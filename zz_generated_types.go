@@ -2276,10 +2276,11 @@ type KeyOctave struct {
 // The use-symbols attribute is yes if the kind should be represented when
 // possible with harmony symbols rather than letters and numbers. These symbols
 // include:
-//
-// major: a triangle, like Unicode 25B3 minor: -, like Unicode 002D augmented:
-// +, like Unicode 002B diminished: °, like Unicode 00B0 half-diminished: ø,
-// like Unicode 00F8
+//   - major: a triangle, like Unicode 25B3
+//   - minor: -, like Unicode 002D
+//   - augmented: +, like Unicode 002B
+//   - diminished: °, like Unicode 00B0
+//   - half-diminished: ø, like Unicode 00F8
 //
 // For the major-minor kind, only the minor symbol is used when use-symbols is
 // yes. The major symbol is set using the symbol attribute in the degree-value
@@ -2898,7 +2899,11 @@ type Notations struct {
 // arco.
 type Note struct {
 	Grace *Grace `xml:"grace,omitempty"`
-	Cue   *Empty `xml:"cue,omitempty"`
+	// The cue element indicates the presence of a cue note. In MusicXML, a cue
+	// note is a silent note with no playback. Normal notes that play can be
+	// specified as cue size using the type element. A cue note that is
+	// specified as full size using the type element will still remain silent.
+	Cue *Empty `xml:"cue,omitempty"`
 	// The chord element indicates that this note is an additional chord tone
 	// with the preceding note.
 	//
@@ -4987,22 +4992,55 @@ func (values *ArticulationsContents) UnmarshalXML(
 
 // ArticulationsContent is one ordered child element of Articulations.
 type ArticulationsContent struct {
-	Accent            *EmptyPlacement
-	StrongAccent      *StrongAccent
-	Staccato          *EmptyPlacement
-	Tenuto            *EmptyPlacement
-	DetachedLegato    *EmptyPlacement
-	Staccatissimo     *EmptyPlacement
-	Spiccato          *EmptyPlacement
-	Scoop             *EmptyLine
-	Plop              *EmptyLine
-	Doit              *EmptyLine
-	Falloff           *EmptyLine
-	BreathMark        *BreathMark
-	Caesura           *Caesura
-	Stress            *EmptyPlacement
-	Unstress          *EmptyPlacement
-	SoftAccent        *EmptyPlacement
+	// The accent element indicates a regular horizontal accent mark.
+	Accent *EmptyPlacement
+	// The strong-accent element indicates a vertical accent mark.
+	StrongAccent *StrongAccent
+	// The staccato element is used for a dot articulation, as opposed to a
+	// stroke or a wedge.
+	Staccato *EmptyPlacement
+	// The tenuto element indicates a tenuto line symbol.
+	Tenuto *EmptyPlacement
+	// The detached-legato element indicates the combination of a tenuto line
+	// and staccato dot symbol.
+	DetachedLegato *EmptyPlacement
+	// The staccatissimo element is used for a wedge articulation, as opposed to
+	// a dot or a stroke.
+	Staccatissimo *EmptyPlacement
+	// The spiccato element is used for a stroke articulation, as opposed to a
+	// dot or a wedge.
+	Spiccato *EmptyPlacement
+	// The scoop element is an indeterminate slide attached to a single note.
+	// The scoop appears before the main note and comes from below the main
+	// pitch.
+	Scoop *EmptyLine
+	// The plop element is an indeterminate slide attached to a single note. The
+	// plop appears before the main note and comes from above the main pitch.
+	Plop *EmptyLine
+	// The doit element is an indeterminate slide attached to a single note. The
+	// doit appears after the main note and goes above the main pitch.
+	Doit *EmptyLine
+	// The falloff element is an indeterminate slide attached to a single note.
+	// The falloff appears after the main note and goes below the main pitch.
+	Falloff    *EmptyLine
+	BreathMark *BreathMark
+	Caesura    *Caesura
+	// The stress element indicates a stressed note.
+	Stress *EmptyPlacement
+	// The unstress element indicates an unstressed note. It is often notated
+	// using a u-shaped symbol.
+	Unstress *EmptyPlacement
+	// The soft-accent element indicates a soft accent that is not as heavy as a
+	// normal accent. It is often notated as <>. It can be combined with other
+	// articulations to implement the first eight symbols in the SMuFL
+	// Articulation supplement range.
+	SoftAccent *EmptyPlacement
+	// The other-articulation element is used to define any articulations not
+	// yet in the MusicXML format. The smufl attribute can be used to specify a
+	// particular articulation, allowing application interoperability without
+	// requiring every SMuFL articulation to have a MusicXML element equivalent.
+	// Using the other-articulation element without the smufl attribute allows
+	// for extended representation, though without application interoperability.
 	OtherArticulation *OtherPlacementText
 }
 
@@ -5766,7 +5804,15 @@ func (values *DirectionTypeContents) UnmarshalXML(
 
 // DirectionTypeContent is one ordered child element of DirectionType.
 type DirectionTypeContent struct {
-	Words  *FormattedTextID
+	// The words element specifies a standard text direction. The enclosure is
+	// none if not specified. The language is Italian ("it") if not specified.
+	// Left justification is used if not specified.
+	Words *FormattedTextID
+	// The symbol element specifies a musical symbol using a canonical SMuFL
+	// glyph name. It is used when an occasional musical symbol is interspersed
+	// into text. It should not be used in place of semantic markup, such as
+	// metronome marks that mix text and symbols. Left justification is used if
+	// not specified. Enclosure is none if not specified.
 	Symbol *FormattedSymbolID
 }
 
@@ -6921,8 +6967,13 @@ func (values *HarmonyContents) UnmarshalXML(
 
 // HarmonyContent is one ordered child element of Harmony.
 type HarmonyContent struct {
-	Root      *Root
-	Numeral   *Numeral
+	Root    *Root
+	Numeral *Numeral
+	// The function element represents classical functional harmony with an
+	// indication like I, II, III rather than C, D, E. It represents the Roman
+	// numeral part of a functional harmony rather than the complete function
+	// itself. It has been deprecated as of MusicXML 4.0 in favor of the numeral
+	// element.
 	Function  *StyleText
 	Kind      *Kind
 	Inversion *Inversion
@@ -7189,7 +7240,11 @@ func (values *InterchangeableContents) UnmarshalXML(
 
 // InterchangeableContent is one ordered child element of Interchangeable.
 type InterchangeableContent struct {
-	Beats    *string
+	// The beats element indicates the number of beats, as found in the
+	// numerator of a time signature.
+	Beats *string
+	// The beat-type element indicates the beat unit, as found in the
+	// denominator of a time signature.
 	BeatType *string
 }
 
@@ -7322,8 +7377,18 @@ func (values *KeyContents) UnmarshalXML(
 
 // KeyContent is one ordered child element of Key.
 type KeyContent struct {
-	KeyStep       *Step
-	KeyAlter      *Semitones
+	// Non-traditional key signatures are represented using a list of altered
+	// tones. The key-step element indicates the pitch step to be altered,
+	// represented using the same names as in the step element.
+	KeyStep *Step
+	// Non-traditional key signatures are represented using a list of altered
+	// tones. The key-alter element represents the alteration for a given pitch
+	// step, represented with semitones in the same manner as the alter element.
+	KeyAlter *Semitones
+	// Non-traditional key signatures are represented using a list of altered
+	// tones. The key-accidental element indicates the accidental to be
+	// displayed in the key signature, represented in the same manner as the
+	// accidental element. It is used for disambiguating microtonal accidentals.
 	KeyAccidental *KeyAccidental
 }
 
@@ -7775,13 +7840,21 @@ func (values *LyricContents) UnmarshalXML(
 
 // LyricContent is one ordered child element of Lyric.
 type LyricContent struct {
-	Syllabic     *Syllabic
-	Text         *TextElementData
-	Elision      *Elision
-	Extend       *Extend
-	Laughing     *Empty
-	Humming      *Empty
-	EndLine      *Empty
+	Syllabic *Syllabic
+	Text     *TextElementData
+	Elision  *Elision
+	Extend   *Extend
+	// The laughing element represents a laughing voice.
+	Laughing *Empty
+	// The humming element represents a humming voice.
+	Humming *Empty
+	// The end-line element comes from RP-017 for Standard MIDI File Lyric
+	// meta-events. It facilitates lyric display for Karaoke and similar
+	// applications.
+	EndLine *Empty
+	// The end-paragraph element comes from RP-017 for Standard MIDI File Lyric
+	// meta-events. It facilitates lyric display for Karaoke and similar
+	// applications.
 	EndParagraph *Empty
 	Footnote     *FormattedText
 	Level        *Level
@@ -8124,12 +8197,22 @@ func (values *MetronomeContents) UnmarshalXML(
 
 // MetronomeContent is one ordered child element of Metronome.
 type MetronomeContent struct {
-	BeatUnit          *NoteTypeValue
-	BeatUnitDot       *Empty
-	BeatUnitTied      *BeatUnitTied
-	PerMinute         *PerMinute
-	MetronomeArrows   *Empty
-	MetronomeNote     *MetronomeNote
+	// The beat-unit element indicates the graphical note type to use in a
+	// metronome mark.
+	BeatUnit *NoteTypeValue
+	// The beat-unit-dot element is used to specify any augmentation dots for a
+	// metronome mark note.
+	BeatUnitDot  *Empty
+	BeatUnitTied *BeatUnitTied
+	PerMinute    *PerMinute
+	// If the metronome-arrows element is present, it indicates that metric
+	// modulation arrows are displayed on both sides of the metronome mark.
+	MetronomeArrows *Empty
+	MetronomeNote   *MetronomeNote
+	// The metronome-relation element describes the relationship symbol that
+	// goes between the two sets of metronome-note elements. The currently
+	// allowed value is equals, but this may expand in future versions. If the
+	// element is empty, the equals value is used.
 	MetronomeRelation *string
 }
 
@@ -9115,22 +9198,51 @@ func (values *OrnamentsContents) UnmarshalXML(
 
 // OrnamentsContent is one ordered child element of Ornaments.
 type OrnamentsContent struct {
-	TrillMark            *EmptyTrillSound
-	Turn                 *HorizontalTurn
-	DelayedTurn          *HorizontalTurn
-	InvertedTurn         *HorizontalTurn
-	DelayedInvertedTurn  *HorizontalTurn
-	VerticalTurn         *EmptyTrillSound
+	// The trill-mark element represents the trill-mark symbol.
+	TrillMark *EmptyTrillSound
+	// The turn element is the normal turn shape which goes up then down.
+	Turn *HorizontalTurn
+	// The delayed-turn element indicates a normal turn that is delayed until
+	// the end of the current note.
+	DelayedTurn *HorizontalTurn
+	// The inverted-turn element has the shape which goes down and then up.
+	InvertedTurn *HorizontalTurn
+	// The delayed-inverted-turn element indicates an inverted turn that is
+	// delayed until the end of the current note.
+	DelayedInvertedTurn *HorizontalTurn
+	// The vertical-turn element has the turn symbol shape arranged vertically
+	// going from upper left to lower right.
+	VerticalTurn *EmptyTrillSound
+	// The inverted-vertical-turn element has the turn symbol shape arranged
+	// vertically going from upper right to lower left.
 	InvertedVerticalTurn *EmptyTrillSound
-	Shake                *EmptyTrillSound
-	WavyLine             *WavyLine
-	Mordent              *Mordent
-	InvertedMordent      *Mordent
-	Schleifer            *EmptyPlacement
-	Tremolo              *Tremolo
-	Haydn                *EmptyTrillSound
-	OtherOrnament        *OtherPlacementText
-	AccidentalMark       *AccidentalMark
+	// The shake element has a similar appearance to an inverted-mordent
+	// element.
+	Shake    *EmptyTrillSound
+	WavyLine *WavyLine
+	// The mordent element represents the sign with the vertical line. The
+	// choice of which mordent sign is inverted differs between MusicXML and
+	// SMuFL. The long attribute is "no" by default.
+	Mordent *Mordent
+	// The inverted-mordent element represents the sign without the vertical
+	// line. The choice of which mordent is inverted differs between MusicXML
+	// and SMuFL. The long attribute is "no" by default.
+	InvertedMordent *Mordent
+	// The name for this ornament is based on the German, to avoid confusion
+	// with the more common slide element defined earlier.
+	Schleifer *EmptyPlacement
+	Tremolo   *Tremolo
+	// The haydn element represents the Haydn ornament. This is defined in SMuFL
+	// as ornamentHaydn.
+	Haydn *EmptyTrillSound
+	// The other-ornament element is used to define any ornaments not yet in the
+	// MusicXML format. The smufl attribute can be used to specify a particular
+	// ornament, allowing application interoperability without requiring every
+	// SMuFL ornament to have a MusicXML element equivalent. Using the
+	// other-ornament element without the smufl attribute allows for extended
+	// representation, though without application interoperability.
+	OtherOrnament  *OtherPlacementText
+	AccidentalMark *AccidentalMark
 }
 
 // AddTrillMark appends the "trill-mark" child while preserving content order.
@@ -9627,6 +9739,11 @@ func (values *PartListContents) UnmarshalXML(
 // PartListContent is one ordered child element of PartList.
 type PartListContent struct {
 	PartGroup *PartGroup
+	// Each MusicXML part corresponds to a track in a Standard MIDI Format 1
+	// file. The score-instrument elements are used when there are multiple
+	// instruments per track. The midi-device element is used to make a MIDI
+	// device or port assignment for the given track. Initial midi-instrument
+	// assignments may be made here as well.
 	ScorePart *ScorePart
 }
 
@@ -9759,6 +9876,9 @@ func (values *PlayContents) UnmarshalXML(
 
 // PlayContent is one ordered child element of Play.
 type PlayContent struct {
+	// The ipa element represents International Phonetic Alphabet (IPA) sounds
+	// for vocal music. String content is limited to IPA 2015 symbols
+	// represented in Unicode 13.0.
 	Ipa         *string
 	Mute        *Mute
 	SemiPitched *SemiPitched
@@ -10266,36 +10386,86 @@ func (values *TechnicalContents) UnmarshalXML(
 
 // TechnicalContent is one ordered child element of Technical.
 type TechnicalContent struct {
-	UpBow          *EmptyPlacement
-	DownBow        *EmptyPlacement
-	Harmonic       *Harmonic
-	OpenString     *EmptyPlacement
-	ThumbPosition  *EmptyPlacement
-	Fingering      *Fingering
-	Pluck          *PlacementText
-	DoubleTongue   *EmptyPlacement
-	TripleTongue   *EmptyPlacement
-	Stopped        *EmptyPlacementSMuFL
-	SnapPizzicato  *EmptyPlacement
-	Fret           *Fret
-	String         *String
-	HammerOn       *HammerOnPullOff
-	PullOff        *HammerOnPullOff
-	Bend           *Bend
-	Tap            *Tap
-	Heel           *HeelToe
-	Toe            *HeelToe
-	Fingernails    *EmptyPlacement
-	Hole           *Hole
-	Arrow          *Arrow
-	Handbell       *Handbell
-	BrassBend      *EmptyPlacement
-	Flip           *EmptyPlacement
-	Smear          *EmptyPlacement
-	Open           *EmptyPlacementSMuFL
-	HalfMuted      *EmptyPlacementSMuFL
-	HarmonMute     *HarmonMute
-	Golpe          *EmptyPlacement
+	// The up-bow element represents the symbol that is used both for up-bowing
+	// on bowed instruments, and up-stroke on plucked instruments.
+	UpBow *EmptyPlacement
+	// The down-bow element represents the symbol that is used both for
+	// down-bowing on bowed instruments, and down-stroke on plucked instruments.
+	DownBow  *EmptyPlacement
+	Harmonic *Harmonic
+	// The open-string element represents the zero-shaped open string symbol.
+	OpenString *EmptyPlacement
+	// The thumb-position element represents the thumb position symbol. This is
+	// a circle with a line, where the line does not come within the circle. It
+	// is distinct from the snap pizzicato symbol, where the line comes inside
+	// the circle.
+	ThumbPosition *EmptyPlacement
+	Fingering     *Fingering
+	// The pluck element is used to specify the plucking fingering on a fretted
+	// instrument, where the fingering element refers to the fretting fingering.
+	// Typical values are p, i, m, a for pulgar/thumb, indicio/index,
+	// medio/middle, and anular/ring fingers.
+	Pluck *PlacementText
+	// The double-tongue element represents the double tongue symbol (two dots
+	// arranged horizontally).
+	DoubleTongue *EmptyPlacement
+	// The triple-tongue element represents the triple tongue symbol (three dots
+	// arranged horizontally).
+	TripleTongue *EmptyPlacement
+	// The stopped element represents the stopped symbol, which looks like a
+	// plus sign. The smufl attribute distinguishes different SMuFL glyphs that
+	// have a similar appearance such as handbellsMalletBellSuspended and
+	// guitarClosePedal. If not present, the default glyph is brassMuteClosed.
+	Stopped *EmptyPlacementSMuFL
+	// The snap-pizzicato element represents the snap pizzicato symbol. This is
+	// a circle with a line, where the line comes inside the circle. It is
+	// distinct from the thumb-position symbol, where the line does not come
+	// inside the circle.
+	SnapPizzicato *EmptyPlacement
+	Fret          *Fret
+	String        *String
+	HammerOn      *HammerOnPullOff
+	PullOff       *HammerOnPullOff
+	Bend          *Bend
+	Tap           *Tap
+	Heel          *HeelToe
+	Toe           *HeelToe
+	// The fingernails element is used in notation for harp and other plucked
+	// string instruments.
+	Fingernails *EmptyPlacement
+	Hole        *Hole
+	Arrow       *Arrow
+	Handbell    *Handbell
+	// The brass-bend element represents the u-shaped bend symbol used in brass
+	// notation, distinct from the bend element used in guitar music.
+	BrassBend *EmptyPlacement
+	// The flip element represents the flip symbol used in brass notation.
+	Flip *EmptyPlacement
+	// The smear element represents the tilde-shaped smear symbol used in brass
+	// notation.
+	Smear *EmptyPlacement
+	// The open element represents the open symbol, which looks like a circle.
+	// The smufl attribute can be used to distinguish different SMuFL glyphs
+	// that have a similar appearance such as brassMuteOpen and guitarOpenPedal.
+	// If not present, the default glyph is brassMuteOpen.
+	Open *EmptyPlacementSMuFL
+	// The half-muted element represents the half-muted symbol, which looks like
+	// a circle with a plus sign inside. The smufl attribute can be used to
+	// distinguish different SMuFL glyphs that have a similar appearance such as
+	// brassMuteHalfClosed and guitarHalfOpenPedal. If not present, the default
+	// glyph is brassMuteHalfClosed.
+	HalfMuted  *EmptyPlacementSMuFL
+	HarmonMute *HarmonMute
+	// The golpe element represents the golpe symbol that is used for tapping
+	// the pick guard in guitar music.
+	Golpe *EmptyPlacement
+	// The other-technical element is used to define any technical indications
+	// not yet in the MusicXML format. The smufl attribute can be used to
+	// specify a particular glyph, allowing application interoperability without
+	// requiring every SMuFL technical indication to have a MusicXML element
+	// equivalent. Using the other-technical element without the smufl attribute
+	// allows for extended representation, though without application
+	// interoperability.
 	OtherTechnical *OtherPlacementText
 }
 
@@ -11182,7 +11352,11 @@ func (values *TimeContents) UnmarshalXML(
 
 // TimeContent is one ordered child element of Time.
 type TimeContent struct {
-	Beats    *string
+	// The beats element indicates the number of beats, as found in the
+	// numerator of a time signature.
+	Beats *string
+	// The beat-type element indicates the beat unit, as found in the
+	// denominator of a time signature.
 	BeatType *string
 }
 
@@ -12506,7 +12680,11 @@ func (value *MultipleRest) UnmarshalXML(decoder *xml.Decoder, start xml.StartEle
 
 type xmlNote struct {
 	Grace *Grace `xml:"grace,omitempty"`
-	Cue   *Empty `xml:"cue,omitempty"`
+	// The cue element indicates the presence of a cue note. In MusicXML, a cue
+	// note is a silent note with no playback. Normal notes that play can be
+	// specified as cue size using the type element. A cue note that is
+	// specified as full size using the type element will still remain silent.
+	Cue *Empty `xml:"cue,omitempty"`
 	// The chord element indicates that this note is an additional chord tone
 	// with the preceding note.
 	//

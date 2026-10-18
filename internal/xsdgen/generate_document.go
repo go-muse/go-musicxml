@@ -75,7 +75,8 @@ func GenerateDocument(
 	}
 
 	// External types are named by another generation, so the manifest does
-	// not assign them here.
+	// not assign them here. A shallow copy keeps the caller's index, which
+	// concurrent generations may share, unchanged.
 	external, err := documentExternalTypes(
 		index,
 		options.ExternalTypes,
@@ -83,11 +84,22 @@ func GenerateDocument(
 	if err != nil {
 		return nil, err
 	}
-	index.nameExternal = external
-	if elementDeclaration.Element.Type == "" {
-		// An inline root type is named after its element; a named root type
-		// keeps the name of its type.
-		options.GoName, err = index.names.Assign(componentKey(elementDeclaration, "element"), options.GoName)
+	scoped := *index
+	scoped.nameExternal = external
+	index = &scoped
+	// The manifest names the root: an inline root type after its element, a
+	// named one after its type. Every use of the root, from the struct to its
+	// references, takes that name.
+	rootKey := componentKey(elementDeclaration, "element")
+	if elementDeclaration.Element.Type != "" {
+		rootTypeDeclaration, err := index.ResolveType(elementDeclaration.File, elementDeclaration.Element.Type)
+		if err != nil {
+			return nil, err
+		}
+		rootKey = componentKey(rootTypeDeclaration, "type")
+	}
+	if index.names != nil {
+		options.GoName, err = index.names.Assign(rootKey, options.GoName)
 		if err != nil {
 			return nil, err
 		}
@@ -177,6 +189,7 @@ func GenerateDocument(
 		simpleRenderer: simpleRenderer,
 		packageName:    packageName,
 		usedTypeNames:  make(map[string]string),
+		ownerKeys:      make(map[string]string),
 		nameInline:     true,
 	}
 	for _, declaration := range names.Declarations() {
@@ -185,7 +198,9 @@ func GenerateDocument(
 			panic("xsdgen: missing Go name for indexed type")
 		}
 		renderer.usedTypeNames[name] = describeDeclaration(declaration)
+		renderer.ownerKeys[name] = componentKey(declaration, "type")
 	}
+	renderer.ownerKeys[options.GoName] = rootKey
 
 	var body bytes.Buffer
 	for planIndex := range simplePlans {

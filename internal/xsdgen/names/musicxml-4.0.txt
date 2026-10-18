@@ -1,59 +1,13 @@
-go anonymous ScorePartwisePart	ScorePartwisePart
-go anonymous ScorePartwisePartMeasure	ScorePartwisePartMeasure
-go anonymous ScoreTimewiseMeasure	ScoreTimewiseMeasure
-go anonymous ScoreTimewiseMeasurePart	ScoreTimewiseMeasurePart
-go content Articulations	ArticulationsContent
-go content Credit	CreditContent
-go content DirectionType	DirectionTypeContent
-go content Dynamics	DynamicsContent
-go content Encoding	EncodingContent
-go content Harmony	HarmonyContent
-go content Interchangeable	InterchangeableContent
-go content Key	KeyContent
-go content Listen	ListenContent
-go content Listening	ListeningContent
-go content Lyric	LyricContent
-go content Metronome	MetronomeContent
-go content NameDisplay	NameDisplayContent
-go content Notations	NotationsContent
-go content NoteheadText	NoteheadTextContent
-go content OpusDocument	OpusDocumentContent
-go content Ornaments	OrnamentsContent
-go content PartList	PartListContent
-go content Play	PlayContent
-go content ScorePart	ScorePartContent
-go content ScorePartwisePartMeasure	ScorePartwisePartMeasureContent
-go content ScoreTimewiseMeasurePart	ScoreTimewiseMeasurePartContent
-go content Sound	SoundContent
-go content Technical	TechnicalContent
-go content Time	TimeContent
-go contents Articulations	ArticulationsContents
-go contents Credit	CreditContents
-go contents DirectionType	DirectionTypeContents
-go contents Dynamics	DynamicsContents
-go contents Encoding	EncodingContents
-go contents Harmony	HarmonyContents
-go contents Interchangeable	InterchangeableContents
-go contents Key	KeyContents
-go contents Listen	ListenContents
-go contents Listening	ListeningContents
-go contents Lyric	LyricContents
-go contents Metronome	MetronomeContents
-go contents NameDisplay	NameDisplayContents
-go contents Notations	NotationsContents
-go contents NoteheadText	NoteheadTextContents
-go contents OpusDocument	OpusDocumentContents
-go contents Ornaments	OrnamentsContents
-go contents PartList	PartListContents
-go contents Play	PlayContents
-go contents ScorePart	ScorePartContents
-go contents ScorePartwisePartMeasure	ScorePartwisePartMeasureContents
-go contents ScoreTimewiseMeasurePart	ScoreTimewiseMeasurePartContents
-go contents Sound	SoundContents
-go contents Technical	TechnicalContents
-go contents Time	TimeContents
 musicxml.xsd element score-partwise	ScorePartwise
+musicxml.xsd element score-partwise element part	ScorePartwisePart
+musicxml.xsd element score-partwise element part element measure	ScorePartwisePartMeasure
+musicxml.xsd element score-partwise element part element measure content	ScorePartwisePartMeasureContent
+musicxml.xsd element score-partwise element part element measure contents	ScorePartwisePartMeasureContents
 musicxml.xsd element score-timewise	ScoreTimewise
+musicxml.xsd element score-timewise element measure	ScoreTimewiseMeasure
+musicxml.xsd element score-timewise element measure element part	ScoreTimewiseMeasurePart
+musicxml.xsd element score-timewise element measure element part content	ScoreTimewiseMeasurePartContent
+musicxml.xsd element score-timewise element measure element part contents	ScoreTimewiseMeasurePartContents
 musicxml.xsd type above-below	AboveBelow
 musicxml.xsd type above-below enumeration "above"	AboveBelowAbove
 musicxml.xsd type above-below enumeration "below"	AboveBelowBelow
@@ -131,6 +85,8 @@ musicxml.xsd type arrow-style enumeration "other"	ArrowStyleOther
 musicxml.xsd type arrow-style enumeration "paired"	ArrowStylePaired
 musicxml.xsd type arrow-style enumeration "single"	ArrowStyleSingle
 musicxml.xsd type articulations	Articulations
+musicxml.xsd type articulations content	ArticulationsContent
+musicxml.xsd type articulations contents	ArticulationsContents
 musicxml.xsd type assess	Assess
 musicxml.xsd type attributes	Attributes
 musicxml.xsd type backup	Backup
@@ -228,6 +184,8 @@ musicxml.xsd type coda	Coda
 musicxml.xsd type color	Color
 musicxml.xsd type comma-separated-text	CommaSeparatedText
 musicxml.xsd type credit	Credit
+musicxml.xsd type credit content	CreditContent
+musicxml.xsd type credit contents	CreditContents
 musicxml.xsd type css-font-size	CSSFontSize
 musicxml.xsd type css-font-size enumeration "large"	CSSFontSizeLarge
 musicxml.xsd type css-font-size enumeration "medium"	CSSFontSizeMedium
@@ -254,11 +212,15 @@ musicxml.xsd type degree-type-value enumeration "subtract"	DegreeTypeValueSubtra
 musicxml.xsd type degree-value	DegreeValue
 musicxml.xsd type direction	Direction
 musicxml.xsd type direction-type	DirectionType
+musicxml.xsd type direction-type content	DirectionTypeContent
+musicxml.xsd type direction-type contents	DirectionTypeContents
 musicxml.xsd type distance	Distance
 musicxml.xsd type distance-type	DistanceType
 musicxml.xsd type divisions	Divisions
 musicxml.xsd type double	Double
 musicxml.xsd type dynamics	Dynamics
+musicxml.xsd type dynamics content	DynamicsContent
+musicxml.xsd type dynamics contents	DynamicsContents
 musicxml.xsd type effect	Effect
 musicxml.xsd type effect-value	EffectValue
 musicxml.xsd type effect-value enumeration "anvil"	EffectValueAnvil
@@ -305,6 +267,8 @@ musicxml.xsd type enclosure-shape enumeration "rectangle"	EnclosureShapeRectangl
 musicxml.xsd type enclosure-shape enumeration "square"	EnclosureShapeSquare
 musicxml.xsd type enclosure-shape enumeration "triangle"	EnclosureShapeTriangle
 musicxml.xsd type encoding	Encoding
+musicxml.xsd type encoding content	EncodingContent
+musicxml.xsd type encoding contents	EncodingContents
 musicxml.xsd type ending	Ending
 musicxml.xsd type ending-number	EndingNumber
 musicxml.xsd type extend	Extend
@@ -397,6 +361,8 @@ musicxml.xsd type harmon-closed-value enumeration "yes"	HarmonClosedValueYes
 musicxml.xsd type harmon-mute	HarmonMute
 musicxml.xsd type harmonic	Harmonic
 musicxml.xsd type harmony	Harmony
+musicxml.xsd type harmony content	HarmonyContent
+musicxml.xsd type harmony contents	HarmonyContents
 musicxml.xsd type harmony-alter	HarmonyAlter
 musicxml.xsd type harmony-arrangement	HarmonyArrangement
 musicxml.xsd type harmony-arrangement enumeration "diagonal"	HarmonyArrangementDiagonal
@@ -426,8 +392,12 @@ musicxml.xsd type instrument	Instrument
 musicxml.xsd type instrument-change	InstrumentChange
 musicxml.xsd type instrument-link	InstrumentLink
 musicxml.xsd type interchangeable	Interchangeable
+musicxml.xsd type interchangeable content	InterchangeableContent
+musicxml.xsd type interchangeable contents	InterchangeableContents
 musicxml.xsd type inversion	Inversion
 musicxml.xsd type key	Key
+musicxml.xsd type key content	KeyContent
+musicxml.xsd type key contents	KeyContents
 musicxml.xsd type key-accidental	KeyAccidental
 musicxml.xsd type key-octave	KeyOctave
 musicxml.xsd type kind	Kind
@@ -496,8 +466,14 @@ musicxml.xsd type line-width	LineWidth
 musicxml.xsd type line-width-type	LineWidthType
 musicxml.xsd type link	Link
 musicxml.xsd type listen	Listen
+musicxml.xsd type listen content	ListenContent
+musicxml.xsd type listen contents	ListenContents
 musicxml.xsd type listening	Listening
+musicxml.xsd type listening content	ListeningContent
+musicxml.xsd type listening contents	ListeningContents
 musicxml.xsd type lyric	Lyric
+musicxml.xsd type lyric content	LyricContent
+musicxml.xsd type lyric contents	LyricContents
 musicxml.xsd type lyric-font	LyricFont
 musicxml.xsd type lyric-language	LyricLanguage
 musicxml.xsd type margin-type	MarginType
@@ -567,6 +543,8 @@ musicxml.xsd type metal-value enumeration "tam tam with beater"	MetalValueTamTam
 musicxml.xsd type metal-value enumeration "tam tam"	MetalValueTamTam
 musicxml.xsd type metal-value enumeration "triangle"	MetalValueTriangle
 musicxml.xsd type metronome	Metronome
+musicxml.xsd type metronome content	MetronomeContent
+musicxml.xsd type metronome contents	MetronomeContents
 musicxml.xsd type metronome-beam	MetronomeBeam
 musicxml.xsd type metronome-note	MetronomeNote
 musicxml.xsd type metronome-tied	MetronomeTied
@@ -600,9 +578,13 @@ musicxml.xsd type mute enumeration "stop-hand"	MuteStopHand
 musicxml.xsd type mute enumeration "stop-mute"	MuteStopMute
 musicxml.xsd type mute enumeration "straight"	MuteStraight
 musicxml.xsd type name-display	NameDisplay
+musicxml.xsd type name-display content	NameDisplayContent
+musicxml.xsd type name-display contents	NameDisplayContents
 musicxml.xsd type non-arpeggiate	NonArpeggiate
 musicxml.xsd type non-negative-decimal	NonNegativeDecimal
 musicxml.xsd type notations	Notations
+musicxml.xsd type notations content	NotationsContent
+musicxml.xsd type notations contents	NotationsContents
 musicxml.xsd type note	Note
 musicxml.xsd type note-size	NoteSize
 musicxml.xsd type note-size-type	NoteSizeType
@@ -628,6 +610,8 @@ musicxml.xsd type note-type-value enumeration "quarter"	NoteTypeValueQuarter
 musicxml.xsd type note-type-value enumeration "whole"	NoteTypeValueWhole
 musicxml.xsd type notehead	Notehead
 musicxml.xsd type notehead-text	NoteheadText
+musicxml.xsd type notehead-text content	NoteheadTextContent
+musicxml.xsd type notehead-text contents	NoteheadTextContents
 musicxml.xsd type notehead-value	NoteheadValue
 musicxml.xsd type notehead-value enumeration "arrow down"	NoteheadValueArrowDown
 musicxml.xsd type notehead-value enumeration "arrow up"	NoteheadValueArrowUp
@@ -679,6 +663,8 @@ musicxml.xsd type on-off enumeration "off"	OnOffOff
 musicxml.xsd type on-off enumeration "on"	OnOffOn
 musicxml.xsd type opus	Opus
 musicxml.xsd type ornaments	Ornaments
+musicxml.xsd type ornaments content	OrnamentsContent
+musicxml.xsd type ornaments contents	OrnamentsContents
 musicxml.xsd type other-appearance	OtherAppearance
 musicxml.xsd type other-direction	OtherDirection
 musicxml.xsd type other-listening	OtherListening
@@ -695,6 +681,8 @@ musicxml.xsd type part-clef	PartClef
 musicxml.xsd type part-group	PartGroup
 musicxml.xsd type part-link	PartLink
 musicxml.xsd type part-list	PartList
+musicxml.xsd type part-list content	PartListContent
+musicxml.xsd type part-list contents	PartListContents
 musicxml.xsd type part-name	PartName
 musicxml.xsd type part-symbol	PartSymbol
 musicxml.xsd type part-transpose	PartTranspose
@@ -727,6 +715,8 @@ musicxml.xsd type pitched-value enumeration "vibraphone"	PitchedValueVibraphone
 musicxml.xsd type pitched-value enumeration "xylophone"	PitchedValueXylophone
 musicxml.xsd type placement-text	PlacementText
 musicxml.xsd type play	Play
+musicxml.xsd type play content	PlayContent
+musicxml.xsd type play contents	PlayContents
 musicxml.xsd type player	Player
 musicxml.xsd type positive-decimal	PositiveDecimal
 musicxml.xsd type positive-divisions	PositiveDivisions
@@ -753,6 +743,8 @@ musicxml.xsd type scaling	Scaling
 musicxml.xsd type scordatura	Scordatura
 musicxml.xsd type score-instrument	ScoreInstrument
 musicxml.xsd type score-part	ScorePart
+musicxml.xsd type score-part content	ScorePartContent
+musicxml.xsd type score-part contents	ScorePartContents
 musicxml.xsd type segno	Segno
 musicxml.xsd type semi-pitched	SemiPitched
 musicxml.xsd type semi-pitched enumeration "high"	SemiPitchedHigh
@@ -780,6 +772,8 @@ musicxml.xsd type smufl-pictogram-glyph-name	SMuFLPictogramGlyphName
 musicxml.xsd type smufl-segno-glyph-name	SMuFLSegnoGlyphName
 musicxml.xsd type smufl-wavy-line-glyph-name	SMuFLWavyLineGlyphName
 musicxml.xsd type sound	Sound
+musicxml.xsd type sound content	SoundContent
+musicxml.xsd type sound contents	SoundContents
 musicxml.xsd type staff-details	StaffDetails
 musicxml.xsd type staff-divide	StaffDivide
 musicxml.xsd type staff-divide-symbol	StaffDivideSymbol
@@ -905,6 +899,8 @@ musicxml.xsd type tap-hand	TapHand
 musicxml.xsd type tap-hand enumeration "left"	TapHandLeft
 musicxml.xsd type tap-hand enumeration "right"	TapHandRight
 musicxml.xsd type technical	Technical
+musicxml.xsd type technical content	TechnicalContent
+musicxml.xsd type technical contents	TechnicalContents
 musicxml.xsd type tenths	Tenths
 musicxml.xsd type text-direction	TextDirection
 musicxml.xsd type text-direction enumeration "lro"	TextDirectionLro
@@ -920,6 +916,8 @@ musicxml.xsd type tied-type enumeration "let-ring"	TiedTypeLetRing
 musicxml.xsd type tied-type enumeration "start"	TiedTypeStart
 musicxml.xsd type tied-type enumeration "stop"	TiedTypeStop
 musicxml.xsd type time	Time
+musicxml.xsd type time content	TimeContent
+musicxml.xsd type time contents	TimeContents
 musicxml.xsd type time-modification	TimeModification
 musicxml.xsd type time-only	TimeOnly
 musicxml.xsd type time-relation	TimeRelation
@@ -1044,6 +1042,8 @@ musicxml.xsd type yes-no enumeration "yes"	YesNoYes
 musicxml.xsd type yes-no-number	YesNoNumber
 musicxml.xsd type yyyy-mm-dd	YYYYMMDD
 opus.xsd type opus	OpusDocument
+opus.xsd type opus content	OpusDocumentContent
+opus.xsd type opus contents	OpusDocumentContents
 opus.xsd type opus-link	OpusLink
 opus.xsd type score	OpusScore
 xlink.xsd attribute actuate enumeration "none"	XLinkActuateNone

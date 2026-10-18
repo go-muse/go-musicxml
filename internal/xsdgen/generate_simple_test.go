@@ -105,7 +105,8 @@ const (
 	Rank2 Rank = 2
 )
 
-// IsKnown reports whether value is exactly one of the Rank constants.
+// IsKnown reports whether value is exactly one of the Rank constants;
+// XML whitespace is not collapsed first.
 func (value Rank) IsKnown() bool {
 	switch value {
 	case Rank1, Rank2:
@@ -137,7 +138,8 @@ const (
 	StateClosed State = "closed"
 )
 
-// IsKnown reports whether value is exactly one of the State constants.
+// IsKnown reports whether value is exactly one of the State constants;
+// XML whitespace is not collapsed first.
 func (value State) IsKnown() bool {
 	switch value {
 	case StateOpen, StateClosed:
@@ -159,7 +161,8 @@ const (
 	SubStateOpen SubState = "open"
 )
 
-// IsKnown reports whether value is exactly one of the SubState constants.
+// IsKnown reports whether value is exactly one of the SubState constants;
+// XML whitespace is not collapsed first.
 func (value SubState) IsKnown() bool {
 	switch value {
 	case SubStateOpen:

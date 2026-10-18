@@ -128,6 +128,7 @@ func GenerateComplexTypesWithOptions(
 		simpleRenderer: simpleRenderer,
 		packageName:    packageName,
 		usedTypeNames:  make(map[string]string),
+		ownerKeys:      make(map[string]string),
 		orderedContent: orderedContentTypes,
 	}
 	for _, declaration := range names.Declarations() {
@@ -136,6 +137,7 @@ func GenerateComplexTypesWithOptions(
 			panic("xsdgen: missing Go name for indexed type")
 		}
 		renderer.usedTypeNames[name] = describeDeclaration(declaration)
+		renderer.ownerKeys[name] = componentKey(declaration, "type")
 	}
 
 	var body bytes.Buffer
@@ -236,6 +238,32 @@ type complexTypeRenderer struct {
 	structures         map[string]*complexStructure
 	namedStructures    map[string]bool
 	externalStructures map[string]bool
+	// ownerKeys maps a generated type's Go name to its schema component key,
+	// from which the manifest keys of its choice and anonymous types derive.
+	ownerKeys map[string]string
+}
+
+// elementDocumentation returns the documentation of a local element, or of
+// the global element it references when it has none of its own.
+func (r *complexTypeRenderer) elementDocumentation(element *ElementPlan) string {
+	var documentation string
+	if element.Source != nil {
+		documentation = r.index.documentation(element.Source.Annotation)
+	}
+	if reference := element.Reference; documentation == "" && reference != nil && reference.Element != nil {
+		documentation = r.index.documentation(reference.Element.Annotation)
+	}
+	return documentation
+}
+
+// manifestOwnerKey returns the schema component key of the generated type
+// owner, so that names derived from it are listed by schema component rather
+// than by the owner's Go name.
+func (r *complexTypeRenderer) manifestOwnerKey(owner string) string {
+	if key, found := r.ownerKeys[owner]; found {
+		return key
+	}
+	return "go " + owner
 }
 
 type inlineComplexType struct {
@@ -611,11 +639,8 @@ func (r *complexTypeRenderer) collectParticle(
 		}
 		if particle.Element.Source != nil {
 			field.nillable = particle.Element.Source.Nillable
-			field.documentation = r.index.documentation(particle.Element.Source.Annotation)
 		}
-		if reference := particle.Element.Reference; field.documentation == "" && reference != nil && reference.Element != nil {
-			field.documentation = r.index.documentation(reference.Element.Annotation)
-		}
+		field.documentation = r.elementDocumentation(particle.Element)
 
 		return structure.addElement(field)
 
@@ -715,10 +740,19 @@ func (r *complexTypeRenderer) elementGoType(
 	if err != nil {
 		return "", err
 	}
+	name := owner + elementName
+	if r.nameInline && typePlan.InlineComplex != nil {
+		key := r.manifestOwnerKey(owner) + " element " + element.Name.Local
+		name, err = r.index.names.Assign(key, name)
+		if err != nil {
+			return "", err
+		}
+		r.ownerKeys[name] = key
+	}
 
 	return r.typePlanGoTypeWithOwner(
 		typePlan,
-		owner+elementName,
+		name,
 	)
 }
 
@@ -799,11 +833,6 @@ func (r *complexTypeRenderer) typePlanGoTypeWithOwner(
 			inlineOwner = "Inline"
 		}
 		if r.nameInline {
-			name, err := r.index.names.Assign("go anonymous "+inlineOwner, inlineOwner)
-			if err != nil {
-				return "", err
-			}
-			inlineOwner = name
 			description := "anonymous complex type " + inlineOwner
 			if err := r.reserveTypeName(
 				inlineOwner,
@@ -915,6 +944,9 @@ func (s *complexStructure) addElement(field complexField) error {
 		existing.required = existing.required && field.required
 		existing.repeated = existing.repeated || field.repeated
 		existing.nillable = existing.nillable || field.nillable
+		if existing.documentation == "" {
+			existing.documentation = field.documentation
+		}
 
 		return nil
 	}

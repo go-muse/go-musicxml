@@ -24,7 +24,7 @@ func TestNameManifestAvoidsHandwrittenNames(t *testing.T) {
 	generated := map[string]string{}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		key, name, found := strings.Cut(scanner.Text(), "\t")
+		key, name, found := strings.Cut(strings.TrimSuffix(scanner.Text(), "\r"), "\t")
 		require.True(t, found, scanner.Text())
 		generated[name] = key
 	}

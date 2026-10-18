@@ -12,8 +12,9 @@ import (
 )
 
 // TestTimingKindConstantsAreTheFullSet pins the exported TimingContextResult.Kind
-// values and checks the package's own code: every exported kind is used, and
-// no Kind is assigned, compared or started from a string literal.
+// values and checks the package's own code: every exported kind is produced,
+// and no Kind is assigned, set in a composite literal, compared, switched on
+// or started from a string literal.
 func TestTimingKindConstantsAreTheFullSet(t *testing.T) {
 	want := map[string]string{
 		"TimingKindEvent": "event", "TimingKindNote": "note", "TimingKindFiguredBass": "figured-bass",
@@ -31,7 +32,7 @@ func TestTimingKindConstantsAreTheFullSet(t *testing.T) {
 	}
 	fset := token.NewFileSet()
 	declared := map[string]string{}
-	used := map[string]int{}
+	produced := map[string]int{}
 	var literals []string
 	// An empty literal is never a timing kind; other Kind fields compare to it.
 	isString := func(e ast.Expr) bool {
@@ -55,29 +56,47 @@ func TestTimingKindConstantsAreTheFullSet(t *testing.T) {
 			switch n := n.(type) {
 			case *ast.ValueSpec:
 				for i, id := range n.Names {
-					if strings.HasPrefix(id.Name, "TimingKind") && i < len(n.Values) {
-						value, err := strconv.Unquote(n.Values[i].(*ast.BasicLit).Value)
-						if err != nil {
-							t.Fatal(err)
-						}
-						declared[id.Name] = value
+					if !strings.HasPrefix(id.Name, "TimingKind") || i >= len(n.Values) {
+						continue
 					}
-				}
-				for _, v := range n.Values {
-					ast.Inspect(v, func(m ast.Node) bool {
-						if id, ok := m.(*ast.Ident); ok {
-							used[id.Name]++
-						}
-						return true
-					})
+					lit, ok := n.Values[i].(*ast.BasicLit)
+					if !ok {
+						t.Fatalf("%s is not a string literal", id.Name)
+					}
+					value, err := strconv.Unquote(lit.Value)
+					if err != nil {
+						t.Fatal(err)
+					}
+					declared[id.Name] = value
 				}
 				return false
-			case *ast.Ident:
-				used[n.Name]++
 			case *ast.AssignStmt:
 				for i, lhs := range n.Lhs {
-					if i < len(n.Rhs) && isKind(lhs) && isString(n.Rhs[i]) {
+					if i >= len(n.Rhs) || !isKind(lhs) {
+						continue
+					}
+					if isString(n.Rhs[i]) {
 						literals = append(literals, fset.Position(n.Pos()).String())
+					} else if id, ok := n.Rhs[i].(*ast.Ident); ok {
+						produced[id.Name]++
+					}
+				}
+			case *ast.KeyValueExpr:
+				if key, ok := n.Key.(*ast.Ident); ok && key.Name == "Kind" {
+					if isString(n.Value) {
+						literals = append(literals, fset.Position(n.Pos()).String())
+					} else if id, ok := n.Value.(*ast.Ident); ok {
+						produced[id.Name]++
+					}
+				}
+			case *ast.SwitchStmt:
+				if n.Tag != nil && isKind(n.Tag) {
+					for _, statement := range n.Body.List {
+						for _, value := range statement.(*ast.CaseClause).List {
+							if isString(value) {
+								literals = append(literals, fset.Position(value.Pos()).String())
+							}
+						}
 					}
 				}
 			case *ast.BinaryExpr:
@@ -89,6 +108,8 @@ func TestTimingKindConstantsAreTheFullSet(t *testing.T) {
 					for _, arg := range n.Args {
 						if isString(arg) {
 							literals = append(literals, fset.Position(n.Pos()).String())
+						} else if id, ok := arg.(*ast.Ident); ok {
+							produced[id.Name]++
 						}
 					}
 				}
@@ -100,7 +121,7 @@ func TestTimingKindConstantsAreTheFullSet(t *testing.T) {
 		t.Fatalf("exported timing kinds changed:\n got %v\nwant %v", declared, want)
 	}
 	for name := range want {
-		if used[name] == 0 {
+		if produced[name] == 0 {
 			t.Errorf("%s is never produced", name)
 		}
 	}

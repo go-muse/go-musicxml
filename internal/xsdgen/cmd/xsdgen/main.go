@@ -298,15 +298,9 @@ func run(arguments []string, stderr io.Writer) error {
 		)
 	}
 
-	if manifest != nil {
-		if !*updateNames {
-			if err := manifest.Incomplete(); err != nil {
-				return err
-			}
-		} else if len(manifest.Added()) != 0 {
-			if err := writeFileAtomically(*namesPath, manifest.Format(), 0o644); err != nil {
-				return fmt.Errorf("xsdgen: write %q: %w", *namesPath, err)
-			}
+	if manifest != nil && !*updateNames {
+		if err := manifest.Incomplete(); err != nil {
+			return err
 		}
 	}
 
@@ -316,6 +310,13 @@ func run(arguments []string, stderr io.Writer) error {
 			*outputPath,
 			err,
 		)
+	}
+	// The manifest records the new names only once the output that uses
+	// them is written.
+	if manifest != nil && *updateNames && len(manifest.Added()) != 0 {
+		if err := writeFileAtomically(*namesPath, manifest.Format(), 0o644); err != nil {
+			return fmt.Errorf("xsdgen: write %q: %w", *namesPath, err)
+		}
 	}
 
 	return nil

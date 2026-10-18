@@ -78,6 +78,7 @@ func generateElements(index *Index, packageName string, modelMetadata bool, elem
 		simpleRenderer: simpleRenderer,
 		packageName:    packageName,
 		usedTypeNames:  make(map[string]string),
+		ownerKeys:      make(map[string]string),
 		nameInline:     true,
 	}
 	for _, declaration := range names.Declarations() {
@@ -86,6 +87,7 @@ func generateElements(index *Index, packageName string, modelMetadata bool, elem
 			panic("xsdgen: missing Go name for indexed type")
 		}
 		renderer.usedTypeNames[name] = describeDeclaration(declaration)
+		renderer.ownerKeys[name] = componentKey(declaration, "type")
 	}
 
 	selected := append([]QName(nil), elements...)
@@ -143,6 +145,7 @@ func generateElements(index *Index, packageName string, modelMetadata bool, elem
 		if err != nil {
 			return nil, err
 		}
+		renderer.ownerKeys[goName] = componentKey(declaration, "element")
 		if err := renderer.reserveTypeName(
 			goName,
 			"global element "+formatExpandedName(declaration.Name),

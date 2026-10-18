@@ -22,8 +22,12 @@ When a schema change adds a component, `go generate ./...` fails and lists the
 new components with the names they would get; a derived name that is already
 taken gets a numeric suffix. Review those names, then run the four model
 `go:generate` commands once with `-update-names` added, or edit the manifest
-by hand, and commit it with the generated code. To rename a declaration on
-purpose, change its manifest line. `TestMusicXMLNameManifestMatchesGeneration`
+by hand, and commit it with the generated code. Keys name schema components,
+such as `musicxml.xsd type yes-no`, `musicxml.xsd type yes-no enumeration
+"yes"` or `musicxml.xsd type measure content` for a type's choice wrapper, so
+a rename does not change any key. To rename a declaration on purpose, change
+its manifest line; the declarations derived from it, such as its constants and
+choice types, keep their own lines and names until those change too. `TestMusicXMLNameManifestMatchesGeneration`
 reports listed components that no generation produces, and
 `TestNameManifestAvoidsHandwrittenNames` reports a generated name that a
 hand-written declaration already uses.

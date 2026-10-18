@@ -17,12 +17,13 @@ type complexChoice struct {
 }
 
 type complexChoiceVariant struct {
-	name        QName
-	goName      string
-	goType      string
-	xmlType     string
-	inline      *complexStructure
-	description string
+	name          QName
+	goName        string
+	goType        string
+	xmlType       string
+	inline        *complexStructure
+	description   string
+	documentation string
 }
 
 func (r *complexTypeRenderer) planRepeatedChoices(
@@ -167,7 +168,8 @@ func (r *complexTypeRenderer) buildChoice(
 		return nil, ErrInvalidParticle
 	}
 
-	goType, err := r.index.names.Assign("go content "+owner, owner+"Content")
+	ownerKey := r.manifestOwnerKey(owner)
+	goType, err := r.index.names.Assign(ownerKey+" content", owner+"Content")
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +177,7 @@ func (r *complexTypeRenderer) buildChoice(
 	if err := r.reserveTypeName(goType, description); err != nil {
 		return nil, err
 	}
-	listGoType, err := r.index.names.Assign("go contents "+owner, owner+"Contents")
+	listGoType, err := r.index.names.Assign(ownerKey+" contents", owner+"Contents")
 	if err != nil {
 		return nil, err
 	}
@@ -243,6 +245,7 @@ func (r *complexTypeRenderer) buildChoice(
 			namespace: element.Name.Namespace,
 			local:     element.Name.Local,
 		}
+		documentation := r.elementDocumentation(element)
 		if existingIndex, found := result.variantIndexes[key]; found {
 			existing := &result.variants[existingIndex]
 			if existing.goType != goTypeValue {
@@ -252,6 +255,9 @@ func (r *complexTypeRenderer) buildChoice(
 					First:  existing.description + " of type " + existing.goType,
 					Second: description + " of type " + goTypeValue,
 				}
+			}
+			if existing.documentation == "" {
+				existing.documentation = documentation
 			}
 
 			continue
@@ -270,12 +276,13 @@ func (r *complexTypeRenderer) buildChoice(
 		result.variants = append(
 			result.variants,
 			complexChoiceVariant{
-				name:        element.Name,
-				goName:      goName,
-				goType:      goTypeValue,
-				xmlType:     xmlType,
-				inline:      inline,
-				description: description,
+				name:          element.Name,
+				goName:        goName,
+				goType:        goTypeValue,
+				xmlType:       xmlType,
+				inline:        inline,
+				description:   description,
+				documentation: documentation,
 			},
 		)
 	}
@@ -425,6 +432,7 @@ func (r *complexTypeRenderer) renderChoice(
 	)
 	fmt.Fprintf(target, "type %s struct {\n", choice.goType)
 	for _, variant := range choice.variants {
+		renderFieldDocumentation(target, variant.documentation)
 		fmt.Fprintf(
 			target,
 			"\t%s *%s\n",

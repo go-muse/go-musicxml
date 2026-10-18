@@ -31,6 +31,15 @@ func TestGeneratedDocumentationCarriesNotice(t *testing.T) {
 		}
 		assert.Contains(t, strings.Join(strings.Fields(strings.Join(text, " ")), " "), strings.Join(strings.Fields(string(notice)), " "), name)
 	}
+	// Only musicxml.xsd and opus.xsd documentation is copied: text from the
+	// imported xml.xsd and xlink.xsd modules appears nowhere.
+	for _, name := range []string{"zz_generated_simple.go", "zz_generated_types.go", "zz_generated_documents.go", "zz_generated_opus.go"} {
+		data, err := os.ReadFile(name)
+		require.NoError(t, err)
+		for _, imported := range []string{"for information about this namespace", "schemas wishing to allow", "subset of XLink attributes"} {
+			assert.NotContains(t, strings.Join(strings.Fields(strings.ReplaceAll(string(data), "//", " ")), " "), imported, name)
+		}
+	}
 	notices, err := os.ReadFile("THIRD_PARTY_NOTICES.md")
 	require.NoError(t, err)
 	assert.Contains(t, string(notices), "internal/xsdgen/notices/musicxml-4.0.txt")

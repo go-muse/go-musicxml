@@ -953,9 +953,8 @@ A closed `ContextProperty` identifies a scalar evidence value or a typed
 `SpanContextResult`, `RepeatContextResult`, `NavigationContextResult`,
 `LayoutContextResult` or `TimingContextResult`. `TimingContextResult.Kind` is one
 of the `validation.TimingKind…` constants, such as `TimingKindNote` or
-`TimingKindRootAlter`; a node with several roles is published under the last
-role evaluated. Local scalar defaults also use layout-shaped scope/applicability
-metadata. A provider's completion does not
+`TimingKindRootAlter`. Local scalar defaults also use layout-shaped
+scope/applicability metadata. A provider's completion does not
 claim that each optional field is known. Mandatory consumers separately assess
 exact `time-only` ordering, supported bend-release signs and proved graphical
 repeat content. Figure-number content retains MusicXML's deliberately unrestricted

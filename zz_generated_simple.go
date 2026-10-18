@@ -24,7 +24,8 @@ const (
 	AboveBelowBelow AboveBelow = "below"
 )
 
-// IsKnown reports whether value is exactly one of the AboveBelow constants.
+// IsKnown reports whether value is exactly one of the AboveBelow constants;
+// XML whitespace is not collapsed first.
 func (value AboveBelow) IsKnown() bool {
 	switch value {
 	case AboveBelowAbove, AboveBelowBelow:
@@ -141,7 +142,8 @@ const (
 	AccidentalValueOther AccidentalValue = "other"
 )
 
-// IsKnown reports whether value is exactly one of the AccidentalValue constants.
+// IsKnown reports whether value is exactly one of the AccidentalValue constants;
+// XML whitespace is not collapsed first.
 func (value AccidentalValue) IsKnown() bool {
 	switch value {
 	case AccidentalValueSharp, AccidentalValueNatural, AccidentalValueFlat, AccidentalValueDoubleSharp, AccidentalValueSharpSharp, AccidentalValueFlatFlat, AccidentalValueNaturalSharp, AccidentalValueNaturalFlat, AccidentalValueQuarterFlat, AccidentalValueQuarterSharp, AccidentalValueThreeQuartersFlat, AccidentalValueThreeQuartersSharp, AccidentalValueSharpDown, AccidentalValueSharpUp, AccidentalValueNaturalDown, AccidentalValueNaturalUp, AccidentalValueFlatDown, AccidentalValueFlatUp, AccidentalValueDoubleSharpDown, AccidentalValueDoubleSharpUp, AccidentalValueFlatFlatDown, AccidentalValueFlatFlatUp, AccidentalValueArrowDown, AccidentalValueArrowUp, AccidentalValueTripleSharp, AccidentalValueTripleFlat, AccidentalValueSlashQuarterSharp, AccidentalValueSlashSharp, AccidentalValueSlashFlat, AccidentalValueDoubleSlashFlat, AccidentalValueSharp1, AccidentalValueSharp2, AccidentalValueSharp3, AccidentalValueSharp5, AccidentalValueFlat1, AccidentalValueFlat2, AccidentalValueFlat3, AccidentalValueFlat4, AccidentalValueSori, AccidentalValueKoron, AccidentalValueOther:
@@ -207,7 +209,8 @@ const (
 	ArrowDirectionOther ArrowDirection = "other"
 )
 
-// IsKnown reports whether value is exactly one of the ArrowDirection constants.
+// IsKnown reports whether value is exactly one of the ArrowDirection constants;
+// XML whitespace is not collapsed first.
 func (value ArrowDirection) IsKnown() bool {
 	switch value {
 	case ArrowDirectionLeft, ArrowDirectionUp, ArrowDirectionRight, ArrowDirectionDown, ArrowDirectionNorthwest, ArrowDirectionNortheast, ArrowDirectionSoutheast, ArrowDirectionSouthwest, ArrowDirectionLeftRight, ArrowDirectionUpDown, ArrowDirectionNorthwestSoutheast, ArrowDirectionNortheastSouthwest, ArrowDirectionOther:
@@ -248,7 +251,8 @@ const (
 	ArrowStyleOther ArrowStyle = "other"
 )
 
-// IsKnown reports whether value is exactly one of the ArrowStyle constants.
+// IsKnown reports whether value is exactly one of the ArrowStyle constants;
+// XML whitespace is not collapsed first.
 func (value ArrowStyle) IsKnown() bool {
 	switch value {
 	case ArrowStyleSingle, ArrowStyleDouble, ArrowStyleFilled, ArrowStyleHollow, ArrowStylePaired, ArrowStyleCombined, ArrowStyleOther:
@@ -276,7 +280,8 @@ const (
 	BackwardForwardForward BackwardForward = "forward"
 )
 
-// IsKnown reports whether value is exactly one of the BackwardForward constants.
+// IsKnown reports whether value is exactly one of the BackwardForward constants;
+// XML whitespace is not collapsed first.
 func (value BackwardForward) IsKnown() bool {
 	switch value {
 	case BackwardForwardBackward, BackwardForwardForward:
@@ -323,7 +328,8 @@ const (
 	BarStyleNone BarStyle = "none"
 )
 
-// IsKnown reports whether value is exactly one of the BarStyle constants.
+// IsKnown reports whether value is exactly one of the BarStyle constants;
+// XML whitespace is not collapsed first.
 func (value BarStyle) IsKnown() bool {
 	switch value {
 	case BarStyleRegular, BarStyleDotted, BarStyleDashed, BarStyleHeavy, BarStyleLightLight, BarStyleLightHeavy, BarStyleHeavyLight, BarStyleHeavyHeavy, BarStyleTick, BarStyleShort, BarStyleNone:
@@ -374,7 +380,8 @@ const (
 	BeamValueBackwardHook BeamValue = "backward hook"
 )
 
-// IsKnown reports whether value is exactly one of the BeamValue constants.
+// IsKnown reports whether value is exactly one of the BeamValue constants;
+// XML whitespace is not collapsed first.
 func (value BeamValue) IsKnown() bool {
 	switch value {
 	case BeamValueBegin, BeamValueContinue, BeamValueEnd, BeamValueForwardHook, BeamValueBackwardHook:
@@ -438,7 +445,8 @@ const (
 	BeaterValueWireBrush BeaterValue = "wire brush"
 )
 
-// IsKnown reports whether value is exactly one of the BeaterValue constants.
+// IsKnown reports whether value is exactly one of the BeaterValue constants;
+// XML whitespace is not collapsed first.
 func (value BeaterValue) IsKnown() bool {
 	switch value {
 	case BeaterValueBow, BeaterValueChimeHammer, BeaterValueCoin, BeaterValueDrumStick, BeaterValueFinger, BeaterValueFingernail, BeaterValueFist, BeaterValueGuiroScraper, BeaterValueHammer, BeaterValueHand, BeaterValueJazzStick, BeaterValueKnittingNeedle, BeaterValueMetalHammer, BeaterValueSlideBrushOnGong, BeaterValueSnareStick, BeaterValueSpoonMallet, BeaterValueSuperball, BeaterValueTriangleBeater, BeaterValueTriangleBeaterPlain, BeaterValueWireBrush:
@@ -466,7 +474,8 @@ const (
 	BendShapeCurved BendShape = "curved"
 )
 
-// IsKnown reports whether value is exactly one of the BendShape constants.
+// IsKnown reports whether value is exactly one of the BendShape constants;
+// XML whitespace is not collapsed first.
 func (value BendShape) IsKnown() bool {
 	switch value {
 	case BendShapeAngled, BendShapeCurved:
@@ -498,7 +507,8 @@ const (
 	BreathMarkValueSalzedo BreathMarkValue = "salzedo"
 )
 
-// IsKnown reports whether value is exactly one of the BreathMarkValue constants.
+// IsKnown reports whether value is exactly one of the BreathMarkValue constants;
+// XML whitespace is not collapsed first.
 func (value BreathMarkValue) IsKnown() bool {
 	switch value {
 	case BreathMarkValueEmpty, BreathMarkValueComma, BreathMarkValueTick, BreathMarkValueUpbow, BreathMarkValueSalzedo:
@@ -532,7 +542,8 @@ const (
 	CaesuraValueEmpty CaesuraValue = ""
 )
 
-// IsKnown reports whether value is exactly one of the CaesuraValue constants.
+// IsKnown reports whether value is exactly one of the CaesuraValue constants;
+// XML whitespace is not collapsed first.
 func (value CaesuraValue) IsKnown() bool {
 	switch value {
 	case CaesuraValueNormal, CaesuraValueThick, CaesuraValueShort, CaesuraValueCurved, CaesuraValueSingle, CaesuraValueEmpty:
@@ -564,7 +575,8 @@ const (
 	CancelLocationBeforeBarline CancelLocation = "before-barline"
 )
 
-// IsKnown reports whether value is exactly one of the CancelLocation constants.
+// IsKnown reports whether value is exactly one of the CancelLocation constants;
+// XML whitespace is not collapsed first.
 func (value CancelLocation) IsKnown() bool {
 	switch value {
 	case CancelLocationLeft, CancelLocationRight, CancelLocationBeforeBarline:
@@ -591,7 +603,8 @@ const (
 	CircularArrowAnticlockwise CircularArrow = "anticlockwise"
 )
 
-// IsKnown reports whether value is exactly one of the CircularArrow constants.
+// IsKnown reports whether value is exactly one of the CircularArrow constants;
+// XML whitespace is not collapsed first.
 func (value CircularArrow) IsKnown() bool {
 	switch value {
 	case CircularArrowClockwise, CircularArrowAnticlockwise:
@@ -635,7 +648,8 @@ const (
 	ClefSignNone ClefSign = "none"
 )
 
-// IsKnown reports whether value is exactly one of the ClefSign constants.
+// IsKnown reports whether value is exactly one of the ClefSign constants;
+// XML whitespace is not collapsed first.
 func (value ClefSign) IsKnown() bool {
 	switch value {
 	case ClefSignG, ClefSignF, ClefSignC, ClefSignPercussion, ClefSignTAB, ClefSignJianpu, ClefSignNone:
@@ -693,7 +707,8 @@ const (
 	CSSFontSizeXxLarge CSSFontSize = "xx-large"
 )
 
-// IsKnown reports whether value is exactly one of the CSSFontSize constants.
+// IsKnown reports whether value is exactly one of the CSSFontSize constants;
+// XML whitespace is not collapsed first.
 func (value CSSFontSize) IsKnown() bool {
 	switch value {
 	case CSSFontSizeXxSmall, CSSFontSizeXSmall, CSSFontSizeSmall, CSSFontSizeMedium, CSSFontSizeLarge, CSSFontSizeXLarge, CSSFontSizeXxLarge:
@@ -726,7 +741,8 @@ const (
 	DegreeSymbolValueHalfDiminished DegreeSymbolValue = "half-diminished"
 )
 
-// IsKnown reports whether value is exactly one of the DegreeSymbolValue constants.
+// IsKnown reports whether value is exactly one of the DegreeSymbolValue constants;
+// XML whitespace is not collapsed first.
 func (value DegreeSymbolValue) IsKnown() bool {
 	switch value {
 	case DegreeSymbolValueMajor, DegreeSymbolValueMinor, DegreeSymbolValueAugmented, DegreeSymbolValueDiminished, DegreeSymbolValueHalfDiminished:
@@ -756,7 +772,8 @@ const (
 	DegreeTypeValueSubtract DegreeTypeValue = "subtract"
 )
 
-// IsKnown reports whether value is exactly one of the DegreeTypeValue constants.
+// IsKnown reports whether value is exactly one of the DegreeTypeValue constants;
+// XML whitespace is not collapsed first.
 func (value DegreeTypeValue) IsKnown() bool {
 	switch value {
 	case DegreeTypeValueAdd, DegreeTypeValueAlter, DegreeTypeValueSubtract:
@@ -848,7 +865,8 @@ const (
 	EffectValueWindWhistle EffectValue = "wind whistle"
 )
 
-// IsKnown reports whether value is exactly one of the EffectValue constants.
+// IsKnown reports whether value is exactly one of the EffectValue constants;
+// XML whitespace is not collapsed first.
 func (value EffectValue) IsKnown() bool {
 	switch value {
 	case EffectValueAnvil, EffectValueAutoHorn, EffectValueBirdWhistle, EffectValueCannon, EffectValueDuckCall, EffectValueGunShot, EffectValueKlaxonHorn, EffectValueLionsRoar, EffectValueLotusFlute, EffectValueMegaphone, EffectValuePoliceWhistle, EffectValueSiren, EffectValueSlideWhistle, EffectValueThunderSheet, EffectValueWindMachine, EffectValueWindWhistle:
@@ -904,7 +922,8 @@ const (
 	EnclosureShapeNone EnclosureShape = "none"
 )
 
-// IsKnown reports whether value is exactly one of the EnclosureShape constants.
+// IsKnown reports whether value is exactly one of the EnclosureShape constants;
+// XML whitespace is not collapsed first.
 func (value EnclosureShape) IsKnown() bool {
 	switch value {
 	case EnclosureShapeRectangle, EnclosureShapeSquare, EnclosureShapeOval, EnclosureShapeCircle, EnclosureShapeBracket, EnclosureShapeInvertedBracket, EnclosureShapeTriangle, EnclosureShapeDiamond, EnclosureShapePentagon, EnclosureShapeHexagon, EnclosureShapeHeptagon, EnclosureShapeOctagon, EnclosureShapeNonagon, EnclosureShapeDecagon, EnclosureShapeNone:
@@ -942,7 +961,8 @@ const (
 	FanNone Fan = "none"
 )
 
-// IsKnown reports whether value is exactly one of the Fan constants.
+// IsKnown reports whether value is exactly one of the Fan constants;
+// XML whitespace is not collapsed first.
 func (value Fan) IsKnown() bool {
 	switch value {
 	case FanAccel, FanRit, FanNone:
@@ -983,7 +1003,8 @@ const (
 	FermataShapeEmpty FermataShape = ""
 )
 
-// IsKnown reports whether value is exactly one of the FermataShape constants.
+// IsKnown reports whether value is exactly one of the FermataShape constants;
+// XML whitespace is not collapsed first.
 func (value FermataShape) IsKnown() bool {
 	switch value {
 	case FermataShapeNormal, FermataShapeAngled, FermataShapeSquare, FermataShapeDoubleAngled, FermataShapeDoubleSquare, FermataShapeDoubleDot, FermataShapeHalfCurve, FermataShapeCurlew, FermataShapeEmpty:
@@ -1034,7 +1055,8 @@ const (
 	FontStyleItalic FontStyle = "italic"
 )
 
-// IsKnown reports whether value is exactly one of the FontStyle constants.
+// IsKnown reports whether value is exactly one of the FontStyle constants;
+// XML whitespace is not collapsed first.
 func (value FontStyle) IsKnown() bool {
 	switch value {
 	case FontStyleNormal, FontStyleItalic:
@@ -1061,7 +1083,8 @@ const (
 	FontWeightBold FontWeight = "bold"
 )
 
-// IsKnown reports whether value is exactly one of the FontWeight constants.
+// IsKnown reports whether value is exactly one of the FontWeight constants;
+// XML whitespace is not collapsed first.
 func (value FontWeight) IsKnown() bool {
 	switch value {
 	case FontWeightNormal, FontWeightBold:
@@ -1089,7 +1112,8 @@ const (
 	GlassValueWindChimes GlassValue = "wind chimes"
 )
 
-// IsKnown reports whether value is exactly one of the GlassValue constants.
+// IsKnown reports whether value is exactly one of the GlassValue constants;
+// XML whitespace is not collapsed first.
 func (value GlassValue) IsKnown() bool {
 	switch value {
 	case GlassValueGlassHarmonica, GlassValueGlassHarp, GlassValueWindChimes:
@@ -1139,7 +1163,8 @@ const (
 	GroupBarlineValueMensurstrich GroupBarlineValue = "Mensurstrich"
 )
 
-// IsKnown reports whether value is exactly one of the GroupBarlineValue constants.
+// IsKnown reports whether value is exactly one of the GroupBarlineValue constants;
+// XML whitespace is not collapsed first.
 func (value GroupBarlineValue) IsKnown() bool {
 	switch value {
 	case GroupBarlineValueYes, GroupBarlineValueNo, GroupBarlineValueMensurstrich:
@@ -1172,7 +1197,8 @@ const (
 	GroupSymbolValueSquare GroupSymbolValue = "square"
 )
 
-// IsKnown reports whether value is exactly one of the GroupSymbolValue constants.
+// IsKnown reports whether value is exactly one of the GroupSymbolValue constants;
+// XML whitespace is not collapsed first.
 func (value GroupSymbolValue) IsKnown() bool {
 	switch value {
 	case GroupSymbolValueNone, GroupSymbolValueBrace, GroupSymbolValueLine, GroupSymbolValueBracket, GroupSymbolValueSquare:
@@ -1219,7 +1245,8 @@ const (
 	HandbellValueSwing HandbellValue = "swing"
 )
 
-// IsKnown reports whether value is exactly one of the HandbellValue constants.
+// IsKnown reports whether value is exactly one of the HandbellValue constants;
+// XML whitespace is not collapsed first.
 func (value HandbellValue) IsKnown() bool {
 	switch value {
 	case HandbellValueBelltree, HandbellValueDamp, HandbellValueEcho, HandbellValueGyro, HandbellValueHandMartellato, HandbellValueMalletLift, HandbellValueMalletTable, HandbellValueMartellato, HandbellValueMartellatoLift, HandbellValueMutedMartellato, HandbellValuePluckLift, HandbellValueSwing:
@@ -1250,7 +1277,8 @@ const (
 	HarmonClosedLocationTop HarmonClosedLocation = "top"
 )
 
-// IsKnown reports whether value is exactly one of the HarmonClosedLocation constants.
+// IsKnown reports whether value is exactly one of the HarmonClosedLocation constants;
+// XML whitespace is not collapsed first.
 func (value HarmonClosedLocation) IsKnown() bool {
 	switch value {
 	case HarmonClosedLocationRight, HarmonClosedLocationBottom, HarmonClosedLocationLeft, HarmonClosedLocationTop:
@@ -1279,7 +1307,8 @@ const (
 	HarmonClosedValueHalf HarmonClosedValue = "half"
 )
 
-// IsKnown reports whether value is exactly one of the HarmonClosedValue constants.
+// IsKnown reports whether value is exactly one of the HarmonClosedValue constants;
+// XML whitespace is not collapsed first.
 func (value HarmonClosedValue) IsKnown() bool {
 	switch value {
 	case HarmonClosedValueYes, HarmonClosedValueNo, HarmonClosedValueHalf:
@@ -1312,7 +1341,8 @@ const (
 	HarmonyArrangementDiagonal HarmonyArrangement = "diagonal"
 )
 
-// IsKnown reports whether value is exactly one of the HarmonyArrangement constants.
+// IsKnown reports whether value is exactly one of the HarmonyArrangement constants;
+// XML whitespace is not collapsed first.
 func (value HarmonyArrangement) IsKnown() bool {
 	switch value {
 	case HarmonyArrangementVertical, HarmonyArrangementHorizontal, HarmonyArrangementDiagonal:
@@ -1343,7 +1373,8 @@ const (
 	HarmonyTypeAlternate HarmonyType = "alternate"
 )
 
-// IsKnown reports whether value is exactly one of the HarmonyType constants.
+// IsKnown reports whether value is exactly one of the HarmonyType constants;
+// XML whitespace is not collapsed first.
 func (value HarmonyType) IsKnown() bool {
 	switch value {
 	case HarmonyTypeExplicit, HarmonyTypeImplied, HarmonyTypeAlternate:
@@ -1374,7 +1405,8 @@ const (
 	HoleClosedLocationTop HoleClosedLocation = "top"
 )
 
-// IsKnown reports whether value is exactly one of the HoleClosedLocation constants.
+// IsKnown reports whether value is exactly one of the HoleClosedLocation constants;
+// XML whitespace is not collapsed first.
 func (value HoleClosedLocation) IsKnown() bool {
 	switch value {
 	case HoleClosedLocationRight, HoleClosedLocationBottom, HoleClosedLocationLeft, HoleClosedLocationTop:
@@ -1403,7 +1435,8 @@ const (
 	HoleClosedValueHalf HoleClosedValue = "half"
 )
 
-// IsKnown reports whether value is exactly one of the HoleClosedValue constants.
+// IsKnown reports whether value is exactly one of the HoleClosedValue constants;
+// XML whitespace is not collapsed first.
 func (value HoleClosedValue) IsKnown() bool {
 	switch value {
 	case HoleClosedValueYes, HoleClosedValueNo, HoleClosedValueHalf:
@@ -1422,24 +1455,54 @@ func (HoleClosedValue) Values() []HoleClosedValue {
 // A kind-value indicates the type of chord. Degree elements can then add,
 // subtract, or alter from these starting points. Values include:
 //
-// Triads: major (major third, perfect fifth) minor (minor third, perfect fifth)
-// augmented (major third, augmented fifth) diminished (minor third, diminished
-// fifth) Sevenths: dominant (major triad, minor seventh) major-seventh (major
-// triad, major seventh) minor-seventh (minor triad, minor seventh)
-// diminished-seventh (diminished triad, diminished seventh) augmented-seventh
-// (augmented triad, minor seventh) half-diminished (diminished triad, minor
-// seventh) major-minor (minor triad, major seventh) Sixths: major-sixth (major
-// triad, added sixth) minor-sixth (minor triad, added sixth) Ninths:
-// dominant-ninth (dominant-seventh, major ninth) major-ninth (major-seventh,
-// major ninth) minor-ninth (minor-seventh, major ninth) 11ths (usually as the
-// basis for alteration): dominant-11th (dominant-ninth, perfect 11th)
-// major-11th (major-ninth, perfect 11th) minor-11th (minor-ninth, perfect 11th)
-// 13ths (usually as the basis for alteration): dominant-13th (dominant-11th,
-// major 13th) major-13th (major-11th, major 13th) minor-13th (minor-11th, major
-// 13th) Suspended: suspended-second (major second, perfect fifth)
-// suspended-fourth (perfect fourth, perfect fifth) Functional sixths:
-// Neapolitan Italian French German Other: pedal (pedal-point bass) power
-// (perfect fifth) Tristan
+// Triads:
+//   - major (major third, perfect fifth)
+//   - minor (minor third, perfect fifth)
+//   - augmented (major third, augmented fifth)
+//   - diminished (minor third, diminished fifth)
+//
+// Sevenths:
+//   - dominant (major triad, minor seventh)
+//   - major-seventh (major triad, major seventh)
+//   - minor-seventh (minor triad, minor seventh)
+//   - diminished-seventh (diminished triad, diminished seventh)
+//   - augmented-seventh (augmented triad, minor seventh)
+//   - half-diminished (diminished triad, minor seventh)
+//   - major-minor (minor triad, major seventh)
+//
+// Sixths:
+//   - major-sixth (major triad, added sixth)
+//   - minor-sixth (minor triad, added sixth)
+//
+// Ninths:
+//   - dominant-ninth (dominant-seventh, major ninth)
+//   - major-ninth (major-seventh, major ninth)
+//   - minor-ninth (minor-seventh, major ninth)
+//
+// 11ths (usually as the basis for alteration):
+//   - dominant-11th (dominant-ninth, perfect 11th)
+//   - major-11th (major-ninth, perfect 11th)
+//   - minor-11th (minor-ninth, perfect 11th)
+//
+// 13ths (usually as the basis for alteration):
+//   - dominant-13th (dominant-11th, major 13th)
+//   - major-13th (major-11th, major 13th)
+//   - minor-13th (minor-11th, major 13th)
+//
+// Suspended:
+//   - suspended-second (major second, perfect fifth)
+//   - suspended-fourth (perfect fourth, perfect fifth)
+//
+// Functional sixths:
+//   - Neapolitan
+//   - Italian
+//   - French
+//   - German
+//
+// Other:
+//   - pedal (pedal-point bass)
+//   - power (perfect fifth)
+//   - Tristan
 //
 // The "other" kind is used when the harmony is entirely composed of add
 // elements.
@@ -1520,7 +1583,8 @@ const (
 	KindValueNone KindValue = "none"
 )
 
-// IsKnown reports whether value is exactly one of the KindValue constants.
+// IsKnown reports whether value is exactly one of the KindValue constants;
+// XML whitespace is not collapsed first.
 func (value KindValue) IsKnown() bool {
 	switch value {
 	case KindValueMajor, KindValueMinor, KindValueAugmented, KindValueDiminished, KindValueDominant, KindValueMajorSeventh, KindValueMinorSeventh, KindValueDiminishedSeventh, KindValueAugmentedSeventh, KindValueHalfDiminished, KindValueMajorMinor, KindValueMajorSixth, KindValueMinorSixth, KindValueDominantNinth, KindValueMajorNinth, KindValueMinorNinth, KindValueDominant11th, KindValueMajor11th, KindValueMinor11th, KindValueDominant13th, KindValueMajor13th, KindValueMinor13th, KindValueSuspendedSecond, KindValueSuspendedFourth, KindValueNeapolitan, KindValueItalian, KindValueFrench, KindValueGerman, KindValuePedal, KindValuePower, KindValueTristan, KindValueOther, KindValueNone:
@@ -1549,7 +1613,8 @@ const (
 	LeftCenterRightRight LeftCenterRight = "right"
 )
 
-// IsKnown reports whether value is exactly one of the LeftCenterRight constants.
+// IsKnown reports whether value is exactly one of the LeftCenterRight constants;
+// XML whitespace is not collapsed first.
 func (value LeftCenterRight) IsKnown() bool {
 	switch value {
 	case LeftCenterRightLeft, LeftCenterRightCenter, LeftCenterRightRight:
@@ -1576,7 +1641,8 @@ const (
 	LeftRightRight LeftRight = "right"
 )
 
-// IsKnown reports whether value is exactly one of the LeftRight constants.
+// IsKnown reports whether value is exactly one of the LeftRight constants;
+// XML whitespace is not collapsed first.
 func (value LeftRight) IsKnown() bool {
 	switch value {
 	case LeftRightLeft, LeftRightRight:
@@ -1609,7 +1675,8 @@ const (
 	LineEndNone LineEnd = "none"
 )
 
-// IsKnown reports whether value is exactly one of the LineEnd constants.
+// IsKnown reports whether value is exactly one of the LineEnd constants;
+// XML whitespace is not collapsed first.
 func (value LineEnd) IsKnown() bool {
 	switch value {
 	case LineEndUp, LineEndDown, LineEndBoth, LineEndArrow, LineEndNone:
@@ -1638,7 +1705,8 @@ const (
 	LineLengthLong LineLength = "long"
 )
 
-// IsKnown reports whether value is exactly one of the LineLength constants.
+// IsKnown reports whether value is exactly one of the LineLength constants;
+// XML whitespace is not collapsed first.
 func (value LineLength) IsKnown() bool {
 	switch value {
 	case LineLengthShort, LineLengthMedium, LineLengthLong:
@@ -1664,7 +1732,8 @@ const (
 	LineShapeCurved LineShape = "curved"
 )
 
-// IsKnown reports whether value is exactly one of the LineShape constants.
+// IsKnown reports whether value is exactly one of the LineShape constants;
+// XML whitespace is not collapsed first.
 func (value LineShape) IsKnown() bool {
 	switch value {
 	case LineShapeStraight, LineShapeCurved:
@@ -1695,7 +1764,8 @@ const (
 	LineTypeWavy LineType = "wavy"
 )
 
-// IsKnown reports whether value is exactly one of the LineType constants.
+// IsKnown reports whether value is exactly one of the LineType constants;
+// XML whitespace is not collapsed first.
 func (value LineType) IsKnown() bool {
 	switch value {
 	case LineTypeSolid, LineTypeDashed, LineTypeDotted, LineTypeWavy:
@@ -1735,7 +1805,8 @@ const (
 	MarginTypeBoth MarginType = "both"
 )
 
-// IsKnown reports whether value is exactly one of the MarginType constants.
+// IsKnown reports whether value is exactly one of the MarginType constants;
+// XML whitespace is not collapsed first.
 func (value MarginType) IsKnown() bool {
 	switch value {
 	case MarginTypeOdd, MarginTypeEven, MarginTypeBoth:
@@ -1764,7 +1835,8 @@ const (
 	MeasureNumberingValueSystem MeasureNumberingValue = "system"
 )
 
-// IsKnown reports whether value is exactly one of the MeasureNumberingValue constants.
+// IsKnown reports whether value is exactly one of the MeasureNumberingValue constants;
+// XML whitespace is not collapsed first.
 func (value MeasureNumberingValue) IsKnown() bool {
 	switch value {
 	case MeasureNumberingValueNone, MeasureNumberingValueMeasure, MeasureNumberingValueSystem:
@@ -1829,7 +1901,8 @@ const (
 	MembraneValueTomtom MembraneValue = "tomtom"
 )
 
-// IsKnown reports whether value is exactly one of the MembraneValue constants.
+// IsKnown reports whether value is exactly one of the MembraneValue constants;
+// XML whitespace is not collapsed first.
 func (value MembraneValue) IsKnown() bool {
 	switch value {
 	case MembraneValueBassDrum, MembraneValueBassDrumOnSide, MembraneValueBongos, MembraneValueChineseTomtom, MembraneValueCongaDrum, MembraneValueCuica, MembraneValueGobletDrum, MembraneValueIndoAmericanTomtom, MembraneValueJapaneseTomtom, MembraneValueMilitaryDrum, MembraneValueSnareDrum, MembraneValueSnareDrumSnaresOff, MembraneValueTabla, MembraneValueTambourine, MembraneValueTenorDrum, MembraneValueTimbales, MembraneValueTomtom:
@@ -1917,7 +1990,8 @@ const (
 	MetalValueVietnameseHat MetalValue = "Vietnamese hat"
 )
 
-// IsKnown reports whether value is exactly one of the MetalValue constants.
+// IsKnown reports whether value is exactly one of the MetalValue constants;
+// XML whitespace is not collapsed first.
 func (value MetalValue) IsKnown() bool {
 	switch value {
 	case MetalValueAgogo, MetalValueAlmglocken, MetalValueBell, MetalValueBellPlate, MetalValueBellTree, MetalValueBrakeDrum, MetalValueCencerro, MetalValueChainRattle, MetalValueChineseCymbal, MetalValueCowbell, MetalValueCrashCymbals, MetalValueCrotale, MetalValueCymbalTongs, MetalValueDomedGong, MetalValueFingerCymbals, MetalValueFlexatone, MetalValueGong, MetalValueHiHat, MetalValueHighHatCymbals, MetalValueHandbell, MetalValueJawHarp, MetalValueJingleBells, MetalValueMusicalSaw, MetalValueShellBells, MetalValueSistrum, MetalValueSizzleCymbal, MetalValueSleighBells, MetalValueSuspendedCymbal, MetalValueTamTam, MetalValueTamTamWithBeater, MetalValueTriangle, MetalValueVietnameseHat:
@@ -2068,7 +2142,8 @@ const (
 	MutePalm Mute = "palm"
 )
 
-// IsKnown reports whether value is exactly one of the Mute constants.
+// IsKnown reports whether value is exactly one of the Mute constants;
+// XML whitespace is not collapsed first.
 func (value Mute) IsKnown() bool {
 	switch value {
 	case MuteOn, MuteOff, MuteStraight, MuteCup, MuteHarmonNoStem, MuteHarmonStem, MuteBucket, MutePlunger, MuteHat, MuteSolotone, MutePractice, MuteStopMute, MuteStopHand, MuteEcho, MutePalm:
@@ -2129,7 +2204,8 @@ const (
 	NoteSizeTypeLarge NoteSizeType = "large"
 )
 
-// IsKnown reports whether value is exactly one of the NoteSizeType constants.
+// IsKnown reports whether value is exactly one of the NoteSizeType constants;
+// XML whitespace is not collapsed first.
 func (value NoteSizeType) IsKnown() bool {
 	switch value {
 	case NoteSizeTypeCue, NoteSizeTypeGrace, NoteSizeTypeGraceCue, NoteSizeTypeLarge:
@@ -2180,7 +2256,8 @@ const (
 	NoteTypeValueMaxima NoteTypeValue = "maxima"
 )
 
-// IsKnown reports whether value is exactly one of the NoteTypeValue constants.
+// IsKnown reports whether value is exactly one of the NoteTypeValue constants;
+// XML whitespace is not collapsed first.
 func (value NoteTypeValue) IsKnown() bool {
 	switch value {
 	case NoteTypeValue1024th, NoteTypeValue512th, NoteTypeValue256th, NoteTypeValue128th, NoteTypeValue64th, NoteTypeValue32nd, NoteTypeValue16th, NoteTypeValueEighth, NoteTypeValueQuarter, NoteTypeValueHalf, NoteTypeValueWhole, NoteTypeValueBreve, NoteTypeValueLong, NoteTypeValueMaxima:
@@ -2279,7 +2356,8 @@ const (
 	NoteheadValueOther NoteheadValue = "other"
 )
 
-// IsKnown reports whether value is exactly one of the NoteheadValue constants.
+// IsKnown reports whether value is exactly one of the NoteheadValue constants;
+// XML whitespace is not collapsed first.
 func (value NoteheadValue) IsKnown() bool {
 	switch value {
 	case NoteheadValueSlash, NoteheadValueTriangle, NoteheadValueDiamond, NoteheadValueSquare, NoteheadValueCross, NoteheadValueX, NoteheadValueCircleX, NoteheadValueInvertedTriangle, NoteheadValueArrowDown, NoteheadValueArrowUp, NoteheadValueCircled, NoteheadValueSlashed, NoteheadValueBackSlashed, NoteheadValueNormal, NoteheadValueCluster, NoteheadValueCircleDot, NoteheadValueLeftTriangle, NoteheadValueRectangle, NoteheadValueNone, NoteheadValueDo, NoteheadValueRe, NoteheadValueMi, NoteheadValueFa, NoteheadValueFaUp, NoteheadValueSo, NoteheadValueLa, NoteheadValueTi, NoteheadValueOther:
@@ -2392,7 +2470,8 @@ const (
 	NumeralModeHarmonicMinor NumeralMode = "harmonic minor"
 )
 
-// IsKnown reports whether value is exactly one of the NumeralMode constants.
+// IsKnown reports whether value is exactly one of the NumeralMode constants;
+// XML whitespace is not collapsed first.
 func (value NumeralMode) IsKnown() bool {
 	switch value {
 	case NumeralModeMajor, NumeralModeMinor, NumeralModeNaturalMinor, NumeralModeMelodicMinor, NumeralModeHarmonicMinor:
@@ -2440,7 +2519,8 @@ const (
 	OnOffOff OnOff = "off"
 )
 
-// IsKnown reports whether value is exactly one of the OnOff constants.
+// IsKnown reports whether value is exactly one of the OnOff constants;
+// XML whitespace is not collapsed first.
 func (value OnOff) IsKnown() bool {
 	switch value {
 	case OnOffOn, OnOffOff:
@@ -2467,7 +2547,8 @@ const (
 	OverUnderUnder OverUnder = "under"
 )
 
-// IsKnown reports whether value is exactly one of the OverUnder constants.
+// IsKnown reports whether value is exactly one of the OverUnder constants;
+// XML whitespace is not collapsed first.
 func (value OverUnder) IsKnown() bool {
 	switch value {
 	case OverUnderOver, OverUnderUnder:
@@ -2519,7 +2600,8 @@ const (
 	PedalTypeResume PedalType = "resume"
 )
 
-// IsKnown reports whether value is exactly one of the PedalType constants.
+// IsKnown reports whether value is exactly one of the PedalType constants;
+// XML whitespace is not collapsed first.
 func (value PedalType) IsKnown() bool {
 	switch value {
 	case PedalTypeStart, PedalTypeStop, PedalTypeSostenuto, PedalTypeChange, PedalTypeContinue, PedalTypeDiscontinue, PedalTypeResume:
@@ -2591,7 +2673,8 @@ const (
 	PitchedValueXylophone PitchedValue = "xylophone"
 )
 
-// IsKnown reports whether value is exactly one of the PitchedValue constants.
+// IsKnown reports whether value is exactly one of the PitchedValue constants;
+// XML whitespace is not collapsed first.
 func (value PitchedValue) IsKnown() bool {
 	switch value {
 	case PitchedValueCelesta, PitchedValueChimes, PitchedValueGlockenspiel, PitchedValueLithophone, PitchedValueMallet, PitchedValueMarimba, PitchedValueSteelDrums, PitchedValueTubaphone, PitchedValueTubularChimes, PitchedValueVibraphone, PitchedValueXylophone:
@@ -2688,7 +2771,8 @@ const (
 	PrincipalVoiceSymbolNone PrincipalVoiceSymbol = "none"
 )
 
-// IsKnown reports whether value is exactly one of the PrincipalVoiceSymbol constants.
+// IsKnown reports whether value is exactly one of the PrincipalVoiceSymbol constants;
+// XML whitespace is not collapsed first.
 func (value PrincipalVoiceSymbol) IsKnown() bool {
 	switch value {
 	case PrincipalVoiceSymbolHauptstimme, PrincipalVoiceSymbolNebenstimme, PrincipalVoiceSymbolPlain, PrincipalVoiceSymbolNone:
@@ -2716,7 +2800,8 @@ const (
 	RightLeftMiddleMiddle RightLeftMiddle = "middle"
 )
 
-// IsKnown reports whether value is exactly one of the RightLeftMiddle constants.
+// IsKnown reports whether value is exactly one of the RightLeftMiddle constants;
+// XML whitespace is not collapsed first.
 func (value RightLeftMiddle) IsKnown() bool {
 	switch value {
 	case RightLeftMiddleRight, RightLeftMiddleLeft, RightLeftMiddleMiddle:
@@ -2778,7 +2863,8 @@ const (
 	SemiPitchedVeryLow SemiPitched = "very-low"
 )
 
-// IsKnown reports whether value is exactly one of the SemiPitched constants.
+// IsKnown reports whether value is exactly one of the SemiPitched constants;
+// XML whitespace is not collapsed first.
 func (value SemiPitched) IsKnown() bool {
 	switch value {
 	case SemiPitchedHigh, SemiPitchedMediumHigh, SemiPitchedMedium, SemiPitchedMediumLow, SemiPitchedLow, SemiPitchedVeryLow:
@@ -2833,7 +2919,8 @@ const (
 	ShowFretsLetters ShowFrets = "letters"
 )
 
-// IsKnown reports whether value is exactly one of the ShowFrets constants.
+// IsKnown reports whether value is exactly one of the ShowFrets constants;
+// XML whitespace is not collapsed first.
 func (value ShowFrets) IsKnown() bool {
 	switch value {
 	case ShowFretsNumbers, ShowFretsLetters:
@@ -2863,7 +2950,8 @@ const (
 	ShowTupletNone ShowTuplet = "none"
 )
 
-// IsKnown reports whether value is exactly one of the ShowTuplet constants.
+// IsKnown reports whether value is exactly one of the ShowTuplet constants;
+// XML whitespace is not collapsed first.
 func (value ShowTuplet) IsKnown() bool {
 	switch value {
 	case ShowTupletActual, ShowTupletBoth, ShowTupletNone:
@@ -2946,7 +3034,8 @@ const (
 	StaffDivideSymbolUpDown StaffDivideSymbol = "up-down"
 )
 
-// IsKnown reports whether value is exactly one of the StaffDivideSymbol constants.
+// IsKnown reports whether value is exactly one of the StaffDivideSymbol constants;
+// XML whitespace is not collapsed first.
 func (value StaffDivideSymbol) IsKnown() bool {
 	switch value {
 	case StaffDivideSymbolDown, StaffDivideSymbolUp, StaffDivideSymbolUpDown:
@@ -3029,7 +3118,8 @@ const (
 	StaffTypeRegular StaffType = "regular"
 )
 
-// IsKnown reports whether value is exactly one of the StaffType constants.
+// IsKnown reports whether value is exactly one of the StaffType constants;
+// XML whitespace is not collapsed first.
 func (value StaffType) IsKnown() bool {
 	switch value {
 	case StaffTypeOssia, StaffTypeEditorial, StaffTypeCue, StaffTypeAlternate, StaffTypeRegular:
@@ -3058,7 +3148,8 @@ const (
 	StartNoteBelow StartNote = "below"
 )
 
-// IsKnown reports whether value is exactly one of the StartNote constants.
+// IsKnown reports whether value is exactly one of the StartNote constants;
+// XML whitespace is not collapsed first.
 func (value StartNote) IsKnown() bool {
 	switch value {
 	case StartNoteUpper, StartNoteMain, StartNoteBelow:
@@ -3095,7 +3186,8 @@ const (
 	StartStopStop StartStop = "stop"
 )
 
-// IsKnown reports whether value is exactly one of the StartStop constants.
+// IsKnown reports whether value is exactly one of the StartStop constants;
+// XML whitespace is not collapsed first.
 func (value StartStop) IsKnown() bool {
 	switch value {
 	case StartStopStart, StartStopStop:
@@ -3126,7 +3218,8 @@ const (
 	StartStopChangeContinueContinue StartStopChangeContinue = "continue"
 )
 
-// IsKnown reports whether value is exactly one of the StartStopChangeContinue constants.
+// IsKnown reports whether value is exactly one of the StartStopChangeContinue constants;
+// XML whitespace is not collapsed first.
 func (value StartStopChangeContinue) IsKnown() bool {
 	switch value {
 	case StartStopChangeContinueStart, StartStopChangeContinueStop, StartStopChangeContinueChange, StartStopChangeContinueContinue:
@@ -3170,7 +3263,8 @@ const (
 	StartStopContinueContinue StartStopContinue = "continue"
 )
 
-// IsKnown reports whether value is exactly one of the StartStopContinue constants.
+// IsKnown reports whether value is exactly one of the StartStopContinue constants;
+// XML whitespace is not collapsed first.
 func (value StartStopContinue) IsKnown() bool {
 	switch value {
 	case StartStopContinueStart, StartStopContinueStop, StartStopContinueContinue:
@@ -3204,7 +3298,8 @@ const (
 	StartStopDiscontinueDiscontinue StartStopDiscontinue = "discontinue"
 )
 
-// IsKnown reports whether value is exactly one of the StartStopDiscontinue constants.
+// IsKnown reports whether value is exactly one of the StartStopDiscontinue constants;
+// XML whitespace is not collapsed first.
 func (value StartStopDiscontinue) IsKnown() bool {
 	switch value {
 	case StartStopDiscontinueStart, StartStopDiscontinueStop, StartStopDiscontinueDiscontinue:
@@ -3237,7 +3332,8 @@ const (
 	StartStopSingleSingle StartStopSingle = "single"
 )
 
-// IsKnown reports whether value is exactly one of the StartStopSingle constants.
+// IsKnown reports whether value is exactly one of the StartStopSingle constants;
+// XML whitespace is not collapsed first.
 func (value StartStopSingle) IsKnown() bool {
 	switch value {
 	case StartStopSingleStart, StartStopSingleStop, StartStopSingleSingle:
@@ -3267,7 +3363,8 @@ const (
 	StemValueNone StemValue = "none"
 )
 
-// IsKnown reports whether value is exactly one of the StemValue constants.
+// IsKnown reports whether value is exactly one of the StemValue constants;
+// XML whitespace is not collapsed first.
 func (value StemValue) IsKnown() bool {
 	switch value {
 	case StemValueDown, StemValueUp, StemValueDouble, StemValueNone:
@@ -3304,7 +3401,8 @@ const (
 	StepG Step = "G"
 )
 
-// IsKnown reports whether value is exactly one of the Step constants.
+// IsKnown reports whether value is exactly one of the Step constants;
+// XML whitespace is not collapsed first.
 func (value Step) IsKnown() bool {
 	switch value {
 	case StepA, StepB, StepC, StepD, StepE, StepF, StepG:
@@ -3335,7 +3433,8 @@ const (
 	StickLocationCymbalEdge StickLocation = "cymbal edge"
 )
 
-// IsKnown reports whether value is exactly one of the StickLocation constants.
+// IsKnown reports whether value is exactly one of the StickLocation constants;
+// XML whitespace is not collapsed first.
 func (value StickLocation) IsKnown() bool {
 	switch value {
 	case StickLocationCenter, StickLocationRim, StickLocationCymbalBell, StickLocationCymbalEdge:
@@ -3368,7 +3467,8 @@ const (
 	StickMaterialX StickMaterial = "x"
 )
 
-// IsKnown reports whether value is exactly one of the StickMaterial constants.
+// IsKnown reports whether value is exactly one of the StickMaterial constants;
+// XML whitespace is not collapsed first.
 func (value StickMaterial) IsKnown() bool {
 	switch value {
 	case StickMaterialSoft, StickMaterialMedium, StickMaterialHard, StickMaterialShaded, StickMaterialX:
@@ -3411,7 +3511,8 @@ const (
 	StickTypeYarn StickType = "yarn"
 )
 
-// IsKnown reports whether value is exactly one of the StickType constants.
+// IsKnown reports whether value is exactly one of the StickType constants;
+// XML whitespace is not collapsed first.
 func (value StickType) IsKnown() bool {
 	switch value {
 	case StickTypeBassDrum, StickTypeDoubleBassDrum, StickTypeGlockenspiel, StickTypeGum, StickTypeHammer, StickTypeSuperball, StickTypeTimpani, StickTypeWound, StickTypeXylophone, StickTypeYarn:
@@ -3454,7 +3555,8 @@ const (
 	SwingTypeValueEighth SwingTypeValue = "eighth"
 )
 
-// IsKnown reports whether value is exactly one of the SwingTypeValue constants.
+// IsKnown reports whether value is exactly one of the SwingTypeValue constants;
+// XML whitespace is not collapsed first.
 func (value SwingTypeValue) IsKnown() bool {
 	switch value {
 	case SwingTypeValue16th, SwingTypeValueEighth:
@@ -3486,7 +3588,8 @@ const (
 	SyllabicMiddle Syllabic = "middle"
 )
 
-// IsKnown reports whether value is exactly one of the Syllabic constants.
+// IsKnown reports whether value is exactly one of the Syllabic constants;
+// XML whitespace is not collapsed first.
 func (value Syllabic) IsKnown() bool {
 	switch value {
 	case SyllabicSingle, SyllabicBegin, SyllabicEnd, SyllabicMiddle:
@@ -3517,7 +3620,8 @@ const (
 	SymbolSizeLarge SymbolSize = "large"
 )
 
-// IsKnown reports whether value is exactly one of the SymbolSize constants.
+// IsKnown reports whether value is exactly one of the SymbolSize constants;
+// XML whitespace is not collapsed first.
 func (value SymbolSize) IsKnown() bool {
 	switch value {
 	case SymbolSizeFull, SymbolSizeCue, SymbolSizeGraceCue, SymbolSizeLarge:
@@ -3560,7 +3664,8 @@ const (
 	SyncTypeAlwaysEvent SyncType = "always-event"
 )
 
-// IsKnown reports whether value is exactly one of the SyncType constants.
+// IsKnown reports whether value is exactly one of the SyncType constants;
+// XML whitespace is not collapsed first.
 func (value SyncType) IsKnown() bool {
 	switch value {
 	case SyncTypeNone, SyncTypeTempo, SyncTypeMostlyTempo, SyncTypeMostlyEvent, SyncTypeEvent, SyncTypeAlwaysEvent:
@@ -3595,7 +3700,8 @@ const (
 	SystemRelationNone SystemRelation = "none"
 )
 
-// IsKnown reports whether value is exactly one of the SystemRelation constants.
+// IsKnown reports whether value is exactly one of the SystemRelation constants;
+// XML whitespace is not collapsed first.
 func (value SystemRelation) IsKnown() bool {
 	switch value {
 	case SystemRelationOnlyTop, SystemRelationAlsoTop, SystemRelationNone:
@@ -3636,7 +3742,8 @@ const (
 	SystemRelationNumberNone SystemRelationNumber = "none"
 )
 
-// IsKnown reports whether value is exactly one of the SystemRelationNumber constants.
+// IsKnown reports whether value is exactly one of the SystemRelationNumber constants;
+// XML whitespace is not collapsed first.
 func (value SystemRelationNumber) IsKnown() bool {
 	switch value {
 	case SystemRelationNumberOnlyTop, SystemRelationNumberOnlyBottom, SystemRelationNumberAlsoTop, SystemRelationNumberAlsoBottom, SystemRelationNumberNone:
@@ -3664,7 +3771,8 @@ const (
 	TapHandRight TapHand = "right"
 )
 
-// IsKnown reports whether value is exactly one of the TapHand constants.
+// IsKnown reports whether value is exactly one of the TapHand constants;
+// XML whitespace is not collapsed first.
 func (value TapHand) IsKnown() bool {
 	switch value {
 	case TapHandLeft, TapHandRight:
@@ -3738,7 +3846,8 @@ const (
 	TextDirectionRlo TextDirection = "rlo"
 )
 
-// IsKnown reports whether value is exactly one of the TextDirection constants.
+// IsKnown reports whether value is exactly one of the TextDirection constants;
+// XML whitespace is not collapsed first.
 func (value TextDirection) IsKnown() bool {
 	switch value {
 	case TextDirectionLtr, TextDirectionRtl, TextDirectionLro, TextDirectionRlo:
@@ -3783,7 +3892,8 @@ const (
 	TiedTypeLetRing TiedType = "let-ring"
 )
 
-// IsKnown reports whether value is exactly one of the TiedType constants.
+// IsKnown reports whether value is exactly one of the TiedType constants;
+// XML whitespace is not collapsed first.
 func (value TiedType) IsKnown() bool {
 	switch value {
 	case TiedTypeStart, TiedTypeStop, TiedTypeContinue, TiedTypeLetRing:
@@ -3827,7 +3937,8 @@ const (
 	TimeRelationHyphen TimeRelation = "hyphen"
 )
 
-// IsKnown reports whether value is exactly one of the TimeRelation constants.
+// IsKnown reports whether value is exactly one of the TimeRelation constants;
+// XML whitespace is not collapsed first.
 func (value TimeRelation) IsKnown() bool {
 	switch value {
 	case TimeRelationParentheses, TimeRelationBracket, TimeRelationEquals, TimeRelationSlash, TimeRelationSpace, TimeRelationHyphen:
@@ -3866,7 +3977,8 @@ const (
 	TimeSeparatorAdjacent TimeSeparator = "adjacent"
 )
 
-// IsKnown reports whether value is exactly one of the TimeSeparator constants.
+// IsKnown reports whether value is exactly one of the TimeSeparator constants;
+// XML whitespace is not collapsed first.
 func (value TimeSeparator) IsKnown() bool {
 	switch value {
 	case TimeSeparatorNone, TimeSeparatorHorizontal, TimeSeparatorDiagonal, TimeSeparatorVertical, TimeSeparatorAdjacent:
@@ -3907,7 +4019,8 @@ const (
 	TimeSymbolNormal TimeSymbol = "normal"
 )
 
-// IsKnown reports whether value is exactly one of the TimeSymbol constants.
+// IsKnown reports whether value is exactly one of the TimeSymbol constants;
+// XML whitespace is not collapsed first.
 func (value TimeSymbol) IsKnown() bool {
 	switch value {
 	case TimeSymbolCommon, TimeSymbolCut, TimeSymbolSingleNumber, TimeSymbolNote, TimeSymbolDottedNote, TimeSymbolNormal:
@@ -3946,7 +4059,8 @@ const (
 	TipDirectionSouthwest TipDirection = "southwest"
 )
 
-// IsKnown reports whether value is exactly one of the TipDirection constants.
+// IsKnown reports whether value is exactly one of the TipDirection constants;
+// XML whitespace is not collapsed first.
 func (value TipDirection) IsKnown() bool {
 	switch value {
 	case TipDirectionUp, TipDirectionDown, TipDirectionLeft, TipDirectionRight, TipDirectionNorthwest, TipDirectionNortheast, TipDirectionSoutheast, TipDirectionSouthwest:
@@ -3973,7 +4087,8 @@ const (
 	TopBottomBottom TopBottom = "bottom"
 )
 
-// IsKnown reports whether value is exactly one of the TopBottom constants.
+// IsKnown reports whether value is exactly one of the TopBottom constants;
+// XML whitespace is not collapsed first.
 func (value TopBottom) IsKnown() bool {
 	switch value {
 	case TopBottomTop, TopBottomBottom:
@@ -4010,7 +4125,8 @@ const (
 	TremoloTypeUnmeasured TremoloType = "unmeasured"
 )
 
-// IsKnown reports whether value is exactly one of the TremoloType constants.
+// IsKnown reports whether value is exactly one of the TremoloType constants;
+// XML whitespace is not collapsed first.
 func (value TremoloType) IsKnown() bool {
 	switch value {
 	case TremoloTypeStart, TremoloTypeStop, TremoloTypeSingle, TremoloTypeUnmeasured:
@@ -4066,7 +4182,8 @@ const (
 	TrillStepUnison TrillStep = "unison"
 )
 
-// IsKnown reports whether value is exactly one of the TrillStep constants.
+// IsKnown reports whether value is exactly one of the TrillStep constants;
+// XML whitespace is not collapsed first.
 func (value TrillStep) IsKnown() bool {
 	switch value {
 	case TrillStepWhole, TrillStepHalf, TrillStepUnison:
@@ -4095,7 +4212,8 @@ const (
 	TwoNoteTurnNone TwoNoteTurn = "none"
 )
 
-// IsKnown reports whether value is exactly one of the TwoNoteTurn constants.
+// IsKnown reports whether value is exactly one of the TwoNoteTurn constants;
+// XML whitespace is not collapsed first.
 func (value TwoNoteTurn) IsKnown() bool {
 	switch value {
 	case TwoNoteTurnWhole, TwoNoteTurnHalf, TwoNoteTurnNone:
@@ -4122,7 +4240,8 @@ const (
 	UpDownDown UpDown = "down"
 )
 
-// IsKnown reports whether value is exactly one of the UpDown constants.
+// IsKnown reports whether value is exactly one of the UpDown constants;
+// XML whitespace is not collapsed first.
 func (value UpDown) IsKnown() bool {
 	switch value {
 	case UpDownUp, UpDownDown:
@@ -4154,7 +4273,8 @@ const (
 	UpDownStopContinueContinue UpDownStopContinue = "continue"
 )
 
-// IsKnown reports whether value is exactly one of the UpDownStopContinue constants.
+// IsKnown reports whether value is exactly one of the UpDownStopContinue constants;
+// XML whitespace is not collapsed first.
 func (value UpDownStopContinue) IsKnown() bool {
 	switch value {
 	case UpDownStopContinueUp, UpDownStopContinueDown, UpDownStopContinueStop, UpDownStopContinueContinue:
@@ -4181,7 +4301,8 @@ const (
 	UprightInvertedInverted UprightInverted = "inverted"
 )
 
-// IsKnown reports whether value is exactly one of the UprightInverted constants.
+// IsKnown reports whether value is exactly one of the UprightInverted constants;
+// XML whitespace is not collapsed first.
 func (value UprightInverted) IsKnown() bool {
 	switch value {
 	case UprightInvertedUpright, UprightInvertedInverted:
@@ -4214,7 +4335,8 @@ const (
 	ValignBaseline Valign = "baseline"
 )
 
-// IsKnown reports whether value is exactly one of the Valign constants.
+// IsKnown reports whether value is exactly one of the Valign constants;
+// XML whitespace is not collapsed first.
 func (value Valign) IsKnown() bool {
 	switch value {
 	case ValignTop, ValignMiddle, ValignBottom, ValignBaseline:
@@ -4244,7 +4366,8 @@ const (
 	ValignImageBottom ValignImage = "bottom"
 )
 
-// IsKnown reports whether value is exactly one of the ValignImage constants.
+// IsKnown reports whether value is exactly one of the ValignImage constants;
+// XML whitespace is not collapsed first.
 func (value ValignImage) IsKnown() bool {
 	switch value {
 	case ValignImageTop, ValignImageMiddle, ValignImageBottom:
@@ -4278,7 +4401,8 @@ const (
 	WedgeTypeContinue WedgeType = "continue"
 )
 
-// IsKnown reports whether value is exactly one of the WedgeType constants.
+// IsKnown reports whether value is exactly one of the WedgeType constants;
+// XML whitespace is not collapsed first.
 func (value WedgeType) IsKnown() bool {
 	switch value {
 	case WedgeTypeCrescendo, WedgeTypeDiminuendo, WedgeTypeStop, WedgeTypeContinue:
@@ -4313,7 +4437,8 @@ const (
 	WingedDoubleCurved Winged = "double-curved"
 )
 
-// IsKnown reports whether value is exactly one of the Winged constants.
+// IsKnown reports whether value is exactly one of the Winged constants;
+// XML whitespace is not collapsed first.
 func (value Winged) IsKnown() bool {
 	switch value {
 	case WingedNone, WingedStraight, WingedCurved, WingedDoubleStraight, WingedDoubleCurved:
@@ -4379,7 +4504,8 @@ const (
 	WoodValueWoodBlock WoodValue = "wood block"
 )
 
-// IsKnown reports whether value is exactly one of the WoodValue constants.
+// IsKnown reports whether value is exactly one of the WoodValue constants;
+// XML whitespace is not collapsed first.
 func (value WoodValue) IsKnown() bool {
 	switch value {
 	case WoodValueBambooScraper, WoodValueBoardClapper, WoodValueCabasa, WoodValueCastanets, WoodValueCastanetsWithHandle, WoodValueClaves, WoodValueFootballRattle, WoodValueGuiro, WoodValueLogDrum, WoodValueMaraca, WoodValueMaracas, WoodValueQuijada, WoodValueRainstick, WoodValueRatchet, WoodValueRecoReco, WoodValueSandpaperBlocks, WoodValueSlitDrum, WoodValueTempleBlock, WoodValueVibraslap, WoodValueWhip, WoodValueWoodBlock:
@@ -4406,7 +4532,8 @@ const (
 	YesNoNo YesNo = "no"
 )
 
-// IsKnown reports whether value is exactly one of the YesNo constants.
+// IsKnown reports whether value is exactly one of the YesNo constants;
+// XML whitespace is not collapsed first.
 func (value YesNo) IsKnown() bool {
 	switch value {
 	case YesNoYes, YesNoNo:

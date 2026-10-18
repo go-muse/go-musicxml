@@ -22,6 +22,9 @@ func TestReadNameManifestRejectsAmbiguity(t *testing.T) {
 		_, err := ReadNameManifest(strings.NewReader(text))
 		assert.ErrorIs(t, err, ErrNameManifest, name)
 	}
+	crlf, err := ReadNameManifest(strings.NewReader("a.xsd type one\tOne\r\n"))
+	require.NoError(t, err, "a CRLF checkout reads like LF")
+	assert.Equal(t, "a.xsd type one\tOne\n", string(crlf.Format()))
 	manifest, err := ReadNameManifest(strings.NewReader("b.xsd type two\tTwo\na.xsd type one\tOne\n"))
 	require.NoError(t, err)
 	assert.Equal(t, "a.xsd type one\tOne\nb.xsd type two\tTwo\n", string(manifest.Format()), "Format sorts by key")
@@ -49,6 +52,10 @@ func TestNameManifestAssign(t *testing.T) {
 	name, err = manifest.Assign("a.xsd type other enumeration \"x\"", "Other")
 	require.NoError(t, err)
 	assert.Equal(t, "Taken2", name, "a component is named once")
+	name, err = manifest.Assign("a.xsd type flat enumeration \"1\"", "Taken3")
+	require.NoError(t, err)
+	assert.Equal(t, "Taken3_2", name, "a name ending in a digit takes its suffix after an underscore")
+	delete(manifest.added, "a.xsd type flat enumeration \"1\"")
 
 	assert.Equal(t, map[string]string{
 		"a.xsd type other enumeration \"x\"": "Taken2",
@@ -155,4 +162,37 @@ func useMusicXMLGenerationInputs(t *testing.T, index *Index) {
 	manifest, err := LoadNameManifest(filepath.Join("names", "musicxml-4.0.txt"))
 	require.NoError(t, err)
 	index.SetNameManifest(manifest)
+}
+
+// TestNameManifestRenamesDocumentRoot renames the named root type of the opus
+// document through the manifest: the root struct and every reference take the
+// new name, while its choice types keep their own listed names.
+func TestNameManifestRenamesDocumentRoot(t *testing.T) {
+	t.Parallel()
+
+	committed, err := os.ReadFile(filepath.Join("names", "musicxml-4.0.txt"))
+	require.NoError(t, err)
+	renamed := strings.Replace(string(committed), "opus.xsd type opus\tOpusDocument\n", "opus.xsd type opus\tOpusDoc\n", 1)
+	require.NotEqual(t, string(committed), renamed)
+	manifest, err := ReadNameManifest(strings.NewReader(renamed))
+	require.NoError(t, err)
+
+	set, err := Load(os.DirFS(filepath.Join("..", "..", "schema", "musicxml-4.0")), "opus.xsd", "catalog.xml")
+	require.NoError(t, err)
+	index, err := NewIndex(set)
+	require.NoError(t, err)
+	index.SetNameManifest(manifest)
+	actual, err := GenerateDocument(index, "musicxml", DocumentGenerationOptions{
+		Element:       QName{Local: "opus"},
+		GoName:        "OpusDocument",
+		TypeNames:     []TypeNameOverride{{Name: QName{Local: "score"}, GoName: "OpusScore"}},
+		ExternalTypes: []QName{{Local: "yes-no"}},
+	})
+	require.NoError(t, err)
+	assert.Contains(t, string(actual), "type OpusDoc struct")
+	assert.Contains(t, string(actual), "Opus     *OpusDoc\n")
+	assert.NotContains(t, string(actual), "type OpusDocument struct")
+	assert.NotRegexp(t, `\bOpusDocument\b`, string(actual), "no reference to the old name remains")
+	assert.Contains(t, string(actual), "type OpusDocumentContent struct", "a listed choice type keeps its name")
+	assert.Empty(t, manifest.Added(), "the rename needs no new entries")
 }

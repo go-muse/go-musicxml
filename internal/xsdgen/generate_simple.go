@@ -197,7 +197,8 @@ func renderEnumerationHelpers(
 
 	fmt.Fprintf(
 		target,
-		"// IsKnown reports whether value is exactly one of the %s constants.\n",
+		"// IsKnown reports whether value is exactly one of the %s constants;\n"+
+			"// XML whitespace is not collapsed first.\n",
 		goName,
 	)
 	fmt.Fprintf(target, "func (value %s) IsKnown() bool {\n", goName)

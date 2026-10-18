@@ -1,8 +1,7 @@
 package validation
 
 // TimingContextResult.Kind values. Each names the encoded role a timing row
-// describes and selects its applicable fields; a node with several roles is
-// published under the last role evaluated.
+// describes and selects its applicable fields.
 const (
 	// TimingKindEvent is a projected encoded event without a more specific role.
 	TimingKindEvent Code = "event"

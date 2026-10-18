@@ -16,10 +16,10 @@ import (
 // ErrNameManifest reports an invalid or incomplete name manifest.
 var ErrNameManifest = errors.New("xsdgen: name manifest")
 
-// NameManifest pins the Go names of the package-scope declarations that the
-// generator emits: named, anonymous and choice types and enumeration
-// constants. Struct fields and methods are scoped to their type and are not
-// listed.
+// NameManifest pins the Go names of the exported package-scope types and
+// constants that the generator emits: named, anonymous and choice types and
+// enumeration constants. Struct fields and methods are scoped to their type,
+// and unexported helpers are private to the package; neither is listed.
 //
 // The manifest is authoritative: a listed component keeps its name even when
 // the derivation would produce another one, and no name belongs to two
@@ -28,7 +28,8 @@ var ErrNameManifest = errors.New("xsdgen: name manifest")
 // is recorded as new. Every model generation of one Go package shares one
 // manifest, so collisions between generations, such as a new constant named
 // like an existing type, are resolved in the generator rather than by the
-// compiler.
+// compiler. A manifest records what generation asks for, so it is not safe
+// for concurrent generations.
 type NameManifest struct {
 	byKey  map[string]string
 	byName map[string]string
@@ -55,7 +56,7 @@ func ReadNameManifest(reader io.Reader) (*NameManifest, error) {
 	line := 0
 	for scanner.Scan() {
 		line++
-		text := scanner.Text()
+		text := strings.TrimSuffix(scanner.Text(), "\r")
 		if text == "" {
 			continue
 		}
@@ -108,12 +109,19 @@ func (m *NameManifest) Assign(key, derived string) (string, error) {
 		m.used[key] = true
 		return name, nil
 	}
+	// A name that already ends in a digit takes its suffix after an
+	// underscore, so that Flat1 and its second holder Flat1_2 stay distinct
+	// from a Flat12.
+	separator := ""
+	if last := derived[len(derived)-1]; last >= '0' && last <= '9' {
+		separator = "_"
+	}
 	name := derived
 	for suffix := 2; ; suffix++ {
 		if _, taken := m.byName[name]; !taken {
 			break
 		}
-		name = derived + strconv.Itoa(suffix)
+		name = derived + separator + strconv.Itoa(suffix)
 	}
 	m.byKey[key] = name
 	m.byName[name] = key
