@@ -1,17 +1,21 @@
 # Mandatory assessed-loading pipeline
 
 `DecodeAssessed` now always requires the existing `ProfileSourceSemantics`
-followed by direct `ProfileModelSemantics`; `DecodeMXLAssessed` does the same
-for MXL. The former `DecodeAssessedWithDictionaries` was removed; its
-dictionary options are `AssessmentOptions.Dictionaries`.
+followed by direct `ProfileModelSemantics`. `DecodeMXLAssessed` assesses the
+original archive with `ProfileMXLSourceSemantics` instead and then the primary
+document with `ProfileModelSemantics`. The former
+`DecodeAssessedWithDictionaries` was removed; its dictionary options are
+`AssessmentOptions.Dictionaries`.
 This breaks the earlier unreleased development API; these entry points did not
 exist in v0.1.0. It does not widen either profile, change its catalog digest, or
 establish complete MusicXML conformance.
 
 Ordinary `Decode`, typed decode helpers and `DecodeWithOptions` remain transport
-operations. `InspectXML`, `AssessModel`, their dictionary variants and the
-resource/MXL inspection and assessment APIs retain their explicit profiles and
-data-selection contracts. There is no assessed package decoder in this change.
+operations. `InspectXML`, `AssessModel` and the resource/MXL inspection and
+assessment APIs retain their explicit-profile and data-selection contracts; an
+empty profile selects their semantic profile (see
+[Scenarios](../../API.md#scenarios)). `DecodeMXLAssessed` is the assessed
+package decoder.
 
 ## Loading and report contract
 

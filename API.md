@@ -585,9 +585,10 @@ The name is deliberately `AssessModel`: `Assess` is already an exported generate
 MusicXML model type and remains unchanged. `AssessmentOptions` retains its
 `Profile` and `Budgets` fields. `AssessModel` accepts `*ScorePartwise`,
 `*ScoreTimewise` and `*OpusDocument`; it rejects nil/typed-nil documents and
-unsupported concrete implementations. A nonnil context and an explicit model
-profile are required. Empty, unknown or source-target profiles, invalid budgets
-and already-canceled contexts fail before model traversal.
+unsupported concrete implementations. A nonnil context is required; an empty
+profile selects `ProfileModelSemantics` (see [Scenarios](#scenarios)). Unknown
+or source-target profiles, invalid budgets and already-canceled contexts fail
+before model traversal.
 
 | Constant | Profile ID | Declared scope |
 | --- | --- | --- |

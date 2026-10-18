@@ -95,8 +95,10 @@ selected normative predicate instances; model blockers are a separate axis.
 keys, support and normative closure.
 
 Use `AssessModel` with an explicit model profile and `InspectXML` with an explicit
-source profile. Empty, unknown or wrong-target selection fails their preflight;
-there is no default-profile fallback in those inspection/assessment APIs.
+source profile. Unknown or wrong-target selection fails their preflight. An
+empty profile, which failed here when this scope was recorded, now selects
+`ProfileModelSemantics` or `ProfileSourceSemantics` (see
+[Scenarios](../../API.md#scenarios)).
 The [later assessed-loading migration](assessed-loading-pipeline.md) instead fixes
 `ProfileSourceSemantics` then direct `ProfileModelSemantics` in both assessed
 loaders. Nil/empty assessment options select that pipeline; narrower source-local

@@ -17,9 +17,10 @@ predicates; see the [legacy behavior note](local-link-context-scope.md#legacy-be
 | `InspectMXL` with `Graph.Dictionaries` | `ProfileMXLSourceInternalDTDDictionaries` |
 | `AssessMXLPackage` with `Graph.Dictionaries` | `ProfileMXLModelInternalDTDDictionaries` |
 
-Choose `Graph.Profile` explicitly. Existing dictionary profiles retain
-their selected scope, subject to the separately documented corrections. Empty,
-unknown and cross-entry-point selections, invalid
+Choose `Graph.Profile` explicitly; an empty profile selects the entry point's
+semantic profile instead (see [Scenarios](../../API.md#scenarios)). Existing
+dictionary profiles retain their selected scope, subject to the separately
+documented corrections. Unknown and cross-entry-point selections, invalid
 budgets, dictionaries, dependencies and MXL limits fail before caller/provider
 I/O. Ordinary non-dictionary entry points do not acquire a new mode.
 
