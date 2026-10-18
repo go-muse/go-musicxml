@@ -270,14 +270,14 @@ type Attributes struct {
 	// the given part (e.g., 2 staves for typical piano parts). If absent, a
 	// value of 1 is assumed. Staves are ordered from top to bottom in a part in
 	// numerical order, with staff 1 above staff 2.
-	Staves *uint64 `xml:"staves,omitempty"`
+	Staves *NonNegativeInteger `xml:"staves,omitempty"`
 	// The part-symbol element indicates how a symbol for a multi-staff part is
 	// indicated in the score.
 	PartSymbol *PartSymbol `xml:"part-symbol,omitempty"`
 	// The instruments element is only used if more than one instrument is
 	// represented in the part (e.g., oboe I and II where they play together
 	// most of the time). If absent, a value of 1 is assumed.
-	Instruments *uint64 `xml:"instruments,omitempty"`
+	Instruments *NonNegativeInteger `xml:"instruments,omitempty"`
 	// Clefs are represented by a combination of sign, line, and
 	// clef-octave-change elements.
 	Clef []Clef `xml:"clef"`
@@ -511,10 +511,10 @@ type BeatRepeat struct {
 	// notation and regular notation. Any note elements that are in voices
 	// specified by the except-voice elements are displayed in normal notation,
 	// in addition to the slash notation that is always displayed.
-	ExceptVoice []string  `xml:"except-voice"`
-	Type        StartStop `xml:"type,attr"`
-	Slashes     *uint64   `xml:"slashes,attr,omitempty"`
-	UseDots     *YesNo    `xml:"use-dots,attr,omitempty"`
+	ExceptVoice []string         `xml:"except-voice"`
+	Type        StartStop        `xml:"type,attr"`
+	Slashes     *PositiveInteger `xml:"slashes,attr,omitempty"`
+	UseDots     *YesNo           `xml:"use-dots,attr,omitempty"`
 }
 
 // BeatUnitTied represents the "beat-unit-tied" XSD complex type.
@@ -588,10 +588,10 @@ type Bend struct {
 // The bookmark type serves as a well-defined target for an incoming simple
 // XLink.
 type Bookmark struct {
-	ID       string  `xml:"id,attr"`
-	Name     *string `xml:"name,attr,omitempty"`
-	Element  *string `xml:"element,attr,omitempty"`
-	Position *uint64 `xml:"position,attr,omitempty"`
+	ID       string           `xml:"id,attr"`
+	Name     *string          `xml:"name,attr,omitempty"`
+	Element  *string          `xml:"element,attr,omitempty"`
+	Position *PositiveInteger `xml:"position,attr,omitempty"`
 }
 
 // Bracket represents the "bracket" XSD complex type.
@@ -698,7 +698,7 @@ type Clef struct {
 	Line *StaffLinePosition `xml:"line,omitempty"`
 	// The clef-octave-change element is used for transposing clefs. A treble
 	// clef for tenors would have a value of -1.
-	ClefOctaveChange *int64       `xml:"clef-octave-change,omitempty"`
+	ClefOctaveChange *Integer     `xml:"clef-octave-change,omitempty"`
 	Number           *StaffNumber `xml:"number,attr,omitempty"`
 	Additional       *YesNo       `xml:"additional,attr,omitempty"`
 	Size             *SymbolSize  `xml:"size,attr,omitempty"`
@@ -763,9 +763,9 @@ type Coda struct {
 // Standard values include page number, title, subtitle, composer, arranger,
 // lyricist, rights, and part name.
 type Credit struct {
-	Content CreditContents `xml:",any"`
-	Page    *uint64        `xml:"page,attr,omitempty"`
-	ID      *string        `xml:"id,attr,omitempty"`
+	Content CreditContents   `xml:",any"`
+	Page    *PositiveInteger `xml:"page,attr,omitempty"`
+	ID      *string          `xml:"id,attr,omitempty"`
 }
 
 // Dashes represents the "dashes" XSD complex type.
@@ -884,7 +884,7 @@ type DegreeType struct {
 // that a symbol should be used in specifying the degree. If the symbol
 // attribute is present, the value of the text attribute follows the symbol.
 type DegreeValue struct {
-	Value      uint64             `xml:",chardata"`
+	Value      PositiveInteger    `xml:",chardata"`
 	Symbol     *DegreeSymbolValue `xml:"symbol,attr,omitempty"`
 	Text       *string            `xml:"text,attr,omitempty"`
 	DefaultX   *Tenths            `xml:"default-x,attr,omitempty"`
@@ -921,13 +921,13 @@ type Direction struct {
 	// Staff assignment is only needed for music notated on multiple staves.
 	// Used by both notes and directions. Staff values are numbers, with 1
 	// referring to the top-most staff in a part.
-	Staff     *uint64         `xml:"staff,omitempty"`
-	Sound     *Sound          `xml:"sound,omitempty"`
-	Listening *Listening      `xml:"listening,omitempty"`
-	Placement *AboveBelow     `xml:"placement,attr,omitempty"`
-	Directive *YesNo          `xml:"directive,attr,omitempty"`
-	System    *SystemRelation `xml:"system,attr,omitempty"`
-	ID        *string         `xml:"id,attr,omitempty"`
+	Staff     *PositiveInteger `xml:"staff,omitempty"`
+	Sound     *Sound           `xml:"sound,omitempty"`
+	Listening *Listening       `xml:"listening,omitempty"`
+	Placement *AboveBelow      `xml:"placement,attr,omitempty"`
+	Directive *YesNo           `xml:"directive,attr,omitempty"`
+	System    *SystemRelation  `xml:"system,attr,omitempty"`
+	ID        *string          `xml:"id,attr,omitempty"`
 }
 
 // DirectionType represents the "direction-type" XSD complex type.
@@ -1428,9 +1428,9 @@ type Fingering struct {
 // location attribute indicates whether the text appears to the left or right of
 // the frame.
 type FirstFret struct {
-	Value    uint64     `xml:",chardata"`
-	Text     *string    `xml:"text,attr,omitempty"`
-	Location *LeftRight `xml:"location,attr,omitempty"`
+	Value    PositiveInteger `xml:",chardata"`
+	Text     *string         `xml:"text,attr,omitempty"`
+	Location *LeftRight      `xml:"location,attr,omitempty"`
 }
 
 // ForPart represents the "for-part" XSD complex type.
@@ -1598,7 +1598,7 @@ type Forward struct {
 	// Staff assignment is only needed for music notated on multiple staves.
 	// Used by both notes and directions. Staff values are numbers, with 1
 	// referring to the top-most staff in a part.
-	Staff *uint64 `xml:"staff,omitempty"`
+	Staff *PositiveInteger `xml:"staff,omitempty"`
 }
 
 // Frame represents the "frame" XSD complex type.
@@ -1612,10 +1612,10 @@ type Forward struct {
 type Frame struct {
 	// The frame-strings element gives the overall size of the frame in vertical
 	// lines (strings).
-	FrameStrings uint64 `xml:"frame-strings"`
+	FrameStrings PositiveInteger `xml:"frame-strings"`
 	// The frame-frets element gives the overall size of the frame in horizontal
 	// spaces (frets).
-	FrameFrets uint64           `xml:"frame-frets"`
+	FrameFrets PositiveInteger  `xml:"frame-frets"`
 	FirstFret  *FirstFret       `xml:"first-fret,omitempty"`
 	FrameNote  []FrameNote      `xml:"frame-note"`
 	Height     *Tenths          `xml:"height,attr,omitempty"`
@@ -1648,12 +1648,12 @@ type FrameNote struct {
 // The fret element is used with tablature notation and chord diagrams. Fret
 // numbers start with 0 for an open string and 1 for the first fret.
 type Fret struct {
-	Value      uint64      `xml:",chardata"`
-	FontFamily *FontFamily `xml:"font-family,attr,omitempty"`
-	FontStyle  *FontStyle  `xml:"font-style,attr,omitempty"`
-	FontSize   *FontSize   `xml:"font-size,attr,omitempty"`
-	FontWeight *FontWeight `xml:"font-weight,attr,omitempty"`
-	Color      *Color      `xml:"color,attr,omitempty"`
+	Value      NonNegativeInteger `xml:",chardata"`
+	FontFamily *FontFamily        `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle         `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize          `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight        `xml:"font-weight,attr,omitempty"`
+	Color      *Color             `xml:"color,attr,omitempty"`
 }
 
 // Glass represents the "glass" XSD complex type.
@@ -1943,7 +1943,7 @@ type Harmony struct {
 	// Staff assignment is only needed for music notated on multiple staves.
 	// Used by both notes and directions. Staff values are numbers, with 1
 	// referring to the top-most staff in a part.
-	Staff       *uint64             `xml:"staff,omitempty"`
+	Staff       *PositiveInteger    `xml:"staff,omitempty"`
 	Type        *HarmonyType        `xml:"type,attr,omitempty"`
 	PrintFrame  *YesNo              `xml:"print-frame,attr,omitempty"`
 	Arrangement *HarmonyArrangement `xml:"arrangement,attr,omitempty"`
@@ -2196,17 +2196,17 @@ type Interchangeable struct {
 // inversion, etc. The text attribute indicates how the inversion should be
 // displayed in a score.
 type Inversion struct {
-	Value      uint64      `xml:",chardata"`
-	Text       *string     `xml:"text,attr,omitempty"`
-	DefaultX   *Tenths     `xml:"default-x,attr,omitempty"`
-	DefaultY   *Tenths     `xml:"default-y,attr,omitempty"`
-	RelativeX  *Tenths     `xml:"relative-x,attr,omitempty"`
-	RelativeY  *Tenths     `xml:"relative-y,attr,omitempty"`
-	FontFamily *FontFamily `xml:"font-family,attr,omitempty"`
-	FontStyle  *FontStyle  `xml:"font-style,attr,omitempty"`
-	FontSize   *FontSize   `xml:"font-size,attr,omitempty"`
-	FontWeight *FontWeight `xml:"font-weight,attr,omitempty"`
-	Color      *Color      `xml:"color,attr,omitempty"`
+	Value      NonNegativeInteger `xml:",chardata"`
+	Text       *string            `xml:"text,attr,omitempty"`
+	DefaultX   *Tenths            `xml:"default-x,attr,omitempty"`
+	DefaultY   *Tenths            `xml:"default-y,attr,omitempty"`
+	RelativeX  *Tenths            `xml:"relative-x,attr,omitempty"`
+	RelativeY  *Tenths            `xml:"relative-y,attr,omitempty"`
+	FontFamily *FontFamily        `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle         `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize          `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight        `xml:"font-weight,attr,omitempty"`
+	Color      *Color             `xml:"color,attr,omitempty"`
 }
 
 // Key represents the "key" XSD complex type.
@@ -2259,9 +2259,9 @@ type KeyAccidental struct {
 // cancel attribute cannot be set to yes if there is no corresponding cancel
 // element within the parent key element. It is no by default.
 type KeyOctave struct {
-	Value  Octave `xml:",chardata"`
-	Number uint64 `xml:"number,attr"`
-	Cancel *YesNo `xml:"cancel,attr,omitempty"`
+	Value  Octave          `xml:",chardata"`
+	Number PositiveInteger `xml:"number,attr"`
+	Cancel *YesNo          `xml:"cancel,attr,omitempty"`
 }
 
 // Kind represents the "kind" XSD complex type.
@@ -2381,19 +2381,19 @@ type LineWidth struct {
 // within a document that is part of a compressed MusicXML file, the link is
 // relative to the root folder of the zip file.
 type Link struct {
-	Name      *string `xml:"name,attr,omitempty"`
-	Href      string  `xml:"http://www.w3.org/1999/xlink href,attr"`
-	Type      *string `xml:"http://www.w3.org/1999/xlink type,attr,omitempty"`
-	Role      *string `xml:"http://www.w3.org/1999/xlink role,attr,omitempty"`
-	Title     *string `xml:"http://www.w3.org/1999/xlink title,attr,omitempty"`
-	Show      *string `xml:"http://www.w3.org/1999/xlink show,attr,omitempty"`
-	Actuate   *string `xml:"http://www.w3.org/1999/xlink actuate,attr,omitempty"`
-	Element   *string `xml:"element,attr,omitempty"`
-	Position  *uint64 `xml:"position,attr,omitempty"`
-	DefaultX  *Tenths `xml:"default-x,attr,omitempty"`
-	DefaultY  *Tenths `xml:"default-y,attr,omitempty"`
-	RelativeX *Tenths `xml:"relative-x,attr,omitempty"`
-	RelativeY *Tenths `xml:"relative-y,attr,omitempty"`
+	Name      *string          `xml:"name,attr,omitempty"`
+	Href      string           `xml:"http://www.w3.org/1999/xlink href,attr"`
+	Type      *string          `xml:"http://www.w3.org/1999/xlink type,attr,omitempty"`
+	Role      *string          `xml:"http://www.w3.org/1999/xlink role,attr,omitempty"`
+	Title     *string          `xml:"http://www.w3.org/1999/xlink title,attr,omitempty"`
+	Show      *string          `xml:"http://www.w3.org/1999/xlink show,attr,omitempty"`
+	Actuate   *string          `xml:"http://www.w3.org/1999/xlink actuate,attr,omitempty"`
+	Element   *string          `xml:"element,attr,omitempty"`
+	Position  *PositiveInteger `xml:"position,attr,omitempty"`
+	DefaultX  *Tenths          `xml:"default-x,attr,omitempty"`
+	DefaultY  *Tenths          `xml:"default-y,attr,omitempty"`
+	RelativeX *Tenths          `xml:"relative-x,attr,omitempty"`
+	RelativeY *Tenths          `xml:"relative-y,attr,omitempty"`
 }
 
 // EffectiveType returns Type when explicitly present and the XSD fixed value "simple" otherwise.
@@ -2582,7 +2582,7 @@ type MeasureNumbering struct {
 type MeasureRepeat struct {
 	Value   PositiveIntegerOrEmpty `xml:",chardata"`
 	Type    StartStop              `xml:"type,attr"`
-	Slashes *uint64                `xml:"slashes,attr,omitempty"`
+	Slashes *PositiveInteger       `xml:"slashes,attr,omitempty"`
 }
 
 // MeasureStyle represents the "measure-style" XSD complex type.
@@ -2813,8 +2813,8 @@ type Mordent struct {
 // or a single shape. The use-symbols attribute indicates which to use; it is no
 // if not specified.
 type MultipleRest struct {
-	Value      uint64 `xml:",chardata"`
-	UseSymbols *YesNo `xml:"use-symbols,attr,omitempty"`
+	Value      PositiveInteger `xml:",chardata"`
+	UseSymbols *YesNo          `xml:"use-symbols,attr,omitempty"`
 }
 
 // NameDisplay represents the "name-display" XSD complex type.
@@ -2947,7 +2947,7 @@ type Note struct {
 	// Staff assignment is only needed for music notated on multiple staves.
 	// Used by both notes and directions. Staff values are numbers, with 1
 	// referring to the top-most staff in a part.
-	Staff        *uint64             `xml:"staff,omitempty"`
+	Staff        *PositiveInteger    `xml:"staff,omitempty"`
 	Beam         []Beam              `xml:"beam"`
 	Notations    []Notations         `xml:"notations"`
 	Lyric        []Lyric             `xml:"lyric"`
@@ -3108,7 +3108,7 @@ type NumeralRoot struct {
 type OctaveShift struct {
 	Type        UpDownStopContinue `xml:"type,attr"`
 	Number      *NumberLevel       `xml:"number,attr,omitempty"`
-	Size        *uint64            `xml:"size,attr,omitempty"`
+	Size        *PositiveInteger   `xml:"size,attr,omitempty"`
 	DashLength  *Tenths            `xml:"dash-length,attr,omitempty"`
 	SpaceLength *Tenths            `xml:"space-length,attr,omitempty"`
 	DefaultX    *Tenths            `xml:"default-x,attr,omitempty"`
@@ -3124,7 +3124,7 @@ type OctaveShift struct {
 }
 
 // EffectiveSize returns Size when explicitly present and the XSD default value "8" otherwise.
-func (value *OctaveShift) EffectiveSize() uint64 {
+func (value *OctaveShift) EffectiveSize() PositiveInteger {
 	if value != nil && value.Size != nil {
 		return *value.Size
 	}
@@ -3385,7 +3385,7 @@ type PartClef struct {
 	Line *StaffLinePosition `xml:"line,omitempty"`
 	// The clef-octave-change element is used for transposing clefs. A treble
 	// clef for tenors would have a value of -1.
-	ClefOctaveChange *int64 `xml:"clef-octave-change,omitempty"`
+	ClefOctaveChange *Integer `xml:"clef-octave-change,omitempty"`
 }
 
 // PartGroup represents the "part-group" XSD complex type.
@@ -3552,7 +3552,7 @@ type PartTranspose struct {
 	// enharmonic transpositions. This value does not include octave-change
 	// values; the values for both elements need to be added to the written
 	// pitch to get the correct sounding pitch.
-	Diatonic *int64 `xml:"diatonic,omitempty"`
+	Diatonic *Integer `xml:"diatonic,omitempty"`
 	// The chromatic element represents the number of semitones needed to get
 	// from written to sounding pitch. This value does not include octave-change
 	// values; the values for both elements need to be added to the written
@@ -3562,7 +3562,7 @@ type PartTranspose struct {
 	// written pitch to sounding pitch. The octave-change element should be
 	// included when using transposition intervals of an octave or more, and
 	// should not be present for intervals of less than an octave.
-	OctaveChange *int64 `xml:"octave-change,omitempty"`
+	OctaveChange *Integer `xml:"octave-change,omitempty"`
 	// If the double element is present, it indicates that the music is doubled
 	// one octave from what is currently written.
 	Double *Double `xml:"double,omitempty"`
@@ -3772,7 +3772,7 @@ type Print struct {
 	StaffSpacing            *Tenths           `xml:"staff-spacing,attr,omitempty"`
 	NewSystem               *YesNo            `xml:"new-system,attr,omitempty"`
 	NewPage                 *YesNo            `xml:"new-page,attr,omitempty"`
-	BlankPage               *uint64           `xml:"blank-page,attr,omitempty"`
+	BlankPage               *PositiveInteger  `xml:"blank-page,attr,omitempty"`
 	PageNumber              *string           `xml:"page-number,attr,omitempty"`
 	ID                      *string           `xml:"id,attr,omitempty"`
 }
@@ -3798,10 +3798,10 @@ type Release struct {
 // repeated section is played. The after-jump attribute indicates if the repeats
 // are played after a jump due to a da capo or dal segno.
 type Repeat struct {
-	Direction BackwardForward `xml:"direction,attr"`
-	Times     *uint64         `xml:"times,attr,omitempty"`
-	AfterJump *YesNo          `xml:"after-jump,attr,omitempty"`
-	Winged    *Winged         `xml:"winged,attr,omitempty"`
+	Direction BackwardForward     `xml:"direction,attr"`
+	Times     *NonNegativeInteger `xml:"times,attr,omitempty"`
+	AfterJump *YesNo              `xml:"after-jump,attr,omitempty"`
+	Winged    *Winged             `xml:"winged,attr,omitempty"`
 }
 
 // Rest represents the "rest" XSD complex type.
@@ -4167,18 +4167,18 @@ type StaffDetails struct {
 	// for a non 5-line staff. If the staff-lines element is present, the
 	// appearance of each line may be individually specified with a line-detail
 	// element.
-	StaffLines  *uint64       `xml:"staff-lines,omitempty"`
-	LineDetail  []LineDetail  `xml:"line-detail"`
-	StaffTuning []StaffTuning `xml:"staff-tuning"`
+	StaffLines  *NonNegativeInteger `xml:"staff-lines,omitempty"`
+	LineDetail  []LineDetail        `xml:"line-detail"`
+	StaffTuning []StaffTuning       `xml:"staff-tuning"`
 	// The capo element indicates at which fret a capo should be placed on a
 	// fretted instrument. This changes the open tuning of the strings specified
 	// by staff-tuning by the specified number of half-steps.
-	Capo         *uint64      `xml:"capo,omitempty"`
-	StaffSize    *StaffSize   `xml:"staff-size,omitempty"`
-	Number       *StaffNumber `xml:"number,attr,omitempty"`
-	ShowFrets    *ShowFrets   `xml:"show-frets,attr,omitempty"`
-	PrintObject  *YesNo       `xml:"print-object,attr,omitempty"`
-	PrintSpacing *YesNo       `xml:"print-spacing,attr,omitempty"`
+	Capo         *NonNegativeInteger `xml:"capo,omitempty"`
+	StaffSize    *StaffSize          `xml:"staff-size,omitempty"`
+	Number       *StaffNumber        `xml:"number,attr,omitempty"`
+	ShowFrets    *ShowFrets          `xml:"show-frets,attr,omitempty"`
+	PrintObject  *YesNo              `xml:"print-object,attr,omitempty"`
+	PrintSpacing *YesNo              `xml:"print-spacing,attr,omitempty"`
 }
 
 // StaffDivide represents the "staff-divide" XSD complex type.
@@ -4406,11 +4406,11 @@ type Supports struct {
 // swung note has attack and release attributes, those values modify the swung
 // playback.
 type Swing struct {
-	Straight   *Empty          `xml:"straight,omitempty"`
-	First      *uint64         `xml:"first,omitempty"`
-	Second     *uint64         `xml:"second,omitempty"`
-	SwingType  *SwingTypeValue `xml:"swing-type,omitempty"`
-	SwingStyle *string         `xml:"swing-style,omitempty"`
+	Straight   *Empty           `xml:"straight,omitempty"`
+	First      *PositiveInteger `xml:"first,omitempty"`
+	Second     *PositiveInteger `xml:"second,omitempty"`
+	SwingType  *SwingTypeValue  `xml:"swing-type,omitempty"`
+	SwingStyle *string          `xml:"swing-style,omitempty"`
 }
 
 // Sync represents the "sync" XSD complex type.
@@ -4655,10 +4655,10 @@ type Time struct {
 type TimeModification struct {
 	// The actual-notes element describes how many notes are played in the time
 	// usually occupied by the number in the normal-notes element.
-	ActualNotes uint64 `xml:"actual-notes"`
+	ActualNotes NonNegativeInteger `xml:"actual-notes"`
 	// The normal-notes element describes how many notes are usually played in
 	// the time occupied by the number in the actual-notes element.
-	NormalNotes uint64 `xml:"normal-notes"`
+	NormalNotes NonNegativeInteger `xml:"normal-notes"`
 	// If the type associated with the number in the normal-notes element is
 	// different than the current note type (e.g., a quarter note within an
 	// eighth note triplet), then the normal-notes type (e.g. eighth) is
@@ -4689,7 +4689,7 @@ type Transpose struct {
 	// enharmonic transpositions. This value does not include octave-change
 	// values; the values for both elements need to be added to the written
 	// pitch to get the correct sounding pitch.
-	Diatonic *int64 `xml:"diatonic,omitempty"`
+	Diatonic *Integer `xml:"diatonic,omitempty"`
 	// The chromatic element represents the number of semitones needed to get
 	// from written to sounding pitch. This value does not include octave-change
 	// values; the values for both elements need to be added to the written
@@ -4699,7 +4699,7 @@ type Transpose struct {
 	// written pitch to sounding pitch. The octave-change element should be
 	// included when using transposition intervals of an octave or more, and
 	// should not be present for intervals of less than an octave.
-	OctaveChange *int64 `xml:"octave-change,omitempty"`
+	OctaveChange *Integer `xml:"octave-change,omitempty"`
 	// If the double element is present, it indicates that the music is doubled
 	// one octave from what is currently written.
 	Double *Double      `xml:"double,omitempty"`
@@ -4816,12 +4816,12 @@ type TupletDot struct {
 // The tuplet-number type indicates the number of notes for this portion of the
 // tuplet.
 type TupletNumber struct {
-	Value      uint64      `xml:",chardata"`
-	FontFamily *FontFamily `xml:"font-family,attr,omitempty"`
-	FontStyle  *FontStyle  `xml:"font-style,attr,omitempty"`
-	FontSize   *FontSize   `xml:"font-size,attr,omitempty"`
-	FontWeight *FontWeight `xml:"font-weight,attr,omitempty"`
-	Color      *Color      `xml:"color,attr,omitempty"`
+	Value      NonNegativeInteger `xml:",chardata"`
+	FontFamily *FontFamily        `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle         `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize          `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight        `xml:"font-weight,attr,omitempty"`
+	Color      *Color             `xml:"color,attr,omitempty"`
 }
 
 // TupletPortion represents the "tuplet-portion" XSD complex type.
@@ -9879,15 +9879,15 @@ type PlayContent struct {
 	// The ipa element represents International Phonetic Alphabet (IPA) sounds
 	// for vocal music. String content is limited to IPA 2015 symbols
 	// represented in Unicode 13.0.
-	Ipa         *string
+	IPA         *string
 	Mute        *Mute
 	SemiPitched *SemiPitched
 	OtherPlay   *OtherPlay
 }
 
-// AddIpa appends the "ipa" child while preserving content order.
-func (value *Play) AddIpa(element *string) *string {
-	value.Content = append(value.Content, PlayContent{Ipa: element})
+// AddIPA appends the "ipa" child while preserving content order.
+func (value *Play) AddIPA(element *string) *string {
+	value.Content = append(value.Content, PlayContent{IPA: element})
 	return element
 }
 
@@ -9920,9 +9920,9 @@ func (value *PlayContent) UnmarshalXML(
 	case (xml.Name{Local: "ipa"}):
 		var decoded string
 		if err := decoder.DecodeElement(&decoded, &start); err != nil {
-			return fmt.Errorf("musicxml: decode PlayContent.Ipa: %w", err)
+			return fmt.Errorf("musicxml: decode PlayContent.IPA: %w", err)
 		}
-		value.Ipa = &decoded
+		value.IPA = &decoded
 		return nil
 
 	case (xml.Name{Local: "mute"}):
@@ -9963,7 +9963,7 @@ func (value PlayContent) MarshalXML(
 	_ xml.StartElement,
 ) error {
 	selected := 0
-	if value.Ipa != nil {
+	if value.IPA != nil {
 		selected++
 	}
 	if value.Mute != nil {
@@ -9980,10 +9980,10 @@ func (value PlayContent) MarshalXML(
 	}
 
 	switch {
-	case value.Ipa != nil:
+	case value.IPA != nil:
 		start := xml.StartElement{Name: xml.Name{Local: "ipa"}}
-		if err := encoder.EncodeElement(value.Ipa, start); err != nil {
-			return fmt.Errorf("musicxml: encode PlayContent.Ipa: %w", err)
+		if err := encoder.EncodeElement(value.IPA, start); err != nil {
+			return fmt.Errorf("musicxml: encode PlayContent.IPA: %w", err)
 		}
 		return nil
 	case value.Mute != nil:
@@ -10027,8 +10027,8 @@ func (value PlayContent) selected() (string, any) {
 	var name string
 	var selected any
 	count := 0
-	if value.Ipa != nil {
-		name, selected, count = "ipa", value.Ipa, count+1
+	if value.IPA != nil {
+		name, selected, count = "ipa", value.IPA, count+1
 	}
 	if value.Mute != nil {
 		name, selected, count = "mute", value.Mute, count+1
@@ -11508,262 +11508,29 @@ const (
 	XMLSpacePreserve = "preserve"
 )
 
-type xmlAttributes struct {
-	Footnote *FormattedText `xml:"footnote,omitempty"`
-	Level    *Level         `xml:"level,omitempty"`
-	// Musical notation duration is commonly represented as fractions. The
-	// divisions element indicates how many divisions per quarter note are used
-	// to indicate a note's duration. For example, if duration = 1 and divisions
-	// = 2, this is an eighth note duration. Duration and divisions are used
-	// directly for generating sound output, so they must be chosen to take
-	// tuplets into account. Using a divisions element lets us use just one
-	// number to represent a duration for each note in the score, while
-	// retaining the full power of a fractional representation. If maximum
-	// compatibility with Standard MIDI 1.0 files is important, do not have the
-	// divisions value exceed 16383.
-	Divisions *PositiveDivisions `xml:"divisions,omitempty"`
-	// The key element represents a key signature. Both traditional and
-	// non-traditional key signatures are supported. The optional number
-	// attribute refers to staff numbers. If absent, the key signature applies
-	// to all staves in the part.
-	Key []Key `xml:"key"`
-	// Time signatures are represented by the beats element for the numerator
-	// and the beat-type element for the denominator.
-	Time []Time `xml:"time"`
-	// The staves element is used if there is more than one staff represented in
-	// the given part (e.g., 2 staves for typical piano parts). If absent, a
-	// value of 1 is assumed. Staves are ordered from top to bottom in a part in
-	// numerical order, with staff 1 above staff 2.
-	Staves *xmlUnsigned64 `xml:"staves,omitempty"`
-	// The part-symbol element indicates how a symbol for a multi-staff part is
-	// indicated in the score.
-	PartSymbol *PartSymbol `xml:"part-symbol,omitempty"`
-	// The instruments element is only used if more than one instrument is
-	// represented in the part (e.g., oboe I and II where they play together
-	// most of the time). If absent, a value of 1 is assumed.
-	Instruments *xmlUnsigned64 `xml:"instruments,omitempty"`
-	// Clefs are represented by a combination of sign, line, and
-	// clef-octave-change elements.
-	Clef []Clef `xml:"clef"`
-	// The staff-details element is used to indicate different types of staves.
-	StaffDetails []StaffDetails `xml:"staff-details"`
-	// If the part is being encoded for a transposing instrument in written vs.
-	// concert pitch, the transposition must be encoded in the transpose element
-	// using the transpose type.
-	Transpose []Transpose `xml:"transpose"`
-	// The for-part element is used in a concert score to indicate the
-	// transposition for a transposed part created from that score. It is only
-	// used in score files that contain a concert-score element in the defaults.
-	// This allows concert scores with transposed parts to be represented in a
-	// single uncompressed MusicXML file.
-	ForPart []ForPart `xml:"for-part"`
-	// Directives are like directions, but can be grouped together with
-	// attributes for convenience. This is typically used for tempo markings at
-	// the beginning of a piece of music. This element was deprecated in Version
-	// 2.0 in favor of the direction element's directive attribute. Language
-	// names come from ISO 639, with optional country subcodes from ISO 3166.
-	Directive []struct {
-		Value      string      `xml:",chardata"`
-		Lang       *string     `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
-		DefaultX   *Tenths     `xml:"default-x,attr,omitempty"`
-		DefaultY   *Tenths     `xml:"default-y,attr,omitempty"`
-		RelativeX  *Tenths     `xml:"relative-x,attr,omitempty"`
-		RelativeY  *Tenths     `xml:"relative-y,attr,omitempty"`
-		FontFamily *FontFamily `xml:"font-family,attr,omitempty"`
-		FontStyle  *FontStyle  `xml:"font-style,attr,omitempty"`
-		FontSize   *FontSize   `xml:"font-size,attr,omitempty"`
-		FontWeight *FontWeight `xml:"font-weight,attr,omitempty"`
-		Color      *Color      `xml:"color,attr,omitempty"`
-	} `xml:"directive"`
-	// A measure-style indicates a special way to print partial to multiple
-	// measures within a part. This includes multiple rests over several
-	// measures, repeats of beats, single, or multiple measures, and use of
-	// slash notation.
-	MeasureStyle []MeasureStyle `xml:"measure-style"`
+// Integer is an xs:integer value in a field whose type is the
+// built-in type itself. Decoding accepts every XSD lexical form that fits
+// int64, such as "+1"; validation, not decoding, checks the range.
+type Integer int64
+
+// NonNegativeInteger is an xs:nonNegativeInteger value in a field whose type is the
+// built-in type itself. Decoding accepts every XSD lexical form that fits
+// uint64, such as "+1"; validation, not decoding, checks the range.
+type NonNegativeInteger uint64
+
+// UnmarshalText decodes an XSD integer lexical form, such as "+1" or "-0".
+func (value *NonNegativeInteger) UnmarshalText(text []byte) error {
+	return (*xmlUnsigned64)(value).UnmarshalText(text)
 }
 
-func xmlAttributesFrom(value Attributes) xmlAttributes {
-	return xmlAttributes{
-		Footnote:     value.Footnote,
-		Level:        value.Level,
-		Divisions:    value.Divisions,
-		Key:          value.Key,
-		Time:         value.Time,
-		Staves:       (*xmlUnsigned64)(value.Staves),
-		PartSymbol:   value.PartSymbol,
-		Instruments:  (*xmlUnsigned64)(value.Instruments),
-		Clef:         value.Clef,
-		StaffDetails: value.StaffDetails,
-		Transpose:    value.Transpose,
-		ForPart:      value.ForPart,
-		Directive:    value.Directive,
-		MeasureStyle: value.MeasureStyle,
-	}
-}
+// PositiveInteger is an xs:positiveInteger value in a field whose type is the
+// built-in type itself. Decoding accepts every XSD lexical form that fits
+// uint64, such as "+1"; validation, not decoding, checks the range.
+type PositiveInteger uint64
 
-func (value xmlAttributes) model() Attributes {
-	return Attributes{
-		Footnote:     value.Footnote,
-		Level:        value.Level,
-		Divisions:    value.Divisions,
-		Key:          value.Key,
-		Time:         value.Time,
-		Staves:       (*uint64)(value.Staves),
-		PartSymbol:   value.PartSymbol,
-		Instruments:  (*uint64)(value.Instruments),
-		Clef:         value.Clef,
-		StaffDetails: value.StaffDetails,
-		Transpose:    value.Transpose,
-		ForPart:      value.ForPart,
-		Directive:    value.Directive,
-		MeasureStyle: value.MeasureStyle,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Attributes) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlAttributesFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Attributes) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlAttributesFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlBeatRepeat struct {
-	// The slash-type element indicates the graphical note type to use for the
-	// display of repetition marks.
-	SlashType *NoteTypeValue `xml:"slash-type,omitempty"`
-	// The slash-dot element is used to specify any augmentation dots in the
-	// note type used to display repetition marks.
-	SlashDot []Empty `xml:"slash-dot"`
-	// The except-voice element is used to specify a combination of slash
-	// notation and regular notation. Any note elements that are in voices
-	// specified by the except-voice elements are displayed in normal notation,
-	// in addition to the slash notation that is always displayed.
-	ExceptVoice []string       `xml:"except-voice"`
-	Type        StartStop      `xml:"type,attr"`
-	Slashes     *xmlUnsigned64 `xml:"slashes,attr,omitempty"`
-	UseDots     *YesNo         `xml:"use-dots,attr,omitempty"`
-}
-
-func xmlBeatRepeatFrom(value BeatRepeat) xmlBeatRepeat {
-	return xmlBeatRepeat{
-		SlashType:   value.SlashType,
-		SlashDot:    value.SlashDot,
-		ExceptVoice: value.ExceptVoice,
-		Type:        value.Type,
-		Slashes:     (*xmlUnsigned64)(value.Slashes),
-		UseDots:     value.UseDots,
-	}
-}
-
-func (value xmlBeatRepeat) model() BeatRepeat {
-	return BeatRepeat{
-		SlashType:   value.SlashType,
-		SlashDot:    value.SlashDot,
-		ExceptVoice: value.ExceptVoice,
-		Type:        value.Type,
-		Slashes:     (*uint64)(value.Slashes),
-		UseDots:     value.UseDots,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value BeatRepeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlBeatRepeatFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *BeatRepeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlBeatRepeatFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlBookmark struct {
-	ID       string         `xml:"id,attr"`
-	Name     *string        `xml:"name,attr,omitempty"`
-	Element  *string        `xml:"element,attr,omitempty"`
-	Position *xmlUnsigned64 `xml:"position,attr,omitempty"`
-}
-
-func xmlBookmarkFrom(value Bookmark) xmlBookmark {
-	return xmlBookmark{
-		ID:       value.ID,
-		Name:     value.Name,
-		Element:  value.Element,
-		Position: (*xmlUnsigned64)(value.Position),
-	}
-}
-
-func (value xmlBookmark) model() Bookmark {
-	return Bookmark{
-		ID:       value.ID,
-		Name:     value.Name,
-		Element:  value.Element,
-		Position: (*uint64)(value.Position),
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Bookmark) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlBookmarkFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Bookmark) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlBookmarkFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlCredit struct {
-	Content CreditContents `xml:",any"`
-	Page    *xmlUnsigned64 `xml:"page,attr,omitempty"`
-	ID      *string        `xml:"id,attr,omitempty"`
-}
-
-func xmlCreditFrom(value Credit) xmlCredit {
-	return xmlCredit{
-		Content: value.Content,
-		Page:    (*xmlUnsigned64)(value.Page),
-		ID:      value.ID,
-	}
-}
-
-func (value xmlCredit) model() Credit {
-	return Credit{
-		Content: value.Content,
-		Page:    (*uint64)(value.Page),
-		ID:      value.ID,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Credit) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlCreditFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Credit) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlCreditFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
+// UnmarshalText decodes an XSD integer lexical form, such as "+1" or "-0".
+func (value *PositiveInteger) UnmarshalText(text []byte) error {
+	return (*xmlUnsigned64)(value).UnmarshalText(text)
 }
 
 type xmlDegreeAlter struct {
@@ -11827,137 +11594,6 @@ func (value *DegreeAlter) UnmarshalXML(decoder *xml.Decoder, start xml.StartElem
 	return nil
 }
 
-type xmlDegreeValue struct {
-	Value      xmlUnsigned64      `xml:",chardata"`
-	Symbol     *DegreeSymbolValue `xml:"symbol,attr,omitempty"`
-	Text       *string            `xml:"text,attr,omitempty"`
-	DefaultX   *Tenths            `xml:"default-x,attr,omitempty"`
-	DefaultY   *Tenths            `xml:"default-y,attr,omitempty"`
-	RelativeX  *Tenths            `xml:"relative-x,attr,omitempty"`
-	RelativeY  *Tenths            `xml:"relative-y,attr,omitempty"`
-	FontFamily *FontFamily        `xml:"font-family,attr,omitempty"`
-	FontStyle  *FontStyle         `xml:"font-style,attr,omitempty"`
-	FontSize   *FontSize          `xml:"font-size,attr,omitempty"`
-	FontWeight *FontWeight        `xml:"font-weight,attr,omitempty"`
-	Color      *Color             `xml:"color,attr,omitempty"`
-}
-
-func xmlDegreeValueFrom(value DegreeValue) xmlDegreeValue {
-	return xmlDegreeValue{
-		Value:      xmlUnsigned64(value.Value),
-		Symbol:     value.Symbol,
-		Text:       value.Text,
-		DefaultX:   value.DefaultX,
-		DefaultY:   value.DefaultY,
-		RelativeX:  value.RelativeX,
-		RelativeY:  value.RelativeY,
-		FontFamily: value.FontFamily,
-		FontStyle:  value.FontStyle,
-		FontSize:   value.FontSize,
-		FontWeight: value.FontWeight,
-		Color:      value.Color,
-	}
-}
-
-func (value xmlDegreeValue) model() DegreeValue {
-	return DegreeValue{
-		Value:      uint64(value.Value),
-		Symbol:     value.Symbol,
-		Text:       value.Text,
-		DefaultX:   value.DefaultX,
-		DefaultY:   value.DefaultY,
-		RelativeX:  value.RelativeX,
-		RelativeY:  value.RelativeY,
-		FontFamily: value.FontFamily,
-		FontStyle:  value.FontStyle,
-		FontSize:   value.FontSize,
-		FontWeight: value.FontWeight,
-		Color:      value.Color,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value DegreeValue) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlDegreeValueFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *DegreeValue) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlDegreeValueFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlDirection struct {
-	DirectionType []DirectionType `xml:"direction-type"`
-	Offset        *Offset         `xml:"offset,omitempty"`
-	Footnote      *FormattedText  `xml:"footnote,omitempty"`
-	Level         *Level          `xml:"level,omitempty"`
-	Voice         *string         `xml:"voice,omitempty"`
-	// Staff assignment is only needed for music notated on multiple staves.
-	// Used by both notes and directions. Staff values are numbers, with 1
-	// referring to the top-most staff in a part.
-	Staff     *xmlUnsigned64  `xml:"staff,omitempty"`
-	Sound     *Sound          `xml:"sound,omitempty"`
-	Listening *Listening      `xml:"listening,omitempty"`
-	Placement *AboveBelow     `xml:"placement,attr,omitempty"`
-	Directive *YesNo          `xml:"directive,attr,omitempty"`
-	System    *SystemRelation `xml:"system,attr,omitempty"`
-	ID        *string         `xml:"id,attr,omitempty"`
-}
-
-func xmlDirectionFrom(value Direction) xmlDirection {
-	return xmlDirection{
-		DirectionType: value.DirectionType,
-		Offset:        value.Offset,
-		Footnote:      value.Footnote,
-		Level:         value.Level,
-		Voice:         value.Voice,
-		Staff:         (*xmlUnsigned64)(value.Staff),
-		Sound:         value.Sound,
-		Listening:     value.Listening,
-		Placement:     value.Placement,
-		Directive:     value.Directive,
-		System:        value.System,
-		ID:            value.ID,
-	}
-}
-
-func (value xmlDirection) model() Direction {
-	return Direction{
-		DirectionType: value.DirectionType,
-		Offset:        value.Offset,
-		Footnote:      value.Footnote,
-		Level:         value.Level,
-		Voice:         value.Voice,
-		Staff:         (*uint64)(value.Staff),
-		Sound:         value.Sound,
-		Listening:     value.Listening,
-		Placement:     value.Placement,
-		Directive:     value.Directive,
-		System:        value.System,
-		ID:            value.ID,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Direction) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlDirectionFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Direction) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlDirectionFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
 type xmlDistance struct {
 	Value xmlDecimal   `xml:",chardata"`
 	Type  DistanceType `xml:"type,attr"`
@@ -11985,318 +11621,6 @@ func (value Distance) MarshalXML(encoder *xml.Encoder, start xml.StartElement) e
 // UnmarshalXML decodes numeric fields using their XSD lexical forms.
 func (value *Distance) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
 	decoded := xmlDistanceFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlFirstFret struct {
-	Value    xmlUnsigned64 `xml:",chardata"`
-	Text     *string       `xml:"text,attr,omitempty"`
-	Location *LeftRight    `xml:"location,attr,omitempty"`
-}
-
-func xmlFirstFretFrom(value FirstFret) xmlFirstFret {
-	return xmlFirstFret{
-		Value:    xmlUnsigned64(value.Value),
-		Text:     value.Text,
-		Location: value.Location,
-	}
-}
-
-func (value xmlFirstFret) model() FirstFret {
-	return FirstFret{
-		Value:    uint64(value.Value),
-		Text:     value.Text,
-		Location: value.Location,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value FirstFret) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlFirstFretFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *FirstFret) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlFirstFretFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlForward struct {
-	// Duration is a positive number specified in division units. This is the
-	// intended duration vs. notated duration (for instance, differences in
-	// dotted notes in Baroque-era music). Differences in duration specific to
-	// an interpretation or performance should be represented using the note
-	// element's attack and release attributes.
-	//
-	// The duration element moves the musical position when used in backup
-	// elements, forward elements, and note elements that do not contain a chord
-	// child element.
-	Duration PositiveDivisions `xml:"duration"`
-	Footnote *FormattedText    `xml:"footnote,omitempty"`
-	Level    *Level            `xml:"level,omitempty"`
-	Voice    *string           `xml:"voice,omitempty"`
-	// Staff assignment is only needed for music notated on multiple staves.
-	// Used by both notes and directions. Staff values are numbers, with 1
-	// referring to the top-most staff in a part.
-	Staff *xmlUnsigned64 `xml:"staff,omitempty"`
-}
-
-func xmlForwardFrom(value Forward) xmlForward {
-	return xmlForward{
-		Duration: value.Duration,
-		Footnote: value.Footnote,
-		Level:    value.Level,
-		Voice:    value.Voice,
-		Staff:    (*xmlUnsigned64)(value.Staff),
-	}
-}
-
-func (value xmlForward) model() Forward {
-	return Forward{
-		Duration: value.Duration,
-		Footnote: value.Footnote,
-		Level:    value.Level,
-		Voice:    value.Voice,
-		Staff:    (*uint64)(value.Staff),
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Forward) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlForwardFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Forward) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlForwardFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlFrame struct {
-	// The frame-strings element gives the overall size of the frame in vertical
-	// lines (strings).
-	FrameStrings xmlUnsigned64 `xml:"frame-strings"`
-	// The frame-frets element gives the overall size of the frame in horizontal
-	// spaces (frets).
-	FrameFrets xmlUnsigned64    `xml:"frame-frets"`
-	FirstFret  *FirstFret       `xml:"first-fret,omitempty"`
-	FrameNote  []FrameNote      `xml:"frame-note"`
-	Height     *Tenths          `xml:"height,attr,omitempty"`
-	Width      *Tenths          `xml:"width,attr,omitempty"`
-	Unplayed   *string          `xml:"unplayed,attr,omitempty"`
-	DefaultX   *Tenths          `xml:"default-x,attr,omitempty"`
-	DefaultY   *Tenths          `xml:"default-y,attr,omitempty"`
-	RelativeX  *Tenths          `xml:"relative-x,attr,omitempty"`
-	RelativeY  *Tenths          `xml:"relative-y,attr,omitempty"`
-	Color      *Color           `xml:"color,attr,omitempty"`
-	Halign     *LeftCenterRight `xml:"halign,attr,omitempty"`
-	Valign     *ValignImage     `xml:"valign,attr,omitempty"`
-	ID         *string          `xml:"id,attr,omitempty"`
-}
-
-func xmlFrameFrom(value Frame) xmlFrame {
-	return xmlFrame{
-		FrameStrings: xmlUnsigned64(value.FrameStrings),
-		FrameFrets:   xmlUnsigned64(value.FrameFrets),
-		FirstFret:    value.FirstFret,
-		FrameNote:    value.FrameNote,
-		Height:       value.Height,
-		Width:        value.Width,
-		Unplayed:     value.Unplayed,
-		DefaultX:     value.DefaultX,
-		DefaultY:     value.DefaultY,
-		RelativeX:    value.RelativeX,
-		RelativeY:    value.RelativeY,
-		Color:        value.Color,
-		Halign:       value.Halign,
-		Valign:       value.Valign,
-		ID:           value.ID,
-	}
-}
-
-func (value xmlFrame) model() Frame {
-	return Frame{
-		FrameStrings: uint64(value.FrameStrings),
-		FrameFrets:   uint64(value.FrameFrets),
-		FirstFret:    value.FirstFret,
-		FrameNote:    value.FrameNote,
-		Height:       value.Height,
-		Width:        value.Width,
-		Unplayed:     value.Unplayed,
-		DefaultX:     value.DefaultX,
-		DefaultY:     value.DefaultY,
-		RelativeX:    value.RelativeX,
-		RelativeY:    value.RelativeY,
-		Color:        value.Color,
-		Halign:       value.Halign,
-		Valign:       value.Valign,
-		ID:           value.ID,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Frame) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlFrameFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Frame) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlFrameFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlFret struct {
-	Value      xmlUnsigned64 `xml:",chardata"`
-	FontFamily *FontFamily   `xml:"font-family,attr,omitempty"`
-	FontStyle  *FontStyle    `xml:"font-style,attr,omitempty"`
-	FontSize   *FontSize     `xml:"font-size,attr,omitempty"`
-	FontWeight *FontWeight   `xml:"font-weight,attr,omitempty"`
-	Color      *Color        `xml:"color,attr,omitempty"`
-}
-
-func xmlFretFrom(value Fret) xmlFret {
-	return xmlFret{
-		Value:      xmlUnsigned64(value.Value),
-		FontFamily: value.FontFamily,
-		FontStyle:  value.FontStyle,
-		FontSize:   value.FontSize,
-		FontWeight: value.FontWeight,
-		Color:      value.Color,
-	}
-}
-
-func (value xmlFret) model() Fret {
-	return Fret{
-		Value:      uint64(value.Value),
-		FontFamily: value.FontFamily,
-		FontStyle:  value.FontStyle,
-		FontSize:   value.FontSize,
-		FontWeight: value.FontWeight,
-		Color:      value.Color,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Fret) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlFretFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Fret) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlFretFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlHarmony struct {
-	Content  HarmonyContents `xml:",any"`
-	Frame    *Frame          `xml:"frame,omitempty"`
-	Offset   *Offset         `xml:"offset,omitempty"`
-	Footnote *FormattedText  `xml:"footnote,omitempty"`
-	Level    *Level          `xml:"level,omitempty"`
-	// Staff assignment is only needed for music notated on multiple staves.
-	// Used by both notes and directions. Staff values are numbers, with 1
-	// referring to the top-most staff in a part.
-	Staff       *xmlUnsigned64      `xml:"staff,omitempty"`
-	Type        *HarmonyType        `xml:"type,attr,omitempty"`
-	PrintFrame  *YesNo              `xml:"print-frame,attr,omitempty"`
-	Arrangement *HarmonyArrangement `xml:"arrangement,attr,omitempty"`
-	PrintObject *YesNo              `xml:"print-object,attr,omitempty"`
-	DefaultX    *Tenths             `xml:"default-x,attr,omitempty"`
-	DefaultY    *Tenths             `xml:"default-y,attr,omitempty"`
-	RelativeX   *Tenths             `xml:"relative-x,attr,omitempty"`
-	RelativeY   *Tenths             `xml:"relative-y,attr,omitempty"`
-	FontFamily  *FontFamily         `xml:"font-family,attr,omitempty"`
-	FontStyle   *FontStyle          `xml:"font-style,attr,omitempty"`
-	FontSize    *FontSize           `xml:"font-size,attr,omitempty"`
-	FontWeight  *FontWeight         `xml:"font-weight,attr,omitempty"`
-	Color       *Color              `xml:"color,attr,omitempty"`
-	Placement   *AboveBelow         `xml:"placement,attr,omitempty"`
-	System      *SystemRelation     `xml:"system,attr,omitempty"`
-	ID          *string             `xml:"id,attr,omitempty"`
-}
-
-func xmlHarmonyFrom(value Harmony) xmlHarmony {
-	return xmlHarmony{
-		Content:     value.Content,
-		Frame:       value.Frame,
-		Offset:      value.Offset,
-		Footnote:    value.Footnote,
-		Level:       value.Level,
-		Staff:       (*xmlUnsigned64)(value.Staff),
-		Type:        value.Type,
-		PrintFrame:  value.PrintFrame,
-		Arrangement: value.Arrangement,
-		PrintObject: value.PrintObject,
-		DefaultX:    value.DefaultX,
-		DefaultY:    value.DefaultY,
-		RelativeX:   value.RelativeX,
-		RelativeY:   value.RelativeY,
-		FontFamily:  value.FontFamily,
-		FontStyle:   value.FontStyle,
-		FontSize:    value.FontSize,
-		FontWeight:  value.FontWeight,
-		Color:       value.Color,
-		Placement:   value.Placement,
-		System:      value.System,
-		ID:          value.ID,
-	}
-}
-
-func (value xmlHarmony) model() Harmony {
-	return Harmony{
-		Content:     value.Content,
-		Frame:       value.Frame,
-		Offset:      value.Offset,
-		Footnote:    value.Footnote,
-		Level:       value.Level,
-		Staff:       (*uint64)(value.Staff),
-		Type:        value.Type,
-		PrintFrame:  value.PrintFrame,
-		Arrangement: value.Arrangement,
-		PrintObject: value.PrintObject,
-		DefaultX:    value.DefaultX,
-		DefaultY:    value.DefaultY,
-		RelativeX:   value.RelativeX,
-		RelativeY:   value.RelativeY,
-		FontFamily:  value.FontFamily,
-		FontStyle:   value.FontStyle,
-		FontSize:    value.FontSize,
-		FontWeight:  value.FontWeight,
-		Color:       value.Color,
-		Placement:   value.Placement,
-		System:      value.System,
-		ID:          value.ID,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Harmony) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlHarmonyFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Harmony) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlHarmonyFrom(*value)
 	if err := decoder.DecodeElement(&decoded, &start); err != nil {
 		return err
 	}
@@ -12368,104 +11692,6 @@ func (value *HarmonyAlter) UnmarshalXML(decoder *xml.Decoder, start xml.StartEle
 	return nil
 }
 
-type xmlInversion struct {
-	Value      xmlUnsigned64 `xml:",chardata"`
-	Text       *string       `xml:"text,attr,omitempty"`
-	DefaultX   *Tenths       `xml:"default-x,attr,omitempty"`
-	DefaultY   *Tenths       `xml:"default-y,attr,omitempty"`
-	RelativeX  *Tenths       `xml:"relative-x,attr,omitempty"`
-	RelativeY  *Tenths       `xml:"relative-y,attr,omitempty"`
-	FontFamily *FontFamily   `xml:"font-family,attr,omitempty"`
-	FontStyle  *FontStyle    `xml:"font-style,attr,omitempty"`
-	FontSize   *FontSize     `xml:"font-size,attr,omitempty"`
-	FontWeight *FontWeight   `xml:"font-weight,attr,omitempty"`
-	Color      *Color        `xml:"color,attr,omitempty"`
-}
-
-func xmlInversionFrom(value Inversion) xmlInversion {
-	return xmlInversion{
-		Value:      xmlUnsigned64(value.Value),
-		Text:       value.Text,
-		DefaultX:   value.DefaultX,
-		DefaultY:   value.DefaultY,
-		RelativeX:  value.RelativeX,
-		RelativeY:  value.RelativeY,
-		FontFamily: value.FontFamily,
-		FontStyle:  value.FontStyle,
-		FontSize:   value.FontSize,
-		FontWeight: value.FontWeight,
-		Color:      value.Color,
-	}
-}
-
-func (value xmlInversion) model() Inversion {
-	return Inversion{
-		Value:      uint64(value.Value),
-		Text:       value.Text,
-		DefaultX:   value.DefaultX,
-		DefaultY:   value.DefaultY,
-		RelativeX:  value.RelativeX,
-		RelativeY:  value.RelativeY,
-		FontFamily: value.FontFamily,
-		FontStyle:  value.FontStyle,
-		FontSize:   value.FontSize,
-		FontWeight: value.FontWeight,
-		Color:      value.Color,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Inversion) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlInversionFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Inversion) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlInversionFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlKeyOctave struct {
-	Value  Octave        `xml:",chardata"`
-	Number xmlUnsigned64 `xml:"number,attr"`
-	Cancel *YesNo        `xml:"cancel,attr,omitempty"`
-}
-
-func xmlKeyOctaveFrom(value KeyOctave) xmlKeyOctave {
-	return xmlKeyOctave{
-		Value:  value.Value,
-		Number: xmlUnsigned64(value.Number),
-		Cancel: value.Cancel,
-	}
-}
-
-func (value xmlKeyOctave) model() KeyOctave {
-	return KeyOctave{
-		Value:  value.Value,
-		Number: uint64(value.Number),
-		Cancel: value.Cancel,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value KeyOctave) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlKeyOctaveFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *KeyOctave) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlKeyOctaveFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
 type xmlLineWidth struct {
 	Value xmlDecimal    `xml:",chardata"`
 	Type  LineWidthType `xml:"type,attr"`
@@ -12493,380 +11719,6 @@ func (value LineWidth) MarshalXML(encoder *xml.Encoder, start xml.StartElement) 
 // UnmarshalXML decodes numeric fields using their XSD lexical forms.
 func (value *LineWidth) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
 	decoded := xmlLineWidthFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlLink struct {
-	Name      *string        `xml:"name,attr,omitempty"`
-	Href      string         `xml:"http://www.w3.org/1999/xlink href,attr"`
-	Type      *string        `xml:"http://www.w3.org/1999/xlink type,attr,omitempty"`
-	Role      *string        `xml:"http://www.w3.org/1999/xlink role,attr,omitempty"`
-	Title     *string        `xml:"http://www.w3.org/1999/xlink title,attr,omitempty"`
-	Show      *string        `xml:"http://www.w3.org/1999/xlink show,attr,omitempty"`
-	Actuate   *string        `xml:"http://www.w3.org/1999/xlink actuate,attr,omitempty"`
-	Element   *string        `xml:"element,attr,omitempty"`
-	Position  *xmlUnsigned64 `xml:"position,attr,omitempty"`
-	DefaultX  *Tenths        `xml:"default-x,attr,omitempty"`
-	DefaultY  *Tenths        `xml:"default-y,attr,omitempty"`
-	RelativeX *Tenths        `xml:"relative-x,attr,omitempty"`
-	RelativeY *Tenths        `xml:"relative-y,attr,omitempty"`
-}
-
-func xmlLinkFrom(value Link) xmlLink {
-	return xmlLink{
-		Name:      value.Name,
-		Href:      value.Href,
-		Type:      value.Type,
-		Role:      value.Role,
-		Title:     value.Title,
-		Show:      value.Show,
-		Actuate:   value.Actuate,
-		Element:   value.Element,
-		Position:  (*xmlUnsigned64)(value.Position),
-		DefaultX:  value.DefaultX,
-		DefaultY:  value.DefaultY,
-		RelativeX: value.RelativeX,
-		RelativeY: value.RelativeY,
-	}
-}
-
-func (value xmlLink) model() Link {
-	return Link{
-		Name:      value.Name,
-		Href:      value.Href,
-		Type:      value.Type,
-		Role:      value.Role,
-		Title:     value.Title,
-		Show:      value.Show,
-		Actuate:   value.Actuate,
-		Element:   value.Element,
-		Position:  (*uint64)(value.Position),
-		DefaultX:  value.DefaultX,
-		DefaultY:  value.DefaultY,
-		RelativeX: value.RelativeX,
-		RelativeY: value.RelativeY,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Link) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlLinkFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Link) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlLinkFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlMeasureRepeat struct {
-	Value   PositiveIntegerOrEmpty `xml:",chardata"`
-	Type    StartStop              `xml:"type,attr"`
-	Slashes *xmlUnsigned64         `xml:"slashes,attr,omitempty"`
-}
-
-func xmlMeasureRepeatFrom(value MeasureRepeat) xmlMeasureRepeat {
-	return xmlMeasureRepeat{
-		Value:   value.Value,
-		Type:    value.Type,
-		Slashes: (*xmlUnsigned64)(value.Slashes),
-	}
-}
-
-func (value xmlMeasureRepeat) model() MeasureRepeat {
-	return MeasureRepeat{
-		Value:   value.Value,
-		Type:    value.Type,
-		Slashes: (*uint64)(value.Slashes),
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value MeasureRepeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlMeasureRepeatFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *MeasureRepeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlMeasureRepeatFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlMetronomeTuplet struct {
-	xmlTimeModification
-	Type       StartStop   `xml:"type,attr"`
-	Bracket    *YesNo      `xml:"bracket,attr,omitempty"`
-	ShowNumber *ShowTuplet `xml:"show-number,attr,omitempty"`
-}
-
-func xmlMetronomeTupletFrom(value MetronomeTuplet) xmlMetronomeTuplet {
-	return xmlMetronomeTuplet{
-		xmlTimeModification: xmlTimeModificationFrom(value.TimeModification),
-		Type:                value.Type,
-		Bracket:             value.Bracket,
-		ShowNumber:          value.ShowNumber,
-	}
-}
-
-func (value xmlMetronomeTuplet) model() MetronomeTuplet {
-	return MetronomeTuplet{
-		TimeModification: value.xmlTimeModification.model(),
-		Type:             value.Type,
-		Bracket:          value.Bracket,
-		ShowNumber:       value.ShowNumber,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value MetronomeTuplet) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlMetronomeTupletFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *MetronomeTuplet) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlMetronomeTupletFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlMultipleRest struct {
-	Value      xmlUnsigned64 `xml:",chardata"`
-	UseSymbols *YesNo        `xml:"use-symbols,attr,omitempty"`
-}
-
-func xmlMultipleRestFrom(value MultipleRest) xmlMultipleRest {
-	return xmlMultipleRest{
-		Value:      xmlUnsigned64(value.Value),
-		UseSymbols: value.UseSymbols,
-	}
-}
-
-func (value xmlMultipleRest) model() MultipleRest {
-	return MultipleRest{
-		Value:      uint64(value.Value),
-		UseSymbols: value.UseSymbols,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value MultipleRest) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlMultipleRestFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *MultipleRest) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlMultipleRestFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlNote struct {
-	Grace *Grace `xml:"grace,omitempty"`
-	// The cue element indicates the presence of a cue note. In MusicXML, a cue
-	// note is a silent note with no playback. Normal notes that play can be
-	// specified as cue size using the type element. A cue note that is
-	// specified as full size using the type element will still remain silent.
-	Cue *Empty `xml:"cue,omitempty"`
-	// The chord element indicates that this note is an additional chord tone
-	// with the preceding note.
-	//
-	// The duration of a chord note does not move the musical position within a
-	// measure. That is done by the duration of the first preceding note without
-	// a chord element. Thus the duration of a chord note cannot be longer than
-	// the preceding note.
-	//
-	// In most cases the duration will be the same as the preceding note.
-	// However it can be shorter in situations such as multiple stops for string
-	// instruments.
-	Chord     *Empty     `xml:"chord,omitempty"`
-	Pitch     *Pitch     `xml:"pitch,omitempty"`
-	Unpitched *Unpitched `xml:"unpitched,omitempty"`
-	Rest      *Rest      `xml:"rest,omitempty"`
-	// Duration is a positive number specified in division units. This is the
-	// intended duration vs. notated duration (for instance, differences in
-	// dotted notes in Baroque-era music). Differences in duration specific to
-	// an interpretation or performance should be represented using the note
-	// element's attack and release attributes.
-	//
-	// The duration element moves the musical position when used in backup
-	// elements, forward elements, and note elements that do not contain a chord
-	// child element.
-	Duration   *PositiveDivisions `xml:"duration,omitempty"`
-	Tie        []Tie              `xml:"tie"`
-	Instrument []Instrument       `xml:"instrument"`
-	Footnote   *FormattedText     `xml:"footnote,omitempty"`
-	Level      *Level             `xml:"level,omitempty"`
-	Voice      *string            `xml:"voice,omitempty"`
-	Type       *NoteType          `xml:"type,omitempty"`
-	// One dot element is used for each dot of prolongation. The placement
-	// attribute is used to specify whether the dot should appear above or below
-	// the staff line. It is ignored for notes that appear on a staff space.
-	Dot              []EmptyPlacement  `xml:"dot"`
-	Accidental       *Accidental       `xml:"accidental,omitempty"`
-	TimeModification *TimeModification `xml:"time-modification,omitempty"`
-	Stem             *Stem             `xml:"stem,omitempty"`
-	Notehead         *Notehead         `xml:"notehead,omitempty"`
-	NoteheadText     *NoteheadText     `xml:"notehead-text,omitempty"`
-	// Staff assignment is only needed for music notated on multiple staves.
-	// Used by both notes and directions. Staff values are numbers, with 1
-	// referring to the top-most staff in a part.
-	Staff        *xmlUnsigned64      `xml:"staff,omitempty"`
-	Beam         []Beam              `xml:"beam"`
-	Notations    []Notations         `xml:"notations"`
-	Lyric        []Lyric             `xml:"lyric"`
-	Play         *Play               `xml:"play,omitempty"`
-	Listen       *Listen             `xml:"listen,omitempty"`
-	PrintLeger   *YesNo              `xml:"print-leger,attr,omitempty"`
-	Dynamics     *NonNegativeDecimal `xml:"dynamics,attr,omitempty"`
-	EndDynamics  *NonNegativeDecimal `xml:"end-dynamics,attr,omitempty"`
-	Attack       *Divisions          `xml:"attack,attr,omitempty"`
-	Release      *Divisions          `xml:"release,attr,omitempty"`
-	TimeOnly     *TimeOnly           `xml:"time-only,attr,omitempty"`
-	Pizzicato    *YesNo              `xml:"pizzicato,attr,omitempty"`
-	DefaultX     *Tenths             `xml:"default-x,attr,omitempty"`
-	DefaultY     *Tenths             `xml:"default-y,attr,omitempty"`
-	RelativeX    *Tenths             `xml:"relative-x,attr,omitempty"`
-	RelativeY    *Tenths             `xml:"relative-y,attr,omitempty"`
-	FontFamily   *FontFamily         `xml:"font-family,attr,omitempty"`
-	FontStyle    *FontStyle          `xml:"font-style,attr,omitempty"`
-	FontSize     *FontSize           `xml:"font-size,attr,omitempty"`
-	FontWeight   *FontWeight         `xml:"font-weight,attr,omitempty"`
-	Color        *Color              `xml:"color,attr,omitempty"`
-	PrintDot     *YesNo              `xml:"print-dot,attr,omitempty"`
-	PrintLyric   *YesNo              `xml:"print-lyric,attr,omitempty"`
-	PrintObject  *YesNo              `xml:"print-object,attr,omitempty"`
-	PrintSpacing *YesNo              `xml:"print-spacing,attr,omitempty"`
-	ID           *string             `xml:"id,attr,omitempty"`
-}
-
-func xmlNoteFrom(value Note) xmlNote {
-	return xmlNote{
-		Grace:            value.Grace,
-		Cue:              value.Cue,
-		Chord:            value.Chord,
-		Pitch:            value.Pitch,
-		Unpitched:        value.Unpitched,
-		Rest:             value.Rest,
-		Duration:         value.Duration,
-		Tie:              value.Tie,
-		Instrument:       value.Instrument,
-		Footnote:         value.Footnote,
-		Level:            value.Level,
-		Voice:            value.Voice,
-		Type:             value.Type,
-		Dot:              value.Dot,
-		Accidental:       value.Accidental,
-		TimeModification: value.TimeModification,
-		Stem:             value.Stem,
-		Notehead:         value.Notehead,
-		NoteheadText:     value.NoteheadText,
-		Staff:            (*xmlUnsigned64)(value.Staff),
-		Beam:             value.Beam,
-		Notations:        value.Notations,
-		Lyric:            value.Lyric,
-		Play:             value.Play,
-		Listen:           value.Listen,
-		PrintLeger:       value.PrintLeger,
-		Dynamics:         value.Dynamics,
-		EndDynamics:      value.EndDynamics,
-		Attack:           value.Attack,
-		Release:          value.Release,
-		TimeOnly:         value.TimeOnly,
-		Pizzicato:        value.Pizzicato,
-		DefaultX:         value.DefaultX,
-		DefaultY:         value.DefaultY,
-		RelativeX:        value.RelativeX,
-		RelativeY:        value.RelativeY,
-		FontFamily:       value.FontFamily,
-		FontStyle:        value.FontStyle,
-		FontSize:         value.FontSize,
-		FontWeight:       value.FontWeight,
-		Color:            value.Color,
-		PrintDot:         value.PrintDot,
-		PrintLyric:       value.PrintLyric,
-		PrintObject:      value.PrintObject,
-		PrintSpacing:     value.PrintSpacing,
-		ID:               value.ID,
-	}
-}
-
-func (value xmlNote) model() Note {
-	return Note{
-		Grace:            value.Grace,
-		Cue:              value.Cue,
-		Chord:            value.Chord,
-		Pitch:            value.Pitch,
-		Unpitched:        value.Unpitched,
-		Rest:             value.Rest,
-		Duration:         value.Duration,
-		Tie:              value.Tie,
-		Instrument:       value.Instrument,
-		Footnote:         value.Footnote,
-		Level:            value.Level,
-		Voice:            value.Voice,
-		Type:             value.Type,
-		Dot:              value.Dot,
-		Accidental:       value.Accidental,
-		TimeModification: value.TimeModification,
-		Stem:             value.Stem,
-		Notehead:         value.Notehead,
-		NoteheadText:     value.NoteheadText,
-		Staff:            (*uint64)(value.Staff),
-		Beam:             value.Beam,
-		Notations:        value.Notations,
-		Lyric:            value.Lyric,
-		Play:             value.Play,
-		Listen:           value.Listen,
-		PrintLeger:       value.PrintLeger,
-		Dynamics:         value.Dynamics,
-		EndDynamics:      value.EndDynamics,
-		Attack:           value.Attack,
-		Release:          value.Release,
-		TimeOnly:         value.TimeOnly,
-		Pizzicato:        value.Pizzicato,
-		DefaultX:         value.DefaultX,
-		DefaultY:         value.DefaultY,
-		RelativeX:        value.RelativeX,
-		RelativeY:        value.RelativeY,
-		FontFamily:       value.FontFamily,
-		FontStyle:        value.FontStyle,
-		FontSize:         value.FontSize,
-		FontWeight:       value.FontWeight,
-		Color:            value.Color,
-		PrintDot:         value.PrintDot,
-		PrintLyric:       value.PrintLyric,
-		PrintObject:      value.PrintObject,
-		PrintSpacing:     value.PrintSpacing,
-		ID:               value.ID,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Note) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlNoteFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Note) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlNoteFrom(*value)
 	if err := decoder.DecodeElement(&decoded, &start); err != nil {
 		return err
 	}
@@ -12969,79 +11821,6 @@ func (value *NumeralRoot) UnmarshalXML(decoder *xml.Decoder, start xml.StartElem
 	return nil
 }
 
-type xmlOctaveShift struct {
-	Type        UpDownStopContinue `xml:"type,attr"`
-	Number      *NumberLevel       `xml:"number,attr,omitempty"`
-	Size        *xmlUnsigned64     `xml:"size,attr,omitempty"`
-	DashLength  *Tenths            `xml:"dash-length,attr,omitempty"`
-	SpaceLength *Tenths            `xml:"space-length,attr,omitempty"`
-	DefaultX    *Tenths            `xml:"default-x,attr,omitempty"`
-	DefaultY    *Tenths            `xml:"default-y,attr,omitempty"`
-	RelativeX   *Tenths            `xml:"relative-x,attr,omitempty"`
-	RelativeY   *Tenths            `xml:"relative-y,attr,omitempty"`
-	FontFamily  *FontFamily        `xml:"font-family,attr,omitempty"`
-	FontStyle   *FontStyle         `xml:"font-style,attr,omitempty"`
-	FontSize    *FontSize          `xml:"font-size,attr,omitempty"`
-	FontWeight  *FontWeight        `xml:"font-weight,attr,omitempty"`
-	Color       *Color             `xml:"color,attr,omitempty"`
-	ID          *string            `xml:"id,attr,omitempty"`
-}
-
-func xmlOctaveShiftFrom(value OctaveShift) xmlOctaveShift {
-	return xmlOctaveShift{
-		Type:        value.Type,
-		Number:      value.Number,
-		Size:        (*xmlUnsigned64)(value.Size),
-		DashLength:  value.DashLength,
-		SpaceLength: value.SpaceLength,
-		DefaultX:    value.DefaultX,
-		DefaultY:    value.DefaultY,
-		RelativeX:   value.RelativeX,
-		RelativeY:   value.RelativeY,
-		FontFamily:  value.FontFamily,
-		FontStyle:   value.FontStyle,
-		FontSize:    value.FontSize,
-		FontWeight:  value.FontWeight,
-		Color:       value.Color,
-		ID:          value.ID,
-	}
-}
-
-func (value xmlOctaveShift) model() OctaveShift {
-	return OctaveShift{
-		Type:        value.Type,
-		Number:      value.Number,
-		Size:        (*uint64)(value.Size),
-		DashLength:  value.DashLength,
-		SpaceLength: value.SpaceLength,
-		DefaultX:    value.DefaultX,
-		DefaultY:    value.DefaultY,
-		RelativeX:   value.RelativeX,
-		RelativeY:   value.RelativeY,
-		FontFamily:  value.FontFamily,
-		FontStyle:   value.FontStyle,
-		FontSize:    value.FontSize,
-		FontWeight:  value.FontWeight,
-		Color:       value.Color,
-		ID:          value.ID,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value OctaveShift) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlOctaveShiftFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *OctaveShift) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlOctaveShiftFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
 type xmlOffset struct {
 	Value xmlDecimal `xml:",chardata"`
 	Sound *YesNo     `xml:"sound,attr,omitempty"`
@@ -13069,178 +11848,6 @@ func (value Offset) MarshalXML(encoder *xml.Encoder, start xml.StartElement) err
 // UnmarshalXML decodes numeric fields using their XSD lexical forms.
 func (value *Offset) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
 	decoded := xmlOffsetFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlPrint struct {
-	PageLayout              *PageLayout       `xml:"page-layout,omitempty"`
-	SystemLayout            *SystemLayout     `xml:"system-layout,omitempty"`
-	StaffLayout             []StaffLayout     `xml:"staff-layout"`
-	MeasureLayout           *MeasureLayout    `xml:"measure-layout,omitempty"`
-	MeasureNumbering        *MeasureNumbering `xml:"measure-numbering,omitempty"`
-	PartNameDisplay         *NameDisplay      `xml:"part-name-display,omitempty"`
-	PartAbbreviationDisplay *NameDisplay      `xml:"part-abbreviation-display,omitempty"`
-	StaffSpacing            *Tenths           `xml:"staff-spacing,attr,omitempty"`
-	NewSystem               *YesNo            `xml:"new-system,attr,omitempty"`
-	NewPage                 *YesNo            `xml:"new-page,attr,omitempty"`
-	BlankPage               *xmlUnsigned64    `xml:"blank-page,attr,omitempty"`
-	PageNumber              *string           `xml:"page-number,attr,omitempty"`
-	ID                      *string           `xml:"id,attr,omitempty"`
-}
-
-func xmlPrintFrom(value Print) xmlPrint {
-	return xmlPrint{
-		PageLayout:              value.PageLayout,
-		SystemLayout:            value.SystemLayout,
-		StaffLayout:             value.StaffLayout,
-		MeasureLayout:           value.MeasureLayout,
-		MeasureNumbering:        value.MeasureNumbering,
-		PartNameDisplay:         value.PartNameDisplay,
-		PartAbbreviationDisplay: value.PartAbbreviationDisplay,
-		StaffSpacing:            value.StaffSpacing,
-		NewSystem:               value.NewSystem,
-		NewPage:                 value.NewPage,
-		BlankPage:               (*xmlUnsigned64)(value.BlankPage),
-		PageNumber:              value.PageNumber,
-		ID:                      value.ID,
-	}
-}
-
-func (value xmlPrint) model() Print {
-	return Print{
-		PageLayout:              value.PageLayout,
-		SystemLayout:            value.SystemLayout,
-		StaffLayout:             value.StaffLayout,
-		MeasureLayout:           value.MeasureLayout,
-		MeasureNumbering:        value.MeasureNumbering,
-		PartNameDisplay:         value.PartNameDisplay,
-		PartAbbreviationDisplay: value.PartAbbreviationDisplay,
-		StaffSpacing:            value.StaffSpacing,
-		NewSystem:               value.NewSystem,
-		NewPage:                 value.NewPage,
-		BlankPage:               (*uint64)(value.BlankPage),
-		PageNumber:              value.PageNumber,
-		ID:                      value.ID,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Print) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlPrintFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Print) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlPrintFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlRepeat struct {
-	Direction BackwardForward `xml:"direction,attr"`
-	Times     *xmlUnsigned64  `xml:"times,attr,omitempty"`
-	AfterJump *YesNo          `xml:"after-jump,attr,omitempty"`
-	Winged    *Winged         `xml:"winged,attr,omitempty"`
-}
-
-func xmlRepeatFrom(value Repeat) xmlRepeat {
-	return xmlRepeat{
-		Direction: value.Direction,
-		Times:     (*xmlUnsigned64)(value.Times),
-		AfterJump: value.AfterJump,
-		Winged:    value.Winged,
-	}
-}
-
-func (value xmlRepeat) model() Repeat {
-	return Repeat{
-		Direction: value.Direction,
-		Times:     (*uint64)(value.Times),
-		AfterJump: value.AfterJump,
-		Winged:    value.Winged,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Repeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlRepeatFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Repeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlRepeatFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlStaffDetails struct {
-	StaffType *StaffType `xml:"staff-type,omitempty"`
-	// The staff-lines element specifies the number of lines and is usually used
-	// for a non 5-line staff. If the staff-lines element is present, the
-	// appearance of each line may be individually specified with a line-detail
-	// element.
-	StaffLines  *xmlUnsigned64 `xml:"staff-lines,omitempty"`
-	LineDetail  []LineDetail   `xml:"line-detail"`
-	StaffTuning []StaffTuning  `xml:"staff-tuning"`
-	// The capo element indicates at which fret a capo should be placed on a
-	// fretted instrument. This changes the open tuning of the strings specified
-	// by staff-tuning by the specified number of half-steps.
-	Capo         *xmlUnsigned64 `xml:"capo,omitempty"`
-	StaffSize    *StaffSize     `xml:"staff-size,omitempty"`
-	Number       *StaffNumber   `xml:"number,attr,omitempty"`
-	ShowFrets    *ShowFrets     `xml:"show-frets,attr,omitempty"`
-	PrintObject  *YesNo         `xml:"print-object,attr,omitempty"`
-	PrintSpacing *YesNo         `xml:"print-spacing,attr,omitempty"`
-}
-
-func xmlStaffDetailsFrom(value StaffDetails) xmlStaffDetails {
-	return xmlStaffDetails{
-		StaffType:    value.StaffType,
-		StaffLines:   (*xmlUnsigned64)(value.StaffLines),
-		LineDetail:   value.LineDetail,
-		StaffTuning:  value.StaffTuning,
-		Capo:         (*xmlUnsigned64)(value.Capo),
-		StaffSize:    value.StaffSize,
-		Number:       value.Number,
-		ShowFrets:    value.ShowFrets,
-		PrintObject:  value.PrintObject,
-		PrintSpacing: value.PrintSpacing,
-	}
-}
-
-func (value xmlStaffDetails) model() StaffDetails {
-	return StaffDetails{
-		StaffType:    value.StaffType,
-		StaffLines:   (*uint64)(value.StaffLines),
-		LineDetail:   value.LineDetail,
-		StaffTuning:  value.StaffTuning,
-		Capo:         (*uint64)(value.Capo),
-		StaffSize:    value.StaffSize,
-		Number:       value.Number,
-		ShowFrets:    value.ShowFrets,
-		PrintObject:  value.PrintObject,
-		PrintSpacing: value.PrintSpacing,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value StaffDetails) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlStaffDetailsFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *StaffDetails) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlStaffDetailsFrom(*value)
 	if err := decoder.DecodeElement(&decoded, &start); err != nil {
 		return err
 	}
@@ -13336,144 +11943,6 @@ func (value String) MarshalXML(encoder *xml.Encoder, start xml.StartElement) err
 // UnmarshalXML decodes numeric fields using their XSD lexical forms.
 func (value *String) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
 	decoded := xmlStringFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlSwing struct {
-	Straight   *Empty          `xml:"straight,omitempty"`
-	First      *xmlUnsigned64  `xml:"first,omitempty"`
-	Second     *xmlUnsigned64  `xml:"second,omitempty"`
-	SwingType  *SwingTypeValue `xml:"swing-type,omitempty"`
-	SwingStyle *string         `xml:"swing-style,omitempty"`
-}
-
-func xmlSwingFrom(value Swing) xmlSwing {
-	return xmlSwing{
-		Straight:   value.Straight,
-		First:      (*xmlUnsigned64)(value.First),
-		Second:     (*xmlUnsigned64)(value.Second),
-		SwingType:  value.SwingType,
-		SwingStyle: value.SwingStyle,
-	}
-}
-
-func (value xmlSwing) model() Swing {
-	return Swing{
-		Straight:   value.Straight,
-		First:      (*uint64)(value.First),
-		Second:     (*uint64)(value.Second),
-		SwingType:  value.SwingType,
-		SwingStyle: value.SwingStyle,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value Swing) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlSwingFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *Swing) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlSwingFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlTimeModification struct {
-	// The actual-notes element describes how many notes are played in the time
-	// usually occupied by the number in the normal-notes element.
-	ActualNotes xmlUnsigned64 `xml:"actual-notes"`
-	// The normal-notes element describes how many notes are usually played in
-	// the time occupied by the number in the actual-notes element.
-	NormalNotes xmlUnsigned64 `xml:"normal-notes"`
-	// If the type associated with the number in the normal-notes element is
-	// different than the current note type (e.g., a quarter note within an
-	// eighth note triplet), then the normal-notes type (e.g. eighth) is
-	// specified in the normal-type and normal-dot elements.
-	NormalType *NoteTypeValue `xml:"normal-type,omitempty"`
-	// The normal-dot element is used to specify dotted normal tuplet types.
-	NormalDot []Empty `xml:"normal-dot"`
-}
-
-func xmlTimeModificationFrom(value TimeModification) xmlTimeModification {
-	return xmlTimeModification{
-		ActualNotes: xmlUnsigned64(value.ActualNotes),
-		NormalNotes: xmlUnsigned64(value.NormalNotes),
-		NormalType:  value.NormalType,
-		NormalDot:   value.NormalDot,
-	}
-}
-
-func (value xmlTimeModification) model() TimeModification {
-	return TimeModification{
-		ActualNotes: uint64(value.ActualNotes),
-		NormalNotes: uint64(value.NormalNotes),
-		NormalType:  value.NormalType,
-		NormalDot:   value.NormalDot,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value TimeModification) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlTimeModificationFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *TimeModification) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlTimeModificationFrom(*value)
-	if err := decoder.DecodeElement(&decoded, &start); err != nil {
-		return err
-	}
-	*value = decoded.model()
-	return nil
-}
-
-type xmlTupletNumber struct {
-	Value      xmlUnsigned64 `xml:",chardata"`
-	FontFamily *FontFamily   `xml:"font-family,attr,omitempty"`
-	FontStyle  *FontStyle    `xml:"font-style,attr,omitempty"`
-	FontSize   *FontSize     `xml:"font-size,attr,omitempty"`
-	FontWeight *FontWeight   `xml:"font-weight,attr,omitempty"`
-	Color      *Color        `xml:"color,attr,omitempty"`
-}
-
-func xmlTupletNumberFrom(value TupletNumber) xmlTupletNumber {
-	return xmlTupletNumber{
-		Value:      xmlUnsigned64(value.Value),
-		FontFamily: value.FontFamily,
-		FontStyle:  value.FontStyle,
-		FontSize:   value.FontSize,
-		FontWeight: value.FontWeight,
-		Color:      value.Color,
-	}
-}
-
-func (value xmlTupletNumber) model() TupletNumber {
-	return TupletNumber{
-		Value:      uint64(value.Value),
-		FontFamily: value.FontFamily,
-		FontStyle:  value.FontStyle,
-		FontSize:   value.FontSize,
-		FontWeight: value.FontWeight,
-		Color:      value.Color,
-	}
-}
-
-// MarshalXML encodes numeric fields using their XSD lexical forms.
-func (value TupletNumber) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
-	return encoder.EncodeElement(xmlTupletNumberFrom(value), start)
-}
-
-// UnmarshalXML decodes numeric fields using their XSD lexical forms.
-func (value *TupletNumber) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
-	decoded := xmlTupletNumberFrom(*value)
 	if err := decoder.DecodeElement(&decoded, &start); err != nil {
 		return err
 	}
@@ -13650,7 +12119,7 @@ func init() {
 	modelDescriptors["Pitch"] = &modelDescriptor{Name: "Pitch", GoFields: 3, MappedFields: 3, SchemaType: modelName{Local: "pitch"}, Attributes: []modelField{}, Elements: []modelField{{Name: "Step", Index: []int{0}, XML: modelName{Local: "step"}, Optional: false, Repeated: false, Kind: modelString}, {Name: "Alter", Index: []int{1}, XML: modelName{Local: "alter"}, Optional: true, Repeated: false, Kind: modelDecimal}, {Name: "Octave", Index: []int{2}, XML: modelName{Local: "octave"}, Optional: false, Repeated: false, Kind: modelSigned}}}
 	modelDescriptors["Pitched"] = &modelDescriptor{Name: "Pitched", GoFields: 2, MappedFields: 2, SchemaType: modelName{Local: "pitched"}, Scalar: &modelField{Name: "Value", Index: []int{0}, Kind: modelString}, Attributes: []modelField{{Name: "SMuFL", Index: []int{1}, XML: modelName{Local: "smufl"}, Optional: true, Kind: modelString}}, Elements: []modelField{}}
 	modelDescriptors["PlacementText"] = &modelDescriptor{Name: "PlacementText", GoFields: 11, MappedFields: 11, SchemaType: modelName{Local: "placement-text"}, Scalar: &modelField{Name: "Value", Index: []int{0}, Kind: modelString}, Attributes: []modelField{{Name: "DefaultX", Index: []int{1}, XML: modelName{Local: "default-x"}, Optional: true, Kind: modelDecimal}, {Name: "DefaultY", Index: []int{2}, XML: modelName{Local: "default-y"}, Optional: true, Kind: modelDecimal}, {Name: "RelativeX", Index: []int{3}, XML: modelName{Local: "relative-x"}, Optional: true, Kind: modelDecimal}, {Name: "RelativeY", Index: []int{4}, XML: modelName{Local: "relative-y"}, Optional: true, Kind: modelDecimal}, {Name: "FontFamily", Index: []int{5}, XML: modelName{Local: "font-family"}, Optional: true, Kind: modelString}, {Name: "FontStyle", Index: []int{6}, XML: modelName{Local: "font-style"}, Optional: true, Kind: modelString}, {Name: "FontSize", Index: []int{7}, XML: modelName{Local: "font-size"}, Optional: true, Kind: modelString}, {Name: "FontWeight", Index: []int{8}, XML: modelName{Local: "font-weight"}, Optional: true, Kind: modelString}, {Name: "Color", Index: []int{9}, XML: modelName{Local: "color"}, Optional: true, Kind: modelString}, {Name: "Placement", Index: []int{10}, XML: modelName{Local: "placement"}, Optional: true, Kind: modelString}}, Elements: []modelField{}}
-	modelDescriptors["Play"] = &modelDescriptor{Name: "Play", GoFields: 2, MappedFields: 2, SchemaType: modelName{Local: "play"}, Attributes: []modelField{{Name: "ID", Index: []int{1}, XML: modelName{Local: "id"}, Optional: true, Kind: modelString}}, Elements: []modelField{{Name: "Content", Index: []int{0}, Repeated: true, Variants: []modelField{{Name: "Ipa", Index: []int{0}, XML: modelName{Local: "ipa"}, Optional: true, Kind: modelString}, {Name: "Mute", Index: []int{1}, XML: modelName{Local: "mute"}, Optional: true, Kind: modelString}, {Name: "SemiPitched", Index: []int{2}, XML: modelName{Local: "semi-pitched"}, Optional: true, Kind: modelString}, {Name: "OtherPlay", Index: []int{3}, XML: modelName{Local: "other-play"}, Optional: true, Child: "OtherPlay"}}}}}
+	modelDescriptors["Play"] = &modelDescriptor{Name: "Play", GoFields: 2, MappedFields: 2, SchemaType: modelName{Local: "play"}, Attributes: []modelField{{Name: "ID", Index: []int{1}, XML: modelName{Local: "id"}, Optional: true, Kind: modelString}}, Elements: []modelField{{Name: "Content", Index: []int{0}, Repeated: true, Variants: []modelField{{Name: "IPA", Index: []int{0}, XML: modelName{Local: "ipa"}, Optional: true, Kind: modelString}, {Name: "Mute", Index: []int{1}, XML: modelName{Local: "mute"}, Optional: true, Kind: modelString}, {Name: "SemiPitched", Index: []int{2}, XML: modelName{Local: "semi-pitched"}, Optional: true, Kind: modelString}, {Name: "OtherPlay", Index: []int{3}, XML: modelName{Local: "other-play"}, Optional: true, Child: "OtherPlay"}}}}}
 	modelDescriptors["Player"] = &modelDescriptor{Name: "Player", GoFields: 2, MappedFields: 2, SchemaType: modelName{Local: "player"}, Attributes: []modelField{{Name: "ID", Index: []int{1}, XML: modelName{Local: "id"}, Optional: false, Kind: modelString}}, Elements: []modelField{{Name: "PlayerName", Index: []int{0}, XML: modelName{Local: "player-name"}, Optional: false, Repeated: false, Kind: modelString}}}
 	modelDescriptors["PrincipalVoice"] = &modelDescriptor{Name: "PrincipalVoice", GoFields: 15, MappedFields: 15, SchemaType: modelName{Local: "principal-voice"}, Scalar: &modelField{Name: "Value", Index: []int{0}, Kind: modelString}, Attributes: []modelField{{Name: "Type", Index: []int{1}, XML: modelName{Local: "type"}, Optional: false, Kind: modelString}, {Name: "Symbol", Index: []int{2}, XML: modelName{Local: "symbol"}, Optional: false, Kind: modelString}, {Name: "DefaultX", Index: []int{3}, XML: modelName{Local: "default-x"}, Optional: true, Kind: modelDecimal}, {Name: "DefaultY", Index: []int{4}, XML: modelName{Local: "default-y"}, Optional: true, Kind: modelDecimal}, {Name: "RelativeX", Index: []int{5}, XML: modelName{Local: "relative-x"}, Optional: true, Kind: modelDecimal}, {Name: "RelativeY", Index: []int{6}, XML: modelName{Local: "relative-y"}, Optional: true, Kind: modelDecimal}, {Name: "FontFamily", Index: []int{7}, XML: modelName{Local: "font-family"}, Optional: true, Kind: modelString}, {Name: "FontStyle", Index: []int{8}, XML: modelName{Local: "font-style"}, Optional: true, Kind: modelString}, {Name: "FontSize", Index: []int{9}, XML: modelName{Local: "font-size"}, Optional: true, Kind: modelString}, {Name: "FontWeight", Index: []int{10}, XML: modelName{Local: "font-weight"}, Optional: true, Kind: modelString}, {Name: "Color", Index: []int{11}, XML: modelName{Local: "color"}, Optional: true, Kind: modelString}, {Name: "Halign", Index: []int{12}, XML: modelName{Local: "halign"}, Optional: true, Kind: modelString}, {Name: "Valign", Index: []int{13}, XML: modelName{Local: "valign"}, Optional: true, Kind: modelString}, {Name: "ID", Index: []int{14}, XML: modelName{Local: "id"}, Optional: true, Kind: modelString}}, Elements: []modelField{}}
 	modelDescriptors["Print"] = &modelDescriptor{Name: "Print", GoFields: 13, MappedFields: 13, SchemaType: modelName{Local: "print"}, Attributes: []modelField{{Name: "StaffSpacing", Index: []int{7}, XML: modelName{Local: "staff-spacing"}, Optional: true, Kind: modelDecimal}, {Name: "NewSystem", Index: []int{8}, XML: modelName{Local: "new-system"}, Optional: true, Kind: modelString}, {Name: "NewPage", Index: []int{9}, XML: modelName{Local: "new-page"}, Optional: true, Kind: modelString}, {Name: "BlankPage", Index: []int{10}, XML: modelName{Local: "blank-page"}, Optional: true, Kind: modelUnsigned}, {Name: "PageNumber", Index: []int{11}, XML: modelName{Local: "page-number"}, Optional: true, Kind: modelString}, {Name: "ID", Index: []int{12}, XML: modelName{Local: "id"}, Optional: true, Kind: modelString}}, Elements: []modelField{{Name: "PageLayout", Index: []int{0}, XML: modelName{Local: "page-layout"}, Optional: true, Repeated: false, Child: "PageLayout"}, {Name: "SystemLayout", Index: []int{1}, XML: modelName{Local: "system-layout"}, Optional: true, Repeated: false, Child: "SystemLayout"}, {Name: "StaffLayout", Index: []int{2}, XML: modelName{Local: "staff-layout"}, Optional: false, Repeated: true, Child: "StaffLayout"}, {Name: "MeasureLayout", Index: []int{3}, XML: modelName{Local: "measure-layout"}, Optional: true, Repeated: false, Child: "MeasureLayout"}, {Name: "MeasureNumbering", Index: []int{4}, XML: modelName{Local: "measure-numbering"}, Optional: true, Repeated: false, Child: "MeasureNumbering"}, {Name: "PartNameDisplay", Index: []int{5}, XML: modelName{Local: "part-name-display"}, Optional: true, Repeated: false, Child: "NameDisplay"}, {Name: "PartAbbreviationDisplay", Index: []int{6}, XML: modelName{Local: "part-abbreviation-display"}, Optional: true, Repeated: false, Child: "NameDisplay"}}}

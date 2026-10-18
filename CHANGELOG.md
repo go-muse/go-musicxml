@@ -28,6 +28,15 @@ or changed identifier to its replacement.
   `validation.Atomic`, `validation.Scalar` and `validation.ContextPosition`.
   `==` used to compare internal pointers, so numerically equal values were
   generally unequal; it now fails to compile. Use `Equal` or `Cmp`.
+- Generated fields whose schema type is the built-in `xs:positiveInteger`,
+  `xs:nonNegativeInteger` or `xs:integer` (35 fields, such as
+  `Attributes.Staves`, `Fret.Value` and `Transpose.Diatonic`) have the new
+  named types `PositiveInteger`, `NonNegativeInteger` and `Integer` instead of
+  `uint64`/`int64`. The named types decode their own lexical forms, so 19
+  structs, such as `Forward`, `Direction` and `Frame`, no longer have
+  `MarshalXML`/`UnmarshalXML` methods that existed only to decode `+1`.
+  Convert with `PositiveInteger(n)` or `uint64(v)`.
+- `PlayContent.Ipa` and `Play.AddIpa` are renamed `IPA` and `AddIPA`.
 
 ### Added
 

@@ -280,6 +280,14 @@ are written without exponent notation, but the model still uses `float64`
 precision. Integers must fit their generated Go type. Exact arbitrary-precision
 XSD numbers are outside the model's representational range.
 
+A field whose schema type is the built-in `xs:positiveInteger`,
+`xs:nonNegativeInteger` or `xs:integer` has the generated type
+`PositiveInteger`, `NonNegativeInteger` or `Integer` (underlying `uint64`,
+`uint64` and `int64`). These types decode every XSD lexical form that fits,
+such as `+1` and `-0`; the range facets, such as positiveInteger's exclusion
+of zero, are checked by validation. Simple types derived from these built-ins,
+such as `StaffNumber`, keep their own names.
+
 Directly assigning generated fields is supported. Constructors and `Add...`
 methods are conveniences, not a separate object model. Generated `Add...`
 methods store the pointer they receive. The hand-written `AddMeasure` methods
@@ -307,7 +315,7 @@ These properties are not guaranteed and may change with the schema:
   a default branch;
 - which generated types implement `xml.Marshaler`, `xml.Unmarshaler`,
   `xml.MarshalerAttr`, or `xml.UnmarshalerAttr`. Some types have whole-struct
-  marshal methods only because they contain built-in integer fields;
+  marshal methods only because they contain decimal or derived integer fields;
 - embedding a generated type in a caller-defined struct to extend its XML.
   Promoted marshal methods take over the outer struct and drop its own fields
   and `XMLName`, so embed nothing or wrap the value in a named field.

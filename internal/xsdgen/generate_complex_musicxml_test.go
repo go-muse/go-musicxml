@@ -58,7 +58,9 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 		parser.SkipObjectResolution,
 	)
 	require.NoError(t, err)
-	assert.Equal(t, 302, countTypeDeclarations(file))
+	// 25 numeric wire structs became unnecessary when the three built-in
+	// integer types got named types of their own.
+	assert.Equal(t, 280, countTypeDeclarations(file))
 
 	source := string(actual)
 	assert.Contains(t, source, "type Pitch struct {")

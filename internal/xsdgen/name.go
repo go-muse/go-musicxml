@@ -350,6 +350,7 @@ var goInitialisms = map[string]string{
 	"https":   "HTTPS",
 	"id":      "ID",
 	"idref":   "IDREF",
+	"ipa":     "IPA",
 	"iso":     "ISO",
 	"json":    "JSON",
 	"midi":    "MIDI",

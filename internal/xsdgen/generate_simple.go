@@ -97,6 +97,9 @@ type simpleTypeRenderer struct {
 	plans      map[*Declaration]*SimpleTypeDefinition
 	kindStates map[*Declaration]resolveState
 	kinds      map[*Declaration]GoTypeKind
+	// builtinNames maps the built-in types that fields reference by name to
+	// their Go names.
+	builtinNames map[string]string
 }
 
 func (r *simpleTypeRenderer) renderPlan(
