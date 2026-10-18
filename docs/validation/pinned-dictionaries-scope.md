@@ -423,7 +423,9 @@ for exact work counters, fixture qualifications and unchanged capability gaps.
   and must be preserved with generated equivalents. No chart artwork, PDF, font,
   outline or Unicode specification text is bundled.
 
-Any binary referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds
+Any binary referencing `DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`,
+`AssessModel`, `InspectXMLWithResources`, `AssessModelWithResources`,
+`InspectMXL`, `AssessMXLPackage` or `DecodeAssessedWithDictionaries` embeds
 all five component assets, including both CC BY-SA 4.0 IPA bundles, even with
 custom-source options. Direct use of `BundledDictionarySource` also retains all
 five. Selection limits runtime import and assessment, not the binary's asset

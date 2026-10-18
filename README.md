@@ -93,14 +93,14 @@ construction and compressed `.mxl` round trips in
 | Read or write compressed MusicXML | `DecodeMXL`, typed `DecodeMXL...` helpers, `As...` accessors, and `EncodeMXL` |
 | Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
 | Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
-| Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
-| Inspect original source with an explicit profile | `InspectXML`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext`, `ProfileSourceSemantics` |
-| Load only after source and current-model semantic acceptance | `DecodeAssessed`, `DecodeAssessedWithDictionaries` |
+| Load only after source and current-model semantic acceptance (scenario 2) | `DecodeAssessed`, `DecodeMXLAssessed`; `Lenient` returns the document with its reports |
+| Check a current model with the semantic profile (scenario 3) | `AssessModel` with empty options; for an MXL package, on its `Document` |
+| Assess current model with an explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
+| Inspect original source | `InspectXML` (empty profile: `ProfileSourceSemantics`), `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
 | Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
 | Compose DTD declarations with standalone local/link/dictionary assessment | `ProfileSourceInternalDTDLocal`, `ProfileSourceInternalDTDLinks`, `ProfileSourceInternalDTDDictionaries` |
 | Assess local links without fetching | `ProfileSourceLinks`, `ProfileModelLinks` |
-| Inspect or assess explicitly supplied pinned dictionaries | `InspectXMLWithDictionaries`, `AssessModelWithDictionaries` |
-| Assess dictionaries across selected resources or MXL | `InspectXMLWithResourcesAndDictionaries`, `AssessModelWithResourcesAndDictionaries`, `InspectMXLWithDictionaries`, `AssessMXLPackageWithDictionaries` |
+| Inspect or assess explicitly supplied pinned dictionaries | `AssessmentOptions.Dictionaries`, or `Graph.Dictionaries` of the resource and MXL options |
 | Assess original auxiliary XML | `ProfileSourceContainer`, `ProfileSourceSounds` |
 | Assess a selected resource graph | `InspectXMLWithResources`, `AssessModelWithResources`, `ProfileResourceGraph` |
 | Assess original or current MXL packages | `InspectMXL`, `AssessMXLPackage`, `ProfileMXLSource`, `ProfileMXLModel` |
@@ -122,12 +122,16 @@ its successful result makes no claim about the original input.
 Encoding rejects invalid UTF-8 and XML 1.0 characters before writing, so text
 is never silently replaced with U+FFFD.
 
-`DecodeAssessed` and `DecodeAssessedWithDictionaries` always require the existing
-`ProfileSourceSemantics` followed by direct `ProfileModelSemantics` assessment.
+Three scenarios cover loading and checking; see [Scenarios](API.md#scenarios).
+`DecodeAssessed` and `DecodeMXLAssessed` always require the existing
+`ProfileSourceSemantics` (`ProfileMXLSourceSemantics` for MXL) followed by
+direct `ProfileModelSemantics` assessment. `AssessModel` with empty options is
+that model assessment on its own.
 Nil or empty assessment options select this fixed pipeline, with bundled canonical
 SMuFL and IPA representation evidence. `DecodeResult` exposes `Source`,
-`Conversion` and `Model` separately; any failure or incomplete required assessment
-withholds `Document`. A DOCTYPE external subset is read from the bundled official
+`Conversion` and `Model` separately; by default any failure or incomplete
+required assessment withholds `Document`, while `Lenient` returns it with
+`Accepted` false. A DOCTYPE external subset is read from the bundled official
 MusicXML 4.0 DTDs, which also resolve the identifiers of MusicXML 1.0 through 3.1
 as the official catalog does, or from a caller `DTDSource`; nothing is fetched.
 An unrecognized external subset still cannot be accepted, and raising budgets does
@@ -434,7 +438,9 @@ in this README.
 
 The library code is licensed under the [MIT License](LICENSE). Bundled schemas,
 test fixtures and runtime dictionary data retain their own terms. Any binary
-referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds all five
+referencing `DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`, `AssessModel`,
+`InspectXMLWithResources`, `AssessModelWithResources`, `InspectMXL`,
+`AssessMXLPackage` or `DecodeAssessedWithDictionaries` embeds all five
 dictionary components, even with custom-source options. Direct use of
 `BundledDictionarySource` also retains all five. These include W3C FSA, CC BY-SA
 4.0 and Unicode License v3 data. Distribute these binaries with the five

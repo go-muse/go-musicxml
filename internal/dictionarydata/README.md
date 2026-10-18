@@ -50,7 +50,9 @@ text. They are explicitly embedded so `go mod vendor` preserves these exact file
 
 These data have separate upstream/adapted-data terms, including CC BY-SA 4.0
 for the IPA-derived data; the implementation code license does not replace
-them. Any binary referencing `DecodeAssessed` or
+them. Any binary referencing `DecodeAssessed`, `DecodeMXLAssessed`,
+`InspectXML`, `AssessModel`, `InspectXMLWithResources`,
+`AssessModelWithResources`, `InspectMXL`, `AssessMXLPackage` or
 `DecodeAssessedWithDictionaries` embeds all five components, even when calls
 pass custom sources or selections. Direct use of `BundledDictionarySource`
 also retains all five. Binary distributors must ship the five files above

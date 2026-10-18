@@ -161,9 +161,10 @@ or establish universal IPA coverage.
 Standard-sound recognition and dictionary-backed rendering advice are not added
 to the score semantic profiles.
 
-`DecodeAssessedWithDictionaries` uses the same defaults when `Assessment` is nil
-or its `Dictionaries.Source` is nil and it has no selections (nil and empty slices
-both qualify). A typed-nil `Source` is an explicit override and does not activate
+`DecodeAssessed` uses the same defaults when `Assessment` or
+`Assessment.Dictionaries` is nil, or when the dictionaries' `Source` is nil and
+they have no selections (nil and empty slices both qualify). The deprecated
+`DecodeAssessedWithDictionaries` behaves the same. A typed-nil `Source` is an explicit override and does not activate
 defaults. Any explicit override must include both required manifest/relation
 pairs. Other supported selections may be added; unknown, duplicate or incomplete
 selections fail before input reads or callbacks.
@@ -172,9 +173,9 @@ A custom source with empty selections is an incomplete configuration.
 For an explicit source, provide the required selections together:
 
 ```go
-options := musicxml.DecodeDictionaryAssessmentOptions{
-    Assessment: &musicxml.DictionaryAssessmentOptions{
-        Dictionaries: musicxml.DictionaryOptions{
+options := musicxml.DecodeAssessmentOptions{
+    Assessment: &musicxml.AssessmentOptions{
+        Dictionaries: &musicxml.DictionaryOptions{
             Source: dictionarySource,
             Selections: []validation.DictionarySelection{
                 {
@@ -193,7 +194,7 @@ options := musicxml.DecodeDictionaryAssessmentOptions{
         },
     },
 }
-result, err := musicxml.DecodeAssessedWithDictionaries(ctx, reader, options)
+result, err := musicxml.DecodeAssessed(ctx, reader, options)
 ```
 
 The explicit source is honored, including a nil, typed-nil or unavailable source
@@ -206,7 +207,8 @@ importer is closed under the existing ownership contract.
 
 Bundled data uses committed local assets and the existing bounded verifier and
 importer. It needs no runtime files or network access. Any binary referencing
-`DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds all five components,
+`DecodeAssessed` or another entry point listed under [Scenarios](../../API.md#scenarios)
+embeds all five components,
 even when every call supplies a custom source or different selections. Direct
 use of `BundledDictionarySource` also retains all five. Options control runtime
 import and assessment; they do not remove the embedded assets. Distribute these

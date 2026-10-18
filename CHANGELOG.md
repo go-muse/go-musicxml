@@ -9,6 +9,29 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Organize loading and checking around three scenarios (see API.md,
+  "Scenarios"): `Decode`/`DecodeMXL` without validation; strict loading with
+  `DecodeAssessed` and the new `DecodeMXLAssessed`; and model checks with
+  `AssessModel`, on the primary document for an MXL package. With unexhausted
+  budgets, `AssessModel` on a document from `DecodeAssessed` gives the same
+  report as its model stage.
+- Add `DecodeAssessmentOptions.Lenient` and `DecodeResult.Accepted`. The
+  lenient mode returns the converted document with both reports when an
+  assessment finds violations or is incomplete, with a nil error; operational
+  failures still return an error.
+- Add `DecodeMXLAssessed`, `DecodeMXLAssessmentOptions` and `DecodeMXLResult`.
+  It assesses the original archive with `ProfileMXLSourceSemantics`, converts
+  it and assesses the primary document with `ProfileModelSemantics`, with one
+  shared budget account and a lenient mode.
+- Add `AssessmentOptions.Dictionaries`, used directly by `InspectXML`,
+  `AssessModel` and `DecodeAssessed` and as `Graph.Dictionaries` by the
+  resource and MXL entry points.
+- Add `ValidationIssue.Rule`, the ID of the violated rule.
+- Add `ErrInvalidConfiguration` (identical to
+  `validation.ErrInvalidConfiguration`), which `ErrInvalidDecodeOptions`,
+  `ErrInvalidEncodeOptions` and `ErrInvalidMXLOptions` now match.
+- Add `DictionarySourceFunc`, `validation.ResourceResolverFunc`,
+  `validation.Known`, `validation.Unknown` and `validation.Report.String`.
 - Bundle the official MusicXML 4.0 DTD modules in `schema/musicxml-4.0` and
   resolve DOCTYPE external subsets from them, never from the network: the
   official catalog's public identifiers of MusicXML 1.0 through 4.0 and the
@@ -462,6 +485,22 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- An empty `Profile` now selects the full semantic profile, with the bundled
+  required dictionaries, instead of returning a configuration error:
+  `ProfileSourceSemantics` for `InspectXML`, `ProfileModelSemantics` for
+  `AssessModel`, `ProfileResourceGraphSemantics` for `InspectXMLWithResources`
+  and `AssessModelWithResources`, `ProfileMXLSourceSemantics` for `InspectMXL`
+  and `ProfileMXLModelSemantics` for `AssessMXLPackage`. Binaries referencing
+  these functions now embed the bundled dictionary data and must ship its
+  notices.
+- `ValidationIssue` from `DecodeAssessed` follows `Validate`: `Constraint` is
+  the reason code, `Message` the offending value and `Rule` the rule ID.
+  Previously `Constraint` held the rule ID and `Message` the reason code.
+  `ValidationIssue.String` shows the constraint when the message is empty.
+- New trailing fields break unkeyed composite literals of `AssessmentOptions`,
+  `DecodeAssessmentOptions`, `DecodeResult` and `ValidationIssue`; keyed
+  literals and `==` are unaffected.
+
 - Source profiles that read DTD declarations (the `ProfileSourceInternalDTD`
   family, `ProfileSourceSemantics` and the internal-DTD and semantic package
   profiles) now read a recognized DOCTYPE external subset, with parameter
@@ -591,6 +630,27 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Fuzz smoke budgets are execution counts for every target. A duration budget
   can fail spuriously with `context deadline exceeded` on Go 1.26
   (go.dev/issue/75804).
+
+### Deprecated
+
+These wrappers keep their behaviour, apart from the `ValidationIssue` fields
+that `DecodeAssessedWithDictionaries` shares with `DecodeAssessed`, and will be
+removed in the next minor release. An empty profile still fails there. The
+replacement gives the same result for every profile the wrapper accepts:
+
+| Deprecated | Replacement |
+| --- | --- |
+| `InspectXMLWithDictionaries(ctx, r, DictionaryAssessmentOptions{Assessment: a, Dictionaries: d})` | `InspectXML(ctx, r, a)` with `a.Dictionaries = &d` |
+| `AssessModelWithDictionaries(ctx, doc, DictionaryAssessmentOptions{Assessment: a, Dictionaries: d})` | `AssessModel(ctx, doc, a)` with `a.Dictionaries = &d` |
+| `DecodeAssessedWithDictionaries(ctx, r, DecodeDictionaryAssessmentOptions{Decode: o, Assessment: &DictionaryAssessmentOptions{Assessment: a, Dictionaries: d}})` | `DecodeAssessed(ctx, r, DecodeAssessmentOptions{Decode: o, Assessment: &a})` with `a.Dictionaries = &d` |
+| `InspectXMLWithResourcesAndDictionaries(ctx, r, LinkedDictionaryAssessmentOptions{Resources: l, Dictionaries: d})` | `InspectXMLWithResources(ctx, r, l)` with `l.Graph.Dictionaries = &d` |
+| `AssessModelWithResourcesAndDictionaries(ctx, doc, LinkedDictionaryAssessmentOptions{Resources: l, Dictionaries: d})` | `AssessModelWithResources(ctx, doc, l)` with `l.Graph.Dictionaries = &d` |
+| `InspectMXLWithDictionaries(ctx, r, MXLDictionaryAssessmentOptions{Resources: m, Dictionaries: d})` | `InspectMXL(ctx, r, m)` with `m.Graph.Dictionaries = &d` |
+| `AssessMXLPackageWithDictionaries(ctx, p, MXLDictionaryAssessmentOptions{Resources: m, Dictionaries: d})` | `AssessMXLPackage(ctx, p, m)` with `m.Graph.Dictionaries = &d` |
+
+The option types `DictionaryAssessmentOptions`,
+`DecodeDictionaryAssessmentOptions`, `LinkedDictionaryAssessmentOptions` and
+`MXLDictionaryAssessmentOptions` are deprecated with them.
 
 ### Fixed
 
