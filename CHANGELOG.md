@@ -39,6 +39,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Add `ErrInvalidConfiguration` (identical to
   `validation.ErrInvalidConfiguration`), which `ErrInvalidDecodeOptions`,
   `ErrInvalidEncodeOptions` and `ErrInvalidMXLOptions` now match.
+- Add the `validation.TimingKind…` constants for every
+  `TimingContextResult.Kind` value; the field keeps its `Code` type.
 - Add `DictionarySourceFunc`, `validation.ResourceResolverFunc`,
   `validation.Known`, `validation.Unknown` and `validation.Report.String`.
 - Bundle the official MusicXML 4.0 DTD modules in `schema/musicxml-4.0` and

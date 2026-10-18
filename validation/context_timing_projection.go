@@ -7,7 +7,7 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 	if !ok {
 		return TimingContextResult{}, false, nil
 	}
-	out := newTimingContext("event")
+	out := newTimingContext(TimingKindEvent)
 	out.Origin = performancePosition(f.Origin)
 	out.Position = performancePosition(f.Position)
 	if f.End.State != "" {
@@ -21,7 +21,7 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 	out.Voice = f.Voice
 	out.Part = f.Part
 	if v, ok := service.NoteOrigins[n.header.ID]; ok {
-		out.Kind = "note"
+		out.Kind = TimingKindNote
 		if f.End.State == "" {
 			out.End = stateUnknown[ContextPosition]("timeline-note-end-unestablished")
 			if v.Chord.State != EvidenceKnown && v.Chord.State != EvidenceAbsent {
@@ -68,7 +68,7 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 		}
 	}
 	if v, ok := service.FiguredBassOrigins[n.header.ID]; ok {
-		out.Kind = "figured-bass"
+		out.Kind = TimingKindFiguredBass
 		out.Anchor = v.Anchor
 		out.AnchorPosition = performancePosition(v.AnchorPosition)
 		out.AnchorStaff = v.AnchorStaff
@@ -84,14 +84,14 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 		out.FiguresComplete = v.FiguresComplete
 	}
 	if v, ok := service.DirectionOrigins[n.header.ID]; ok {
-		out.Kind = "direction"
+		out.Kind = TimingKindDirection
 		out.Anchor = v.Anchor
 		out.AnchorPosition = performancePosition(v.AnchorPosition)
 		out.AnchorStaff = v.AnchorStaff
 		out.AnchorVoice = v.AnchorVoice
 	}
 	if v, ok := service.Playback.Sounds[n.header.ID]; ok {
-		out.Kind = "sound"
+		out.Kind = TimingKindSound
 		out.PlayComplete = v.PlayComplete
 		var e error
 		out.Play, e = performancePlayInstructions(ctx, s, v.Play)

@@ -13,12 +13,12 @@ func performanceLocalState(r *contextReader, sr *stateReader, n *factNode, out *
 	publish := false
 	if sr.matches(n, timelineRoleMeasure) {
 		publish = true
-		out.Kind = "measure-label"
+		out.Kind = TimingKindMeasureLabel
 		out.MeasureLabel = stateText(r.attribute(n, "perf-measure-label"))
 	}
 	if sr.matches(n, timelineRoleScorePart) {
 		publish = true
-		out.Kind = "part-order"
+		out.Kind = TimingKindPartOrder
 		*partOrder++
 		complete := r.enumerated(r.s.nodes[n.header.Parent])
 		out.PartOrder = stateUnavailable[bool, Integer](complete)
@@ -31,7 +31,7 @@ func performanceLocalState(r *contextReader, sr *stateReader, n *factNode, out *
 	}
 	if sr.matches(n, timelineRoleAttributesKey) {
 		publish = true
-		out.Kind = "key"
+		out.Kind = TimingKindKey
 		v := sr.key(n)
 		if sr.err != nil {
 			r.err = sr.err
@@ -45,7 +45,7 @@ func performanceLocalState(r *contextReader, sr *stateReader, n *factNode, out *
 	}
 	if sr.matches(n, timelineRoleAttributesTime) {
 		publish = true
-		out.Kind = "time"
+		out.Kind = TimingKindTime
 		v := sr.time(n)
 		if sr.err != nil {
 			r.err = sr.err
@@ -59,7 +59,7 @@ func performanceLocalState(r *contextReader, sr *stateReader, n *factNode, out *
 	}
 	if sr.matches(n, timelineRoleAttributesTranspose) {
 		publish = true
-		out.Kind = "transpose"
+		out.Kind = TimingKindTranspose
 		v := sr.transpose(n, false)
 		if sr.err != nil {
 			r.err = sr.err
@@ -73,7 +73,7 @@ func performanceLocalState(r *contextReader, sr *stateReader, n *factNode, out *
 	}
 	if sr.matches(n, timelineRoleAttributesStaffDetails) {
 		publish = true
-		out.Kind = "staff-details"
+		out.Kind = TimingKindStaffDetails
 		v := sr.staffDetails(n)
 		if sr.err != nil {
 			r.err = sr.err

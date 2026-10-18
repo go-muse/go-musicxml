@@ -66,9 +66,9 @@ func performanceMovement(r *contextReader, service *timelineService, index *perf
 	if !backup && !forward {
 		return false
 	}
-	out.Kind = "forward"
+	out.Kind = TimingKindForward
 	if backup {
-		out.Kind = "backup"
+		out.Kind = TimingKindBackup
 	}
 	out.CursorAfter = stateUnavailable[ContextPosition, ContextPosition](out.Origin)
 	positive := stateUnavailable[Rational, bool](out.Duration)
@@ -283,7 +283,7 @@ func performanceStateAdvice(ctx context.Context, s *Session, index *performanceA
 	if out.Part.State != EvidenceKnown {
 		return nil
 	}
-	if out.Kind == "note" {
+	if out.Kind == TimingKindNote {
 		identified := stateUnavailable[Integer, bool](out.Instruments)
 		if out.Instruments.State == EvidenceKnown {
 			if out.Instruments.Value.value.Cmp(stateOne().value) <= 0 {
@@ -303,7 +303,7 @@ func performanceStateAdvice(ctx context.Context, s *Session, index *performanceA
 			return err
 		}
 	}
-	if out.Kind == "note" || out.Kind == "event" {
+	if out.Kind == TimingKindNote || out.Kind == TimingKindEvent {
 		if err := s.step(ctx, 1+int64(len(out.Part.Value.DocumentID))); err != nil {
 			return err
 		}

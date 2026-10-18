@@ -692,3 +692,13 @@ func TestPerformanceZeroStaffCountProvesNoStaff(t *testing.T) {
 		}
 	})
 }
+
+func TestPerformanceRootAlterTiming(t *testing.T) {
+	body := `<attributes><divisions>1</divisions></attributes><harmony><root><root-step>C</root-step><root-alter print-object="no">1</root-alter></root><kind>major</kind></harmony><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`
+	performanceReports(t, body, func(t *testing.T, r validation.Report) {
+		alters := performanceTiming(r, validation.TimingKindRootAlter)
+		if len(alters) != 1 || alters[0].RootAlterPrintObject.State != validation.EvidenceKnown || alters[0].RootAlterPrintObject.Value {
+			t.Fatalf("root alter: %+v; findings %s", alters, localFindings(r))
+		}
+	})
+}

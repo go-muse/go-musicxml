@@ -73,14 +73,14 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 			}
 		}
 		if !publish && roles.timing() {
-			out = newTimingContext("performance")
+			out = newTimingContext(timingKindPerformance)
 		}
 		if roles.has(performanceNote) {
 			if !publish {
 				performanceUnavailableEvent(s, key, &out)
 			}
 			publish = true
-			out.Kind = "note"
+			out.Kind = TimingKindNote
 			cue, c := r.child(n, "perf-cue")
 			out.Cue = performancePresence(cue, c)
 			grace, g := r.child(n, "perf-grace")
@@ -93,7 +93,7 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 				out.PlayComplete = Evidence[bool]{State: EvidenceUnsupported, Reason: "timeline-service-unavailable"}
 			}
 			publish = true
-			out.Kind = "sound"
+			out.Kind = TimingKindSound
 			out.Tempo = stateDecimalValue(r.attribute(n, "perf-tempo"))
 			out.Dynamics = stateDecimalValue(r.attribute(n, "perf-dynamics"))
 			if r.err == nil {
@@ -102,7 +102,7 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 		}
 		if roles.has(performanceMIDIUnpitched) {
 			publish = true
-			out.Kind = "midi-unpitched"
+			out.Kind = TimingKindMIDIUnpitched
 			out.MIDIUnpitched = stateInteger(r.scalar(n))
 			out.MIDINote = stateUnavailable[Integer, Rational](out.MIDIUnpitched)
 			if out.MIDIUnpitched.State == EvidenceKnown {
@@ -115,23 +115,23 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 		}
 		if roles.has(performancePan) {
 			publish = true
-			out.Kind = "pan"
+			out.Kind = TimingKindPan
 			out.Pan = stateDecimalValue(r.scalar(n))
 		}
 		if roles.has(performanceElevation) {
 			publish = true
-			out.Kind = "elevation"
+			out.Kind = TimingKindElevation
 			out.Elevation = stateDecimalValue(r.scalar(n))
 		}
 		if roles.has(performanceSwingRole) {
 			publish = true
-			out.Kind = "swing"
+			out.Kind = TimingKindSwing
 			v := performanceReadSwing(r, n)
 			out.Straight, out.SwingType, out.SwingFirst, out.SwingSecond = v.Straight, v.Type, v.First, v.Second
 		}
 		if roles.has(performanceBend) {
 			publish = true
-			out.Kind = "bend"
+			out.Kind = TimingKindBend
 			out.BendAlter = stateDecimalValue(r.childScalar(n, "perf-bend-alter"))
 			pre, c := r.child(n, "perf-pre-bend")
 			out.PreBend = performancePresence(pre, c)
@@ -151,14 +151,14 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 		if roles.has(performanceMovementRole) && performanceMovement(r, service, adviceIndex, n, &out) {
 			publish = true
 		}
-		if out.Kind == "swing" && r.err == nil {
+		if out.Kind == TimingKindSwing && r.err == nil {
 			var reduced Evidence[bool]
 			out.SwingRatio, reduced, r.err = performanceSwingRatio(ctx, s, out.SwingFirst, out.SwingSecond)
 			if r.err == nil {
 				r.err = performanceAdvice(ctx, s, &out, "swing-ratio-reduced", reduced)
 			}
 		}
-		if out.Kind == "sound" && r.err == nil {
+		if out.Kind == TimingKindSound && r.err == nil {
 			grouped := performanceInstrumentGrouping(sr, n, out.Part)
 			if sr.err != nil {
 				r.err = sr.err
