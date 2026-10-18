@@ -790,6 +790,11 @@ func (r *complexTypeRenderer) typePlanGoTypeWithOwner(
 			inlineOwner = "Inline"
 		}
 		if r.nameInline {
+			name, err := r.index.names.Assign("go anonymous "+inlineOwner, inlineOwner)
+			if err != nil {
+				return "", err
+			}
+			inlineOwner = name
 			description := "anonymous complex type " + inlineOwner
 			if err := r.reserveTypeName(
 				inlineOwner,

@@ -39,6 +39,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Add `ErrInvalidConfiguration` (identical to
   `validation.ErrInvalidConfiguration`), which `ErrInvalidDecodeOptions`,
   `ErrInvalidEncodeOptions` and `ErrInvalidMXLOptions` now match.
+- The XSD generator takes package-scope names from an authoritative manifest,
+  `internal/xsdgen/names/musicxml-4.0.txt`, shared by the model generations.
+  A listed declaration keeps its name, a new one that collides with any listed
+  name, such as a constant named like an existing type, gets a numeric suffix,
+  and generation fails until new names are reviewed and recorded (see
+  CONTRIBUTING). The generated model is unchanged.
 - Add `IsKnown()` and `Values()` to every generated restriction enumeration,
   `Value()` and `ElementName()` to every `...Content` choice type, and untyped
   constants for the anonymous `xlink:type`, `xlink:show`, `xlink:actuate` and

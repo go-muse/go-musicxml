@@ -9,6 +9,25 @@ Contributions are welcome.
 - Make for the convenience targets, or the equivalent Go commands
 - Optional: `xmllint` for running the external XSD conformance test locally
 
+## Generated model names
+
+The four model generations in `generate.go` share the name manifest
+`internal/xsdgen/names/musicxml-4.0.txt`. It pins the Go name of every
+package-scope generated declaration: named, anonymous and choice types and
+enumeration constants. Each line is a component key, a tab and the Go name.
+The manifest is authoritative: a listed component keeps its name even if the
+derivation changes, and no name belongs to two components.
+
+When a schema change adds a component, `go generate ./...` fails and lists the
+new components with the names they would get; a derived name that is already
+taken gets a numeric suffix. Review those names, then run the four model
+`go:generate` commands once with `-update-names` added, or edit the manifest
+by hand, and commit it with the generated code. To rename a declaration on
+purpose, change its manifest line. `TestMusicXMLNameManifestMatchesGeneration`
+reports listed components that no generation produces, and
+`TestNameManifestAvoidsHandwrittenNames` reports a generated name that a
+hand-written declaration already uses.
+
 ## Pinned dictionary generation
 
 The bundled dictionary source uses committed assets prepared by explicit

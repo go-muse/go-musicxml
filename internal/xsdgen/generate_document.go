@@ -74,6 +74,25 @@ func GenerateDocument(
 		return nil, ErrInvalidElement
 	}
 
+	// External types are named by another generation, so the manifest does
+	// not assign them here.
+	external, err := documentExternalTypes(
+		index,
+		options.ExternalTypes,
+	)
+	if err != nil {
+		return nil, err
+	}
+	index.nameExternal = external
+	if elementDeclaration.Element.Type == "" {
+		// An inline root type is named after its element; a named root type
+		// keeps the name of its type.
+		options.GoName, err = index.names.Assign(componentKey(elementDeclaration, "element"), options.GoName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	planner := complexTypePlanner{
 		index:        index,
 		file:         elementDeclaration.File,
@@ -121,13 +140,6 @@ func GenerateDocument(
 		return nil, err
 	}
 
-	external, err := documentExternalTypes(
-		index,
-		options.ExternalTypes,
-	)
-	if err != nil {
-		return nil, err
-	}
 	if rootDeclaration != nil {
 		if _, found := external[rootDeclaration]; found {
 			return nil, fmt.Errorf(

@@ -167,12 +167,18 @@ func (r *complexTypeRenderer) buildChoice(
 		return nil, ErrInvalidParticle
 	}
 
-	goType := owner + "Content"
+	goType, err := r.index.names.Assign("go content "+owner, owner+"Content")
+	if err != nil {
+		return nil, err
+	}
 	description := "ordered content for " + owner
 	if err := r.reserveTypeName(goType, description); err != nil {
 		return nil, err
 	}
-	listGoType := owner + "Contents"
+	listGoType, err := r.index.names.Assign("go contents "+owner, owner+"Contents")
+	if err != nil {
+		return nil, err
+	}
 	if err := r.reserveTypeName(
 		listGoType,
 		"ordered content list for "+owner,

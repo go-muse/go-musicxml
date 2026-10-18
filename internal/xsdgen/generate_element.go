@@ -138,6 +138,10 @@ func generateElements(index *Index, packageName string, modelMetadata bool, elem
 		if err != nil {
 			return nil, err
 		}
+		goName, err = index.names.Assign(componentKey(declaration, "element"), goName)
+		if err != nil {
+			return nil, err
+		}
 		if err := renderer.reserveTypeName(
 			goName,
 			"global element "+formatExpandedName(declaration.Name),

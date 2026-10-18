@@ -59,6 +59,17 @@ func renderAttributeEnumerations(target *bytes.Buffer, index *Index) error {
 			continue
 		}
 
+		// Only emitted constants are named through the manifest; a union's
+		// enumerated members, such as xml:lang's empty value, get none.
+		key := componentKey(declaration, "attribute")
+		for position := range definition.Enumerations {
+			enumeration := &definition.Enumerations[position]
+			enumeration.GoName, err = index.names.Assign(enumerationKey(key, enumeration.Value), enumeration.GoName)
+			if err != nil {
+				return err
+			}
+		}
+
 		attribute := prefix.xmlPrefix + ":" + declaration.Name.Local
 		fmt.Fprintf(
 			target,

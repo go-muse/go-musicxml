@@ -94,6 +94,16 @@ func run(arguments []string, stderr io.Writer) error {
 		"zz_generated_simple.go",
 		"generated Go file",
 	)
+	namesPath := flags.String(
+		"names",
+		"",
+		"authoritative manifest of package-scope Go names shared by the model generations",
+	)
+	updateNames := flags.Bool(
+		"update-names",
+		false,
+		"add components missing from the -names manifest instead of failing",
+	)
 
 	if err := flags.Parse(arguments); err != nil {
 		return err
@@ -120,6 +130,16 @@ func run(arguments []string, stderr io.Writer) error {
 	index, err := xsdgen.NewIndex(set)
 	if err != nil {
 		return fmt.Errorf("xsdgen: index schema set: %w", err)
+	}
+	var manifest *xsdgen.NameManifest
+	if *namesPath != "" {
+		manifest, err = xsdgen.LoadNameManifest(*namesPath)
+		if err != nil {
+			return err
+		}
+		index.SetNameManifest(manifest)
+	} else if *updateNames {
+		return errors.New("xsdgen: -update-names requires -names")
 	}
 
 	var source []byte
@@ -261,6 +281,18 @@ func run(arguments []string, stderr io.Writer) error {
 			"xsdgen: unsupported declaration kind %q",
 			*kind,
 		)
+	}
+
+	if manifest != nil {
+		if !*updateNames {
+			if err := manifest.Incomplete(); err != nil {
+				return err
+			}
+		} else if len(manifest.Added()) != 0 {
+			if err := writeFileAtomically(*namesPath, manifest.Format(), 0o644); err != nil {
+				return fmt.Errorf("xsdgen: write %q: %w", *namesPath, err)
+			}
+		}
 	}
 
 	if err := writeFileAtomically(*outputPath, source, 0o644); err != nil {

@@ -114,6 +114,7 @@ func planSimpleTypesWithNames(
 			ownerName:        declaration.Name.Local,
 			constantPrefix:   goName,
 			enumerationNames: make(map[string]string),
+			manifestKey:      index.typeManifestKey(declaration),
 		}
 
 		definition, err := planner.plan(declaration.SimpleType)
@@ -137,6 +138,9 @@ type simpleTypePlanner struct {
 	ownerName        string
 	constantPrefix   string
 	enumerationNames map[string]string
+	// manifestKey, when set, assigns the constants through the index's name
+	// manifest. Inline types whose constants are never emitted leave it empty.
+	manifestKey string
 }
 
 func (p *simpleTypePlanner) plan(
@@ -213,6 +217,13 @@ func (p *simpleTypePlanner) planRestriction(
 				p.ownerName,
 				err,
 			)
+		}
+
+		if p.manifestKey != "" {
+			goName, err = p.index.names.Assign(enumerationKey(p.manifestKey, facet.Value), goName)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		if existing, found := p.enumerationNames[goName]; found {

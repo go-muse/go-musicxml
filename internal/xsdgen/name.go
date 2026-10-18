@@ -103,6 +103,13 @@ func NewTypeNamesWithOverrides(
 			}
 		}
 
+		if key := index.typeManifestKey(declaration); key != "" {
+			name, err = index.names.Assign(key, name)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		if existing, found := used[name]; found {
 			return nil, &GoNameCollisionError{
 				Name:   name,
