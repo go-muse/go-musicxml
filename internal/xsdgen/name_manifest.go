@@ -130,11 +130,16 @@ func (m *NameManifest) Assign(key, derived string) (string, error) {
 	return name, nil
 }
 
-// External returns the listed name of the type that another schema of the
-// destination package declares under the local name of declaration, which a
-// generation names as external rather than owning it. Exactly one other
-// schema must list it; derived is only used to describe a failure.
+// External returns the listed name of a type that a generation names as
+// external rather than owning it: the component's own entry when another
+// generation of the same schema listed it, otherwise the type that exactly one
+// other schema lists under the same local name. derived only describes a
+// failure.
 func (m *NameManifest) External(declaration *Declaration, derived string) (string, error) {
+	// The same component emitted by another generation keeps its entry.
+	if name, found := m.byKey[componentKey(declaration, "type")]; found {
+		return name, nil
+	}
 	own := path.Base(declarationPath(declaration))
 	suffix := " type " + declaration.Name.Local
 	var found []string

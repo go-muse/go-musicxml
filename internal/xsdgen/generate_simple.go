@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go/format"
 	"go/token"
+	"go/types"
 	"math"
 	"strconv"
 	"strings"
@@ -185,6 +186,16 @@ func (r *simpleTypeRenderer) renderPlan(
 	return nil
 }
 
+// constantValueKey identifies the Go constant a literal denotes, so that
+// spellings such as 1 and 01, or 0 and -0.0, compare equal.
+func constantValueKey(literal string) string {
+	value, err := types.Eval(token.NewFileSet(), nil, token.NoPos, literal)
+	if err != nil || value.Value == nil {
+		return literal
+	}
+	return value.Value.ExactString()
+}
+
 // renderEnumerationHelpers renders IsKnown and Values for a restriction
 // whose constants are its complete value space.
 func renderEnumerationHelpers(
@@ -200,8 +211,9 @@ func renderEnumerationHelpers(
 	seen := make(map[string]bool, len(literals))
 	for index, enumeration := range enumerations {
 		names[index] = enumeration.GoName
-		if !seen[literals[index]] {
-			seen[literals[index]] = true
+		value := constantValueKey(literals[index])
+		if !seen[value] {
+			seen[value] = true
 			cases = append(cases, enumeration.GoName)
 		}
 	}

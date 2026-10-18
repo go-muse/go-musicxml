@@ -51,6 +51,12 @@ func TestEnumerationHelpersShareGoValues(t *testing.T) {
 			<xs:enumeration value="01"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name="level">
+		<xs:restriction base="xs:double">
+			<xs:enumeration value="0"/>
+			<xs:enumeration value="-0.0"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name="flag">
 		<xs:restriction base="xs:boolean">
 			<xs:enumeration value="true"/>
@@ -153,4 +159,39 @@ func TestNameManifestRenamesExternalType(t *testing.T) {
 	assert.Contains(t, string(actual), "NewPage *BooleanWord")
 	assert.NotRegexp(t, `\bYesNo\b`, string(actual))
 	assert.Empty(t, manifest.Added())
+}
+
+// TestNameManifestExternalTypeOfSameSchema emits a type in one generation and
+// names it as external in another generation of the same schema: the second
+// reuses the component's own entry.
+func TestNameManifestExternalTypeOfSameSchema(t *testing.T) {
+	t.Parallel()
+
+	file := parseSchemaFile(t, "types.xsd", `
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:simpleType name="state">
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="open"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:element name="root">
+		<xs:complexType>
+			<xs:attribute name="state" type="state"/>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>`)
+	index, err := NewIndex(&Set{Files: []*SchemaFile{file}})
+	require.NoError(t, err)
+	manifest := NewNameManifest()
+	index.SetNameManifest(manifest)
+	simple, err := GenerateSimpleTypes(index, "example")
+	require.NoError(t, err)
+	document, err := GenerateDocument(index, "example", DocumentGenerationOptions{
+		Element:       QName{Local: "root"},
+		GoName:        "Root",
+		ExternalTypes: []QName{{Local: "state"}},
+	})
+	require.NoError(t, err)
+	typeCheckGenerated(t, simple, document)
+	assert.Regexp(t, `State +\*State `, string(document))
 }
