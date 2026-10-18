@@ -123,6 +123,33 @@ type Index struct {
 	attributes      map[expandedName]*Declaration
 	groups          map[expandedName]*Declaration
 	attributeGroups map[expandedName]*Declaration
+
+	// names, when set, assigns the package-scope Go names of generation
+	// from this index. External declarations name types emitted by
+	// another generation and are not assigned here.
+	names        *NameManifest
+	nameExternal map[*Declaration]struct{}
+	// documentationNotice, when set, copies xs:documentation into Go
+	// comments under this notice.
+	documentationNotice string
+}
+
+// SetNameManifest makes generation from this index take its package-scope Go
+// names from manifest. A nil manifest restores derived names.
+func (i *Index) SetNameManifest(manifest *NameManifest) {
+	i.names = manifest
+}
+
+// typeManifestKey returns the manifest key of a declaration whose names this
+// generation assigns, or "" when it assigns none.
+func (i *Index) typeManifestKey(declaration *Declaration) string {
+	if i.names == nil {
+		return ""
+	}
+	if _, external := i.nameExternal[declaration]; external {
+		return ""
+	}
+	return componentKey(declaration, "type")
 }
 
 type expandedName struct {

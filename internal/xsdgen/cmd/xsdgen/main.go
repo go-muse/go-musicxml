@@ -94,6 +94,21 @@ func run(arguments []string, stderr io.Writer) error {
 		"zz_generated_simple.go",
 		"generated Go file",
 	)
+	namesPath := flags.String(
+		"names",
+		"",
+		"authoritative manifest of package-scope Go names shared by the model generations",
+	)
+	noticePath := flags.String(
+		"documentation-notice",
+		"",
+		"file with the attribution under which xs:documentation is copied into comments",
+	)
+	updateNames := flags.Bool(
+		"update-names",
+		false,
+		"add components missing from the -names manifest instead of failing",
+	)
 
 	if err := flags.Parse(arguments); err != nil {
 		return err
@@ -120,6 +135,26 @@ func run(arguments []string, stderr io.Writer) error {
 	index, err := xsdgen.NewIndex(set)
 	if err != nil {
 		return fmt.Errorf("xsdgen: index schema set: %w", err)
+	}
+	if *noticePath != "" {
+		notice, err := os.ReadFile(*noticePath)
+		if err != nil {
+			return fmt.Errorf("xsdgen: read documentation notice: %w", err)
+		}
+		if strings.TrimSpace(string(notice)) == "" {
+			return errors.New("xsdgen: empty documentation notice")
+		}
+		index.SetDocumentationNotice(string(notice))
+	}
+	var manifest *xsdgen.NameManifest
+	if *namesPath != "" {
+		manifest, err = xsdgen.LoadNameManifest(*namesPath)
+		if err != nil {
+			return err
+		}
+		index.SetNameManifest(manifest)
+	} else if *updateNames {
+		return errors.New("xsdgen: -update-names requires -names")
 	}
 
 	var source []byte
@@ -263,12 +298,25 @@ func run(arguments []string, stderr io.Writer) error {
 		)
 	}
 
+	if manifest != nil && !*updateNames {
+		if err := manifest.Incomplete(); err != nil {
+			return err
+		}
+	}
+
 	if err := writeFileAtomically(*outputPath, source, 0o644); err != nil {
 		return fmt.Errorf(
 			"xsdgen: write %q: %w",
 			*outputPath,
 			err,
 		)
+	}
+	// The manifest records the new names only once the output that uses
+	// them is written.
+	if manifest != nil && *updateNames && len(manifest.Added()) != 0 {
+		if err := writeFileAtomically(*namesPath, manifest.Format(), 0o644); err != nil {
+			return fmt.Errorf("xsdgen: write %q: %w", *namesPath, err)
+		}
 	}
 
 	return nil

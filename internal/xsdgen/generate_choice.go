@@ -17,12 +17,13 @@ type complexChoice struct {
 }
 
 type complexChoiceVariant struct {
-	name        QName
-	goName      string
-	goType      string
-	xmlType     string
-	inline      *complexStructure
-	description string
+	name          QName
+	goName        string
+	goType        string
+	xmlType       string
+	inline        *complexStructure
+	description   string
+	documentation string
 }
 
 func (r *complexTypeRenderer) planRepeatedChoices(
@@ -167,12 +168,21 @@ func (r *complexTypeRenderer) buildChoice(
 		return nil, ErrInvalidParticle
 	}
 
-	goType := owner + "Content"
+	ownerKey := r.manifestOwnerKey(owner)
+	goType, err := r.index.names.Assign(ownerKey+" content", owner+"Content")
+	if err != nil {
+		return nil, err
+	}
+	// Anonymous variant types are keyed under the wrapper's schema key.
+	r.ownerKeys[goType] = ownerKey + " content"
 	description := "ordered content for " + owner
 	if err := r.reserveTypeName(goType, description); err != nil {
 		return nil, err
 	}
-	listGoType := owner + "Contents"
+	listGoType, err := r.index.names.Assign(ownerKey+" contents", owner+"Contents")
+	if err != nil {
+		return nil, err
+	}
 	if err := r.reserveTypeName(
 		listGoType,
 		"ordered content list for "+owner,
@@ -219,6 +229,11 @@ func (r *complexTypeRenderer) buildChoice(
 		if err != nil {
 			return nil, err
 		}
+		// A variant field cannot share a name with a method of the wrapper,
+		// as attribute fields take Attr after an element of the same name.
+		if choiceMethodNames[goName] {
+			goName += "Element"
+		}
 		goTypeValue, err := r.elementGoType(element, goType)
 		if err != nil {
 			return nil, fmt.Errorf(
@@ -237,6 +252,7 @@ func (r *complexTypeRenderer) buildChoice(
 			namespace: element.Name.Namespace,
 			local:     element.Name.Local,
 		}
+		documentation := r.elementDocumentation(element)
 		if existingIndex, found := result.variantIndexes[key]; found {
 			existing := &result.variants[existingIndex]
 			if existing.goType != goTypeValue {
@@ -246,6 +262,9 @@ func (r *complexTypeRenderer) buildChoice(
 					First:  existing.description + " of type " + existing.goType,
 					Second: description + " of type " + goTypeValue,
 				}
+			}
+			if existing.documentation == "" {
+				existing.documentation = documentation
 			}
 
 			continue
@@ -264,12 +283,13 @@ func (r *complexTypeRenderer) buildChoice(
 		result.variants = append(
 			result.variants,
 			complexChoiceVariant{
-				name:        element.Name,
-				goName:      goName,
-				goType:      goTypeValue,
-				xmlType:     xmlType,
-				inline:      inline,
-				description: description,
+				name:          element.Name,
+				goName:        goName,
+				goType:        goTypeValue,
+				xmlType:       xmlType,
+				inline:        inline,
+				description:   description,
+				documentation: documentation,
 			},
 		)
 	}
@@ -419,6 +439,7 @@ func (r *complexTypeRenderer) renderChoice(
 	)
 	fmt.Fprintf(target, "type %s struct {\n", choice.goType)
 	for _, variant := range choice.variants {
+		renderFieldDocumentation(target, variant.documentation)
 		fmt.Fprintf(
 			target,
 			"\t%s *%s\n",
@@ -584,6 +605,64 @@ func (r *complexTypeRenderer) renderChoice(
 	}
 	target.WriteString("\t}\n\n")
 	target.WriteString("\treturn nil\n")
+	target.WriteString("}\n\n")
+
+	renderChoiceAccessors(target, choice)
+}
+
+// choiceMethodNames are the methods of a choice wrapper, which its variant
+// fields must not shadow.
+var choiceMethodNames = map[string]bool{
+	"Value": true, "ElementName": true, "MarshalXML": true, "UnmarshalXML": true,
+}
+
+// renderChoiceAccessors renders Value and ElementName. Variants can share a Go
+// type, so a type switch on Value alone cannot tell them apart.
+func renderChoiceAccessors(target *bytes.Buffer, choice *complexChoice) {
+	fmt.Fprintf(
+		target,
+		"// Value returns the selected %s variant, a pointer, or nil unless exactly\n"+
+			"// one variant is set. ElementName tells apart variants of the same type.\n",
+		choice.goType,
+	)
+	fmt.Fprintf(target, "func (value %s) Value() any {\n", choice.goType)
+	target.WriteString("\t_, selected := value.selected()\n")
+	target.WriteString("\treturn selected\n")
+	target.WriteString("}\n\n")
+
+	fmt.Fprintf(
+		target,
+		"// ElementName returns the local XML name of the selected %s variant, or\n"+
+			"// \"\" unless exactly one variant is set.\n",
+		choice.goType,
+	)
+	fmt.Fprintf(target, "func (value %s) ElementName() string {\n", choice.goType)
+	target.WriteString("\tname, _ := value.selected()\n")
+	target.WriteString("\treturn name\n")
+	target.WriteString("}\n\n")
+
+	fmt.Fprintf(
+		target,
+		"func (value %s) selected() (string, any) {\n",
+		choice.goType,
+	)
+	target.WriteString("\tvar name string\n")
+	target.WriteString("\tvar selected any\n")
+	target.WriteString("\tcount := 0\n")
+	for _, variant := range choice.variants {
+		fmt.Fprintf(target, "\tif value.%s != nil {\n", variant.goName)
+		fmt.Fprintf(
+			target,
+			"\t\tname, selected, count = %s, value.%s, count+1\n",
+			strconv.Quote(variant.name.Local),
+			variant.goName,
+		)
+		target.WriteString("\t}\n")
+	}
+	target.WriteString("\tif count != 1 {\n")
+	target.WriteString("\t\treturn \"\", nil\n")
+	target.WriteString("\t}\n")
+	target.WriteString("\treturn name, selected\n")
 	target.WriteString("}\n\n")
 }
 

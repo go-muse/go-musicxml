@@ -27,6 +27,7 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 
 	index, err := NewIndex(set)
 	require.NoError(t, err)
+	useMusicXMLGenerationInputs(t, index)
 
 	actual, err := GenerateComplexTypesWithOptions(
 		index,
@@ -88,7 +89,7 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 	assert.Contains(
 		t,
 		source,
-		"Content     KeyContents  `xml:\",any\"`",
+		"Content KeyContents `xml:\",any\"`",
 	)
 	assert.Contains(
 		t,

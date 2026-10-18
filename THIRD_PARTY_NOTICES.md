@@ -17,6 +17,18 @@ published by the W3C Music Notation Community Group under the
 [W3C Community Final Specification Agreement](https://www.w3.org/community/about/agreements/final/).
 The source files contain the complete notices.
 
+### Documentation comments in the generated model
+
+The doc comments of the generated model files `zz_generated_simple.go`,
+`zz_generated_types.go`, `zz_generated_documents.go` and `zz_generated_opus.go`
+include the `xs:documentation` text of the MusicXML 4.0 schemas `musicxml.xsd`
+and `opus.xsd`. That text keeps the terms above: section 2.1 of the agreement
+permits derivative works, and section 2.2 requires an attribution with the
+specification's name and version, which heads each of those files (from
+`internal/xsdgen/notices/musicxml-4.0.txt`). The surrounding Go code is under
+the project licence. Documentation of the imported `xml.xsd` and `xlink.xsd`
+is not copied.
+
 ## MusicXML Test Suite
 
 `testdata/corpus/musicxml-test-suite` is a snapshot of the

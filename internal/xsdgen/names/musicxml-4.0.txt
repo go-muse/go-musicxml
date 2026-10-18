@@ -1,0 +1,1060 @@
+musicxml.xsd element score-partwise	ScorePartwise
+musicxml.xsd element score-partwise element part	ScorePartwisePart
+musicxml.xsd element score-partwise element part element measure	ScorePartwisePartMeasure
+musicxml.xsd element score-partwise element part element measure content	ScorePartwisePartMeasureContent
+musicxml.xsd element score-partwise element part element measure contents	ScorePartwisePartMeasureContents
+musicxml.xsd element score-timewise	ScoreTimewise
+musicxml.xsd element score-timewise element measure	ScoreTimewiseMeasure
+musicxml.xsd element score-timewise element measure element part	ScoreTimewiseMeasurePart
+musicxml.xsd element score-timewise element measure element part content	ScoreTimewiseMeasurePartContent
+musicxml.xsd element score-timewise element measure element part contents	ScoreTimewiseMeasurePartContents
+musicxml.xsd type above-below	AboveBelow
+musicxml.xsd type above-below enumeration "above"	AboveBelowAbove
+musicxml.xsd type above-below enumeration "below"	AboveBelowBelow
+musicxml.xsd type accidental	Accidental
+musicxml.xsd type accidental-mark	AccidentalMark
+musicxml.xsd type accidental-text	AccidentalText
+musicxml.xsd type accidental-value	AccidentalValue
+musicxml.xsd type accidental-value enumeration "arrow-down"	AccidentalValueArrowDown
+musicxml.xsd type accidental-value enumeration "arrow-up"	AccidentalValueArrowUp
+musicxml.xsd type accidental-value enumeration "double-sharp"	AccidentalValueDoubleSharp
+musicxml.xsd type accidental-value enumeration "double-sharp-down"	AccidentalValueDoubleSharpDown
+musicxml.xsd type accidental-value enumeration "double-sharp-up"	AccidentalValueDoubleSharpUp
+musicxml.xsd type accidental-value enumeration "double-slash-flat"	AccidentalValueDoubleSlashFlat
+musicxml.xsd type accidental-value enumeration "flat"	AccidentalValueFlat
+musicxml.xsd type accidental-value enumeration "flat-1"	AccidentalValueFlat1
+musicxml.xsd type accidental-value enumeration "flat-2"	AccidentalValueFlat2
+musicxml.xsd type accidental-value enumeration "flat-3"	AccidentalValueFlat3
+musicxml.xsd type accidental-value enumeration "flat-4"	AccidentalValueFlat4
+musicxml.xsd type accidental-value enumeration "flat-down"	AccidentalValueFlatDown
+musicxml.xsd type accidental-value enumeration "flat-flat"	AccidentalValueFlatFlat
+musicxml.xsd type accidental-value enumeration "flat-flat-down"	AccidentalValueFlatFlatDown
+musicxml.xsd type accidental-value enumeration "flat-flat-up"	AccidentalValueFlatFlatUp
+musicxml.xsd type accidental-value enumeration "flat-up"	AccidentalValueFlatUp
+musicxml.xsd type accidental-value enumeration "koron"	AccidentalValueKoron
+musicxml.xsd type accidental-value enumeration "natural"	AccidentalValueNatural
+musicxml.xsd type accidental-value enumeration "natural-down"	AccidentalValueNaturalDown
+musicxml.xsd type accidental-value enumeration "natural-flat"	AccidentalValueNaturalFlat
+musicxml.xsd type accidental-value enumeration "natural-sharp"	AccidentalValueNaturalSharp
+musicxml.xsd type accidental-value enumeration "natural-up"	AccidentalValueNaturalUp
+musicxml.xsd type accidental-value enumeration "other"	AccidentalValueOther
+musicxml.xsd type accidental-value enumeration "quarter-flat"	AccidentalValueQuarterFlat
+musicxml.xsd type accidental-value enumeration "quarter-sharp"	AccidentalValueQuarterSharp
+musicxml.xsd type accidental-value enumeration "sharp"	AccidentalValueSharp
+musicxml.xsd type accidental-value enumeration "sharp-1"	AccidentalValueSharp1
+musicxml.xsd type accidental-value enumeration "sharp-2"	AccidentalValueSharp2
+musicxml.xsd type accidental-value enumeration "sharp-3"	AccidentalValueSharp3
+musicxml.xsd type accidental-value enumeration "sharp-5"	AccidentalValueSharp5
+musicxml.xsd type accidental-value enumeration "sharp-down"	AccidentalValueSharpDown
+musicxml.xsd type accidental-value enumeration "sharp-sharp"	AccidentalValueSharpSharp
+musicxml.xsd type accidental-value enumeration "sharp-up"	AccidentalValueSharpUp
+musicxml.xsd type accidental-value enumeration "slash-flat"	AccidentalValueSlashFlat
+musicxml.xsd type accidental-value enumeration "slash-quarter-sharp"	AccidentalValueSlashQuarterSharp
+musicxml.xsd type accidental-value enumeration "slash-sharp"	AccidentalValueSlashSharp
+musicxml.xsd type accidental-value enumeration "sori"	AccidentalValueSori
+musicxml.xsd type accidental-value enumeration "three-quarters-flat"	AccidentalValueThreeQuartersFlat
+musicxml.xsd type accidental-value enumeration "three-quarters-sharp"	AccidentalValueThreeQuartersSharp
+musicxml.xsd type accidental-value enumeration "triple-flat"	AccidentalValueTripleFlat
+musicxml.xsd type accidental-value enumeration "triple-sharp"	AccidentalValueTripleSharp
+musicxml.xsd type accord	Accord
+musicxml.xsd type accordion-middle	AccordionMiddle
+musicxml.xsd type accordion-registration	AccordionRegistration
+musicxml.xsd type appearance	Appearance
+musicxml.xsd type arpeggiate	Arpeggiate
+musicxml.xsd type arrow	Arrow
+musicxml.xsd type arrow-direction	ArrowDirection
+musicxml.xsd type arrow-direction enumeration "down"	ArrowDirectionDown
+musicxml.xsd type arrow-direction enumeration "left right"	ArrowDirectionLeftRight
+musicxml.xsd type arrow-direction enumeration "left"	ArrowDirectionLeft
+musicxml.xsd type arrow-direction enumeration "northeast southwest"	ArrowDirectionNortheastSouthwest
+musicxml.xsd type arrow-direction enumeration "northeast"	ArrowDirectionNortheast
+musicxml.xsd type arrow-direction enumeration "northwest southeast"	ArrowDirectionNorthwestSoutheast
+musicxml.xsd type arrow-direction enumeration "northwest"	ArrowDirectionNorthwest
+musicxml.xsd type arrow-direction enumeration "other"	ArrowDirectionOther
+musicxml.xsd type arrow-direction enumeration "right"	ArrowDirectionRight
+musicxml.xsd type arrow-direction enumeration "southeast"	ArrowDirectionSoutheast
+musicxml.xsd type arrow-direction enumeration "southwest"	ArrowDirectionSouthwest
+musicxml.xsd type arrow-direction enumeration "up down"	ArrowDirectionUpDown
+musicxml.xsd type arrow-direction enumeration "up"	ArrowDirectionUp
+musicxml.xsd type arrow-style	ArrowStyle
+musicxml.xsd type arrow-style enumeration "combined"	ArrowStyleCombined
+musicxml.xsd type arrow-style enumeration "double"	ArrowStyleDouble
+musicxml.xsd type arrow-style enumeration "filled"	ArrowStyleFilled
+musicxml.xsd type arrow-style enumeration "hollow"	ArrowStyleHollow
+musicxml.xsd type arrow-style enumeration "other"	ArrowStyleOther
+musicxml.xsd type arrow-style enumeration "paired"	ArrowStylePaired
+musicxml.xsd type arrow-style enumeration "single"	ArrowStyleSingle
+musicxml.xsd type articulations	Articulations
+musicxml.xsd type articulations content	ArticulationsContent
+musicxml.xsd type articulations contents	ArticulationsContents
+musicxml.xsd type assess	Assess
+musicxml.xsd type attributes	Attributes
+musicxml.xsd type backup	Backup
+musicxml.xsd type backward-forward	BackwardForward
+musicxml.xsd type backward-forward enumeration "backward"	BackwardForwardBackward
+musicxml.xsd type backward-forward enumeration "forward"	BackwardForwardForward
+musicxml.xsd type bar-style	BarStyle
+musicxml.xsd type bar-style enumeration "dashed"	BarStyleDashed
+musicxml.xsd type bar-style enumeration "dotted"	BarStyleDotted
+musicxml.xsd type bar-style enumeration "heavy"	BarStyleHeavy
+musicxml.xsd type bar-style enumeration "heavy-heavy"	BarStyleHeavyHeavy
+musicxml.xsd type bar-style enumeration "heavy-light"	BarStyleHeavyLight
+musicxml.xsd type bar-style enumeration "light-heavy"	BarStyleLightHeavy
+musicxml.xsd type bar-style enumeration "light-light"	BarStyleLightLight
+musicxml.xsd type bar-style enumeration "none"	BarStyleNone
+musicxml.xsd type bar-style enumeration "regular"	BarStyleRegular
+musicxml.xsd type bar-style enumeration "short"	BarStyleShort
+musicxml.xsd type bar-style enumeration "tick"	BarStyleTick
+musicxml.xsd type bar-style-color	BarStyleColor
+musicxml.xsd type barline	Barline
+musicxml.xsd type barre	Barre
+musicxml.xsd type bass	Bass
+musicxml.xsd type bass-step	BassStep
+musicxml.xsd type beam	Beam
+musicxml.xsd type beam-level	BeamLevel
+musicxml.xsd type beam-value	BeamValue
+musicxml.xsd type beam-value enumeration "backward hook"	BeamValueBackwardHook
+musicxml.xsd type beam-value enumeration "begin"	BeamValueBegin
+musicxml.xsd type beam-value enumeration "continue"	BeamValueContinue
+musicxml.xsd type beam-value enumeration "end"	BeamValueEnd
+musicxml.xsd type beam-value enumeration "forward hook"	BeamValueForwardHook
+musicxml.xsd type beat-repeat	BeatRepeat
+musicxml.xsd type beat-unit-tied	BeatUnitTied
+musicxml.xsd type beater	Beater
+musicxml.xsd type beater-value	BeaterValue
+musicxml.xsd type beater-value enumeration "bow"	BeaterValueBow
+musicxml.xsd type beater-value enumeration "chime hammer"	BeaterValueChimeHammer
+musicxml.xsd type beater-value enumeration "coin"	BeaterValueCoin
+musicxml.xsd type beater-value enumeration "drum stick"	BeaterValueDrumStick
+musicxml.xsd type beater-value enumeration "finger"	BeaterValueFinger
+musicxml.xsd type beater-value enumeration "fingernail"	BeaterValueFingernail
+musicxml.xsd type beater-value enumeration "fist"	BeaterValueFist
+musicxml.xsd type beater-value enumeration "guiro scraper"	BeaterValueGuiroScraper
+musicxml.xsd type beater-value enumeration "hammer"	BeaterValueHammer
+musicxml.xsd type beater-value enumeration "hand"	BeaterValueHand
+musicxml.xsd type beater-value enumeration "jazz stick"	BeaterValueJazzStick
+musicxml.xsd type beater-value enumeration "knitting needle"	BeaterValueKnittingNeedle
+musicxml.xsd type beater-value enumeration "metal hammer"	BeaterValueMetalHammer
+musicxml.xsd type beater-value enumeration "slide brush on gong"	BeaterValueSlideBrushOnGong
+musicxml.xsd type beater-value enumeration "snare stick"	BeaterValueSnareStick
+musicxml.xsd type beater-value enumeration "spoon mallet"	BeaterValueSpoonMallet
+musicxml.xsd type beater-value enumeration "superball"	BeaterValueSuperball
+musicxml.xsd type beater-value enumeration "triangle beater plain"	BeaterValueTriangleBeaterPlain
+musicxml.xsd type beater-value enumeration "triangle beater"	BeaterValueTriangleBeater
+musicxml.xsd type beater-value enumeration "wire brush"	BeaterValueWireBrush
+musicxml.xsd type bend	Bend
+musicxml.xsd type bend-shape	BendShape
+musicxml.xsd type bend-shape enumeration "angled"	BendShapeAngled
+musicxml.xsd type bend-shape enumeration "curved"	BendShapeCurved
+musicxml.xsd type bookmark	Bookmark
+musicxml.xsd type bracket	Bracket
+musicxml.xsd type breath-mark	BreathMark
+musicxml.xsd type breath-mark-value	BreathMarkValue
+musicxml.xsd type breath-mark-value enumeration ""	BreathMarkValueEmpty
+musicxml.xsd type breath-mark-value enumeration "comma"	BreathMarkValueComma
+musicxml.xsd type breath-mark-value enumeration "salzedo"	BreathMarkValueSalzedo
+musicxml.xsd type breath-mark-value enumeration "tick"	BreathMarkValueTick
+musicxml.xsd type breath-mark-value enumeration "upbow"	BreathMarkValueUpbow
+musicxml.xsd type caesura	Caesura
+musicxml.xsd type caesura-value	CaesuraValue
+musicxml.xsd type caesura-value enumeration ""	CaesuraValueEmpty
+musicxml.xsd type caesura-value enumeration "curved"	CaesuraValueCurved
+musicxml.xsd type caesura-value enumeration "normal"	CaesuraValueNormal
+musicxml.xsd type caesura-value enumeration "short"	CaesuraValueShort
+musicxml.xsd type caesura-value enumeration "single"	CaesuraValueSingle
+musicxml.xsd type caesura-value enumeration "thick"	CaesuraValueThick
+musicxml.xsd type cancel	Cancel
+musicxml.xsd type cancel-location	CancelLocation
+musicxml.xsd type cancel-location enumeration "before-barline"	CancelLocationBeforeBarline
+musicxml.xsd type cancel-location enumeration "left"	CancelLocationLeft
+musicxml.xsd type cancel-location enumeration "right"	CancelLocationRight
+musicxml.xsd type circular-arrow	CircularArrow
+musicxml.xsd type circular-arrow enumeration "anticlockwise"	CircularArrowAnticlockwise
+musicxml.xsd type circular-arrow enumeration "clockwise"	CircularArrowClockwise
+musicxml.xsd type clef	Clef
+musicxml.xsd type clef-sign	ClefSign
+musicxml.xsd type clef-sign enumeration "C"	ClefSignC
+musicxml.xsd type clef-sign enumeration "F"	ClefSignF
+musicxml.xsd type clef-sign enumeration "G"	ClefSignG
+musicxml.xsd type clef-sign enumeration "TAB"	ClefSignTAB
+musicxml.xsd type clef-sign enumeration "jianpu"	ClefSignJianpu
+musicxml.xsd type clef-sign enumeration "none"	ClefSignNone
+musicxml.xsd type clef-sign enumeration "percussion"	ClefSignPercussion
+musicxml.xsd type coda	Coda
+musicxml.xsd type color	Color
+musicxml.xsd type comma-separated-text	CommaSeparatedText
+musicxml.xsd type credit	Credit
+musicxml.xsd type credit content	CreditContent
+musicxml.xsd type credit contents	CreditContents
+musicxml.xsd type css-font-size	CSSFontSize
+musicxml.xsd type css-font-size enumeration "large"	CSSFontSizeLarge
+musicxml.xsd type css-font-size enumeration "medium"	CSSFontSizeMedium
+musicxml.xsd type css-font-size enumeration "small"	CSSFontSizeSmall
+musicxml.xsd type css-font-size enumeration "x-large"	CSSFontSizeXLarge
+musicxml.xsd type css-font-size enumeration "x-small"	CSSFontSizeXSmall
+musicxml.xsd type css-font-size enumeration "xx-large"	CSSFontSizeXxLarge
+musicxml.xsd type css-font-size enumeration "xx-small"	CSSFontSizeXxSmall
+musicxml.xsd type dashes	Dashes
+musicxml.xsd type defaults	Defaults
+musicxml.xsd type degree	Degree
+musicxml.xsd type degree-alter	DegreeAlter
+musicxml.xsd type degree-symbol-value	DegreeSymbolValue
+musicxml.xsd type degree-symbol-value enumeration "augmented"	DegreeSymbolValueAugmented
+musicxml.xsd type degree-symbol-value enumeration "diminished"	DegreeSymbolValueDiminished
+musicxml.xsd type degree-symbol-value enumeration "half-diminished"	DegreeSymbolValueHalfDiminished
+musicxml.xsd type degree-symbol-value enumeration "major"	DegreeSymbolValueMajor
+musicxml.xsd type degree-symbol-value enumeration "minor"	DegreeSymbolValueMinor
+musicxml.xsd type degree-type	DegreeType
+musicxml.xsd type degree-type-value	DegreeTypeValue
+musicxml.xsd type degree-type-value enumeration "add"	DegreeTypeValueAdd
+musicxml.xsd type degree-type-value enumeration "alter"	DegreeTypeValueAlter
+musicxml.xsd type degree-type-value enumeration "subtract"	DegreeTypeValueSubtract
+musicxml.xsd type degree-value	DegreeValue
+musicxml.xsd type direction	Direction
+musicxml.xsd type direction-type	DirectionType
+musicxml.xsd type direction-type content	DirectionTypeContent
+musicxml.xsd type direction-type contents	DirectionTypeContents
+musicxml.xsd type distance	Distance
+musicxml.xsd type distance-type	DistanceType
+musicxml.xsd type divisions	Divisions
+musicxml.xsd type double	Double
+musicxml.xsd type dynamics	Dynamics
+musicxml.xsd type dynamics content	DynamicsContent
+musicxml.xsd type dynamics contents	DynamicsContents
+musicxml.xsd type effect	Effect
+musicxml.xsd type effect-value	EffectValue
+musicxml.xsd type effect-value enumeration "anvil"	EffectValueAnvil
+musicxml.xsd type effect-value enumeration "auto horn"	EffectValueAutoHorn
+musicxml.xsd type effect-value enumeration "bird whistle"	EffectValueBirdWhistle
+musicxml.xsd type effect-value enumeration "cannon"	EffectValueCannon
+musicxml.xsd type effect-value enumeration "duck call"	EffectValueDuckCall
+musicxml.xsd type effect-value enumeration "gun shot"	EffectValueGunShot
+musicxml.xsd type effect-value enumeration "klaxon horn"	EffectValueKlaxonHorn
+musicxml.xsd type effect-value enumeration "lions roar"	EffectValueLionsRoar
+musicxml.xsd type effect-value enumeration "lotus flute"	EffectValueLotusFlute
+musicxml.xsd type effect-value enumeration "megaphone"	EffectValueMegaphone
+musicxml.xsd type effect-value enumeration "police whistle"	EffectValuePoliceWhistle
+musicxml.xsd type effect-value enumeration "siren"	EffectValueSiren
+musicxml.xsd type effect-value enumeration "slide whistle"	EffectValueSlideWhistle
+musicxml.xsd type effect-value enumeration "thunder sheet"	EffectValueThunderSheet
+musicxml.xsd type effect-value enumeration "wind machine"	EffectValueWindMachine
+musicxml.xsd type effect-value enumeration "wind whistle"	EffectValueWindWhistle
+musicxml.xsd type elision	Elision
+musicxml.xsd type empty	Empty
+musicxml.xsd type empty-font	EmptyFont
+musicxml.xsd type empty-line	EmptyLine
+musicxml.xsd type empty-placement	EmptyPlacement
+musicxml.xsd type empty-placement-smufl	EmptyPlacementSMuFL
+musicxml.xsd type empty-print-object-style-align	EmptyPrintObjectStyleAlign
+musicxml.xsd type empty-print-style	EmptyPrintStyle
+musicxml.xsd type empty-print-style-align	EmptyPrintStyleAlign
+musicxml.xsd type empty-print-style-align-id	EmptyPrintStyleAlignID
+musicxml.xsd type empty-trill-sound	EmptyTrillSound
+musicxml.xsd type enclosure-shape	EnclosureShape
+musicxml.xsd type enclosure-shape enumeration "bracket"	EnclosureShapeBracket
+musicxml.xsd type enclosure-shape enumeration "circle"	EnclosureShapeCircle
+musicxml.xsd type enclosure-shape enumeration "decagon"	EnclosureShapeDecagon
+musicxml.xsd type enclosure-shape enumeration "diamond"	EnclosureShapeDiamond
+musicxml.xsd type enclosure-shape enumeration "heptagon"	EnclosureShapeHeptagon
+musicxml.xsd type enclosure-shape enumeration "hexagon"	EnclosureShapeHexagon
+musicxml.xsd type enclosure-shape enumeration "inverted-bracket"	EnclosureShapeInvertedBracket
+musicxml.xsd type enclosure-shape enumeration "nonagon"	EnclosureShapeNonagon
+musicxml.xsd type enclosure-shape enumeration "none"	EnclosureShapeNone
+musicxml.xsd type enclosure-shape enumeration "octagon"	EnclosureShapeOctagon
+musicxml.xsd type enclosure-shape enumeration "oval"	EnclosureShapeOval
+musicxml.xsd type enclosure-shape enumeration "pentagon"	EnclosureShapePentagon
+musicxml.xsd type enclosure-shape enumeration "rectangle"	EnclosureShapeRectangle
+musicxml.xsd type enclosure-shape enumeration "square"	EnclosureShapeSquare
+musicxml.xsd type enclosure-shape enumeration "triangle"	EnclosureShapeTriangle
+musicxml.xsd type encoding	Encoding
+musicxml.xsd type encoding content	EncodingContent
+musicxml.xsd type encoding contents	EncodingContents
+musicxml.xsd type ending	Ending
+musicxml.xsd type ending-number	EndingNumber
+musicxml.xsd type extend	Extend
+musicxml.xsd type fan	Fan
+musicxml.xsd type fan enumeration "accel"	FanAccel
+musicxml.xsd type fan enumeration "none"	FanNone
+musicxml.xsd type fan enumeration "rit"	FanRit
+musicxml.xsd type feature	Feature
+musicxml.xsd type fermata	Fermata
+musicxml.xsd type fermata-shape	FermataShape
+musicxml.xsd type fermata-shape enumeration ""	FermataShapeEmpty
+musicxml.xsd type fermata-shape enumeration "angled"	FermataShapeAngled
+musicxml.xsd type fermata-shape enumeration "curlew"	FermataShapeCurlew
+musicxml.xsd type fermata-shape enumeration "double-angled"	FermataShapeDoubleAngled
+musicxml.xsd type fermata-shape enumeration "double-dot"	FermataShapeDoubleDot
+musicxml.xsd type fermata-shape enumeration "double-square"	FermataShapeDoubleSquare
+musicxml.xsd type fermata-shape enumeration "half-curve"	FermataShapeHalfCurve
+musicxml.xsd type fermata-shape enumeration "normal"	FermataShapeNormal
+musicxml.xsd type fermata-shape enumeration "square"	FermataShapeSquare
+musicxml.xsd type fifths	Fifths
+musicxml.xsd type figure	Figure
+musicxml.xsd type figured-bass	FiguredBass
+musicxml.xsd type fingering	Fingering
+musicxml.xsd type first-fret	FirstFret
+musicxml.xsd type font-family	FontFamily
+musicxml.xsd type font-size	FontSize
+musicxml.xsd type font-style	FontStyle
+musicxml.xsd type font-style enumeration "italic"	FontStyleItalic
+musicxml.xsd type font-style enumeration "normal"	FontStyleNormal
+musicxml.xsd type font-weight	FontWeight
+musicxml.xsd type font-weight enumeration "bold"	FontWeightBold
+musicxml.xsd type font-weight enumeration "normal"	FontWeightNormal
+musicxml.xsd type for-part	ForPart
+musicxml.xsd type formatted-symbol	FormattedSymbol
+musicxml.xsd type formatted-symbol-id	FormattedSymbolID
+musicxml.xsd type formatted-text	FormattedText
+musicxml.xsd type formatted-text-id	FormattedTextID
+musicxml.xsd type forward	Forward
+musicxml.xsd type frame	Frame
+musicxml.xsd type frame-note	FrameNote
+musicxml.xsd type fret	Fret
+musicxml.xsd type glass	Glass
+musicxml.xsd type glass-value	GlassValue
+musicxml.xsd type glass-value enumeration "glass harmonica"	GlassValueGlassHarmonica
+musicxml.xsd type glass-value enumeration "glass harp"	GlassValueGlassHarp
+musicxml.xsd type glass-value enumeration "wind chimes"	GlassValueWindChimes
+musicxml.xsd type glissando	Glissando
+musicxml.xsd type glyph	Glyph
+musicxml.xsd type glyph-type	GlyphType
+musicxml.xsd type grace	Grace
+musicxml.xsd type group-barline	GroupBarline
+musicxml.xsd type group-barline-value	GroupBarlineValue
+musicxml.xsd type group-barline-value enumeration "Mensurstrich"	GroupBarlineValueMensurstrich
+musicxml.xsd type group-barline-value enumeration "no"	GroupBarlineValueNo
+musicxml.xsd type group-barline-value enumeration "yes"	GroupBarlineValueYes
+musicxml.xsd type group-name	GroupName
+musicxml.xsd type group-symbol	GroupSymbol
+musicxml.xsd type group-symbol-value	GroupSymbolValue
+musicxml.xsd type group-symbol-value enumeration "brace"	GroupSymbolValueBrace
+musicxml.xsd type group-symbol-value enumeration "bracket"	GroupSymbolValueBracket
+musicxml.xsd type group-symbol-value enumeration "line"	GroupSymbolValueLine
+musicxml.xsd type group-symbol-value enumeration "none"	GroupSymbolValueNone
+musicxml.xsd type group-symbol-value enumeration "square"	GroupSymbolValueSquare
+musicxml.xsd type grouping	Grouping
+musicxml.xsd type hammer-on-pull-off	HammerOnPullOff
+musicxml.xsd type handbell	Handbell
+musicxml.xsd type handbell-value	HandbellValue
+musicxml.xsd type handbell-value enumeration "belltree"	HandbellValueBelltree
+musicxml.xsd type handbell-value enumeration "damp"	HandbellValueDamp
+musicxml.xsd type handbell-value enumeration "echo"	HandbellValueEcho
+musicxml.xsd type handbell-value enumeration "gyro"	HandbellValueGyro
+musicxml.xsd type handbell-value enumeration "hand martellato"	HandbellValueHandMartellato
+musicxml.xsd type handbell-value enumeration "mallet lift"	HandbellValueMalletLift
+musicxml.xsd type handbell-value enumeration "mallet table"	HandbellValueMalletTable
+musicxml.xsd type handbell-value enumeration "martellato lift"	HandbellValueMartellatoLift
+musicxml.xsd type handbell-value enumeration "martellato"	HandbellValueMartellato
+musicxml.xsd type handbell-value enumeration "muted martellato"	HandbellValueMutedMartellato
+musicxml.xsd type handbell-value enumeration "pluck lift"	HandbellValuePluckLift
+musicxml.xsd type handbell-value enumeration "swing"	HandbellValueSwing
+musicxml.xsd type harmon-closed	HarmonClosed
+musicxml.xsd type harmon-closed-location	HarmonClosedLocation
+musicxml.xsd type harmon-closed-location enumeration "bottom"	HarmonClosedLocationBottom
+musicxml.xsd type harmon-closed-location enumeration "left"	HarmonClosedLocationLeft
+musicxml.xsd type harmon-closed-location enumeration "right"	HarmonClosedLocationRight
+musicxml.xsd type harmon-closed-location enumeration "top"	HarmonClosedLocationTop
+musicxml.xsd type harmon-closed-value	HarmonClosedValue
+musicxml.xsd type harmon-closed-value enumeration "half"	HarmonClosedValueHalf
+musicxml.xsd type harmon-closed-value enumeration "no"	HarmonClosedValueNo
+musicxml.xsd type harmon-closed-value enumeration "yes"	HarmonClosedValueYes
+musicxml.xsd type harmon-mute	HarmonMute
+musicxml.xsd type harmonic	Harmonic
+musicxml.xsd type harmony	Harmony
+musicxml.xsd type harmony content	HarmonyContent
+musicxml.xsd type harmony contents	HarmonyContents
+musicxml.xsd type harmony-alter	HarmonyAlter
+musicxml.xsd type harmony-arrangement	HarmonyArrangement
+musicxml.xsd type harmony-arrangement enumeration "diagonal"	HarmonyArrangementDiagonal
+musicxml.xsd type harmony-arrangement enumeration "horizontal"	HarmonyArrangementHorizontal
+musicxml.xsd type harmony-arrangement enumeration "vertical"	HarmonyArrangementVertical
+musicxml.xsd type harmony-type	HarmonyType
+musicxml.xsd type harmony-type enumeration "alternate"	HarmonyTypeAlternate
+musicxml.xsd type harmony-type enumeration "explicit"	HarmonyTypeExplicit
+musicxml.xsd type harmony-type enumeration "implied"	HarmonyTypeImplied
+musicxml.xsd type harp-pedals	HarpPedals
+musicxml.xsd type heel-toe	HeelToe
+musicxml.xsd type hole	Hole
+musicxml.xsd type hole-closed	HoleClosed
+musicxml.xsd type hole-closed-location	HoleClosedLocation
+musicxml.xsd type hole-closed-location enumeration "bottom"	HoleClosedLocationBottom
+musicxml.xsd type hole-closed-location enumeration "left"	HoleClosedLocationLeft
+musicxml.xsd type hole-closed-location enumeration "right"	HoleClosedLocationRight
+musicxml.xsd type hole-closed-location enumeration "top"	HoleClosedLocationTop
+musicxml.xsd type hole-closed-value	HoleClosedValue
+musicxml.xsd type hole-closed-value enumeration "half"	HoleClosedValueHalf
+musicxml.xsd type hole-closed-value enumeration "no"	HoleClosedValueNo
+musicxml.xsd type hole-closed-value enumeration "yes"	HoleClosedValueYes
+musicxml.xsd type horizontal-turn	HorizontalTurn
+musicxml.xsd type identification	Identification
+musicxml.xsd type image	Image
+musicxml.xsd type instrument	Instrument
+musicxml.xsd type instrument-change	InstrumentChange
+musicxml.xsd type instrument-link	InstrumentLink
+musicxml.xsd type interchangeable	Interchangeable
+musicxml.xsd type interchangeable content	InterchangeableContent
+musicxml.xsd type interchangeable contents	InterchangeableContents
+musicxml.xsd type inversion	Inversion
+musicxml.xsd type key	Key
+musicxml.xsd type key content	KeyContent
+musicxml.xsd type key contents	KeyContents
+musicxml.xsd type key-accidental	KeyAccidental
+musicxml.xsd type key-octave	KeyOctave
+musicxml.xsd type kind	Kind
+musicxml.xsd type kind-value	KindValue
+musicxml.xsd type kind-value enumeration "French"	KindValueFrench
+musicxml.xsd type kind-value enumeration "German"	KindValueGerman
+musicxml.xsd type kind-value enumeration "Italian"	KindValueItalian
+musicxml.xsd type kind-value enumeration "Neapolitan"	KindValueNeapolitan
+musicxml.xsd type kind-value enumeration "Tristan"	KindValueTristan
+musicxml.xsd type kind-value enumeration "augmented"	KindValueAugmented
+musicxml.xsd type kind-value enumeration "augmented-seventh"	KindValueAugmentedSeventh
+musicxml.xsd type kind-value enumeration "diminished"	KindValueDiminished
+musicxml.xsd type kind-value enumeration "diminished-seventh"	KindValueDiminishedSeventh
+musicxml.xsd type kind-value enumeration "dominant"	KindValueDominant
+musicxml.xsd type kind-value enumeration "dominant-11th"	KindValueDominant11th
+musicxml.xsd type kind-value enumeration "dominant-13th"	KindValueDominant13th
+musicxml.xsd type kind-value enumeration "dominant-ninth"	KindValueDominantNinth
+musicxml.xsd type kind-value enumeration "half-diminished"	KindValueHalfDiminished
+musicxml.xsd type kind-value enumeration "major"	KindValueMajor
+musicxml.xsd type kind-value enumeration "major-11th"	KindValueMajor11th
+musicxml.xsd type kind-value enumeration "major-13th"	KindValueMajor13th
+musicxml.xsd type kind-value enumeration "major-minor"	KindValueMajorMinor
+musicxml.xsd type kind-value enumeration "major-ninth"	KindValueMajorNinth
+musicxml.xsd type kind-value enumeration "major-seventh"	KindValueMajorSeventh
+musicxml.xsd type kind-value enumeration "major-sixth"	KindValueMajorSixth
+musicxml.xsd type kind-value enumeration "minor"	KindValueMinor
+musicxml.xsd type kind-value enumeration "minor-11th"	KindValueMinor11th
+musicxml.xsd type kind-value enumeration "minor-13th"	KindValueMinor13th
+musicxml.xsd type kind-value enumeration "minor-ninth"	KindValueMinorNinth
+musicxml.xsd type kind-value enumeration "minor-seventh"	KindValueMinorSeventh
+musicxml.xsd type kind-value enumeration "minor-sixth"	KindValueMinorSixth
+musicxml.xsd type kind-value enumeration "none"	KindValueNone
+musicxml.xsd type kind-value enumeration "other"	KindValueOther
+musicxml.xsd type kind-value enumeration "pedal"	KindValuePedal
+musicxml.xsd type kind-value enumeration "power"	KindValuePower
+musicxml.xsd type kind-value enumeration "suspended-fourth"	KindValueSuspendedFourth
+musicxml.xsd type kind-value enumeration "suspended-second"	KindValueSuspendedSecond
+musicxml.xsd type left-center-right	LeftCenterRight
+musicxml.xsd type left-center-right enumeration "center"	LeftCenterRightCenter
+musicxml.xsd type left-center-right enumeration "left"	LeftCenterRightLeft
+musicxml.xsd type left-center-right enumeration "right"	LeftCenterRightRight
+musicxml.xsd type left-right	LeftRight
+musicxml.xsd type left-right enumeration "left"	LeftRightLeft
+musicxml.xsd type left-right enumeration "right"	LeftRightRight
+musicxml.xsd type level	Level
+musicxml.xsd type line-detail	LineDetail
+musicxml.xsd type line-end	LineEnd
+musicxml.xsd type line-end enumeration "arrow"	LineEndArrow
+musicxml.xsd type line-end enumeration "both"	LineEndBoth
+musicxml.xsd type line-end enumeration "down"	LineEndDown
+musicxml.xsd type line-end enumeration "none"	LineEndNone
+musicxml.xsd type line-end enumeration "up"	LineEndUp
+musicxml.xsd type line-length	LineLength
+musicxml.xsd type line-length enumeration "long"	LineLengthLong
+musicxml.xsd type line-length enumeration "medium"	LineLengthMedium
+musicxml.xsd type line-length enumeration "short"	LineLengthShort
+musicxml.xsd type line-shape	LineShape
+musicxml.xsd type line-shape enumeration "curved"	LineShapeCurved
+musicxml.xsd type line-shape enumeration "straight"	LineShapeStraight
+musicxml.xsd type line-type	LineType
+musicxml.xsd type line-type enumeration "dashed"	LineTypeDashed
+musicxml.xsd type line-type enumeration "dotted"	LineTypeDotted
+musicxml.xsd type line-type enumeration "solid"	LineTypeSolid
+musicxml.xsd type line-type enumeration "wavy"	LineTypeWavy
+musicxml.xsd type line-width	LineWidth
+musicxml.xsd type line-width-type	LineWidthType
+musicxml.xsd type link	Link
+musicxml.xsd type listen	Listen
+musicxml.xsd type listen content	ListenContent
+musicxml.xsd type listen contents	ListenContents
+musicxml.xsd type listening	Listening
+musicxml.xsd type listening content	ListeningContent
+musicxml.xsd type listening contents	ListeningContents
+musicxml.xsd type lyric	Lyric
+musicxml.xsd type lyric content	LyricContent
+musicxml.xsd type lyric contents	LyricContents
+musicxml.xsd type lyric-font	LyricFont
+musicxml.xsd type lyric-language	LyricLanguage
+musicxml.xsd type margin-type	MarginType
+musicxml.xsd type margin-type enumeration "both"	MarginTypeBoth
+musicxml.xsd type margin-type enumeration "even"	MarginTypeEven
+musicxml.xsd type margin-type enumeration "odd"	MarginTypeOdd
+musicxml.xsd type measure-layout	MeasureLayout
+musicxml.xsd type measure-numbering	MeasureNumbering
+musicxml.xsd type measure-numbering-value	MeasureNumberingValue
+musicxml.xsd type measure-numbering-value enumeration "measure"	MeasureNumberingValueMeasure
+musicxml.xsd type measure-numbering-value enumeration "none"	MeasureNumberingValueNone
+musicxml.xsd type measure-numbering-value enumeration "system"	MeasureNumberingValueSystem
+musicxml.xsd type measure-repeat	MeasureRepeat
+musicxml.xsd type measure-style	MeasureStyle
+musicxml.xsd type measure-text	MeasureText
+musicxml.xsd type membrane	Membrane
+musicxml.xsd type membrane-value	MembraneValue
+musicxml.xsd type membrane-value enumeration "Chinese tomtom"	MembraneValueChineseTomtom
+musicxml.xsd type membrane-value enumeration "Indo-American tomtom"	MembraneValueIndoAmericanTomtom
+musicxml.xsd type membrane-value enumeration "Japanese tomtom"	MembraneValueJapaneseTomtom
+musicxml.xsd type membrane-value enumeration "bass drum on side"	MembraneValueBassDrumOnSide
+musicxml.xsd type membrane-value enumeration "bass drum"	MembraneValueBassDrum
+musicxml.xsd type membrane-value enumeration "bongos"	MembraneValueBongos
+musicxml.xsd type membrane-value enumeration "conga drum"	MembraneValueCongaDrum
+musicxml.xsd type membrane-value enumeration "cuica"	MembraneValueCuica
+musicxml.xsd type membrane-value enumeration "goblet drum"	MembraneValueGobletDrum
+musicxml.xsd type membrane-value enumeration "military drum"	MembraneValueMilitaryDrum
+musicxml.xsd type membrane-value enumeration "snare drum snares off"	MembraneValueSnareDrumSnaresOff
+musicxml.xsd type membrane-value enumeration "snare drum"	MembraneValueSnareDrum
+musicxml.xsd type membrane-value enumeration "tabla"	MembraneValueTabla
+musicxml.xsd type membrane-value enumeration "tambourine"	MembraneValueTambourine
+musicxml.xsd type membrane-value enumeration "tenor drum"	MembraneValueTenorDrum
+musicxml.xsd type membrane-value enumeration "timbales"	MembraneValueTimbales
+musicxml.xsd type membrane-value enumeration "tomtom"	MembraneValueTomtom
+musicxml.xsd type metal	Metal
+musicxml.xsd type metal-value	MetalValue
+musicxml.xsd type metal-value enumeration "Chinese cymbal"	MetalValueChineseCymbal
+musicxml.xsd type metal-value enumeration "Vietnamese hat"	MetalValueVietnameseHat
+musicxml.xsd type metal-value enumeration "agogo"	MetalValueAgogo
+musicxml.xsd type metal-value enumeration "almglocken"	MetalValueAlmglocken
+musicxml.xsd type metal-value enumeration "bell plate"	MetalValueBellPlate
+musicxml.xsd type metal-value enumeration "bell tree"	MetalValueBellTree
+musicxml.xsd type metal-value enumeration "bell"	MetalValueBell
+musicxml.xsd type metal-value enumeration "brake drum"	MetalValueBrakeDrum
+musicxml.xsd type metal-value enumeration "cencerro"	MetalValueCencerro
+musicxml.xsd type metal-value enumeration "chain rattle"	MetalValueChainRattle
+musicxml.xsd type metal-value enumeration "cowbell"	MetalValueCowbell
+musicxml.xsd type metal-value enumeration "crash cymbals"	MetalValueCrashCymbals
+musicxml.xsd type metal-value enumeration "crotale"	MetalValueCrotale
+musicxml.xsd type metal-value enumeration "cymbal tongs"	MetalValueCymbalTongs
+musicxml.xsd type metal-value enumeration "domed gong"	MetalValueDomedGong
+musicxml.xsd type metal-value enumeration "finger cymbals"	MetalValueFingerCymbals
+musicxml.xsd type metal-value enumeration "flexatone"	MetalValueFlexatone
+musicxml.xsd type metal-value enumeration "gong"	MetalValueGong
+musicxml.xsd type metal-value enumeration "handbell"	MetalValueHandbell
+musicxml.xsd type metal-value enumeration "hi-hat"	MetalValueHiHat
+musicxml.xsd type metal-value enumeration "high-hat cymbals"	MetalValueHighHatCymbals
+musicxml.xsd type metal-value enumeration "jaw harp"	MetalValueJawHarp
+musicxml.xsd type metal-value enumeration "jingle bells"	MetalValueJingleBells
+musicxml.xsd type metal-value enumeration "musical saw"	MetalValueMusicalSaw
+musicxml.xsd type metal-value enumeration "shell bells"	MetalValueShellBells
+musicxml.xsd type metal-value enumeration "sistrum"	MetalValueSistrum
+musicxml.xsd type metal-value enumeration "sizzle cymbal"	MetalValueSizzleCymbal
+musicxml.xsd type metal-value enumeration "sleigh bells"	MetalValueSleighBells
+musicxml.xsd type metal-value enumeration "suspended cymbal"	MetalValueSuspendedCymbal
+musicxml.xsd type metal-value enumeration "tam tam with beater"	MetalValueTamTamWithBeater
+musicxml.xsd type metal-value enumeration "tam tam"	MetalValueTamTam
+musicxml.xsd type metal-value enumeration "triangle"	MetalValueTriangle
+musicxml.xsd type metronome	Metronome
+musicxml.xsd type metronome content	MetronomeContent
+musicxml.xsd type metronome contents	MetronomeContents
+musicxml.xsd type metronome-beam	MetronomeBeam
+musicxml.xsd type metronome-note	MetronomeNote
+musicxml.xsd type metronome-tied	MetronomeTied
+musicxml.xsd type metronome-tuplet	MetronomeTuplet
+musicxml.xsd type midi-128	MIDI128
+musicxml.xsd type midi-16	MIDI16
+musicxml.xsd type midi-16384	MIDI16384
+musicxml.xsd type midi-device	MIDIDevice
+musicxml.xsd type midi-instrument	MIDIInstrument
+musicxml.xsd type millimeters	Millimeters
+musicxml.xsd type milliseconds	Milliseconds
+musicxml.xsd type miscellaneous	Miscellaneous
+musicxml.xsd type miscellaneous-field	MiscellaneousField
+musicxml.xsd type mode	Mode
+musicxml.xsd type mordent	Mordent
+musicxml.xsd type multiple-rest	MultipleRest
+musicxml.xsd type mute	Mute
+musicxml.xsd type mute enumeration "bucket"	MuteBucket
+musicxml.xsd type mute enumeration "cup"	MuteCup
+musicxml.xsd type mute enumeration "echo"	MuteEcho
+musicxml.xsd type mute enumeration "harmon-no-stem"	MuteHarmonNoStem
+musicxml.xsd type mute enumeration "harmon-stem"	MuteHarmonStem
+musicxml.xsd type mute enumeration "hat"	MuteHat
+musicxml.xsd type mute enumeration "off"	MuteOff
+musicxml.xsd type mute enumeration "on"	MuteOn
+musicxml.xsd type mute enumeration "palm"	MutePalm
+musicxml.xsd type mute enumeration "plunger"	MutePlunger
+musicxml.xsd type mute enumeration "practice"	MutePractice
+musicxml.xsd type mute enumeration "solotone"	MuteSolotone
+musicxml.xsd type mute enumeration "stop-hand"	MuteStopHand
+musicxml.xsd type mute enumeration "stop-mute"	MuteStopMute
+musicxml.xsd type mute enumeration "straight"	MuteStraight
+musicxml.xsd type name-display	NameDisplay
+musicxml.xsd type name-display content	NameDisplayContent
+musicxml.xsd type name-display contents	NameDisplayContents
+musicxml.xsd type non-arpeggiate	NonArpeggiate
+musicxml.xsd type non-negative-decimal	NonNegativeDecimal
+musicxml.xsd type notations	Notations
+musicxml.xsd type notations content	NotationsContent
+musicxml.xsd type notations contents	NotationsContents
+musicxml.xsd type note	Note
+musicxml.xsd type note-size	NoteSize
+musicxml.xsd type note-size-type	NoteSizeType
+musicxml.xsd type note-size-type enumeration "cue"	NoteSizeTypeCue
+musicxml.xsd type note-size-type enumeration "grace"	NoteSizeTypeGrace
+musicxml.xsd type note-size-type enumeration "grace-cue"	NoteSizeTypeGraceCue
+musicxml.xsd type note-size-type enumeration "large"	NoteSizeTypeLarge
+musicxml.xsd type note-type	NoteType
+musicxml.xsd type note-type-value	NoteTypeValue
+musicxml.xsd type note-type-value enumeration "1024th"	NoteTypeValue1024th
+musicxml.xsd type note-type-value enumeration "128th"	NoteTypeValue128th
+musicxml.xsd type note-type-value enumeration "16th"	NoteTypeValue16th
+musicxml.xsd type note-type-value enumeration "256th"	NoteTypeValue256th
+musicxml.xsd type note-type-value enumeration "32nd"	NoteTypeValue32nd
+musicxml.xsd type note-type-value enumeration "512th"	NoteTypeValue512th
+musicxml.xsd type note-type-value enumeration "64th"	NoteTypeValue64th
+musicxml.xsd type note-type-value enumeration "breve"	NoteTypeValueBreve
+musicxml.xsd type note-type-value enumeration "eighth"	NoteTypeValueEighth
+musicxml.xsd type note-type-value enumeration "half"	NoteTypeValueHalf
+musicxml.xsd type note-type-value enumeration "long"	NoteTypeValueLong
+musicxml.xsd type note-type-value enumeration "maxima"	NoteTypeValueMaxima
+musicxml.xsd type note-type-value enumeration "quarter"	NoteTypeValueQuarter
+musicxml.xsd type note-type-value enumeration "whole"	NoteTypeValueWhole
+musicxml.xsd type notehead	Notehead
+musicxml.xsd type notehead-text	NoteheadText
+musicxml.xsd type notehead-text content	NoteheadTextContent
+musicxml.xsd type notehead-text contents	NoteheadTextContents
+musicxml.xsd type notehead-value	NoteheadValue
+musicxml.xsd type notehead-value enumeration "arrow down"	NoteheadValueArrowDown
+musicxml.xsd type notehead-value enumeration "arrow up"	NoteheadValueArrowUp
+musicxml.xsd type notehead-value enumeration "back slashed"	NoteheadValueBackSlashed
+musicxml.xsd type notehead-value enumeration "circle dot"	NoteheadValueCircleDot
+musicxml.xsd type notehead-value enumeration "circle-x"	NoteheadValueCircleX
+musicxml.xsd type notehead-value enumeration "circled"	NoteheadValueCircled
+musicxml.xsd type notehead-value enumeration "cluster"	NoteheadValueCluster
+musicxml.xsd type notehead-value enumeration "cross"	NoteheadValueCross
+musicxml.xsd type notehead-value enumeration "diamond"	NoteheadValueDiamond
+musicxml.xsd type notehead-value enumeration "do"	NoteheadValueDo
+musicxml.xsd type notehead-value enumeration "fa up"	NoteheadValueFaUp
+musicxml.xsd type notehead-value enumeration "fa"	NoteheadValueFa
+musicxml.xsd type notehead-value enumeration "inverted triangle"	NoteheadValueInvertedTriangle
+musicxml.xsd type notehead-value enumeration "la"	NoteheadValueLa
+musicxml.xsd type notehead-value enumeration "left triangle"	NoteheadValueLeftTriangle
+musicxml.xsd type notehead-value enumeration "mi"	NoteheadValueMi
+musicxml.xsd type notehead-value enumeration "none"	NoteheadValueNone
+musicxml.xsd type notehead-value enumeration "normal"	NoteheadValueNormal
+musicxml.xsd type notehead-value enumeration "other"	NoteheadValueOther
+musicxml.xsd type notehead-value enumeration "re"	NoteheadValueRe
+musicxml.xsd type notehead-value enumeration "rectangle"	NoteheadValueRectangle
+musicxml.xsd type notehead-value enumeration "slash"	NoteheadValueSlash
+musicxml.xsd type notehead-value enumeration "slashed"	NoteheadValueSlashed
+musicxml.xsd type notehead-value enumeration "so"	NoteheadValueSo
+musicxml.xsd type notehead-value enumeration "square"	NoteheadValueSquare
+musicxml.xsd type notehead-value enumeration "ti"	NoteheadValueTi
+musicxml.xsd type notehead-value enumeration "triangle"	NoteheadValueTriangle
+musicxml.xsd type notehead-value enumeration "x"	NoteheadValueX
+musicxml.xsd type number-level	NumberLevel
+musicxml.xsd type number-of-lines	NumberOfLines
+musicxml.xsd type number-or-normal	NumberOrNormal
+musicxml.xsd type number-or-normal enumeration "normal"	NumberOrNormalNormal
+musicxml.xsd type numeral	Numeral
+musicxml.xsd type numeral-key	NumeralKey
+musicxml.xsd type numeral-mode	NumeralMode
+musicxml.xsd type numeral-mode enumeration "harmonic minor"	NumeralModeHarmonicMinor
+musicxml.xsd type numeral-mode enumeration "major"	NumeralModeMajor
+musicxml.xsd type numeral-mode enumeration "melodic minor"	NumeralModeMelodicMinor
+musicxml.xsd type numeral-mode enumeration "minor"	NumeralModeMinor
+musicxml.xsd type numeral-mode enumeration "natural minor"	NumeralModeNaturalMinor
+musicxml.xsd type numeral-root	NumeralRoot
+musicxml.xsd type numeral-value	NumeralValue
+musicxml.xsd type octave	Octave
+musicxml.xsd type octave-shift	OctaveShift
+musicxml.xsd type offset	Offset
+musicxml.xsd type on-off	OnOff
+musicxml.xsd type on-off enumeration "off"	OnOffOff
+musicxml.xsd type on-off enumeration "on"	OnOffOn
+musicxml.xsd type opus	Opus
+musicxml.xsd type ornaments	Ornaments
+musicxml.xsd type ornaments content	OrnamentsContent
+musicxml.xsd type ornaments contents	OrnamentsContents
+musicxml.xsd type other-appearance	OtherAppearance
+musicxml.xsd type other-direction	OtherDirection
+musicxml.xsd type other-listening	OtherListening
+musicxml.xsd type other-notation	OtherNotation
+musicxml.xsd type other-placement-text	OtherPlacementText
+musicxml.xsd type other-play	OtherPlay
+musicxml.xsd type other-text	OtherText
+musicxml.xsd type over-under	OverUnder
+musicxml.xsd type over-under enumeration "over"	OverUnderOver
+musicxml.xsd type over-under enumeration "under"	OverUnderUnder
+musicxml.xsd type page-layout	PageLayout
+musicxml.xsd type page-margins	PageMargins
+musicxml.xsd type part-clef	PartClef
+musicxml.xsd type part-group	PartGroup
+musicxml.xsd type part-link	PartLink
+musicxml.xsd type part-list	PartList
+musicxml.xsd type part-list content	PartListContent
+musicxml.xsd type part-list contents	PartListContents
+musicxml.xsd type part-name	PartName
+musicxml.xsd type part-symbol	PartSymbol
+musicxml.xsd type part-transpose	PartTranspose
+musicxml.xsd type pedal	Pedal
+musicxml.xsd type pedal-tuning	PedalTuning
+musicxml.xsd type pedal-type	PedalType
+musicxml.xsd type pedal-type enumeration "change"	PedalTypeChange
+musicxml.xsd type pedal-type enumeration "continue"	PedalTypeContinue
+musicxml.xsd type pedal-type enumeration "discontinue"	PedalTypeDiscontinue
+musicxml.xsd type pedal-type enumeration "resume"	PedalTypeResume
+musicxml.xsd type pedal-type enumeration "sostenuto"	PedalTypeSostenuto
+musicxml.xsd type pedal-type enumeration "start"	PedalTypeStart
+musicxml.xsd type pedal-type enumeration "stop"	PedalTypeStop
+musicxml.xsd type per-minute	PerMinute
+musicxml.xsd type percent	Percent
+musicxml.xsd type percussion	Percussion
+musicxml.xsd type pitch	Pitch
+musicxml.xsd type pitched	Pitched
+musicxml.xsd type pitched-value	PitchedValue
+musicxml.xsd type pitched-value enumeration "celesta"	PitchedValueCelesta
+musicxml.xsd type pitched-value enumeration "chimes"	PitchedValueChimes
+musicxml.xsd type pitched-value enumeration "glockenspiel"	PitchedValueGlockenspiel
+musicxml.xsd type pitched-value enumeration "lithophone"	PitchedValueLithophone
+musicxml.xsd type pitched-value enumeration "mallet"	PitchedValueMallet
+musicxml.xsd type pitched-value enumeration "marimba"	PitchedValueMarimba
+musicxml.xsd type pitched-value enumeration "steel drums"	PitchedValueSteelDrums
+musicxml.xsd type pitched-value enumeration "tubaphone"	PitchedValueTubaphone
+musicxml.xsd type pitched-value enumeration "tubular chimes"	PitchedValueTubularChimes
+musicxml.xsd type pitched-value enumeration "vibraphone"	PitchedValueVibraphone
+musicxml.xsd type pitched-value enumeration "xylophone"	PitchedValueXylophone
+musicxml.xsd type placement-text	PlacementText
+musicxml.xsd type play	Play
+musicxml.xsd type play content	PlayContent
+musicxml.xsd type play contents	PlayContents
+musicxml.xsd type player	Player
+musicxml.xsd type positive-decimal	PositiveDecimal
+musicxml.xsd type positive-divisions	PositiveDivisions
+musicxml.xsd type positive-integer-or-empty	PositiveIntegerOrEmpty
+musicxml.xsd type positive-integer-or-empty enumeration ""	PositiveIntegerOrEmptyEmpty
+musicxml.xsd type principal-voice	PrincipalVoice
+musicxml.xsd type principal-voice-symbol	PrincipalVoiceSymbol
+musicxml.xsd type principal-voice-symbol enumeration "Hauptstimme"	PrincipalVoiceSymbolHauptstimme
+musicxml.xsd type principal-voice-symbol enumeration "Nebenstimme"	PrincipalVoiceSymbolNebenstimme
+musicxml.xsd type principal-voice-symbol enumeration "none"	PrincipalVoiceSymbolNone
+musicxml.xsd type principal-voice-symbol enumeration "plain"	PrincipalVoiceSymbolPlain
+musicxml.xsd type print	Print
+musicxml.xsd type release	Release
+musicxml.xsd type repeat	Repeat
+musicxml.xsd type rest	Rest
+musicxml.xsd type right-left-middle	RightLeftMiddle
+musicxml.xsd type right-left-middle enumeration "left"	RightLeftMiddleLeft
+musicxml.xsd type right-left-middle enumeration "middle"	RightLeftMiddleMiddle
+musicxml.xsd type right-left-middle enumeration "right"	RightLeftMiddleRight
+musicxml.xsd type root	Root
+musicxml.xsd type root-step	RootStep
+musicxml.xsd type rotation-degrees	RotationDegrees
+musicxml.xsd type scaling	Scaling
+musicxml.xsd type scordatura	Scordatura
+musicxml.xsd type score-instrument	ScoreInstrument
+musicxml.xsd type score-part	ScorePart
+musicxml.xsd type score-part content	ScorePartContent
+musicxml.xsd type score-part contents	ScorePartContents
+musicxml.xsd type segno	Segno
+musicxml.xsd type semi-pitched	SemiPitched
+musicxml.xsd type semi-pitched enumeration "high"	SemiPitchedHigh
+musicxml.xsd type semi-pitched enumeration "low"	SemiPitchedLow
+musicxml.xsd type semi-pitched enumeration "medium"	SemiPitchedMedium
+musicxml.xsd type semi-pitched enumeration "medium-high"	SemiPitchedMediumHigh
+musicxml.xsd type semi-pitched enumeration "medium-low"	SemiPitchedMediumLow
+musicxml.xsd type semi-pitched enumeration "very-low"	SemiPitchedVeryLow
+musicxml.xsd type semitones	Semitones
+musicxml.xsd type show-frets	ShowFrets
+musicxml.xsd type show-frets enumeration "letters"	ShowFretsLetters
+musicxml.xsd type show-frets enumeration "numbers"	ShowFretsNumbers
+musicxml.xsd type show-tuplet	ShowTuplet
+musicxml.xsd type show-tuplet enumeration "actual"	ShowTupletActual
+musicxml.xsd type show-tuplet enumeration "both"	ShowTupletBoth
+musicxml.xsd type show-tuplet enumeration "none"	ShowTupletNone
+musicxml.xsd type slash	Slash
+musicxml.xsd type slide	Slide
+musicxml.xsd type slur	Slur
+musicxml.xsd type smufl-accidental-glyph-name	SMuFLAccidentalGlyphName
+musicxml.xsd type smufl-coda-glyph-name	SMuFLCodaGlyphName
+musicxml.xsd type smufl-glyph-name	SMuFLGlyphName
+musicxml.xsd type smufl-lyrics-glyph-name	SMuFLLyricsGlyphName
+musicxml.xsd type smufl-pictogram-glyph-name	SMuFLPictogramGlyphName
+musicxml.xsd type smufl-segno-glyph-name	SMuFLSegnoGlyphName
+musicxml.xsd type smufl-wavy-line-glyph-name	SMuFLWavyLineGlyphName
+musicxml.xsd type sound	Sound
+musicxml.xsd type sound content	SoundContent
+musicxml.xsd type sound contents	SoundContents
+musicxml.xsd type staff-details	StaffDetails
+musicxml.xsd type staff-divide	StaffDivide
+musicxml.xsd type staff-divide-symbol	StaffDivideSymbol
+musicxml.xsd type staff-divide-symbol enumeration "down"	StaffDivideSymbolDown
+musicxml.xsd type staff-divide-symbol enumeration "up"	StaffDivideSymbolUp
+musicxml.xsd type staff-divide-symbol enumeration "up-down"	StaffDivideSymbolUpDown
+musicxml.xsd type staff-layout	StaffLayout
+musicxml.xsd type staff-line	StaffLine
+musicxml.xsd type staff-line-position	StaffLinePosition
+musicxml.xsd type staff-number	StaffNumber
+musicxml.xsd type staff-size	StaffSize
+musicxml.xsd type staff-tuning	StaffTuning
+musicxml.xsd type staff-type	StaffType
+musicxml.xsd type staff-type enumeration "alternate"	StaffTypeAlternate
+musicxml.xsd type staff-type enumeration "cue"	StaffTypeCue
+musicxml.xsd type staff-type enumeration "editorial"	StaffTypeEditorial
+musicxml.xsd type staff-type enumeration "ossia"	StaffTypeOssia
+musicxml.xsd type staff-type enumeration "regular"	StaffTypeRegular
+musicxml.xsd type start-note	StartNote
+musicxml.xsd type start-note enumeration "below"	StartNoteBelow
+musicxml.xsd type start-note enumeration "main"	StartNoteMain
+musicxml.xsd type start-note enumeration "upper"	StartNoteUpper
+musicxml.xsd type start-stop	StartStop
+musicxml.xsd type start-stop enumeration "start"	StartStopStart
+musicxml.xsd type start-stop enumeration "stop"	StartStopStop
+musicxml.xsd type start-stop-change-continue	StartStopChangeContinue
+musicxml.xsd type start-stop-change-continue enumeration "change"	StartStopChangeContinueChange
+musicxml.xsd type start-stop-change-continue enumeration "continue"	StartStopChangeContinueContinue
+musicxml.xsd type start-stop-change-continue enumeration "start"	StartStopChangeContinueStart
+musicxml.xsd type start-stop-change-continue enumeration "stop"	StartStopChangeContinueStop
+musicxml.xsd type start-stop-continue	StartStopContinue
+musicxml.xsd type start-stop-continue enumeration "continue"	StartStopContinueContinue
+musicxml.xsd type start-stop-continue enumeration "start"	StartStopContinueStart
+musicxml.xsd type start-stop-continue enumeration "stop"	StartStopContinueStop
+musicxml.xsd type start-stop-discontinue	StartStopDiscontinue
+musicxml.xsd type start-stop-discontinue enumeration "discontinue"	StartStopDiscontinueDiscontinue
+musicxml.xsd type start-stop-discontinue enumeration "start"	StartStopDiscontinueStart
+musicxml.xsd type start-stop-discontinue enumeration "stop"	StartStopDiscontinueStop
+musicxml.xsd type start-stop-single	StartStopSingle
+musicxml.xsd type start-stop-single enumeration "single"	StartStopSingleSingle
+musicxml.xsd type start-stop-single enumeration "start"	StartStopSingleStart
+musicxml.xsd type start-stop-single enumeration "stop"	StartStopSingleStop
+musicxml.xsd type stem	Stem
+musicxml.xsd type stem-value	StemValue
+musicxml.xsd type stem-value enumeration "double"	StemValueDouble
+musicxml.xsd type stem-value enumeration "down"	StemValueDown
+musicxml.xsd type stem-value enumeration "none"	StemValueNone
+musicxml.xsd type stem-value enumeration "up"	StemValueUp
+musicxml.xsd type step	Step
+musicxml.xsd type step enumeration "A"	StepA
+musicxml.xsd type step enumeration "B"	StepB
+musicxml.xsd type step enumeration "C"	StepC
+musicxml.xsd type step enumeration "D"	StepD
+musicxml.xsd type step enumeration "E"	StepE
+musicxml.xsd type step enumeration "F"	StepF
+musicxml.xsd type step enumeration "G"	StepG
+musicxml.xsd type stick	Stick
+musicxml.xsd type stick-location	StickLocation
+musicxml.xsd type stick-location enumeration "center"	StickLocationCenter
+musicxml.xsd type stick-location enumeration "cymbal bell"	StickLocationCymbalBell
+musicxml.xsd type stick-location enumeration "cymbal edge"	StickLocationCymbalEdge
+musicxml.xsd type stick-location enumeration "rim"	StickLocationRim
+musicxml.xsd type stick-material	StickMaterial
+musicxml.xsd type stick-material enumeration "hard"	StickMaterialHard
+musicxml.xsd type stick-material enumeration "medium"	StickMaterialMedium
+musicxml.xsd type stick-material enumeration "shaded"	StickMaterialShaded
+musicxml.xsd type stick-material enumeration "soft"	StickMaterialSoft
+musicxml.xsd type stick-material enumeration "x"	StickMaterialX
+musicxml.xsd type stick-type	StickType
+musicxml.xsd type stick-type enumeration "bass drum"	StickTypeBassDrum
+musicxml.xsd type stick-type enumeration "double bass drum"	StickTypeDoubleBassDrum
+musicxml.xsd type stick-type enumeration "glockenspiel"	StickTypeGlockenspiel
+musicxml.xsd type stick-type enumeration "gum"	StickTypeGum
+musicxml.xsd type stick-type enumeration "hammer"	StickTypeHammer
+musicxml.xsd type stick-type enumeration "superball"	StickTypeSuperball
+musicxml.xsd type stick-type enumeration "timpani"	StickTypeTimpani
+musicxml.xsd type stick-type enumeration "wound"	StickTypeWound
+musicxml.xsd type stick-type enumeration "xylophone"	StickTypeXylophone
+musicxml.xsd type stick-type enumeration "yarn"	StickTypeYarn
+musicxml.xsd type string	String
+musicxml.xsd type string-mute	StringMute
+musicxml.xsd type string-number	StringNumber
+musicxml.xsd type strong-accent	StrongAccent
+musicxml.xsd type style-text	StyleText
+musicxml.xsd type supports	Supports
+musicxml.xsd type swing	Swing
+musicxml.xsd type swing-type-value	SwingTypeValue
+musicxml.xsd type swing-type-value enumeration "16th"	SwingTypeValue16th
+musicxml.xsd type swing-type-value enumeration "eighth"	SwingTypeValueEighth
+musicxml.xsd type syllabic	Syllabic
+musicxml.xsd type syllabic enumeration "begin"	SyllabicBegin
+musicxml.xsd type syllabic enumeration "end"	SyllabicEnd
+musicxml.xsd type syllabic enumeration "middle"	SyllabicMiddle
+musicxml.xsd type syllabic enumeration "single"	SyllabicSingle
+musicxml.xsd type symbol-size	SymbolSize
+musicxml.xsd type symbol-size enumeration "cue"	SymbolSizeCue
+musicxml.xsd type symbol-size enumeration "full"	SymbolSizeFull
+musicxml.xsd type symbol-size enumeration "grace-cue"	SymbolSizeGraceCue
+musicxml.xsd type symbol-size enumeration "large"	SymbolSizeLarge
+musicxml.xsd type sync	Sync
+musicxml.xsd type sync-type	SyncType
+musicxml.xsd type sync-type enumeration "always-event"	SyncTypeAlwaysEvent
+musicxml.xsd type sync-type enumeration "event"	SyncTypeEvent
+musicxml.xsd type sync-type enumeration "mostly-event"	SyncTypeMostlyEvent
+musicxml.xsd type sync-type enumeration "mostly-tempo"	SyncTypeMostlyTempo
+musicxml.xsd type sync-type enumeration "none"	SyncTypeNone
+musicxml.xsd type sync-type enumeration "tempo"	SyncTypeTempo
+musicxml.xsd type system-dividers	SystemDividers
+musicxml.xsd type system-layout	SystemLayout
+musicxml.xsd type system-margins	SystemMargins
+musicxml.xsd type system-relation	SystemRelation
+musicxml.xsd type system-relation enumeration "also-top"	SystemRelationAlsoTop
+musicxml.xsd type system-relation enumeration "none"	SystemRelationNone
+musicxml.xsd type system-relation enumeration "only-top"	SystemRelationOnlyTop
+musicxml.xsd type system-relation-number	SystemRelationNumber
+musicxml.xsd type system-relation-number enumeration "also-bottom"	SystemRelationNumberAlsoBottom
+musicxml.xsd type system-relation-number enumeration "also-top"	SystemRelationNumberAlsoTop
+musicxml.xsd type system-relation-number enumeration "none"	SystemRelationNumberNone
+musicxml.xsd type system-relation-number enumeration "only-bottom"	SystemRelationNumberOnlyBottom
+musicxml.xsd type system-relation-number enumeration "only-top"	SystemRelationNumberOnlyTop
+musicxml.xsd type tap	Tap
+musicxml.xsd type tap-hand	TapHand
+musicxml.xsd type tap-hand enumeration "left"	TapHandLeft
+musicxml.xsd type tap-hand enumeration "right"	TapHandRight
+musicxml.xsd type technical	Technical
+musicxml.xsd type technical content	TechnicalContent
+musicxml.xsd type technical contents	TechnicalContents
+musicxml.xsd type tenths	Tenths
+musicxml.xsd type text-direction	TextDirection
+musicxml.xsd type text-direction enumeration "lro"	TextDirectionLro
+musicxml.xsd type text-direction enumeration "ltr"	TextDirectionLtr
+musicxml.xsd type text-direction enumeration "rlo"	TextDirectionRlo
+musicxml.xsd type text-direction enumeration "rtl"	TextDirectionRtl
+musicxml.xsd type text-element-data	TextElementData
+musicxml.xsd type tie	Tie
+musicxml.xsd type tied	Tied
+musicxml.xsd type tied-type	TiedType
+musicxml.xsd type tied-type enumeration "continue"	TiedTypeContinue
+musicxml.xsd type tied-type enumeration "let-ring"	TiedTypeLetRing
+musicxml.xsd type tied-type enumeration "start"	TiedTypeStart
+musicxml.xsd type tied-type enumeration "stop"	TiedTypeStop
+musicxml.xsd type time	Time
+musicxml.xsd type time content	TimeContent
+musicxml.xsd type time contents	TimeContents
+musicxml.xsd type time-modification	TimeModification
+musicxml.xsd type time-only	TimeOnly
+musicxml.xsd type time-relation	TimeRelation
+musicxml.xsd type time-relation enumeration "bracket"	TimeRelationBracket
+musicxml.xsd type time-relation enumeration "equals"	TimeRelationEquals
+musicxml.xsd type time-relation enumeration "hyphen"	TimeRelationHyphen
+musicxml.xsd type time-relation enumeration "parentheses"	TimeRelationParentheses
+musicxml.xsd type time-relation enumeration "slash"	TimeRelationSlash
+musicxml.xsd type time-relation enumeration "space"	TimeRelationSpace
+musicxml.xsd type time-separator	TimeSeparator
+musicxml.xsd type time-separator enumeration "adjacent"	TimeSeparatorAdjacent
+musicxml.xsd type time-separator enumeration "diagonal"	TimeSeparatorDiagonal
+musicxml.xsd type time-separator enumeration "horizontal"	TimeSeparatorHorizontal
+musicxml.xsd type time-separator enumeration "none"	TimeSeparatorNone
+musicxml.xsd type time-separator enumeration "vertical"	TimeSeparatorVertical
+musicxml.xsd type time-symbol	TimeSymbol
+musicxml.xsd type time-symbol enumeration "common"	TimeSymbolCommon
+musicxml.xsd type time-symbol enumeration "cut"	TimeSymbolCut
+musicxml.xsd type time-symbol enumeration "dotted-note"	TimeSymbolDottedNote
+musicxml.xsd type time-symbol enumeration "normal"	TimeSymbolNormal
+musicxml.xsd type time-symbol enumeration "note"	TimeSymbolNote
+musicxml.xsd type time-symbol enumeration "single-number"	TimeSymbolSingleNumber
+musicxml.xsd type timpani	Timpani
+musicxml.xsd type tip-direction	TipDirection
+musicxml.xsd type tip-direction enumeration "down"	TipDirectionDown
+musicxml.xsd type tip-direction enumeration "left"	TipDirectionLeft
+musicxml.xsd type tip-direction enumeration "northeast"	TipDirectionNortheast
+musicxml.xsd type tip-direction enumeration "northwest"	TipDirectionNorthwest
+musicxml.xsd type tip-direction enumeration "right"	TipDirectionRight
+musicxml.xsd type tip-direction enumeration "southeast"	TipDirectionSoutheast
+musicxml.xsd type tip-direction enumeration "southwest"	TipDirectionSouthwest
+musicxml.xsd type tip-direction enumeration "up"	TipDirectionUp
+musicxml.xsd type top-bottom	TopBottom
+musicxml.xsd type top-bottom enumeration "bottom"	TopBottomBottom
+musicxml.xsd type top-bottom enumeration "top"	TopBottomTop
+musicxml.xsd type transpose	Transpose
+musicxml.xsd type tremolo	Tremolo
+musicxml.xsd type tremolo-marks	TremoloMarks
+musicxml.xsd type tremolo-type	TremoloType
+musicxml.xsd type tremolo-type enumeration "single"	TremoloTypeSingle
+musicxml.xsd type tremolo-type enumeration "start"	TremoloTypeStart
+musicxml.xsd type tremolo-type enumeration "stop"	TremoloTypeStop
+musicxml.xsd type tremolo-type enumeration "unmeasured"	TremoloTypeUnmeasured
+musicxml.xsd type trill-beats	TrillBeats
+musicxml.xsd type trill-step	TrillStep
+musicxml.xsd type trill-step enumeration "half"	TrillStepHalf
+musicxml.xsd type trill-step enumeration "unison"	TrillStepUnison
+musicxml.xsd type trill-step enumeration "whole"	TrillStepWhole
+musicxml.xsd type tuplet	Tuplet
+musicxml.xsd type tuplet-dot	TupletDot
+musicxml.xsd type tuplet-number	TupletNumber
+musicxml.xsd type tuplet-portion	TupletPortion
+musicxml.xsd type tuplet-type	TupletType
+musicxml.xsd type two-note-turn	TwoNoteTurn
+musicxml.xsd type two-note-turn enumeration "half"	TwoNoteTurnHalf
+musicxml.xsd type two-note-turn enumeration "none"	TwoNoteTurnNone
+musicxml.xsd type two-note-turn enumeration "whole"	TwoNoteTurnWhole
+musicxml.xsd type typed-text	TypedText
+musicxml.xsd type unpitched	Unpitched
+musicxml.xsd type up-down	UpDown
+musicxml.xsd type up-down enumeration "down"	UpDownDown
+musicxml.xsd type up-down enumeration "up"	UpDownUp
+musicxml.xsd type up-down-stop-continue	UpDownStopContinue
+musicxml.xsd type up-down-stop-continue enumeration "continue"	UpDownStopContinueContinue
+musicxml.xsd type up-down-stop-continue enumeration "down"	UpDownStopContinueDown
+musicxml.xsd type up-down-stop-continue enumeration "stop"	UpDownStopContinueStop
+musicxml.xsd type up-down-stop-continue enumeration "up"	UpDownStopContinueUp
+musicxml.xsd type upright-inverted	UprightInverted
+musicxml.xsd type upright-inverted enumeration "inverted"	UprightInvertedInverted
+musicxml.xsd type upright-inverted enumeration "upright"	UprightInvertedUpright
+musicxml.xsd type valign	Valign
+musicxml.xsd type valign enumeration "baseline"	ValignBaseline
+musicxml.xsd type valign enumeration "bottom"	ValignBottom
+musicxml.xsd type valign enumeration "middle"	ValignMiddle
+musicxml.xsd type valign enumeration "top"	ValignTop
+musicxml.xsd type valign-image	ValignImage
+musicxml.xsd type valign-image enumeration "bottom"	ValignImageBottom
+musicxml.xsd type valign-image enumeration "middle"	ValignImageMiddle
+musicxml.xsd type valign-image enumeration "top"	ValignImageTop
+musicxml.xsd type virtual-instrument	VirtualInstrument
+musicxml.xsd type wait	Wait
+musicxml.xsd type wavy-line	WavyLine
+musicxml.xsd type wedge	Wedge
+musicxml.xsd type wedge-type	WedgeType
+musicxml.xsd type wedge-type enumeration "continue"	WedgeTypeContinue
+musicxml.xsd type wedge-type enumeration "crescendo"	WedgeTypeCrescendo
+musicxml.xsd type wedge-type enumeration "diminuendo"	WedgeTypeDiminuendo
+musicxml.xsd type wedge-type enumeration "stop"	WedgeTypeStop
+musicxml.xsd type winged	Winged
+musicxml.xsd type winged enumeration "curved"	WingedCurved
+musicxml.xsd type winged enumeration "double-curved"	WingedDoubleCurved
+musicxml.xsd type winged enumeration "double-straight"	WingedDoubleStraight
+musicxml.xsd type winged enumeration "none"	WingedNone
+musicxml.xsd type winged enumeration "straight"	WingedStraight
+musicxml.xsd type wood	Wood
+musicxml.xsd type wood-value	WoodValue
+musicxml.xsd type wood-value enumeration "bamboo scraper"	WoodValueBambooScraper
+musicxml.xsd type wood-value enumeration "board clapper"	WoodValueBoardClapper
+musicxml.xsd type wood-value enumeration "cabasa"	WoodValueCabasa
+musicxml.xsd type wood-value enumeration "castanets with handle"	WoodValueCastanetsWithHandle
+musicxml.xsd type wood-value enumeration "castanets"	WoodValueCastanets
+musicxml.xsd type wood-value enumeration "claves"	WoodValueClaves
+musicxml.xsd type wood-value enumeration "football rattle"	WoodValueFootballRattle
+musicxml.xsd type wood-value enumeration "guiro"	WoodValueGuiro
+musicxml.xsd type wood-value enumeration "log drum"	WoodValueLogDrum
+musicxml.xsd type wood-value enumeration "maraca"	WoodValueMaraca
+musicxml.xsd type wood-value enumeration "maracas"	WoodValueMaracas
+musicxml.xsd type wood-value enumeration "quijada"	WoodValueQuijada
+musicxml.xsd type wood-value enumeration "rainstick"	WoodValueRainstick
+musicxml.xsd type wood-value enumeration "ratchet"	WoodValueRatchet
+musicxml.xsd type wood-value enumeration "reco-reco"	WoodValueRecoReco
+musicxml.xsd type wood-value enumeration "sandpaper blocks"	WoodValueSandpaperBlocks
+musicxml.xsd type wood-value enumeration "slit drum"	WoodValueSlitDrum
+musicxml.xsd type wood-value enumeration "temple block"	WoodValueTempleBlock
+musicxml.xsd type wood-value enumeration "vibraslap"	WoodValueVibraslap
+musicxml.xsd type wood-value enumeration "whip"	WoodValueWhip
+musicxml.xsd type wood-value enumeration "wood block"	WoodValueWoodBlock
+musicxml.xsd type work	Work
+musicxml.xsd type yes-no	YesNo
+musicxml.xsd type yes-no enumeration "no"	YesNoNo
+musicxml.xsd type yes-no enumeration "yes"	YesNoYes
+musicxml.xsd type yes-no-number	YesNoNumber
+musicxml.xsd type yyyy-mm-dd	YYYYMMDD
+opus.xsd type opus	OpusDocument
+opus.xsd type opus content	OpusDocumentContent
+opus.xsd type opus contents	OpusDocumentContents
+opus.xsd type opus-link	OpusLink
+opus.xsd type score	OpusScore
+xlink.xsd attribute actuate enumeration "none"	XLinkActuateNone
+xlink.xsd attribute actuate enumeration "onLoad"	XLinkActuateOnLoad
+xlink.xsd attribute actuate enumeration "onRequest"	XLinkActuateOnRequest
+xlink.xsd attribute actuate enumeration "other"	XLinkActuateOther
+xlink.xsd attribute show enumeration "embed"	XLinkShowEmbed
+xlink.xsd attribute show enumeration "new"	XLinkShowNew
+xlink.xsd attribute show enumeration "none"	XLinkShowNone
+xlink.xsd attribute show enumeration "other"	XLinkShowOther
+xlink.xsd attribute show enumeration "replace"	XLinkShowReplace
+xlink.xsd attribute type enumeration "simple"	XLinkTypeSimple
+xml.xsd attribute space enumeration "default"	XMLSpaceDefault
+xml.xsd attribute space enumeration "preserve"	XMLSpacePreserve

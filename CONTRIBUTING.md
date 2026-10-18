@@ -9,6 +9,35 @@ Contributions are welcome.
 - Make for the convenience targets, or the equivalent Go commands
 - Optional: `xmllint` for running the external XSD conformance test locally
 
+## Generated model names
+
+The four model generations in `generate.go` share the name manifest
+`internal/xsdgen/names/musicxml-4.0.txt`. It pins the Go name of every
+package-scope generated declaration: named, anonymous and choice types and
+enumeration constants. Each line is a component key, a tab and the Go name.
+The manifest is authoritative: a listed component keeps its name even if the
+derivation changes, and no name belongs to two components.
+
+When a schema change adds a component, `go generate ./...` fails and lists the
+new components with the names they would get; a derived name that is already
+taken gets a numeric suffix. Review those names, then run the four model
+`go:generate` commands once with `-update-names` added, or edit the manifest
+by hand, and commit it with the generated code. Keys name schema components,
+such as `musicxml.xsd type yes-no`, `musicxml.xsd type yes-no enumeration
+"yes"` or `musicxml.xsd type measure content` for a type's choice wrapper, so
+a rename does not change any key. To rename a declaration on purpose, change
+its manifest line; the declarations derived from it, such as its constants and
+choice types, keep their own lines and names until those change too. `TestMusicXMLNameManifestMatchesGeneration`
+reports listed components that no generation produces, and
+`TestNameManifestAvoidsHandwrittenNames` reports a generated name that a
+hand-written declaration already uses.
+
+The same generations copy the schema's `xs:documentation` into doc comments
+under the attribution in `internal/xsdgen/notices/musicxml-4.0.txt`
+(`-documentation-notice`). The generator copies documentation only together
+with a notice, so the attribution that the schema licence requires always
+heads the files that carry it.
+
 ## Pinned dictionary generation
 
 The bundled dictionary source uses committed assets prepared by explicit

@@ -242,16 +242,28 @@ polymorphic `Document` without a panicking type assertion.
 
 ## Generated model
 
-Most exported types mirror MusicXML 4.0 XSD complex and simple types.
+Most exported types mirror MusicXML 4.0 XSD complex and simple types. Their doc
+comments, and those of element fields, include the schema's `xs:documentation`
+text under the attribution at the top of each generated file; documentation of
+groups and attribute groups is not repeated at every use.
 
 - Optional scalar attributes and elements use pointers.
 - Repeated elements use slices.
-- Named XSD enumerations use named string types and constants. Anonymous
-  enumerations, such as the XLink `show`, `actuate`, and `type` attributes and
-  `xml:space`, and union types such as `FontSize` are plain or named strings
-  without constants.
+- Named XSD enumerations use named string types and constants. A restriction
+  enumeration also has `IsKnown()`, an exact match against its constants, and
+  `Values()`, a new slice of them in schema order, for example
+  `YesNo("").Values()`. Union types with enumerated members, such as
+  `NumberOrNormal`, have constants for those members only and no helpers.
+- Anonymous enumerations, the XLink `show`, `actuate` and `type` attributes and
+  `xml:space`, stay plain strings with untyped constants: `XLinkShowNew`,
+  `XLinkActuateOnRequest`, `XLinkTypeSimple`, `XMLSpacePreserve` and the
+  others. Union types such as `FontSize` are named strings without constants.
 - Repeated XSD choices use `...Content` wrapper structs where exactly one
-  field must be set. A non-repeated choice is flattened into mutually
+  field must be set. `Value()` returns the selected variant, a pointer, and
+  `ElementName()` its XML element name; both are zero unless exactly one variant
+  is set. Variants can share a Go type, for example most `DynamicsContent`
+  variants are `*Empty`, so switch on `ElementName()` or on the type of
+  `Value()` with a default branch. A non-repeated choice is flattened into mutually
   exclusive optional fields of the owning type, for example `Note.Pitch`,
   `Note.Unpitched`, and `Note.Rest`; `Validate` reports more than one set.
 - Types whose child order is semantically significant expose `Content` and
@@ -939,8 +951,10 @@ profile IDs, selected rules, digests and ordinary validation remain unchanged.
 `validation.Report.Context` exposes independently owned `ContextResult` values.
 A closed `ContextProperty` identifies a scalar evidence value or a typed
 `SpanContextResult`, `RepeatContextResult`, `NavigationContextResult`,
-`LayoutContextResult` or `TimingContextResult`. Local scalar defaults also use
-layout-shaped scope/applicability metadata. A provider's completion does not
+`LayoutContextResult` or `TimingContextResult`. `TimingContextResult.Kind` is one
+of the `validation.TimingKind…` constants, such as `TimingKindNote` or
+`TimingKindRootAlter`. Local scalar defaults also use layout-shaped
+scope/applicability metadata. A provider's completion does not
 claim that each optional field is known. Mandatory consumers separately assess
 exact `time-only` ordering, supported bend-release signs and proved graphical
 repeat content. Figure-number content retains MusicXML's deliberately unrestricted

@@ -105,6 +105,21 @@ const (
 	Rank2 Rank = 2
 )
 
+// IsKnown reports whether value is exactly one of the Rank constants;
+// XML whitespace is not collapsed first.
+func (value Rank) IsKnown() bool {
+	switch value {
+	case Rank1, Rank2:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the Rank constants in schema order.
+func (Rank) Values() []Rank {
+	return []Rank{Rank1, Rank2}
+}
+
 // Size represents the "size" XSD simple type.
 type Size string
 
@@ -123,6 +138,21 @@ const (
 	StateClosed State = "closed"
 )
 
+// IsKnown reports whether value is exactly one of the State constants;
+// XML whitespace is not collapsed first.
+func (value State) IsKnown() bool {
+	switch value {
+	case StateOpen, StateClosed:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the State constants in schema order.
+func (State) Values() []State {
+	return []State{StateOpen, StateClosed}
+}
+
 // SubState represents the "sub-state" XSD simple type.
 type SubState State
 
@@ -130,6 +160,21 @@ const (
 	// SubStateOpen is the "open" value.
 	SubStateOpen SubState = "open"
 )
+
+// IsKnown reports whether value is exactly one of the SubState constants;
+// XML whitespace is not collapsed first.
+func (value SubState) IsKnown() bool {
+	switch value {
+	case SubStateOpen:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the SubState constants in schema order.
+func (SubState) Values() []SubState {
+	return []SubState{SubStateOpen}
+}
 `, string(actual))
 }
 

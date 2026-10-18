@@ -103,6 +103,21 @@ func NewTypeNamesWithOverrides(
 			}
 		}
 
+		if _, external := index.nameExternal[declaration]; external && index.names != nil {
+			// An external type is owned by another generation: it takes
+			// that generation's listed name and adds no entry of its own.
+			name, err = index.names.External(declaration, name)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if key := index.typeManifestKey(declaration); key != "" {
+			name, err = index.names.Assign(key, name)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		if existing, found := used[name]; found {
 			return nil, &GoNameCollisionError{
 				Name:   name,

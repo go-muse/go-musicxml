@@ -14,7 +14,7 @@ func performanceLocalRoles(r *contextReader, key RuleKey, n *factNode, out *Timi
 	}
 	if roles.has(performanceFret) {
 		publish = true
-		out.Kind = "fret"
+		out.Kind = TimingKindFret
 		out.FretNumber = stateInteger(r.scalar(n))
 		out.FretOpenString = stateUnavailable[Integer, bool](out.FretNumber)
 		if out.FretNumber.State == EvidenceKnown {
@@ -26,17 +26,17 @@ func performanceLocalRoles(r *contextReader, key RuleKey, n *factNode, out *Timi
 	}
 	if roles.has(performanceLevel) {
 		publish = true
-		out.Kind = "editorial-level"
+		out.Kind = TimingKindEditorialLevel
 		out.EditorialPlaybackSuppressed = stateWithDefault(stateYesNo(r.attribute(n, "perf-level-reference")), false, "editorial-reference-no").Effective
 	}
 	if roles.has(performanceRootAlter) {
 		publish = true
-		out.Kind = "root-alter"
+		out.Kind = TimingKindRootAlter
 		out.RootAlterPrintObject = stateWithDefault(stateYesNo(r.attribute(n, "perf-root-print")), true, "print-object-yes").Effective
 	}
 	if roles.has(performanceTrill) {
 		publish = true
-		out.Kind = "trill"
+		out.Kind = TimingKindTrill
 		out.TrillIncludesInitialSound = Evidence[bool]{State: EvidenceKnown, Value: true}
 		out.TrillExcludesClosingTurn = Evidence[bool]{State: EvidenceKnown, Value: true}
 	}
@@ -50,7 +50,7 @@ func performanceLocalRoles(r *contextReader, key RuleKey, n *factNode, out *Timi
 		parent := r.s.nodes[n.header.Parent]
 		if r.matches(parent, "perf-ornaments") {
 			publish = true
-			out.Kind = "ornament-accidental"
+			out.Kind = TimingKindOrnamentAccidental
 			out.LayoutOrigin = stateUnknown[NodeRef]("ornament-origin-unavailable")
 			complete := r.complete(parent)
 			if complete.State != EvidenceKnown {

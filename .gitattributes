@@ -4,6 +4,11 @@
 go.mod text eol=lf
 go.sum text eol=lf
 
+# The generator's name manifest and documentation notice are inputs of
+# byte-stable generation.
+internal/xsdgen/names/*.txt text eol=lf
+internal/xsdgen/notices/*.txt text eol=lf
+
 # Preserve upstream fixtures exactly. Some are non-UTF-8 or binary.
 testdata/** -text
 

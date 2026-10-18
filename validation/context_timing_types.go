@@ -53,7 +53,8 @@ type TimingTuning struct {
 }
 
 // TimingContextResult retains exact encoded-score evidence; it does not assert physical playback.
-// Kind selects the applicable fields; unrelated fields are absent. Positions and
+// Kind, one of the TimingKind constants, selects the applicable fields;
+// unrelated fields are absent. Positions and
 // durations use exact quarter-note units. WrittenPitch and tuning pitches count
 // semitones from C0; SoundingPitch adds only established encoded transposition.
 // ReferenceVelocity is dynamics percent times 90/100, without MIDI quantization.

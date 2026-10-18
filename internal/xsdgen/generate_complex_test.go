@@ -206,6 +206,36 @@ func (value BaseContent) MarshalXML(
 
 	return nil
 }
+
+// Value returns the selected BaseContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value BaseContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected BaseContent variant, or
+// "" unless exactly one variant is set.
+func (value BaseContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value BaseContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Alpha != nil {
+		name, selected, count = "alpha", value.Alpha, count+1
+	}
+	if value.Beta != nil {
+		name, selected, count = "beta", value.Beta, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
 `, string(actual))
 }
 
