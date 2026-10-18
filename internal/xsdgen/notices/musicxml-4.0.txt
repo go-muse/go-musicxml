@@ -1,0 +1,1 @@
+Documentation comments are adapted from the MusicXML 4.0 W3C XML Schema (XSD), Copyright © 2004-2021 the Contributors to the MusicXML Specification, published by the W3C Music Notation Community Group under the W3C Community Final Specification Agreement (FSA): https://www.w3.org/community/about/agreements/final/. See THIRD_PARTY_NOTICES.md.

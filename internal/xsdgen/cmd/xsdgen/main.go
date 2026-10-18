@@ -99,6 +99,11 @@ func run(arguments []string, stderr io.Writer) error {
 		"",
 		"authoritative manifest of package-scope Go names shared by the model generations",
 	)
+	noticePath := flags.String(
+		"documentation-notice",
+		"",
+		"file with the attribution under which xs:documentation is copied into comments",
+	)
 	updateNames := flags.Bool(
 		"update-names",
 		false,
@@ -130,6 +135,16 @@ func run(arguments []string, stderr io.Writer) error {
 	index, err := xsdgen.NewIndex(set)
 	if err != nil {
 		return fmt.Errorf("xsdgen: index schema set: %w", err)
+	}
+	if *noticePath != "" {
+		notice, err := os.ReadFile(*noticePath)
+		if err != nil {
+			return fmt.Errorf("xsdgen: read documentation notice: %w", err)
+		}
+		if strings.TrimSpace(string(notice)) == "" {
+			return errors.New("xsdgen: empty documentation notice")
+		}
+		index.SetDocumentationNotice(string(notice))
 	}
 	var manifest *xsdgen.NameManifest
 	if *namesPath != "" {

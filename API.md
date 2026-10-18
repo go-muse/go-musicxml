@@ -242,7 +242,10 @@ polymorphic `Document` without a panicking type assertion.
 
 ## Generated model
 
-Most exported types mirror MusicXML 4.0 XSD complex and simple types.
+Most exported types mirror MusicXML 4.0 XSD complex and simple types. Their doc
+comments, and those of element fields, include the schema's `xs:documentation`
+text under the attribution at the top of each generated file; documentation of
+groups and attribute groups is not repeated at every use.
 
 - Optional scalar attributes and elements use pointers.
 - Repeated elements use slices.

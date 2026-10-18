@@ -39,6 +39,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Add `ErrInvalidConfiguration` (identical to
   `validation.ErrInvalidConfiguration`), which `ErrInvalidDecodeOptions`,
   `ErrInvalidEncodeOptions` and `ErrInvalidMXLOptions` now match.
+- Generated model types and element fields carry the `xs:documentation` text of
+  the MusicXML 4.0 schemas as doc comments, under the attribution the schema
+  licence requires (see THIRD_PARTY_NOTICES.md). Documentation of groups and
+  attribute groups is not repeated at every use.
 - The XSD generator takes package-scope names from an authoritative manifest,
   `internal/xsdgen/names/musicxml-4.0.txt`, shared by the model generations.
   A listed declaration keeps its name, a new one that collides with any listed

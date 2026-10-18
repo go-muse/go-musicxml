@@ -129,6 +129,9 @@ type Index struct {
 	// another generation and are not assigned here.
 	names        *NameManifest
 	nameExternal map[*Declaration]struct{}
+	// documentationNotice, when set, copies xs:documentation into Go
+	// comments under this notice.
+	documentationNotice string
 }
 
 // SetNameManifest makes generation from this index take its package-scope Go

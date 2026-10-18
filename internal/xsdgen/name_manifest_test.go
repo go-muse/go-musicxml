@@ -144,3 +144,15 @@ func TestMusicXMLNameManifestMatchesGeneration(t *testing.T) {
 	assert.Empty(t, manifest.Added(), "every generated package-scope name is listed")
 	assert.Equal(t, manifest.Keys(), manifest.Used(), "every listed name is generated")
 }
+
+// useMusicXMLGenerationInputs gives index the documentation notice and the
+// name manifest that generate.go passes to the model generations.
+func useMusicXMLGenerationInputs(t *testing.T, index *Index) {
+	t.Helper()
+	notice, err := os.ReadFile(filepath.Join("notices", "musicxml-4.0.txt"))
+	require.NoError(t, err)
+	index.SetDocumentationNotice(string(notice))
+	manifest, err := LoadNameManifest(filepath.Join("names", "musicxml-4.0.txt"))
+	require.NoError(t, err)
+	index.SetNameManifest(manifest)
+}

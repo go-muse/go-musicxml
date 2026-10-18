@@ -28,6 +28,12 @@ reports listed components that no generation produces, and
 `TestNameManifestAvoidsHandwrittenNames` reports a generated name that a
 hand-written declaration already uses.
 
+The same generations copy the schema's `xs:documentation` into doc comments
+under the attribution in `internal/xsdgen/notices/musicxml-4.0.txt`
+(`-documentation-notice`). The generator copies documentation only together
+with a notice, so the attribution that the schema licence requires always
+heads the files that carry it.
+
 ## Pinned dictionary generation
 
 The bundled dictionary source uses committed assets prepared by explicit

@@ -26,6 +26,7 @@ func TestGenerateMusicXMLElements(t *testing.T) {
 
 	index, err := NewIndex(set)
 	require.NoError(t, err)
+	useMusicXMLGenerationInputs(t, index)
 
 	actual, err := GenerateElementsWithModelMetadata(
 		index,
