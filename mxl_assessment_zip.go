@@ -124,7 +124,7 @@ func openMXLAssessmentArchive(ctx context.Context, reader io.Reader, options MXL
 	if err != nil {
 		return nil, err
 	}
-	if reader == nil {
+	if nilValue(reader) {
 		return a, &validation.ConfigurationError{Field: "reader", Reason: "must not be nil"}
 	}
 	a.data, err = a.readBounded(reader, a.limits.archiveSize, validation.BudgetInputBytes, false)

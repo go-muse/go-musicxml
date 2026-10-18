@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"strconv"
 	"strings"
 	"unicode"
@@ -68,7 +69,7 @@ func (r Report) String() string {
 // containing translations fall back to the report's bounded English text.
 // Output and writer-error guarantees are identical to Format.
 func (r Report) FormatLocalized(w io.Writer, translations map[RuleKey]RuleText) error {
-	if w == nil {
+	if nilWriter(w) {
 		return &ConfigurationError{Field: "writer", Reason: "must not be nil"}
 	}
 	out := reportRenderer{}
@@ -505,5 +506,20 @@ func (s *reportStorageSize) rule(rule RuleDefinition) {
 			s.add(16)
 			s.text(id)
 		}
+	}
+}
+
+// nilWriter reports whether w is nil or a typed nil, such as a nil
+// *bytes.Buffer, whose Write would dereference the nil value.
+func nilWriter(w io.Writer) bool {
+	if w == nil {
+		return true
+	}
+	v := reflect.ValueOf(w)
+	switch v.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return v.IsNil()
+	default:
+		return false
 	}
 }

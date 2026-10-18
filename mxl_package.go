@@ -87,7 +87,7 @@ func EncodeMXLPackage(
 	writer io.Writer,
 	value *MXLPackage,
 ) error {
-	if writer == nil {
+	if nilValue(writer) {
 		return ErrNilWriter
 	}
 	if value == nil {
@@ -177,7 +177,7 @@ func openMXL(
 	reader io.Reader,
 	limits mxlLimits,
 ) (*openedMXL, error) {
-	if reader == nil {
+	if nilValue(reader) {
 		return nil, ErrNilReader
 	}
 	if err := mxlContextErr(ctx); err != nil {

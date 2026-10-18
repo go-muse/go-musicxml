@@ -7,6 +7,23 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Breaking changes (v0.2)
+
+The project has no compatibility promise before v1, and this release removes
+duplicates and tightens types. API.md, "Migrating to v0.2", maps every removed
+or changed identifier to its replacement.
+
+- `(*validation.DictionarySet)(nil).Close()` returns nil instead of an
+  `ErrInvalidConfiguration` error, so `defer set.Close()` is safe after a failed
+  constructor. A zero (uninitialized) set is still rejected.
+- Every reader and writer entry point (`Decode*`, `DecodeMXL*`,
+  `DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`,
+  `InspectXMLWithResources`, `InspectMXL`, `Encode*`, `EncodeMXL*`) rejects a
+  typed-nil stream, such as a nil `*os.File` from a failed `os.Open`, with
+  `ErrNilReader` or `ErrNilWriter` instead of panicking or returning a read
+  error. `validation.Report.Format` and `FormatLocalized` reject a typed-nil
+  writer with `ErrInvalidConfiguration`.
+
 ### Added
 
 - Organize loading and checking around three scenarios (see API.md,

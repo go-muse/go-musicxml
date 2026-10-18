@@ -45,7 +45,7 @@ func EncodeWithOptions(
 	document Document,
 	options EncodeOptions,
 ) error {
-	if writer == nil {
+	if nilValue(writer) {
 		return ErrNilWriter
 	}
 	if err := options.validate(); err != nil {

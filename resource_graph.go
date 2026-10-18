@@ -173,7 +173,7 @@ func InspectXMLWithResources(ctx context.Context, reader io.Reader, options Link
 		options.Graph = graph
 		return inspectXMLWithResourcesAndDictionaries(ctx, reader, linkedDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
 	}
-	if reader == nil {
+	if nilValue(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
 	g, err := startResourceGraph(ctx, options, ProfileResourceGraph)

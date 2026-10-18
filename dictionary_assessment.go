@@ -56,7 +56,7 @@ func dictionaryAssessmentConfig(ctx context.Context, options dictionaryAssessmen
 // reader; this call closes only streams returned by the selected
 // DictionarySource.
 func inspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options dictionaryAssessmentOptions) (report validation.Report, err error) {
-	if dictionaryNil(reader) {
+	if nilValue(reader) {
 		return report, ErrNilReader
 	}
 	cfg, loadErr := dictionaryAssessmentConfig(ctx, options, validation.TargetSource)

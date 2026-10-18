@@ -86,7 +86,7 @@ func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOpti
 		options.Graph = graph
 		return inspectMXLWithDictionaries(ctx, reader, mxlDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
 	}
-	if reader == nil {
+	if nilValue(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
 	if _, err := options.MXL.limits(); err != nil {

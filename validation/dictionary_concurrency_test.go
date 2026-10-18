@@ -123,7 +123,7 @@ func TestDictionaryNilAndUnusedAttachmentPreserveOriginalReportJSON(t *testing.T
 		t.Fatalf("zero close: %v", err)
 	}
 	var absent *DictionarySet
-	if err := absent.Close(); !errors.Is(err, ErrInvalidConfiguration) {
+	if err := absent.Close(); err != nil {
 		t.Fatalf("nil close: %v", err)
 	}
 }

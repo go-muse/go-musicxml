@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"math"
-	"reflect"
 
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -28,21 +27,6 @@ func (b *dictionaryLimitedBody) Read(p []byte) (int, error) {
 	return n, err
 }
 
-// A typed-nil provider or stream transfers no usable object. Do not invoke
-// methods (including Close) on it: those methods may dereference the nil value.
-func dictionaryNil(value any) bool {
-	if value == nil {
-		return true
-	}
-	v := reflect.ValueOf(value)
-	switch v.Kind() {
-	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
-		return v.IsNil()
-	default:
-		return false
-	}
-}
-
 // readDictionaryComponentBody owns body on entry. The existing resource reader
 // accounts each actual external byte, bounded read/hash/copy work and live
 // capacity. The component cap is independent of the aggregate external quota;
@@ -53,7 +37,7 @@ func readDictionaryComponentBody(ctx context.Context, a *validation.Account, bod
 	bad := func(reason string) error {
 		return &validation.ConfigurationError{Field: "dictionary component body", Reason: reason}
 	}
-	if dictionaryNil(body) {
+	if nilValue(body) {
 		return nil, bad("non-nil owned stream required")
 	}
 	if ctx == nil || a == nil || expected <= 0 || expected == math.MaxInt64 {

@@ -74,7 +74,7 @@ func startDictionaryResourceGraphAccount(ctx context.Context, resources LinkedAs
 // The caller reader stays open. Provider failures accompany a partial result;
 // dictionary gaps never suppress independently proved schema/family failures.
 func inspectXMLWithResourcesAndDictionaries(ctx context.Context, reader io.Reader, options linkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
-	if dictionaryNil(reader) {
+	if nilValue(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
 	g, err := startDictionaryResourceGraph(ctx, options.Resources, options.Dictionaries, ProfileResourceGraphDictionaries)
@@ -108,7 +108,7 @@ func assessModelWithResourcesAndDictionaries(ctx context.Context, document Docum
 // with one root account and dictionary import. Container/ZIP evidence, nested
 // boundaries and indirection limits retain the ordinary package contracts.
 func inspectMXLWithDictionaries(ctx context.Context, reader io.Reader, options mxlDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
-	if dictionaryNil(reader) {
+	if nilValue(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
 	if _, err := options.Resources.MXL.limits(); err != nil {

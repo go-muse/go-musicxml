@@ -560,7 +560,7 @@ type sourceDTDResolver struct {
 // sources, rather than calling a method on it.
 func newSourceDTDResolver(options *DTDOptions) *sourceDTDResolver {
 	resolver := &sourceDTDResolver{}
-	if options != nil && !dictionaryNil(options.Source) {
+	if options != nil && !nilValue(options.Source) {
 		resolver.source = options.Source
 	}
 	return resolver

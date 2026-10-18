@@ -126,7 +126,7 @@ func newSourceXMLCursorWithByteOwner(r io.Reader, ctx context.Context, a *valida
 	if owner != sourceBytesPrimary && a == nil {
 		return nil, &validation.ConfigurationError{Field: "Account", Reason: "non-primary bytes require the root account"}
 	}
-	if r == nil {
+	if nilValue(r) {
 		return nil, ErrNilReader
 	}
 	if ctx == nil {

@@ -80,7 +80,7 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	if err := assessmentContext(ctx, "canceled-before-source"); err != nil {
 		return result, err
 	}
-	if dictionaryNil(reader) {
+	if nilValue(reader) {
 		return result, ErrNilReader
 	}
 	limits, err := options.Assessment.MXL.limits()

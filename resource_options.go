@@ -133,7 +133,7 @@ func validateLinkedAssessmentOptionsAccount(ctx context.Context, o LinkedAssessm
 		}
 	}
 	out.account, out.identity, out.resolver, out.dtd = account, o.Identity, o.Resolver, o.Graph.DTD
-	if dictionaryNil(out.resolver) {
+	if nilValue(out.resolver) {
 		out.resolver = nil
 	}
 	out.selected = make(map[ResourceDependency]bool, len(o.Dependencies))
