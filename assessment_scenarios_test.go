@@ -126,9 +126,10 @@ func TestScenarioThreeMatchesStrictLoadingModel(t *testing.T) {
 		mxl, err := DecodeMXLAssessed(ctx, bytes.NewReader(scenarioMXL(t, source)), DecodeMXLAssessmentOptions{Lenient: true})
 		require.NoError(t, err, name)
 		require.NotNil(t, mxl.Package, name)
-		report, err = AssessModel(ctx, mxl.Package.Document, AssessmentOptions{})
+		bundle, err := AssessMXLPackage(ctx, mxl.Package, MXLAssessmentOptions{})
 		require.NoError(t, err, name)
-		assert.True(t, reflect.DeepEqual(mxl.Model, report), "%s: AssessModel equals the model stage of DecodeMXLAssessed", name)
+		assert.Equal(t, summarizeBundle(bundle), summarizeBundle(mxl.Model), "%s: AssessMXLPackage equals the model stage of DecodeMXLAssessed", name)
+		assert.Equal(t, name == "valid", mxl.Model.Satisfied(), "%s: an unedited valid package satisfies its current-state assessment", name)
 	}
 }
 
@@ -207,7 +208,7 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	assert.True(t, result.Source.Satisfied())
 	assert.True(t, result.Model.Satisfied())
 	assert.Equal(t, ProfileMXLSourceSemantics, result.Source.PackageReport().Profile.ID)
-	assert.Equal(t, ProfileModelSemantics, result.Model.Profile.ID)
+	assert.Equal(t, ProfileMXLModelSemantics, result.Model.PackageReport().Profile.ID)
 
 	explicit, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceSemantics}}})
 	require.NoError(t, err)
@@ -218,12 +219,12 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	assert.ErrorIs(t, err, ErrInvalidDocument)
 	assert.Nil(t, strict.Package)
 	assert.False(t, strict.Accepted)
-	assert.False(t, strict.Model.Requested, "strict mode assesses the model only after an accepted archive")
+	assert.False(t, strict.Model.PackageReport().Requested, "strict mode assesses the package only after an accepted archive")
 	lenient, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Lenient: true})
 	require.NoError(t, err)
 	require.NotNil(t, lenient.Package)
 	assert.False(t, lenient.Accepted)
-	assert.True(t, lenient.Model.Requested)
+	assert.True(t, lenient.Model.PackageReport().Requested)
 
 	modelViolated := scenarioMXL(t, scenarioModelViolated)
 	strict, err = DecodeMXLAssessed(ctx, bytes.NewReader(modelViolated), DecodeMXLAssessmentOptions{})

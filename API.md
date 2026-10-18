@@ -65,26 +65,46 @@ error, even in the lenient mode.
 | --- | --- | --- |
 | 1. Load without validation | Reads well-formed XML into the Go model. XSD and MusicXML rules are not checked. | `Decode`, `DecodeMXL`, the typed decoders and their `WithOptions`/`Context` variants |
 | 2. Strict loading | Assesses the original source, converts it, and assesses the converted model. By default the document is returned only when everything is accepted; in the lenient mode it is always returned with the reports. | `DecodeAssessed` for XML, `DecodeMXLAssessed` for MXL |
-| 3. Check a model | Exactly the model assessment of scenario 2: `ProfileModelSemantics` with the bundled required dictionaries. | `AssessModel`; for an MXL package, on its primary `Document` only (see below) |
+| 3. Check a model | Exactly the model assessment of scenario 2, with the bundled required dictionaries: `ProfileModelSemantics` for a document, `ProfileMXLModelSemantics` for the current state of a whole MXL package. | `AssessModel`; `AssessMXLPackage` for an MXL package |
 
 Scenario 2 is the source assessment plus scenario 3: `AssessModel` on a
 document that `DecodeAssessed` returned gives the same report as
-`DecodeResult.Model`, and likewise for `DecodeMXLAssessed` and the primary
-document of its package. This holds while the budgets are not exhausted: the
-loader's model stage shares its account with the source report, so a tight
-diagnostic or buffer budget can truncate or refuse the two differently.
+`DecodeResult.Model`, and `AssessMXLPackage` on the package that
+`DecodeMXLAssessed` returned, with the same `Assessment` options and an empty
+`Graph.Profile`, gives the same outcomes as `DecodeMXLResult.Model`.
+This holds while the budgets are not exhausted: the loader's model stage shares
+its account with the source report, so a tight diagnostic or buffer budget can
+truncate or refuse the two differently.
 
-**MXL packages: primary document only.** For an MXL package, scenario 3
-assesses only the primary `Document`; it is not a reassessment of the whole
-package. Package rules, the other resources of the package, its linked scores
-and opus children, and raw XML resources it keeps are not checked again, so
-edits to them go undetected. `DecodeMXLAssessed` proves them from the original
-archive in its source stage, and its model stage, too, assesses only the
-primary document. `AssessMXLPackage` does not close this gap for a decoded
-package: such a package does not keep the discarded schema hints, so
-`MX40-PACKAGE-schema-hint-pairs` stays unknown and the bundle is never
-satisfied. Assessment of the current state of a whole edited package is planned
-for a later release.
+**Current state of an MXL package.** `AssessMXLPackage` assesses a whole
+package, possibly edited in Go, as `EncodeMXLPackage` would write it:
+
+- The primary `Document` gets the model assessment. The Go model cannot
+  represent `xsi:schemaLocation` or `xsi:noNamespaceSchemaLocation`, and the
+  encoders write neither, so schema-hint pairing
+  (`MX40-PACKAGE-schema-hint-pairs`, revision 2) does not apply to it. Hints of
+  the original source are not reconstructed; `InspectMXL` reports them.
+- Rootfiles, links and other package rules are evaluated from the current
+  fields.
+- Retained raw resources that are reached, such as later rootfiles and link
+  targets, keep their source assessment from their bytes, including their
+  schema hints. Unreferenced resources are recorded as entries only, as in
+  `InspectMXL`.
+- Raw ZIP checks (mimetype storage, extra fields and leading bytes, the
+  container path, compression) do not apply: `EncodeMXLPackage` always writes a
+  stored mimetype entry first, without an extra field, followed by
+  `META-INF/container.xml`, which it builds from `RootFiles` and which is not
+  assessed as a document.
+
+An unedited package decoded from an archive that `InspectMXL` accepts
+satisfies `AssessMXLPackage`, unless conversion lost a fact the source supplied:
+decoding does not apply internal-DTD attribute defaults, for example, so a part
+whose `id` only such a default supplies has none in the model, and the model
+stage of `DecodeMXLAssessed` refuses it. After edits, the package findings and
+acceptance agree with `InspectMXL` on the bytes `EncodeMXLPackage` writes; only
+the archive assessment also covers the container document. Role,
+instrument-association and image facts still need a resolver, as for the
+original archive.
 
 ```go
 // Scenario 2: strict loading.
@@ -140,10 +160,9 @@ strict mode the document is returned exactly when `Accepted` is true.
 
 - `InspectXML` and `InspectMXL` report on an original source without building a
   model.
-- `AssessMXLPackage` assesses a current package, including package rules. A
-  decoded package cannot carry source-only evidence such as discarded schema
-  hints, so its package report stays incomplete; for scenario 3 assess the
-  package's `Document` with `AssessModel`, which covers that document only.
+- `AssessModel` on an MXL package's `Document` checks that document alone,
+  without the package rules and the other resources that `AssessMXLPackage`
+  covers.
 - `InspectXMLWithResources` and `AssessModelWithResources` assess a graph of
   linked documents. They return a `validation.AssessmentBundle`, not a single
   report, and take their dictionaries from `Graph.Dictionaries`.
@@ -167,11 +186,12 @@ strict mode the document is returned exactly when `Accepted` is true.
    lenient mode after any source stage without an operational failure, it
    converts the buffered bytes as `DecodeMXLPackageContext` does, resolving
    DTDs from `Graph.DTD` first, as the source stage does.
-4. It assesses the primary document with `ProfileModelSemantics`.
+4. It assesses the current state of the converted package as
+   `AssessMXLPackage` does with `ProfileMXLModelSemantics`, with the same
+   resources, resolver and dependencies, so the caller's resolver is asked
+   again, and returns that bundle as `DecodeMXLResult.Model`.
 
-Package rules are proved from the original archive. A decoded package cannot
-carry source-only evidence such as discarded schema hints, so `AssessMXLPackage`
-on it stays incomplete. Both assessments share one account bounded by
+Both assessments share one account bounded by
 `Assessment.Graph.Budgets`. The archive bytes stay charged to it until
 conversion finishes, and the source bundle until the call returns, so the later
 stages are bounded by the combined live storage. A rejected source bundle is
@@ -1783,8 +1803,9 @@ corrections and are not current-head note-count boundaries. In the repeated-rest
 accidental fixture measured for the Round 1 correction, all four components are
 imported before assessment. Standalone source/model completed at 368 notes and
 refused at 369; graph and raw/current MXL completed operational enumeration at
-363 and refused at 364 on the unchanged 20,000,000-rule-step cap. Current-model
-bundles retain their independent schema-hint unknown below that boundary.
+363 and refused at 364 on the unchanged 20,000,000-rule-step cap. When this was
+measured, current-model bundles also kept their schema-hint unknown, which
+revision 2 of the pairing rule removed.
 The earlier published `a772914` observations were 320/321 and 316/317;
 [the dated evidence][dictionary-budget-evidence] preserves both measurements.
 These are fixture-specific observations, not supported note-count capacities.
@@ -2181,14 +2202,13 @@ model row. There are no Container/Sounds `Document` model roots. Digests derive
 from the actual compiled intrinsic catalogs, including their selected providers;
 they are not copied constants that can drift from auxiliary metadata changes.
 
-Selected schema-hint discovery is an important current-model limitation. A
-current model cannot establish absent or complete original xsi hints that its
-representation discarded. With the shipped schema-discovery capability rule
-selected, every current-model graph/package bundle remains incomplete and cannot
-be `Satisfied()`, even when its intrinsic current-model report is satisfied and
-it has no outgoing links. The discovery result is explicitly Unknown, never a
-reconstructed absence claim. Source discovery separately preserves namespace/location
-pairs and an unmatched trailing URI. It never changes the accepted odd/even
+Revision 2 of the schema-hint pairing rule assesses a current model as it would
+be encoded: the model cannot represent xsi hints and the encoders write none, so
+the pairing does not apply to it and neither fails nor blocks completion. The
+original hints are not reconstructed. Before revision 2 every
+current-model graph/package bundle stayed incomplete on this rule. Source
+discovery separately preserves namespace/location pairs and an unmatched
+trailing URI. It never changes the accepted odd/even
 `list(anyURI)` datatype contract or automatically loads/selects schemas.
 
 Read the profile's `NormativeClosure` for its exact bounded claim. Central-only

@@ -9,9 +9,10 @@ import (
 // ProfileResourceGraph selects bounded resource-graph assessment with a package
 // target, independently scoped intrinsic source/model reports and no XML root
 // selector. Authorized nested MXL boundaries receive their applicable package
-// checks. Selected schema-hint discovery remains incomplete for current models
-// whose original xsi attributes are unavailable. The profile grants no I/O
-// authority and does not assert complete MusicXML or external-spec conformance.
+// checks. A current model root is assessed as it would be encoded: it carries
+// no xsi attributes, so schema-hint discovery does not apply to it. The profile
+// grants no I/O authority and does not assert complete MusicXML or
+// external-spec conformance.
 const ProfileResourceGraph validation.ProfileID = "musicxml-4.0/resource-graph"
 
 // ProfileMXLSource selects bounded original-MXL package/resource assessment.
@@ -20,12 +21,14 @@ const ProfileResourceGraph validation.ProfileID = "musicxml-4.0/resource-graph"
 // It has TargetPackage, no XML roots and no implicit resolver authority.
 const ProfileMXLSource validation.ProfileID = "musicxml-4.0/mxl-source"
 
-// ProfileMXLModel selects bounded current MXLPackage/resource assessment. Its
-// current Document is assessed directly; original ZIP headers, container lexical
-// form and discarded xsi attributes are never reconstructed by encoding. Raw
-// checks apply only to separately reached raw-MXL boundaries. Selected current
-// model schema-hint discovery remains incomplete when source hints are lost.
-// The graph report has TargetPackage and no XML roots.
+// ProfileMXLModel selects bounded assessment of the current state of a whole
+// MXLPackage, as EncodeMXLPackage would write it. Its current Document is
+// assessed directly and carries no xsi attributes, so schema-hint discovery
+// does not apply to it; retained raw resources that are reached keep their
+// source assessment. Original ZIP headers, container lexical form and
+// discarded xsi attributes are never reconstructed: raw checks apply only to
+// separately reached raw-MXL boundaries. The graph report has TargetPackage
+// and no XML roots.
 const ProfileMXLModel validation.ProfileID = "musicxml-4.0/mxl-model"
 
 var packageAssessmentCatalog = sync.OnceValues(buildPackageAssessmentCatalog)
@@ -80,7 +83,7 @@ func buildPackageAssessmentDefinitions() ([]validation.PackageRuleBinding, []val
 	return rules, profiles, nil
 }
 
-const packageAssessmentClosure = "The selected sealed checks preserve exact container path, ordered rootfile and no-namespace musical-root evidence, reviewed first media-type cases, conditional score-before-parts and exact authorized instrument-part-file association. Local XSD/reference facts are prerequisites, not duplicated package datatype rules. Independent intrinsic source/model reports keep their own profiles, digests, targets and counts; successful target-kind evidence never certifies child conformance. Selected schema-hint namespace/location pairing is a capability policy separate from the accepted list(anyURI) datatype. Unmatched hints or missing discovery evidence prevent selected discovery completion; current models cannot reconstruct discarded xsi attributes and may remain incomplete even with no encoded outgoing links. No hinted schema is loaded or selected. Group, image scaling, mimetype presence/first placement/exact content, UTF-8 entry names and file/MIME conventions remain optional advice. Observed compression is capability context, not an invented DEFLATE-only rejection rule. Raw mimetype checks distinguish mandatory stored/unencrypted, local-header no-extra and reviewed leading padding/five standard Unicode BOM cases from optional exact content; central-only extras satisfy this local-header predicate, while independent ZIP framing/association obligations and other padding families retain their own limits. Complete ZIP/JAR/DEFLATE normative closure, the complete MusicXML media-type set, outer compressed-rootfile and linked-target indirection and unproved association or role interpretations remain unresolved when reached. Bounded technical nested traversal does not resolve outer indirection wording. Missing authority, unavailable target/root/fragment evidence and incomplete graph enumeration cannot certify success. The fixed intrinsic table includes source Container/Sounds for selected auxiliary resources without adding Document model roots. MusicXML 4.0 identifies the pinned schema interpretation, not a blanket version=4.0 instance restriction. No filename-based role inference, cross-file ID equality, universal XPointer, renderer, dictionary, automatic network/filesystem access or full MusicXML conformance claim. Existing intrinsic syntax, unread-DTD, representation and resource limits remain active."
+const packageAssessmentClosure = "The selected sealed checks preserve exact container path, ordered rootfile and no-namespace musical-root evidence, reviewed first media-type cases, conditional score-before-parts and exact authorized instrument-part-file association. Local XSD/reference facts are prerequisites, not duplicated package datatype rules. Independent intrinsic source/model reports keep their own profiles, digests, targets and counts; successful target-kind evidence never certifies child conformance. Selected schema-hint namespace/location pairing is a capability policy separate from the accepted list(anyURI) datatype. Unmatched hints or missing discovery evidence prevent selected discovery completion. A current model resource is assessed as it would be encoded: it cannot represent xsi attributes and carries none, so the pairing does not apply to it; discarded original attributes are never reconstructed. No hinted schema is loaded or selected. Group, image scaling, mimetype presence/first placement/exact content, UTF-8 entry names and file/MIME conventions remain optional advice. Observed compression is capability context, not an invented DEFLATE-only rejection rule. Raw mimetype checks distinguish mandatory stored/unencrypted, local-header no-extra and reviewed leading padding/five standard Unicode BOM cases from optional exact content; central-only extras satisfy this local-header predicate, while independent ZIP framing/association obligations and other padding families retain their own limits. Complete ZIP/JAR/DEFLATE normative closure, the complete MusicXML media-type set, outer compressed-rootfile and linked-target indirection and unproved association or role interpretations remain unresolved when reached. Bounded technical nested traversal does not resolve outer indirection wording. Missing authority, unavailable target/root/fragment evidence and incomplete graph enumeration cannot certify success. The fixed intrinsic table includes source Container/Sounds for selected auxiliary resources without adding Document model roots. MusicXML 4.0 identifies the pinned schema interpretation, not a blanket version=4.0 instance restriction. No filename-based role inference, cross-file ID equality, universal XPointer, renderer, dictionary, automatic network/filesystem access or full MusicXML conformance claim. Existing intrinsic syntax, unread-DTD, representation and resource limits remain active."
 
 func packageIntrinsicProfiles() ([]validation.IntrinsicProfileBinding, error) {
 	var result []validation.IntrinsicProfileBinding
@@ -151,7 +154,7 @@ func packageAssessmentRules() ([]validation.PackageRuleBinding, error) {
 		{validation.PackageCheckMimetypeAdvice, validation.PackageSubjectPackage, "Recommended mimetype conventions", "Presence, first physical placement and exact US-ASCII MIME content are recommendations. Older containers may omit mimetype. These conventions are separate from mandatory existing-entry header and leading-byte conditions.", "A recommended mimetype convention was not established.", container("42", "MX40-PROSE-mxl-mimetype-first")},
 		{validation.PackageCheckEntryNameAdvice, validation.PackageSubjectEntry, "UTF-8 entry-name advice", "Retain observed entry-name encoding and recommend UTF-8 interoperability. Legacy encoding does not become a normative MusicXML violation; path-security processing policy is separate.", "UTF-8 entry-name advice was not established.", container("28", "MX40-PROSE-mxl-entry-name-utf8")},
 		{validation.PackageCheckCompressionObservation, validation.PackageSubjectEntry, "Observed archive compression", "Expose bounded original compression-method evidence. The DEFLATE mandatory-versus-description gate and complete ZIP/JAR closure remain open. A transport implementation's unsupported algorithm is not a MusicXML violation.", "Original archive compression evidence was not available.", container("30", "MX40-PROSE-mxl-deflate", "MX40-PROSE-mxl-zip-format")},
-		{validation.PackageCheckSchemaHintPairs, validation.PackageSubjectResource, "Selected schema discovery pairing", "Consume separately projected namespace/location pairs and unmatched trailing URI as capability evidence. Odd list length is not an XSD datatype failure; noNamespaceSchemaLocation creates no pair requirement. Original source hints are not reconstructed from a current model and never load or select a schema.", "Selected schema discovery evidence is incomplete.", []validation.SourceRef{{IDs: []string{"REQ-DEF-XSI-SCHEMALOC", "REQ-DEF-XSI-NONAMESPACE"}, URL: "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc", Locator: "XML Schema 1.0 Second Edition Part 1 section 4.3.2; pairing consumer separate from datatype validity"}}},
+		{validation.PackageCheckSchemaHintPairs, validation.PackageSubjectResource, "Selected schema discovery pairing", "Consume separately projected namespace/location pairs and unmatched trailing URI as capability evidence. Odd list length is not an XSD datatype failure; noNamespaceSchemaLocation creates no pair requirement. A current model resource cannot represent xsi attributes and is encoded without them, so the pairing does not apply to it; original source hints are not reconstructed. Hints never load or select a schema.", "Selected schema discovery evidence is incomplete.", []validation.SourceRef{{IDs: []string{"REQ-DEF-XSI-SCHEMALOC", "REQ-DEF-XSI-NONAMESPACE"}, URL: "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc", Locator: "XML Schema 1.0 Second Edition Part 1 section 4.3.2; pairing consumer separate from datatype validity"}}},
 		{validation.PackageCheckImageScaling, validation.PackageSubjectImage, "Image scaling advice", "Use exact encoded width/height and authorized positive image dimensions in their declared common unit. One dimension preserves proportion; two dimensions are independent. Missing metadata is optional unavailable advice; never infer pixel density, MusicXML tenths conversion or mandatory geometry.", "Image scaling advice was not established.", score(2326, "MX40-PROSE-image-scaling")},
 		{validation.PackageCheckFileMetadataAdvice, validation.PackageSubjectMetadata, "MusicXML file and MIME conventions", "Expose supplied filename/MIME metadata against published .mxl/.musicxml and legacy .xml conventions. A suffix never proves actual resource kind or normative validity; metadata conventions remain optional advice.", "A recommended file or media-type convention was not established.", container("34", "MX40-PROSE-musicxml-file-types")},
 	}
@@ -162,6 +165,11 @@ func packageAssessmentRules() ([]validation.PackageRuleBinding, error) {
 			return nil, err
 		}
 		key := validation.RuleKey{ID: validation.RuleID("MX40-PACKAGE-" + string(s.check)), Revision: 1}
+		if s.check == validation.PackageCheckSchemaHintPairs {
+			// Revision 2 applies the pairing to current model resources as
+			// they would be encoded, instead of leaving them unknown.
+			key.Revision = 2
+		}
 		rule := validation.RuleDefinition{
 			Key: key, Scope: validation.ScopePackage, Targets: []validation.Target{validation.TargetPackage},
 			Class: validation.ClassMandatory, Role: validation.RolePredicate, Category: validation.CategoryNormative,

@@ -52,13 +52,14 @@ func TestPackageProfilesPublishedBaselineMigration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		after := migrateCurrentStatePackageCatalog(t, tc.after)
 		for _, id := range tc.ids {
 			old, ok := baseline[id]
 			if !ok || old.CatalogDigest != tc.before || old.Target != validation.TargetPackage {
 				t.Fatalf("incorrect published baseline %s: %+v", id, old)
 			}
 			p, ok := c.Profile(id)
-			if !ok || p.CatalogDigest != tc.after || p.Target != old.Target {
+			if !ok || p.CatalogDigest != after || p.Target != old.Target {
 				t.Fatalf("current catalog migration %s: %+v", id, p)
 			}
 			if p.CatalogDigest == old.CatalogDigest {

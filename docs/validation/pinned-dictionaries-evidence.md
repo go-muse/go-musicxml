@@ -315,7 +315,9 @@ Cleanup checks found zero remaining live-buffer/depth gauges after finalization.
 
 The current-model graph/MXL limitation is the existing
 `schema-discovery-pairing-unavailable` package capability result, not dictionary
-nonmembership. Do not call these complete bundles satisfied. The
+nonmembership. Do not call these complete bundles satisfied. (Revision 2 of
+`MX40-PACKAGE-schema-hint-pairs` later removed that unknown for current models;
+these observations predate it.) The
 fixture-specific 320/321 and 316/317 boundaries are historical observations at
 unpublished local checkpoint `229e4fd`, not universal note ceilings, guaranteed
 capacities, raised defaults, full profile acceptance or B5-PERF-01 closure. The

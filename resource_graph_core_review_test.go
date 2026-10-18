@@ -77,7 +77,12 @@ func TestResourceGraphCoreReviewMalformedFailureIdentity(t *testing.T) {
 		t.Errorf("malformed primary identity=%+v exists=%t", summary, ok)
 	}
 }
-func TestResourceGraphCoreReviewCurrentModelDiscoveryUnknown(t *testing.T) {
+
+// TestResourceGraphCoreReviewCurrentModelHasNoSchemaHints assesses a current
+// model as it would be encoded: whatever hints its source had, the model
+// carries none, so schema-hint pairing does not apply and nothing is
+// reconstructed.
+func TestResourceGraphCoreReviewCurrentModelHasNoSchemaHints(t *testing.T) {
 	for _, source := range []string{`<opus/>`, `<opus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="opus.xsd"/>`, `<opus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:a a.xsd extra"/>`} {
 		doc, err := Decode(strings.NewReader(source))
 		if err != nil {
@@ -87,20 +92,16 @@ func TestResourceGraphCoreReviewCurrentModelDiscoveryUnknown(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if b.Satisfied() || b.PackageReport().AssessmentComplete {
-			t.Error("discarded model xsi history fabricated as complete")
+		if !b.Satisfied() || !b.PackageReport().AssessmentComplete {
+			t.Errorf("current model without hints not satisfied: %+v", b.PackageReport())
 		}
-		found := false
 		for _, f := range b.PackageReport().Findings {
 			if f.Rule.ID == "MX40-PACKAGE-schema-hint-pairs" {
-				found = true
-				if f.Outcome != validation.OutcomeUnknown || f.Reason != "schema-discovery-pairing-unavailable" {
-					t.Errorf("discarded history must remain explicit unknown: %+v", f)
-				}
+				t.Errorf("current model offered a pairing obligation: %+v", f)
 			}
 		}
-		if !found {
-			t.Error("missing current-model discovery limitation")
+		if b.PackageReport().Counts.NotApplicable == 0 {
+			t.Error("the pairing was not evaluated as not applicable")
 		}
 	}
 }

@@ -40,7 +40,12 @@ func TestSemanticProfilesExactFinalIdentity(t *testing.T) {
 				}
 				p, ok = e.Profile(tc.id)
 			}
-			if !ok || p.ID != tc.id || p.Target != tc.target || p.CatalogDigest != tc.catalog {
+			catalog, profile := tc.catalog, tc.profile
+			if tc.target == validation.TargetPackage {
+				catalog = migrateCurrentStatePackageCatalog(t, catalog)
+				profile = migrateCurrentStatePackageProfileHash(t, tc.id, profile)
+			}
+			if !ok || p.ID != tc.id || p.Target != tc.target || p.CatalogDigest != catalog {
 				t.Fatalf("semantic identity drift: %+v", p)
 			}
 			raw, err := json.Marshal(p)
@@ -48,8 +53,8 @@ func TestSemanticProfilesExactFinalIdentity(t *testing.T) {
 				t.Fatal(err)
 			}
 			sum := sha256.Sum256(raw)
-			if got := hex.EncodeToString(sum[:]); got != tc.profile {
-				t.Fatalf("complete Profile JSON changed: %s, want %s", got, tc.profile)
+			if got := hex.EncodeToString(sum[:]); got != profile {
+				t.Fatalf("complete Profile JSON changed: %s, want %s", got, profile)
 			}
 		})
 	}

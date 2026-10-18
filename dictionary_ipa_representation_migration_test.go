@@ -85,10 +85,11 @@ func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		after := migrateCurrentStatePackageCatalog(t, tc.after)
 		for _, id := range tc.ids {
 			p, ok := c.Profile(id)
-			if !ok || p.CatalogDigest != tc.after {
-				t.Fatalf("package %s: %s expected %s (prior %s)", id, p.CatalogDigest, tc.after, tc.before)
+			if !ok || p.CatalogDigest != after {
+				t.Fatalf("package %s: %s expected %s (prior %s)", id, p.CatalogDigest, after, tc.before)
 			}
 		}
 	}

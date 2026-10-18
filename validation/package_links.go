@@ -507,7 +507,11 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 			resource := s.resources[id]
 			d := s.baseDecision(r.Rule.Key, resource.subject)
 			if resource.snapshot.header.Target == TargetModel {
-				d.Outcome, d.Reason = OutcomeUnknown, "schema-discovery-pairing-unavailable"
+				// A model snapshot publishes no schema hints: a current model is
+				// assessed as it would be encoded, without xsi attributes, so
+				// it offers no pair to discover. Original hints are not
+				// reconstructed.
+				d.Outcome, d.Reason = OutcomeNotApplicable, "current-model-has-no-schema-hints"
 				if err := s.record(ctx, r.Rule, resource.subject, d, Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/resource[" + string(id) + "]"}, true); err != nil {
 					return err
 				}

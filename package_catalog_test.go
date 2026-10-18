@@ -56,10 +56,10 @@ func TestPackageProfilesExactSelectionAndMetadata(t *testing.T) {
 			seen := map[validation.PackageCheck]bool{}
 			for i, key := range p.Required {
 				r, ok := catalog.Rule(key)
-				if !ok || r.Rule.Key != key || key.Revision != 1 || r.Rule.Selector != (validation.Selector{}) || r.Rule.Scope != validation.ScopePackage || !reflect.DeepEqual(r.Rule.Targets, []validation.Target{validation.TargetPackage}) {
+				check := r.Plan.Check() // Revision 2 of the pairing applies it to current models.
+				if revision := map[bool]uint32{false: 1, true: 2}[check == validation.PackageCheckSchemaHintPairs]; !ok || r.Rule.Key != key || key.Revision != revision || r.Rule.Selector != (validation.Selector{}) || r.Rule.Scope != validation.ScopePackage || !reflect.DeepEqual(r.Rule.Targets, []validation.Target{validation.TargetPackage}) {
 					t.Fatalf("package binding identity: %+v", r)
 				}
-				check := r.Plan.Check()
 				if seen[check] {
 					t.Errorf("duplicate check %q", check)
 				}
