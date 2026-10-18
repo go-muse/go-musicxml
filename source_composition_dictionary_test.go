@@ -28,7 +28,7 @@ func TestSourceDeclarationCompositionDictionaryEffectiveValues(t *testing.T) {
 					attribute = ` smufl="&glyph;"`
 				}
 				input := `<!DOCTYPE score-partwise [` + declaration + `]>` + contextFixtureXML(`<note><rest/><duration>1</duration><accidental`+attribute+`>sharp</accidental></note>`, false)
-				options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceInternalDTDDictionaries}}
+				options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceInternalDTDDictionaries}}
 				calls := 0
 				if tc.available {
 					options.Dictionaries.Selections = []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}
@@ -37,7 +37,7 @@ func TestSourceDeclarationCompositionDictionaryEffectiveValues(t *testing.T) {
 						return DictionaryComponentResult{Request: request, State: validation.EvidenceKnown, Body: &resourceTestBody{Reader: bytes.NewReader(dictionaryImportFixture(t, request.Manifest))}}, nil
 					})
 				}
-				report, err := InspectXMLWithDictionaries(context.Background(), strings.NewReader(input), options)
+				report, err := inspectXMLWithDictionaries(context.Background(), strings.NewReader(input), options)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -65,7 +65,7 @@ func TestSourceDeclarationCompositionDictionaryEffectiveValues(t *testing.T) {
 
 func TestSourceDeclarationCompositionDictionaryPreconditions(t *testing.T) {
 	calls := 0
-	options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceInternalDTDDictionaries}, Dictionaries: DictionaryOptions{
+	options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceInternalDTDDictionaries}, Dictionaries: DictionaryOptions{
 		Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)},
 		Source: dictionaryImportSourceFunc(func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error) {
 			calls++
@@ -73,10 +73,10 @@ func TestSourceDeclarationCompositionDictionaryPreconditions(t *testing.T) {
 		}),
 	}}
 	var reader *strings.Reader
-	if _, err := InspectXMLWithDictionaries(context.Background(), reader, options); !errors.Is(err, ErrNilReader) {
+	if _, err := inspectXMLWithDictionaries(context.Background(), reader, options); !errors.Is(err, ErrNilReader) {
 		t.Fatal(err)
 	}
-	if _, err := AssessModelWithDictionaries(context.Background(), &OpusDocument{}, options); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err := assessModelWithDictionaries(context.Background(), &OpusDocument{}, options); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatal(err)
 	}
 	if calls != 0 {
@@ -86,7 +86,7 @@ func TestSourceDeclarationCompositionDictionaryPreconditions(t *testing.T) {
 
 func TestSourceDeclarationCompositionStrictDecode(t *testing.T) {
 	input := `<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`
-	result, err := DecodeAssessedWithDictionaries(context.Background(), strings.NewReader(input), DecodeDictionaryAssessmentOptions{Assessment: &DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}}})
+	result, err := decodeAssessedWithDictionaries(context.Background(), strings.NewReader(input), decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}}})
 	if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
 		t.Fatalf("result=%+v error=%v", result, err)
 	}

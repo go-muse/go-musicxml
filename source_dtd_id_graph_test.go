@@ -11,7 +11,7 @@ import (
 
 func dtdIDGraph(t *testing.T, source string) validation.AssessmentBundle {
 	t.Helper()
-	b, e := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
+	b, e := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -85,7 +85,7 @@ func TestDTDIDRepeatedAdoptionAndModelSeparation(t *testing.T) {
 		bodies = append(bodies, body)
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "child", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(child)))}, RetrievalURI: "https://e.test/child.musicxml", Body: body}, nil
 	})
-	b, e := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.musicxml"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}})
+	b, e := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.musicxml"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}})
 	if e != nil || !b.Satisfied() || b.ResourceCount() != 2 || b.AdoptionCount() != 3 || calls != 2 {
 		t.Fatalf("adoption: err=%v resources=%d adoptions=%d calls=%d findings=%+v", e, b.ResourceCount(), b.AdoptionCount(), calls, b.PackageReport().Findings)
 	}
@@ -99,7 +99,7 @@ func TestDTDIDRepeatedAdoptionAndModelSeparation(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	b, e = AssessModelWithResourcesAndDictionaries(context.Background(), model, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
+	b, e = assessModelWithResourcesAndDictionaries(context.Background(), model, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 	if e != nil {
 		t.Fatal(e)
 	}

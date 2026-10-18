@@ -13,7 +13,7 @@ func dtdAuxiliaryInspect(t *testing.T, id validation.ProfileID, input string) va
 	var r validation.Report
 	var err error
 	if id == dtdSoundsProfile {
-		r, err = InspectXMLWithDictionaries(context.Background(), strings.NewReader(input), DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: id}})
+		r, err = inspectXMLWithDictionaries(context.Background(), strings.NewReader(input), dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: id}})
 	} else {
 		r, err = InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: id})
 	}

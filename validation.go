@@ -74,9 +74,9 @@ func Validate(document Document) error {
 			}
 			switch finding.Category {
 			case validation.CategoryNormative:
-				issues = append(issues, ValidationIssue{Path: finding.Location.Path, Constraint: string(finding.Reason), Message: finding.Actual})
+				issues = append(issues, ValidationIssue{Path: finding.Location.Path, Constraint: string(finding.Reason), Message: finding.Actual, Rule: string(finding.Rule.ID)})
 			case validation.CategoryModel:
-				issues = append(issues, ValidationIssue{Path: finding.Location.Path, Constraint: "representation", Message: finding.Actual})
+				issues = append(issues, ValidationIssue{Path: finding.Location.Path, Constraint: "representation", Message: finding.Actual, Rule: string(finding.Rule.ID)})
 			}
 		}
 		invalid = &ValidationError{Issues: issues}

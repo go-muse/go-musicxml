@@ -290,7 +290,7 @@ func TestMXLAssessmentDTDOptions(t *testing.T) {
 	failing := &DTDOptions{Source: DTDSourceFunc(func(context.Context, DTDRequest) ([]byte, error) { return nil, os.ErrPermission })}
 	inspect := func(o MXLAssessmentOptions) (validation.AssessmentBundle, error) {
 		o.Graph.Profile = ProfileMXLSourceSemantics
-		return InspectMXLWithDictionaries(context.Background(), bytes.NewReader(archive), MXLDictionaryAssessmentOptions{
+		return inspectMXLWithDictionaries(context.Background(), bytes.NewReader(archive), mxlDictionaryAssessmentOptions{
 			Resources:    o,
 			Dictionaries: DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource()},
 		})
@@ -484,15 +484,15 @@ func TestAssessmentOptionsDTDIsHonoured(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, "H", *score.Work.WorkTitle)
 
-	result, err = DecodeAssessedWithDictionaries(context.Background(), read(), DecodeDictionaryAssessmentOptions{
-		Assessment: &DictionaryAssessmentOptions{Assessment: AssessmentOptions{DTD: source}, Dictionaries: dictionaries},
+	result, err = decodeAssessedWithDictionaries(context.Background(), read(), decodeDictionaryTestOptions{
+		Assessment: &dictionaryAssessmentOptions{Assessment: AssessmentOptions{DTD: source}, Dictionaries: dictionaries},
 	})
 	require.NoError(t, err)
 	score, ok = AsScorePartwise(result.Document)
 	require.True(t, ok)
 	assert.Equal(t, "H", *score.Work.WorkTitle)
 
-	report, err := InspectXMLWithDictionaries(context.Background(), read(), DictionaryAssessmentOptions{
+	report, err := inspectXMLWithDictionaries(context.Background(), read(), dictionaryAssessmentOptions{
 		Assessment:   AssessmentOptions{Profile: ProfileSourceSemantics, DTD: source},
 		Dictionaries: dictionaries,
 	})

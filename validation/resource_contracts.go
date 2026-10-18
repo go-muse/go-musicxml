@@ -250,6 +250,14 @@ type ResourceResolver interface {
 	Resolve(context.Context, ResourceRequest) (ResourceResult, error)
 }
 
+// ResourceResolverFunc adapts a function to ResourceResolver.
+type ResourceResolverFunc func(context.Context, ResourceRequest) (ResourceResult, error)
+
+// Resolve calls f(ctx, request).
+func (f ResourceResolverFunc) Resolve(ctx context.Context, request ResourceRequest) (ResourceResult, error) {
+	return f(ctx, request)
+}
+
 func validateResourcePin(p ResourcePin) error {
 	if !packageIdentityText(p.CanonicalID) || !validText(p.Revision, maxIdentityBytes) {
 		return contract("resource pin", "canonical identity and bounded revision required")

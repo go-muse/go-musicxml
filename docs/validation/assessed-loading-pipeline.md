@@ -1,15 +1,21 @@
 # Mandatory assessed-loading pipeline
 
-`DecodeAssessed` and `DecodeAssessedWithDictionaries` now always require the
-existing `ProfileSourceSemantics` followed by direct `ProfileModelSemantics`.
+`DecodeAssessed` now always requires the existing `ProfileSourceSemantics`
+followed by direct `ProfileModelSemantics`. `DecodeMXLAssessed` assesses the
+original archive with `ProfileMXLSourceSemantics` instead and then the primary
+document with `ProfileModelSemantics`. The former
+`DecodeAssessedWithDictionaries` was removed; its dictionary options are
+`AssessmentOptions.Dictionaries`.
 This breaks the earlier unreleased development API; these entry points did not
 exist in v0.1.0. It does not widen either profile, change its catalog digest, or
 establish complete MusicXML conformance.
 
 Ordinary `Decode`, typed decode helpers and `DecodeWithOptions` remain transport
-operations. `InspectXML`, `AssessModel`, their dictionary variants and the
-resource/MXL inspection and assessment APIs retain their explicit profiles and
-data-selection contracts. There is no assessed package decoder in this change.
+operations. `InspectXML`, `AssessModel` and the resource/MXL inspection and
+assessment APIs retain their explicit-profile and data-selection contracts; an
+empty profile selects their semantic profile (see
+[Scenarios](../../API.md#scenarios)). `DecodeMXLAssessed` is the assessed
+package decoder.
 
 ## Loading and report contract
 
@@ -117,8 +123,9 @@ document, err := musicxml.DecodeWithOptions(reader, decodeOptions)
 
 To retain a narrower source-only assessment, use `InspectXML` with its explicit
 profile and inspect `report.Satisfied()`. For dictionary-dependent profiles, use
-`InspectXMLWithDictionaries` with explicit `Dictionaries.Source` and `Selections`;
-plain `InspectXML` does not supply dictionary evidence. This includes the source
+`InspectXML` with explicit `Dictionaries.Source` and `Selections`; with an
+explicit profile and nil `Dictionaries`, `InspectXML` supplies no dictionary
+evidence. This includes the source
 dictionary, internal-DTD dictionary and source-sounds dictionary profiles.
 Ordinary normative violations still return a report without an operation error.
 A separate conversion needs its own reader; do not reuse a consumed reader.
@@ -161,9 +168,10 @@ or establish universal IPA coverage.
 Standard-sound recognition and dictionary-backed rendering advice are not added
 to the score semantic profiles.
 
-`DecodeAssessedWithDictionaries` uses the same defaults when `Assessment` is nil
-or its `Dictionaries.Source` is nil and it has no selections (nil and empty slices
-both qualify). A typed-nil `Source` is an explicit override and does not activate
+`DecodeAssessed` uses the same defaults when `Assessment` or
+`Assessment.Dictionaries` is nil, or when the dictionaries' `Source` is nil and
+they have no selections (nil and empty slices both qualify). A typed-nil
+`Source` is an explicit override and does not activate
 defaults. Any explicit override must include both required manifest/relation
 pairs. Other supported selections may be added; unknown, duplicate or incomplete
 selections fail before input reads or callbacks.
@@ -172,9 +180,9 @@ A custom source with empty selections is an incomplete configuration.
 For an explicit source, provide the required selections together:
 
 ```go
-options := musicxml.DecodeDictionaryAssessmentOptions{
-    Assessment: &musicxml.DictionaryAssessmentOptions{
-        Dictionaries: musicxml.DictionaryOptions{
+options := musicxml.DecodeAssessmentOptions{
+    Assessment: &musicxml.AssessmentOptions{
+        Dictionaries: &musicxml.DictionaryOptions{
             Source: dictionarySource,
             Selections: []validation.DictionarySelection{
                 {
@@ -193,7 +201,7 @@ options := musicxml.DecodeDictionaryAssessmentOptions{
         },
     },
 }
-result, err := musicxml.DecodeAssessedWithDictionaries(ctx, reader, options)
+result, err := musicxml.DecodeAssessed(ctx, reader, options)
 ```
 
 The explicit source is honored, including a nil, typed-nil or unavailable source
@@ -206,7 +214,8 @@ importer is closed under the existing ownership contract.
 
 Bundled data uses committed local assets and the existing bounded verifier and
 importer. It needs no runtime files or network access. Any binary referencing
-`DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds all five components,
+`DecodeAssessed` or another entry point listed under [Scenarios](../../API.md#scenarios)
+embeds all five components,
 even when every call supplies a custom source or different selections. Direct
 use of `BundledDictionarySource` also retains all five. Options control runtime
 import and assessment; they do not remove the embedded assets. Distribute these

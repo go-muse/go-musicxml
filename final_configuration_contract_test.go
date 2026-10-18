@@ -82,27 +82,33 @@ func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing
 			_, err := musicxml.AssessMXLPackage(ctx, &musicxml.MXLPackage{Document: document}, mxl(profile, p))
 			return err
 		}},
-		{"DecodeAssessedWithDictionaries", musicxml.ProfileModelSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
+		{"DecodeAssessed with dictionaries", musicxml.ProfileModelSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
 			dictionaries := finalConfigurationDictionaries(p)
 			dictionaries.Selections = assessedDecodeDictionarySelections()
-			result, err := musicxml.DecodeAssessedWithDictionaries(ctx, p, musicxml.DecodeDictionaryAssessmentOptions{
-				Assessment: &musicxml.DictionaryAssessmentOptions{Assessment: musicxml.AssessmentOptions{Profile: profile}, Dictionaries: dictionaries},
+			result, err := musicxml.DecodeAssessed(ctx, p, musicxml.DecodeAssessmentOptions{
+				Assessment: &musicxml.AssessmentOptions{Profile: profile, Dictionaries: &dictionaries},
 			})
 			if result.Document != nil || result.Source.Requested || result.Model.Requested || result.Conversion.State != validation.ConversionIncomplete {
 				t.Fatalf("invalid configuration exposed a converted or assessed document: %+v", result)
 			}
 			return err
 		}},
-		{"AssessModelWithResourcesAndDictionaries", musicxml.ProfileModelSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
-			_, err := musicxml.AssessModelWithResourcesAndDictionaries(ctx, document, musicxml.LinkedDictionaryAssessmentOptions{Resources: linked(profile, p), Dictionaries: finalConfigurationDictionaries(p)})
+		{"AssessModelWithResources with dictionaries", musicxml.ProfileModelSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
+			options, dictionaries := linked(profile, p), finalConfigurationDictionaries(p)
+			options.Graph.Dictionaries = &dictionaries
+			_, err := musicxml.AssessModelWithResources(ctx, document, options)
 			return err
 		}},
-		{"InspectMXLWithDictionaries", musicxml.ProfileMXLModelSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
-			_, err := musicxml.InspectMXLWithDictionaries(ctx, p, musicxml.MXLDictionaryAssessmentOptions{Resources: mxl(profile, p), Dictionaries: finalConfigurationDictionaries(p)})
+		{"InspectMXL with dictionaries", musicxml.ProfileMXLModelSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
+			options, dictionaries := mxl(profile, p), finalConfigurationDictionaries(p)
+			options.Graph.Dictionaries = &dictionaries
+			_, err := musicxml.InspectMXL(ctx, p, options)
 			return err
 		}},
-		{"AssessMXLPackageWithDictionaries", musicxml.ProfileMXLSourceSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
-			_, err := musicxml.AssessMXLPackageWithDictionaries(ctx, &musicxml.MXLPackage{Document: document}, musicxml.MXLDictionaryAssessmentOptions{Resources: mxl(profile, p), Dictionaries: finalConfigurationDictionaries(p)})
+		{"AssessMXLPackage with dictionaries", musicxml.ProfileMXLSourceSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
+			options, dictionaries := mxl(profile, p), finalConfigurationDictionaries(p)
+			options.Graph.Dictionaries = &dictionaries
+			_, err := musicxml.AssessMXLPackage(ctx, &musicxml.MXLPackage{Document: document}, options)
 			return err
 		}},
 	} {
@@ -111,8 +117,13 @@ func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing
 				name string
 				id   validation.ProfileID
 			}{{"empty", ""}, {"unknown", "test/unknown-profile"}, {"wrong-target", entry.wrong}} {
-				if entry.name == "DecodeAssessedWithDictionaries" && selection.name == "empty" {
+				if entry.name == "DecodeAssessed with dictionaries" && selection.name == "empty" {
 					selection.name, selection.id = "narrow-source", musicxml.ProfileSourceDictionaries
+				}
+				// An empty profile selects the full semantic profile of the
+				// non-deprecated entry points (TestEmptyProfileSelectsSemanticProfile).
+				if selection.name == "empty" && finalConfigurationEmptySelectsSemantic[entry.name] {
+					continue
 				}
 				t.Run(selection.name, func(t *testing.T) {
 					probe := &finalConfigurationIO{}
@@ -165,22 +176,23 @@ func TestFinalConfigurationSelectedNilDictionaryPublicReports(t *testing.T) {
 		source musicxml.DictionarySource
 	}{{"nil", nil}, {"typed-nil", (*finalConfigurationNilSource)(nil)}} {
 		t.Run(provider.name, func(t *testing.T) {
-			options := musicxml.DictionaryAssessmentOptions{Assessment: musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceDictionaries}, Dictionaries: finalConfigurationDictionaries(provider.source)}
-			report, err := musicxml.InspectXMLWithDictionaries(ctx, strings.NewReader(finalConfigurationSMuFLScore), options)
+			dictionaries := finalConfigurationDictionaries(provider.source)
+			options := musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceDictionaries, Dictionaries: &dictionaries}
+			report, err := musicxml.InspectXML(ctx, strings.NewReader(finalConfigurationSMuFLScore), options)
 			if err != nil {
 				t.Fatal(err)
 			}
 			finalConfigurationRequireUnavailableDictionary(t, report)
-			decodeOptions := options
-			decodeOptions.Assessment.Profile = musicxml.ProfileSourceSemantics
-			decodeOptions.Dictionaries.Selections = assessedDecodeDictionarySelections()
-			result, err := musicxml.DecodeAssessedWithDictionaries(ctx, strings.NewReader(finalConfigurationSMuFLScore), musicxml.DecodeDictionaryAssessmentOptions{Assessment: &decodeOptions})
+			decodeDictionaries := dictionaries
+			decodeDictionaries.Selections = assessedDecodeDictionarySelections()
+			decodeOptions := musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceSemantics, Dictionaries: &decodeDictionaries}
+			result, err := musicxml.DecodeAssessed(ctx, strings.NewReader(finalConfigurationSMuFLScore), musicxml.DecodeAssessmentOptions{Assessment: &decodeOptions})
 			if !errors.Is(err, musicxml.ErrIncompleteAssessment) || errors.Is(err, musicxml.ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || result.Model.Requested {
 				t.Fatalf("strict incomplete result=%+v error=%v", result, err)
 			}
 			finalConfigurationRequireUnavailableDictionary(t, result.Source)
-			options.Assessment.Profile = musicxml.ProfileModelDictionaries
-			report, err = musicxml.AssessModelWithDictionaries(ctx, document, options)
+			options.Profile = musicxml.ProfileModelDictionaries
+			report, err = musicxml.AssessModel(ctx, document, options)
 			if err != nil || report.Target != validation.TargetModel || report.Syntax != validation.SyntaxNotAssessed {
 				t.Fatalf("current model report=%+v error=%v", report, err)
 			}
@@ -202,11 +214,9 @@ func TestFinalConfigurationSelectedNilResolverDictionaryGraph(t *testing.T) {
 		resolver validation.ResourceResolver
 	}{{"nil", nil}, {"typed-nil", (*finalConfigurationNilResolver)(nil)}} {
 		t.Run(provider.name, func(t *testing.T) {
-			bundle, err := musicxml.InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), musicxml.LinkedDictionaryAssessmentOptions{
-				Resources: musicxml.LinkedAssessmentOptions{
-					Graph:        musicxml.AssessmentOptions{Profile: musicxml.ProfileResourceGraphDictionaries},
-					Dependencies: []musicxml.ResourceDependency{musicxml.ResourceDocuments}, Resolver: provider.resolver,
-				},
+			bundle, err := musicxml.InspectXMLWithResources(context.Background(), strings.NewReader(input), musicxml.LinkedAssessmentOptions{
+				Graph:        musicxml.AssessmentOptions{Profile: musicxml.ProfileResourceGraphDictionaries, Dictionaries: &musicxml.DictionaryOptions{}},
+				Dependencies: []musicxml.ResourceDependency{musicxml.ResourceDocuments}, Resolver: provider.resolver,
 			})
 			if err != nil || bundle.Satisfied() || bundle.ResourceCount() != 1 {
 				t.Fatalf("missing resolver: error=%v resources=%d satisfied=%t", err, bundle.ResourceCount(), bundle.Satisfied())
@@ -223,4 +233,14 @@ func TestFinalConfigurationSelectedNilResolverDictionaryGraph(t *testing.T) {
 			t.Fatalf("selected missing resolver reason lost: %+v", report.Findings)
 		})
 	}
+}
+
+var finalConfigurationEmptySelectsSemantic = map[string]bool{
+	"InspectXMLWithResources":                    true,
+	"AssessModelWithResources":                   true,
+	"InspectMXL":                                 true,
+	"AssessMXLPackage":                           true,
+	"AssessModelWithResources with dictionaries": true,
+	"InspectMXL with dictionaries":               true,
+	"AssessMXLPackage with dictionaries":         true,
 }

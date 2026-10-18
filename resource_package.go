@@ -77,9 +77,15 @@ func (g *resourceGraphRun) ownArchive(a *mxlAssessmentArchive) error {
 // InspectMXL assesses original ZIP headers, its original container source and
 // selected archive-local resources using one bounded account. The reader stays
 // open. External I/O occurs only through explicitly selected resolver requests.
-// options.Graph.Profile must be ProfileMXLSource; any other value, including
-// the zero value, is a configuration error.
+// An empty options.Graph.Profile selects ProfileMXLSourceSemantics with the
+// bundled required dictionaries, or options.Graph.Dictionaries. Otherwise it
+// must be ProfileMXLSource, or a dictionary MXL source profile when
+// options.Graph.Dictionaries is set.
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
+	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLSourceSemantics); ok {
+		options.Graph = graph
+		return inspectMXLWithDictionaries(ctx, reader, mxlDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+	}
 	if reader == nil {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
@@ -96,6 +102,12 @@ func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOpti
 
 func (g *resourceGraphRun) inspectRawPackage(reader io.Reader) (validation.AssessmentBundle, error) {
 	a, readErr := openMXLAssessmentArchive(g.ctx, reader, g.mxlOptions, g.options.account)
+	return g.inspectOpenedRawPackage(a, readErr)
+}
+
+// inspectOpenedRawPackage takes ownership of an archive opened on this run's
+// account, together with its open error.
+func (g *resourceGraphRun) inspectOpenedRawPackage(a *mxlAssessmentArchive, readErr error) (validation.AssessmentBundle, error) {
 	var err error
 	if a == nil {
 		return g.finish(readErr)

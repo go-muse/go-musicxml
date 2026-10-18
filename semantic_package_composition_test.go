@@ -22,16 +22,16 @@ func TestSemanticPackageCompositionEntryPoints(t *testing.T) {
 		model   bool
 	}{
 		{"source", validation.ProfileID("musicxml-4.0/resource-graph-semantics"), func() (validation.AssessmentBundle, error) {
-			return InspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(`<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/resource-graph-semantics")}}})
+			return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(`<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/resource-graph-semantics")}}})
 		}, false},
 		{"model", validation.ProfileID("musicxml-4.0/resource-graph-semantics"), func() (validation.AssessmentBundle, error) {
-			return AssessModelWithResourcesAndDictionaries(ctx, doc, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/resource-graph-semantics")}}})
+			return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/resource-graph-semantics")}}})
 		}, true},
 		{"raw MXL", validation.ProfileID("musicxml-4.0/mxl-source-semantics"), func() (validation.AssessmentBundle, error) {
-			return InspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/mxl-source-semantics")}}})
+			return inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/mxl-source-semantics")}}})
 		}, false},
 		{"current MXL", validation.ProfileID("musicxml-4.0/mxl-model-semantics"), func() (validation.AssessmentBundle, error) {
-			return AssessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/mxl-model-semantics")}}})
+			return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/mxl-model-semantics")}}})
 		}, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -74,7 +74,7 @@ func TestSemanticPackageCompositionFragments(t *testing.T) {
 		t.Run(map[bool]string{false: "source", true: "model"}[model], func(t *testing.T) {
 			const root = `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://semantics.test/child.opus#element(/1)"/></opus>`
 			fixture := &graphFixtureResolver{resources: map[string]string{"https://semantics.test/child.opus#element(/1)": `<opus/>`}, pins: map[string]string{"https://semantics.test/child.opus#element(/1)": "child"}}
-			options := LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphSemantics}, Identity: ResourceIdentity{RetrievalURI: "https://semantics.test/root.opus"}, Resolver: fixture, Dependencies: []ResourceDependency{ResourceDocuments}}}
+			options := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphSemantics}, Identity: ResourceIdentity{RetrievalURI: "https://semantics.test/root.opus"}, Resolver: fixture, Dependencies: []ResourceDependency{ResourceDocuments}}}
 			var b validation.AssessmentBundle
 			var err error
 			if model {
@@ -82,9 +82,9 @@ func TestSemanticPackageCompositionFragments(t *testing.T) {
 				if e != nil {
 					t.Fatal(e)
 				}
-				b, err = AssessModelWithResourcesAndDictionaries(context.Background(), doc, options)
+				b, err = assessModelWithResourcesAndDictionaries(context.Background(), doc, options)
 			} else {
-				b, err = InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), options)
+				b, err = inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), options)
 			}
 			if err != nil || (!model && !b.Satisfied()) || b.ResourceCount() != 2 || b.AdoptionCount() != 2 {
 				t.Fatalf("err=%v resources=%d package=%+v", err, b.ResourceCount(), b.PackageReport())
@@ -111,7 +111,7 @@ func TestSemanticPackageCompositionWrongEntryPointBeforeIO(t *testing.T) {
 			calls++
 			return DictionaryComponentResult{}, nil
 		})
-		_, err := InspectXMLWithResourcesAndDictionaries(context.Background(), reader, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}}, Dictionaries: DictionaryOptions{Source: provider, Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}}})
+		_, err := inspectXMLWithResourcesAndDictionaries(context.Background(), reader, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}}, Dictionaries: DictionaryOptions{Source: provider, Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}}})
 		if err == nil || calls != 0 || reader.reads != 0 {
 			t.Fatalf("profile=%s err=%v calls=%d reader=%+v", profile, err, calls, reader)
 		}
@@ -122,7 +122,7 @@ func TestSemanticPackageCompositionFragmentAbsence(t *testing.T) {
 	const href = "https://semantics.test/child.xml#element(/2)"
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="` + href + `"/></opus>`
 	resolver := &graphFixtureResolver{resources: map[string]string{href: `<opus/>`}, pins: map[string]string{href: "child"}}
-	b, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphSemantics}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}})
+	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphSemantics}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}})
 	if err != nil || b.ResourceCount() != 2 || !b.EnumerationComplete() {
 		t.Fatalf("err=%v resources=%d", err, b.ResourceCount())
 	}
@@ -143,16 +143,16 @@ func TestSemanticPackageCompositionRetainsEncodedFailure(t *testing.T) {
 			t.Run(mode+map[bool]string{false: "/partwise", true: "/timewise"}[timewise], func(t *testing.T) {
 				var b validation.AssessmentBundle
 				var e error
-				graph := LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphSemantics}}}
+				graph := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphSemantics}}}
 				switch mode {
 				case "source":
-					b, e = InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), graph)
+					b, e = inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), graph)
 				case "model":
-					b, e = AssessModelWithResourcesAndDictionaries(context.Background(), doc, graph)
+					b, e = assessModelWithResourcesAndDictionaries(context.Background(), doc, graph)
 				case "raw":
-					b, e = InspectMXLWithDictionaries(context.Background(), bytes.NewReader(packageGraphBytes(input, "main.musicxml", "")), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceSemantics}}})
+					b, e = inspectMXLWithDictionaries(context.Background(), bytes.NewReader(packageGraphBytes(input, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceSemantics}}})
 				case "current":
-					b, e = AssessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc}, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelSemantics}}})
+					b, e = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelSemantics}}})
 				}
 				if e != nil || b.Satisfied() {
 					t.Fatalf("err=%v satisfied=%t", e, b.Satisfied())

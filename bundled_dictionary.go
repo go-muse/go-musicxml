@@ -20,10 +20,12 @@ import (
 // access or generation occurs at runtime. Each loader invocation still imports,
 // accounts, verifies and parses its selected bytes; there is no cross-call set cache.
 //
-// Any binary referencing DecodeAssessed or DecodeAssessedWithDictionaries embeds
-// all five components, even with custom-source options. Direct use of this source
-// also retains all five. Distribute the five notice/license files listed in
-// THIRD_PARTY_NOTICES.md, including the CC BY-SA and Unicode data notices.
+// Any binary referencing DecodeAssessed, DecodeMXLAssessed, InspectXML,
+// AssessModel, InspectXMLWithResources, AssessModelWithResources, InspectMXL
+// or AssessMXLPackage embeds all five components, even with custom-source
+// options. Direct use of this source also retains all five. Distribute the
+// five notice/license files listed in THIRD_PARTY_NOTICES.md, including the
+// CC BY-SA and Unicode data notices.
 //
 // The IPA bundles retain their reviewed, bounded positive-witness authority;
 // they are not the original publications or a complete IPA grammar. Data retain

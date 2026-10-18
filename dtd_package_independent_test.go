@@ -164,7 +164,7 @@ func TestDTDPkgIndependentAuxiliaryHintsKeepOddEffectiveTail(t *testing.T) {
 
 func TestDTDPkgIndependentSoundsDefaultsDoNotEraseStringSpaceOrIdentityFailure(t *testing.T) {
 	xml := `<!DOCTYPE sounds [<!ATTLIST sound id ID "repeated" primary (yes|no) "yes"><!ATTLIST ensemble primary (yes|no) "no" number NMTOKEN " two "><!ENTITY row '<ensemble> A&#x9; B </ensemble>'>]><sounds><sound>&row;</sound><sound><solo> C  D </solo></sound></sounds>`
-	r, err := InspectXMLWithDictionaries(context.Background(), strings.NewReader(xml), DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: independentDTDSoundsProfile}})
+	r, err := inspectXMLWithDictionaries(context.Background(), strings.NewReader(xml), dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: independentDTDSoundsProfile}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,7 +237,7 @@ func TestDTDPkgIndependentAllEntryPointsRejectBeforeIO(t *testing.T) {
 				if entry == "current-mxl" {
 					profile = independentDTDCurrentMXLProfile
 				}
-				o := MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{{Manifest: validation.DictionaryManifestStandardSounds40, Relations: []validation.DictionaryRelation{validation.DictionaryRelationStandardSound}}}, Source: independentDTDPanicDictionary{}}}
+				o := mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{{Manifest: validation.DictionaryManifestStandardSounds40, Relations: []validation.DictionaryRelation{validation.DictionaryRelationStandardSound}}}, Source: independentDTDPanicDictionary{}}}
 				switch invalid {
 				case "empty":
 					o.Resources.Graph.Profile = ""
@@ -263,13 +263,13 @@ func TestDTDPkgIndependentAllEntryPointsRejectBeforeIO(t *testing.T) {
 				var e error
 				switch entry {
 				case "source":
-					b, e = InspectXMLWithResourcesAndDictionaries(context.Background(), independentDTDPanicReader{}, LinkedDictionaryAssessmentOptions{Resources: o.Resources.linked(), Dictionaries: o.Dictionaries})
+					b, e = inspectXMLWithResourcesAndDictionaries(context.Background(), independentDTDPanicReader{}, linkedDictionaryAssessmentOptions{Resources: o.Resources.linked(), Dictionaries: o.Dictionaries})
 				case "model":
-					b, e = AssessModelWithResourcesAndDictionaries(context.Background(), doc, LinkedDictionaryAssessmentOptions{Resources: o.Resources.linked(), Dictionaries: o.Dictionaries})
+					b, e = assessModelWithResourcesAndDictionaries(context.Background(), doc, linkedDictionaryAssessmentOptions{Resources: o.Resources.linked(), Dictionaries: o.Dictionaries})
 				case "raw-mxl":
-					b, e = InspectMXLWithDictionaries(context.Background(), independentDTDPanicReader{}, o)
+					b, e = inspectMXLWithDictionaries(context.Background(), independentDTDPanicReader{}, o)
 				case "current-mxl":
-					b, e = AssessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc}, o)
+					b, e = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc}, o)
 				}
 				if e == nil || b.ResourceCount() != 0 {
 					t.Fatalf("invalid request admitted: resources=%d err=%v", b.ResourceCount(), e)
@@ -496,9 +496,9 @@ func TestDTDPkgIndependentCurrentModelRemainsSourceHonest(t *testing.T) {
 				var b validation.AssessmentBundle
 				var err error
 				if mxl {
-					b, err = AssessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus", MediaType: "application/vnd.recordare.musicxml+xml"}}}, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDCurrentMXLProfile}}})
+					b, err = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus", MediaType: "application/vnd.recordare.musicxml+xml"}}}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDCurrentMXLProfile}}})
 				} else {
-					b, err = AssessModelWithResourcesAndDictionaries(context.Background(), doc, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDGraphProfile}}})
+					b, err = assessModelWithResourcesAndDictionaries(context.Background(), doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDGraphProfile}}})
 				}
 				if err != nil {
 					t.Fatal(err)

@@ -110,6 +110,7 @@ type mxlAssessmentArchive struct {
 	closed                   bool
 	inputComplete            bool
 	activeEntryLimit         int64  // Nonzero only during selected bounded prefix classification.
+	borrowed                 bool   // data and its reservation belong to the upstream owner.
 	sharedExpanded           *int64 // Optional root-run aggregate; does not own another Account.
 }
 
@@ -150,6 +151,7 @@ func borrowMXLAssessmentArchive(ctx context.Context, data []byte, options MXLOpt
 		return a, ErrMXLTooLarge
 	}
 	a.data = data
+	a.borrowed = true
 	a.inputComplete = true
 	err = a.observe()
 	return a, err
@@ -173,6 +175,20 @@ func newMXLAssessmentArchive(ctx context.Context, options MXLOptions, account *v
 		return nil, err
 	}
 	return &mxlAssessmentArchive{ctx: ctx, account: account, limits: limits, retained: mxlZIPOwnerBytes}, nil
+}
+
+// detachData transfers the complete buffered representation and its
+// reservation to the caller, which must release reserved buffered bytes once
+// it drops data. The archive keeps reading the same immutable bytes until it
+// is closed, and Close no longer releases them. A borrowed or incomplete
+// representation has nothing to transfer.
+func (a *mxlAssessmentArchive) detachData() (data []byte, reserved int64) {
+	if a == nil || a.closed || a.borrowed || !a.inputComplete {
+		return nil, 0
+	}
+	reserved = int64(cap(a.data))
+	a.retained -= reserved
+	return a.data, reserved
 }
 
 // Close releases only this owner's reservations, exactly once. It does no

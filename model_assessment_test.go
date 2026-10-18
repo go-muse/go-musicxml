@@ -26,7 +26,6 @@ func TestAssessModelPreflight(t *testing.T) {
 	}{
 		{"nil-context", nil, NewOpusDocument(), AssessmentOptions{Profile: ProfileModelXSD}, validation.ErrInvalidConfiguration},
 		{"canceled", canceled, NewOpusDocument(), AssessmentOptions{Profile: ProfileModelXSD}, context.Canceled},
-		{"empty-profile", context.Background(), NewOpusDocument(), AssessmentOptions{}, validation.ErrInvalidConfiguration},
 		{"unknown-profile", context.Background(), NewOpusDocument(), AssessmentOptions{Profile: "unknown"}, validation.ErrInvalidConfiguration},
 		{"source-profile", context.Background(), NewOpusDocument(), AssessmentOptions{Profile: ProfileSourceXSDPreview}, validation.ErrInvalidConfiguration},
 		{"negative-budget", context.Background(), NewOpusDocument(), AssessmentOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxNodes: -1}}, validation.ErrInvalidConfiguration},

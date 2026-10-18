@@ -13,13 +13,14 @@ predicates; see the [legacy behavior note](local-link-context-scope.md#legacy-be
 
 | Entry point | Package profile |
 | --- | --- |
-| `InspectXMLWithResourcesAndDictionaries`, `AssessModelWithResourcesAndDictionaries` | `ProfileResourceGraphInternalDTDDictionaries` |
-| `InspectMXLWithDictionaries` | `ProfileMXLSourceInternalDTDDictionaries` |
-| `AssessMXLPackageWithDictionaries` | `ProfileMXLModelInternalDTDDictionaries` |
+| `InspectXMLWithResources`, `AssessModelWithResources` with `Graph.Dictionaries` | `ProfileResourceGraphInternalDTDDictionaries` |
+| `InspectMXL` with `Graph.Dictionaries` | `ProfileMXLSourceInternalDTDDictionaries` |
+| `AssessMXLPackage` with `Graph.Dictionaries` | `ProfileMXLModelInternalDTDDictionaries` |
 
-Choose `Resources.Graph.Profile` explicitly. Existing dictionary profiles retain
-their selected scope, subject to the separately documented corrections. Empty,
-unknown and cross-entry-point selections, invalid
+Choose `Graph.Profile` explicitly; an empty profile selects the entry point's
+semantic profile instead (see [Scenarios](../../API.md#scenarios)). Existing
+dictionary profiles retain their selected scope, subject to the separately
+documented corrections. Unknown and cross-entry-point selections, invalid
 budgets, dictionaries, dependencies and MXL limits fail before caller/provider
 I/O. Ordinary non-dictionary entry points do not acquire a new mode.
 
@@ -34,7 +35,7 @@ is transport, not proof that every provenance component is available.
 Public musical link/rootfile traversal still requests musical sources. The
 Sounds row supports explicit compatible snapshot admission, as tested through
 private adapter seams; it does not provide a public auxiliary-file selector.
-Standalone `InspectXMLWithDictionaries` accepts the new Sounds profile, and
+Standalone `InspectXML` with `Dictionaries` accepts the new Sounds profile, and
 `InspectXML` accepts the new Container profile. Neither creates a Document model
 or decode root. Filenames never select auxiliary profiles.
 

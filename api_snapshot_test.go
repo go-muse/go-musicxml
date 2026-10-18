@@ -122,11 +122,13 @@ func apiSnapshot(pkg *types.Package) []string {
 
 		case *types.Func:
 			signature := object.Type().(*types.Signature)
+			params := apiTypeParams(signature.TypeParams(), typeString)
+			// A generic signature already prints its type parameters.
 			lines = append(lines, fmt.Sprintf(
 				"func %s%s%s",
 				name,
-				apiTypeParams(signature.TypeParams(), typeString),
-				strings.TrimPrefix(typeString(signature), "func"),
+				params,
+				strings.TrimPrefix(strings.TrimPrefix(typeString(signature), "func"), params),
 			))
 
 		case *types.TypeName:

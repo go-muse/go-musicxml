@@ -12,8 +12,8 @@ import (
 // assessedLoadingOptions elects fixed validation stages, never a caller-selected
 // weaker profile. Explicit dictionary inputs remain authoritative: an unavailable
 // or invalid override is not repaired with bundled data.
-func assessedLoadingOptions(options *DictionaryAssessmentOptions) (DictionaryAssessmentOptions, error) {
-	var out DictionaryAssessmentOptions
+func assessedLoadingOptions(options *dictionaryAssessmentOptions) (dictionaryAssessmentOptions, error) {
+	var out dictionaryAssessmentOptions
 	if options != nil {
 		out = *options
 	}
@@ -21,20 +21,24 @@ func assessedLoadingOptions(options *DictionaryAssessmentOptions) (DictionaryAss
 		return out, &validation.ConfigurationError{Field: "assessed loading profile", Reason: "requires source-semantics; use InspectXML for individually selected profiles"}
 	}
 	out.Assessment.Profile = ProfileSourceSemantics
-	required := []validation.DictionarySelection{
-		{Manifest: validation.DictionaryManifestSMuFL14Canonical, Relations: []validation.DictionaryRelation{validation.DictionaryRelationCanonicalName}},
-		{Manifest: validation.DictionaryManifestIPARepresentation2015Unicode13, Relations: []validation.DictionaryRelation{validation.DictionaryRelationIPARepresentation}},
-	}
+	required := requiredDictionarySelections()
+	// A typed-nil Source is an explicit override, not a request for defaults.
 	if out.Dictionaries.Source == nil && len(out.Dictionaries.Selections) == 0 {
-		out.Dictionaries = DictionaryOptions{Source: BundledDictionarySource(), Selections: required}
+		out.Dictionaries = requiredDictionaryOptions()
 		return out, nil
 	}
-	if err := validateDictionaryOptions(out.Dictionaries); err != nil {
-		return out, err
+	return out, requireDictionaryRelations(out.Dictionaries, required)
+}
+
+// requireDictionaryRelations accepts explicit dictionary options only when
+// they select every required relation.
+func requireDictionaryRelations(dictionaries DictionaryOptions, required []validation.DictionarySelection) error {
+	if err := validateDictionaryOptions(dictionaries); err != nil {
+		return err
 	}
 	for _, want := range required {
 		found := false
-		for _, selected := range out.Dictionaries.Selections {
+		for _, selected := range dictionaries.Selections {
 			if selected.Manifest != want.Manifest {
 				continue
 			}
@@ -45,15 +49,15 @@ func assessedLoadingOptions(options *DictionaryAssessmentOptions) (DictionaryAss
 			}
 		}
 		if !found {
-			return out, &validation.ConfigurationError{Field: "assessed loading dictionaries", Reason: "explicit selections must include canonical SMuFL and IPA representation relations"}
+			return &validation.ConfigurationError{Field: "assessed loading dictionaries", Reason: "explicit selections must include canonical SMuFL and IPA representation relations"}
 		}
 	}
-	return out, nil
+	return nil
 }
 
 // decodeValidated owns one account and one imported set across both stages.
 // Inspect/Assess entry points continue to use their explicit profile contracts.
-func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions, options *DictionaryAssessmentOptions) (result DecodeResult, err error) {
+func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions, options *dictionaryAssessmentOptions, lenient bool) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	if err = assessmentContext(ctx, "canceled-before-source"); err != nil {
 		return result, err
@@ -80,7 +84,7 @@ func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions
 	defer func() {
 		err = errors.Join(err, cfg.Dictionaries.Close())
 		if err != nil {
-			result.Document = nil
+			result.Document, result.Accepted = nil, false
 		}
 	}()
 	run, startErr := newSourceAssessmentRunWithConfig(ctx, reader, decode, &sourceAssessmentConfig{assessmentRunConfig: cfg, ByteOwner: sourceBytesPrimary}, true)
@@ -92,7 +96,7 @@ func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions
 	}
 	modelConfig := cfg
 	modelConfig.Profile, modelConfig.Engine, modelConfig.DocumentID = ProfileModelSemantics, modelEngine, modelDocumentID
-	return decodeAssessedRun(ctx, run, modelConfig, loadErr)
+	return decodeAssessedRun(ctx, run, modelConfig, loadErr, lenient)
 }
 
 func modelAcceptanceError(report validation.Report, status modelWalkStatus) error {
@@ -104,7 +108,7 @@ func modelAcceptanceError(report validation.Report, status modelWalkStatus) erro
 		issues := make([]ValidationIssue, 0)
 		for _, finding := range report.Findings {
 			if finding.Outcome == validation.OutcomeFail && (finding.Category == validation.CategoryNormative || finding.Category == validation.CategoryModel) {
-				issues = append(issues, ValidationIssue{Path: finding.Location.Path, Constraint: string(finding.Rule.ID), Message: string(finding.Reason)})
+				issues = append(issues, assessmentIssue(finding))
 			}
 		}
 		invalid = &ValidationError{Issues: issues}
@@ -116,4 +120,10 @@ func modelAcceptanceError(report validation.Report, status modelWalkStatus) erro
 		return errors.Join(invalid, &validation.IncompleteError{Reason: "model-profile-not-satisfied"})
 	}
 	return invalid
+}
+
+// assessmentIssue maps a failed finding as Validate does: Constraint is the
+// reason code, Message the offending value and Rule the rule ID.
+func assessmentIssue(finding validation.Finding) ValidationIssue {
+	return ValidationIssue{Path: finding.Location.Path, Constraint: string(finding.Reason), Message: finding.Actual, Rule: string(finding.Rule.ID)}
 }

@@ -18,7 +18,7 @@ func dictionaryReviewWork(t *testing.T, count int, accidental, dictionaries, ava
 	var cfg assessmentRunConfig
 	var err error
 	if dictionaries {
-		opts := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}}
+		opts := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}}
 		if available {
 			for _, manifest := range []validation.DictionaryManifestID{validation.DictionaryManifestSMuFL14Canonical, validation.DictionaryManifestSMuFL14Ranges, validation.DictionaryManifestStandardSounds40, validation.DictionaryManifestIPAPositive2015Unicode13} {
 				opts.Dictionaries.Selections = append(opts.Dictionaries.Selections, dictionaryImportSelection(manifest))

@@ -87,14 +87,24 @@ var (
 	// ErrXMLTooDeep reports an XML element nesting depth limit violation.
 	ErrXMLTooDeep = errors.New("musicxml: XML nesting depth limit exceeded")
 
-	// ErrInvalidDecodeOptions reports invalid uncompressed decode limits.
-	ErrInvalidDecodeOptions = errors.New("musicxml: invalid decode options")
+	// ErrInvalidConfiguration matches rejected options: a
+	// *validation.ConfigurationError, ErrInvalidDecodeOptions,
+	// ErrInvalidEncodeOptions and ErrInvalidMXLOptions. It is
+	// validation.ErrInvalidConfiguration. Nil arguments keep their own errors,
+	// such as ErrNilReader.
+	ErrInvalidConfiguration = validation.ErrInvalidConfiguration
 
-	// ErrInvalidEncodeOptions reports invalid EncodeWithOptions settings.
-	ErrInvalidEncodeOptions = errors.New("musicxml: invalid encode options")
+	// ErrInvalidDecodeOptions reports invalid uncompressed decode limits. It
+	// matches ErrInvalidConfiguration.
+	ErrInvalidDecodeOptions error = &configurationSentinel{"musicxml: invalid decode options"}
 
-	// ErrInvalidMXLOptions reports invalid compressed decode limits.
-	ErrInvalidMXLOptions = errors.New("musicxml: invalid MXL options")
+	// ErrInvalidEncodeOptions reports invalid EncodeWithOptions settings. It
+	// matches ErrInvalidConfiguration.
+	ErrInvalidEncodeOptions error = &configurationSentinel{"musicxml: invalid encode options"}
+
+	// ErrInvalidMXLOptions reports invalid compressed decode limits. It
+	// matches ErrInvalidConfiguration.
+	ErrInvalidMXLOptions error = &configurationSentinel{"musicxml: invalid MXL options"}
 
 	// ErrInvalidMXL reports a malformed or unsafe MXL archive.
 	ErrInvalidMXL = errors.New("musicxml: invalid MXL archive")
@@ -212,4 +222,15 @@ func (e *MXLLinkError) Unwrap() error {
 		return nil
 	}
 	return e.Err
+}
+
+// configurationSentinel is an option sentinel that also matches
+// ErrInvalidConfiguration, keeping its own identity and message.
+type configurationSentinel struct{ message string }
+
+func (e *configurationSentinel) Error() string { return e.message }
+
+// Is makes the sentinel match ErrInvalidConfiguration.
+func (e *configurationSentinel) Is(target error) bool {
+	return target == validation.ErrInvalidConfiguration
 }

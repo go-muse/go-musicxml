@@ -53,15 +53,15 @@ func TestBundledDictionaryGraphAndMXLParity(t *testing.T) {
 				identity := ResourceIdentity{CanonicalID: "bundled-parity-root"}
 				switch mode {
 				case "graph source":
-					return InspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(input), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
+					return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
 				case "graph model":
-					return AssessModelWithResourcesAndDictionaries(ctx, doc, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
+					return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
 				case "MXL source":
 					graph.Profile = ProfileMXLSourceDictionaries
-					return InspectMXLWithDictionaries(ctx, bytes.NewReader(archive), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
+					return inspectMXLWithDictionaries(ctx, bytes.NewReader(archive), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
 				default:
 					graph.Profile = ProfileMXLModelDictionaries
-					return AssessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
+					return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
 				}
 			}
 			t.Run("all five components", func(t *testing.T) {

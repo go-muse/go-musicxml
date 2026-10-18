@@ -16,17 +16,17 @@ func TestSemanticCompositionPublicProfiles(t *testing.T) {
 			name := string(target) + map[bool]string{false: "/partwise", true: "/timewise"}[timewise]
 			t.Run(name, func(t *testing.T) {
 				profile := validation.ProfileID("musicxml-4.0/" + string(target) + "-semantics")
-				options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}}
+				options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}}
 				var report validation.Report
 				var err error
 				if target == validation.TargetSource {
-					report, err = InspectXMLWithDictionaries(context.Background(), strings.NewReader(input), options)
+					report, err = inspectXMLWithDictionaries(context.Background(), strings.NewReader(input), options)
 				} else {
 					doc, e := Decode(strings.NewReader(input))
 					if e != nil {
 						t.Fatal(e)
 					}
-					report, err = AssessModelWithDictionaries(context.Background(), doc, options)
+					report, err = assessModelWithDictionaries(context.Background(), doc, options)
 				}
 				if err != nil || !report.Satisfied() || report.Profile.ID != profile {
 					t.Fatalf("profile=%s err=%v satisfied=%v findings=%+v", profile, err, report.Satisfied(), report.Findings)
@@ -82,9 +82,9 @@ func TestSemanticCompositionRejectsWrongTargetBeforeDictionaryIO(t *testing.T) {
 		calls++
 		return DictionaryComponentResult{}, nil
 	})
-	options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: "musicxml-4.0/model-semantics"}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}, Source: provider}}
+	options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: "musicxml-4.0/model-semantics"}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}, Source: provider}}
 	reader := &assessmentCountingReader{source: strings.NewReader(assessedScore("1", ""))}
-	if _, err := InspectXMLWithDictionaries(context.Background(), reader, options); err == nil {
+	if _, err := inspectXMLWithDictionaries(context.Background(), reader, options); err == nil {
 		t.Fatal("wrong source profile accepted")
 	}
 	doc, err := Decode(strings.NewReader(assessedScore("1", "")))
@@ -92,7 +92,7 @@ func TestSemanticCompositionRejectsWrongTargetBeforeDictionaryIO(t *testing.T) {
 		t.Fatal(err)
 	}
 	options.Assessment.Profile = "musicxml-4.0/source-semantics"
-	if _, err = AssessModelWithDictionaries(context.Background(), doc, options); err == nil {
+	if _, err = assessModelWithDictionaries(context.Background(), doc, options); err == nil {
 		t.Fatal("wrong model profile accepted")
 	}
 	if calls != 0 || reader.bytes != 0 {

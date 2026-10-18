@@ -23,15 +23,21 @@ type Issue struct {
 	Path       string
 	Constraint string
 	Message    string
+	Rule       string
 }
 
-// String returns the issue path and message.
+// String returns the issue path and message, or the constraint when the
+// message is empty.
 func (i Issue) String() string {
+	message := i.Message
+	if message == "" {
+		message = i.Constraint
+	}
 	if i.Path == "" {
-		return i.Message
+		return message
 	}
 
-	return i.Path + ": " + i.Message
+	return i.Path + ": " + message
 }
 
 type QName = struct {

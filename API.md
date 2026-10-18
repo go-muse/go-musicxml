@@ -30,6 +30,14 @@ separate optional interfaces discovered with type assertions. A resolver that
 receives a request branch it does not recognize should return the request ID
 with `State: validation.EvidenceUnsupported`, a `Reason`, and no payload.
 
+`DictionarySourceFunc`, `validation.ResourceResolverFunc` and `DTDSourceFunc`
+adapt plain functions to these interfaces. A nil `DictionarySourceFunc` is a
+typed-nil source: the importer supplies nothing from it, so its selections stay
+unavailable, and it is an explicit override rather than a request for the
+bundled defaults. `validation.Known` and
+`validation.Unknown` build `Evidence` values, and `validation.Report.String`
+returns the text that `Report.Format` writes.
+
 ### Comparable structs
 
 Several option and value structs are comparable today, including
@@ -44,6 +52,158 @@ other structs, in particular generated model types, is not guaranteed; see
 internal pointers. They, and structs that contain them such as
 `validation.Atomic` and `validation.ContextPosition`, compile with `==` but do
 not compare numeric values. Use their `Equal` and `Cmp` methods.
+
+## Scenarios
+
+Three scenarios cover loading and checking MusicXML. Each has one function per
+input kind, and each can be called with zero options. Default budgets bound the
+work and memory of every assessment. The semantic profiles are costly, so
+larger scores can need larger `Budgets`; a refused budget is an operational
+error, even in the lenient mode.
+
+| Scenario | What it does | Functions |
+| --- | --- | --- |
+| 1. Load without validation | Reads well-formed XML into the Go model. XSD and MusicXML rules are not checked. | `Decode`, `DecodeMXL`, the typed decoders and their `WithOptions`/`Context` variants |
+| 2. Strict loading | Assesses the original source, converts it, and assesses the converted model. By default the document is returned only when everything is accepted; in the lenient mode it is always returned with the reports. | `DecodeAssessed` for XML, `DecodeMXLAssessed` for MXL |
+| 3. Check a model | Exactly the model assessment of scenario 2: `ProfileModelSemantics` with the bundled required dictionaries. | `AssessModel`; for an MXL package, on its primary `Document` only (see below) |
+
+Scenario 2 is the source assessment plus scenario 3: `AssessModel` on a
+document that `DecodeAssessed` returned gives the same report as
+`DecodeResult.Model`, and likewise for `DecodeMXLAssessed` and the primary
+document of its package. This holds while the budgets are not exhausted: the
+loader's model stage shares its account with the source report, so a tight
+diagnostic or buffer budget can truncate or refuse the two differently.
+
+**MXL packages: primary document only.** For an MXL package, scenario 3
+assesses only the primary `Document`; it is not a reassessment of the whole
+package. Package rules, the other resources of the package, its linked scores
+and opus children, and raw XML resources it keeps are not checked again, so
+edits to them go undetected. `DecodeMXLAssessed` proves them from the original
+archive in its source stage, and its model stage, too, assesses only the
+primary document. `AssessMXLPackage` does not close this gap for a decoded
+package: such a package does not keep the discarded schema hints, so
+`MX40-PACKAGE-schema-hint-pairs` stays unknown and the bundle is never
+satisfied. Assessment of the current state of a whole edited package is planned
+for a later release.
+
+```go
+// Scenario 2: strict loading.
+result, err := musicxml.DecodeAssessed(ctx, reader, musicxml.DecodeAssessmentOptions{})
+if err != nil {
+	return err // rejected, or an operational failure
+}
+score, _ := musicxml.AsScorePartwise(result.Document)
+
+// Scenario 2, lenient: the document comes back with its reports.
+result, err = musicxml.DecodeAssessed(ctx, reader, musicxml.DecodeAssessmentOptions{Lenient: true})
+if err != nil {
+	return err // operational failure only
+}
+if !result.Accepted {
+	fmt.Println(result.Source.String(), result.Model.String())
+}
+
+// Scenario 3: check a model built or edited in Go.
+report, err := musicxml.AssessModel(ctx, score, musicxml.AssessmentOptions{})
+```
+
+**Lenient mode.** `DecodeAssessmentOptions.Lenient` and
+`DecodeMXLAssessmentOptions.Lenient` return the converted document even when
+an assessment finds violations or is incomplete. In that case `err` is nil,
+`Accepted` is false, and the model is assessed even after source findings, so
+that both reports are complete. Operational failures still return an error and
+no document: malformed XML, I/O, cancellation, resource limits, conversion
+failure, dictionary import failure and invalid configuration. In the default
+strict mode the document is returned exactly when `Accepted` is true.
+
+**Options.** Everything else is a field of the options:
+
+- `AssessmentOptions.Profile` selects a narrower profile. An empty `Profile`
+  selects the full semantic profile of each entry point:
+  - `ProfileSourceSemantics` for `InspectXML`;
+  - `ProfileModelSemantics` for `AssessModel`;
+  - `ProfileResourceGraphSemantics` for `InspectXMLWithResources` and
+    `AssessModelWithResources`;
+  - `ProfileMXLSourceSemantics` for `InspectMXL`;
+  - `ProfileMXLModelSemantics` for `AssessMXLPackage`.
+
+  These defaults use the bundled required dictionaries, also when
+  `Dictionaries` has a nil `Source` and no selections. Before this release an
+  empty profile was a configuration error for these functions.
+- `AssessmentOptions.Dictionaries` selects pinned dictionary capabilities. It
+  replaces the bundled required data of an empty profile, and with an explicit
+  profile it requires a dictionary or semantic one.
+- `AssessmentOptions.Budgets`, `AssessmentOptions.DTD`, and the resource fields
+  of `LinkedAssessmentOptions` and `MXLAssessmentOptions` keep their meaning.
+
+**Advanced tools.**
+
+- `InspectXML` and `InspectMXL` report on an original source without building a
+  model.
+- `AssessMXLPackage` assesses a current package, including package rules. A
+  decoded package cannot carry source-only evidence such as discarded schema
+  hints, so its package report stays incomplete; for scenario 3 assess the
+  package's `Document` with `AssessModel`, which covers that document only.
+- `InspectXMLWithResources` and `AssessModelWithResources` assess a graph of
+  linked documents. They return a `validation.AssessmentBundle`, not a single
+  report, and take their dictionaries from `Graph.Dictionaries`.
+- `Validate` is the fast XSD-only check of a model and is unchanged. It is not
+  scenario 3: it checks the XSD model profile only, without the MusicXML
+  semantic rules.
+
+**Strict MXL loading.** `DecodeMXLAssessed` works in four steps:
+
+1. It checks every option, then reads the archive once into a buffer and
+   indexes it, metered as in `InspectMXL`: reads, buffer growth and the ZIP
+   inventory are admitted on the shared account before they happen. A reader
+   failure or a corrupt archive matches `ErrInvalidMXL`, as in `DecodeMXL`,
+   and `Source` is then the zero bundle. An archive layout the assessment does
+   not process, such as one with a preamble, is reported in `Source`, as by
+   `InspectMXL`; its terminated assessment returns an error that matches
+   `ErrIncompleteAssessment`, in both modes.
+2. It assesses the original archive with `ProfileMXLSourceSemantics`, which
+   includes package rules, resources and opus links.
+3. In the default strict mode only after the archive is accepted, and in the
+   lenient mode after any source stage without an operational failure, it
+   converts the buffered bytes as `DecodeMXLPackageContext` does, resolving
+   DTDs from `Graph.DTD` first, as the source stage does.
+4. It assesses the primary document with `ProfileModelSemantics`.
+
+Package rules are proved from the original archive. A decoded package cannot
+carry source-only evidence such as discarded schema hints, so `AssessMXLPackage`
+on it stays incomplete. Both assessments share one account bounded by
+`Assessment.Graph.Budgets`. The archive bytes stay charged to it until
+conversion finishes, and the source bundle until the call returns, so the later
+stages are bounded by the combined live storage. A rejected source bundle is
+classified from its authoritative counts (see `AssessmentBundle.Failures`):
+failed rule evaluations match `ErrInvalidDocument` even when their diagnostics
+were truncated, and anything else that keeps the bundle from being satisfied
+matches `ErrIncompleteAssessment`. Conversion parses the buffered bytes again,
+so the converted package is bounded by the MXL limits, as for
+`DecodeMXLPackage`.
+
+**Removed functions.** The functions below and their option types
+`DictionaryAssessmentOptions`, `DecodeDictionaryAssessmentOptions`,
+`LinkedDictionaryAssessmentOptions` and `MXLDictionaryAssessmentOptions` were
+removed: they duplicated the entry points above. The replacement gives the same
+result for every profile the removed function accepted.
+
+| Removed | Replacement |
+| --- | --- |
+| `InspectXMLWithDictionaries(ctx, r, DictionaryAssessmentOptions{Assessment: a, Dictionaries: d})` | `InspectXML(ctx, r, a)` with `a.Dictionaries = &d` |
+| `AssessModelWithDictionaries(ctx, doc, DictionaryAssessmentOptions{Assessment: a, Dictionaries: d})` | `AssessModel(ctx, doc, a)` with `a.Dictionaries = &d` |
+| `DecodeAssessedWithDictionaries(ctx, r, DecodeDictionaryAssessmentOptions{Decode: o, Assessment: &DictionaryAssessmentOptions{Assessment: a, Dictionaries: d}})` | `DecodeAssessed(ctx, r, DecodeAssessmentOptions{Decode: o, Assessment: &a})` with `a.Dictionaries = &d` |
+| `InspectXMLWithResourcesAndDictionaries(ctx, r, LinkedDictionaryAssessmentOptions{Resources: l, Dictionaries: d})` | `InspectXMLWithResources(ctx, r, l)` with `l.Graph.Dictionaries = &d` |
+| `AssessModelWithResourcesAndDictionaries(ctx, doc, LinkedDictionaryAssessmentOptions{Resources: l, Dictionaries: d})` | `AssessModelWithResources(ctx, doc, l)` with `l.Graph.Dictionaries = &d` |
+| `InspectMXLWithDictionaries(ctx, r, MXLDictionaryAssessmentOptions{Resources: m, Dictionaries: d})` | `InspectMXL(ctx, r, m)` with `m.Graph.Dictionaries = &d` |
+| `AssessMXLPackageWithDictionaries(ctx, p, MXLDictionaryAssessmentOptions{Resources: m, Dictionaries: d})` | `AssessMXLPackage(ctx, p, m)` with `m.Graph.Dictionaries = &d` |
+
+**Binary contents.** Any binary that references `DecodeAssessed`,
+`DecodeMXLAssessed`, `InspectXML`, `AssessModel`, `InspectXMLWithResources`,
+`AssessModelWithResources`, `InspectMXL` or `AssessMXLPackage` embeds the
+bundled dictionary data. Distribute it with the notices listed under
+[bundled pinned dictionary data](#bundled-pinned-dictionary-data).
+`Decode`, `DecodeMXL`, `Validate` and `Encode` do not embed it.
 
 ## Documents
 
@@ -361,6 +521,11 @@ validate automatically.
 Use `errors.Is(err, ErrInvalidDocument)` for the legacy category and
 `errors.As` with a `*ValidationError` target to inspect retained `ValidationIssue`
 details. Individual diagnostic previews are bounded and are not an exhaustive trace.
+Every operation that reports issues fills them the same way: `Constraint` is the
+failure reason code, `Message` the offending value when the rule reports one,
+and `Rule` the ID of the violated rule. `DecodeAssessed` previously put the rule
+ID in `Constraint` and the reason code in `Message`. `String` shows the
+constraint when the message is empty.
 Legacy issue locations retain XML-style structural display paths; representation
 messages also identify Go fields. These paths do not describe original XML.
 `ErrNilDocument`, `ErrUnsupportedDocument`, `ErrDocumentCycle` and
@@ -420,9 +585,10 @@ The name is deliberately `AssessModel`: `Assess` is already an exported generate
 MusicXML model type and remains unchanged. `AssessmentOptions` retains its
 `Profile` and `Budgets` fields. `AssessModel` accepts `*ScorePartwise`,
 `*ScoreTimewise` and `*OpusDocument`; it rejects nil/typed-nil documents and
-unsupported concrete implementations. A nonnil context and an explicit model
-profile are required. Empty, unknown or source-target profiles, invalid budgets
-and already-canceled contexts fail before model traversal.
+unsupported concrete implementations. A nonnil context is required; an empty
+profile selects `ProfileModelSemantics` (see [Scenarios](#scenarios)). Unknown
+or source-target profiles, invalid budgets and already-canceled contexts fail
+before model traversal.
 
 | Constant | Profile ID | Declared scope |
 | --- | --- | --- |
@@ -591,7 +757,7 @@ throughput or memory improvement. Cold initialization adds further cost.
 
 Select `ProfileModelTimeline` with `AssessModel`, or `ProfileSourceTimeline`
 with `InspectXML`. These narrower profiles cannot replace the fixed semantic
-profiles in `DecodeAssessed` or `DecodeAssessedWithDictionaries`.
+profiles in `DecodeAssessed` or `DecodeMXLAssessed`.
 These profiles use a separately compiled engine and add exactly three required
 bindings to their corresponding local profile: `MX40-TIMELINE-effective-state@1`,
 `MX40-TIMELINE-chord-duration-bound@1`, and
@@ -973,6 +1139,35 @@ diagnostic quotas. A lease has one owner: do not copy it or use it concurrently.
 Returned report data remains caller-owned and usable after `Close`; caller
 mutations and extra report copies are outside the admitted projection accounting.
 
+`PackageSession.FinishWithRetainedBundle(ctx, end)` returns
+`(AssessmentBundle, *ReportLease, error)` for package and graph sessions.
+`Finish` releases every package and resource reservation although the bundle
+still owns its reports, so this variant measures the published bundle once
+after `Finish`, with the strings, slices and pointed-to values of every report
+and record, and charges that size plus the handle to a lease. If the
+measurement or its admission is refused, the bundle is returned with that
+error and no lease; dependent work must not continue. The lease follows the
+rules above. `DecodeMXLAssessed` uses it to keep its source bundle charged
+during the later stages.
+
+`AssessmentBundle.Failures()` summarizes why a bundle is not satisfied, from the
+authoritative conformance and counts of its package report, its required
+resource reports and its failure summary, or the failed report the summary
+retained, without copying those reports:
+
+- `Violated`: one of them is `ConformanceViolated` or counts a failed rule
+  evaluation, even when its diagnostics were truncated;
+- `Incomplete`: anything else keeps the bundle from being satisfied, such as an
+  incomplete, terminated or undetermined report without a violation,
+  incomplete enumeration or a retained failure summary;
+- `Failed`: the failed evaluations they count;
+- `Truncated`: a violated report or failure summary omitted stored
+  diagnostics;
+- `Findings`: copies of the stored failed normative and model findings.
+
+A satisfied bundle has none. The strict loaders build their rejection errors
+from this summary.
+
 The assessed loaders use this cross-package ownership seam to keep source context
 charged while the direct-model stage runs, then close the lease when transferring
 the result to the caller. It adds no loading option. Ordinary `Finish` and
@@ -1281,11 +1476,11 @@ single-goroutine lifecycle; independent sessions own separate declaration facts.
 
 ## Opt-in pinned dictionaries
 
-Dictionary inspection and standalone model/package assessment require their own
-explicit profiles. The [mandatory assessed loaders](#mandatory-assessed-loading)
-are the exception: they select fixed semantic profiles and required bundled
-evidence by default. This wrapper migration does not change `Validate`, ordinary
-`Decode`, `InspectXML`, `AssessModel`, `validation.RunOptions`, or any existing
+Dictionaries are selected with `AssessmentOptions.Dictionaries`, directly or as
+`Graph.Dictionaries` of the resource options (see [Scenarios](#scenarios)). An
+empty profile uses the bundled required data; an explicit profile without
+dictionaries keeps its dictionary-free behaviour. This does not change
+`Validate`, ordinary `Decode`, `validation.RunOptions`, or any existing
 profile's selected rules and catalog digest.
 The full [selected scope](docs/validation/pinned-dictionaries-scope.md) separates
 implemented relations from unresolved obligations; the dated
@@ -1302,22 +1497,22 @@ manifests/relations, duplicate selections and incompatible profiles are
 configuration errors, rejected before callbacks. Selecting ranges does not
 implicitly select or open the canonical-name component.
 
-| Entry point | Options and required profile | Result |
+| Entry point with `Dictionaries` set | Explicit profile | Result |
 | --- | --- | --- |
-| `InspectXMLWithDictionaries` | `DictionaryAssessmentOptions.Assessment.Profile = ProfileSourceDictionaries` or `ProfileSourceSoundsDictionaries` | `validation.Report` |
-| `AssessModelWithDictionaries` | `DictionaryAssessmentOptions.Assessment.Profile = ProfileModelDictionaries` | `validation.Report` |
-| `DecodeAssessedWithDictionaries` | Nil/empty options or `Assessment.Assessment.Profile = ProfileSourceSemantics`; explicit dictionary overrides must include both required relations | `DecodeResult` |
-| `InspectXMLWithResourcesAndDictionaries`, `AssessModelWithResourcesAndDictionaries` | `LinkedDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileResourceGraphDictionaries` | `validation.AssessmentBundle` |
-| `InspectMXLWithDictionaries` | `MXLDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileMXLSourceDictionaries` | `validation.AssessmentBundle` |
-| `AssessMXLPackageWithDictionaries` | `MXLDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileMXLModelDictionaries` | `validation.AssessmentBundle` |
+| `InspectXML` | `ProfileSourceDictionaries`, `ProfileSourceSoundsDictionaries` or a semantic or internal-DTD dictionary profile | `validation.Report` |
+| `AssessModel` | `ProfileModelDictionaries` or `ProfileModelSemantics` | `validation.Report` |
+| `DecodeAssessed` (via `Assessment.Dictionaries`) | empty or `ProfileSourceSemantics`; explicit dictionaries must include both required relations | `DecodeResult` |
+| `DecodeMXLAssessed` (via `Assessment.Graph.Dictionaries`) | empty or `ProfileMXLSourceSemantics`; explicit dictionaries must include both required relations | `DecodeMXLResult` |
+| `InspectXMLWithResources`, `AssessModelWithResources` (via `Graph.Dictionaries`) | `ProfileResourceGraphDictionaries` or its internal-DTD or semantic composition | `validation.AssessmentBundle` |
+| `InspectMXL` (via `Graph.Dictionaries`) | `ProfileMXLSourceDictionaries` or its compositions | `validation.AssessmentBundle` |
+| `AssessMXLPackage` (via `Graph.Dictionaries`) | `ProfileMXLModelDictionaries` or its compositions | `validation.AssessmentBundle` |
 
-All entry points also return an operation error. Standalone options compose an
-unchanged `AssessmentOptions` with `Dictionaries DictionaryOptions`. Linked/MXL
-options compose the corresponding unchanged resource options with `Dictionaries`.
-`DecodeDictionaryAssessmentOptions` contains `Decode DecodeOptions` and
-`Assessment *DictionaryAssessmentOptions`; nil assessment uses the same mandatory
-source/model pipeline and bundled defaults as `DecodeAssessed`. A `Dictionaries`
-value with nil `Source` and no selections also selects defaults:
+All entry points also return an operation error. `AssessmentOptions` carries
+`Dictionaries *DictionaryOptions`; `LinkedAssessmentOptions` and
+`MXLAssessmentOptions` carry it in `Graph`. In `DecodeAssessed` a nil
+`Assessment` uses the mandatory source/model pipeline with the bundled
+defaults. A `Dictionaries` value with nil `Source` and no selections also
+selects defaults:
 `DictionaryManifestSMuFL14Canonical` with `DictionaryRelationCanonicalName`, and
 `DictionaryManifestIPARepresentation2015Unicode13` with
 `DictionaryRelationIPARepresentation`. These constants belong to `validation`.
@@ -1353,8 +1548,8 @@ have source intrinsic rows only. Current MXL assesses its primary model directly
 and retains distinct original-source evidence for selected stored children. The
 source-sounds intrinsic catalog row can admit compatible explicitly supplied
 fact-stream snapshots; the root dictionary package catalog constructor is
-private. Public resource-graph and MXL dictionary wrappers do not discover,
-resolve or assess sounds children. Standalone `InspectXMLWithDictionaries`
+private. Public resource-graph and MXL dictionary assessments do not discover,
+resolve or assess sounds children. Standalone `InspectXML` with `Dictionaries`
 accepts `ProfileSourceSoundsDictionaries` for explicit sounds input.
 
 One root imports each selected component at most once and shares its verified
@@ -1371,19 +1566,20 @@ active.
 
 ### Explicit internal-DTD and dictionary package composition
 
-The existing dictionary entry points also accept these exact additive profiles:
+The resource and MXL entry points with `Graph.Dictionaries` set also accept
+these exact additive profiles:
 
-- `InspectXMLWithResourcesAndDictionaries` and
-  `AssessModelWithResourcesAndDictionaries`:
+- `InspectXMLWithResources` and `AssessModelWithResources`:
   `ProfileResourceGraphInternalDTDDictionaries`
   (`musicxml-4.0/resource-graph-internal-dtd-dictionaries`).
-- `InspectMXLWithDictionaries`: `ProfileMXLSourceInternalDTDDictionaries`
+- `InspectMXL`: `ProfileMXLSourceInternalDTDDictionaries`
   (`musicxml-4.0/mxl-source-internal-dtd-dictionaries`).
-- `AssessMXLPackageWithDictionaries`: `ProfileMXLModelInternalDTDDictionaries`
+- `AssessMXLPackage`: `ProfileMXLModelInternalDTDDictionaries`
   (`musicxml-4.0/mxl-model-internal-dtd-dictionaries`).
 
-Select the profile explicitly in `Resources.Graph.Profile`; empty, unknown and
-cross-entry-point choices fail before reader or provider I/O. The existing
+Select the profile explicitly in `Graph.Profile`; an empty profile selects the
+entry point's semantic profile instead. Unknown and cross-entry-point choices
+fail before reader or provider I/O. The existing
 non-DTD profiles and their catalogs remain unchanged. These new catalogs pin
 source MusicXML/Opus to `ProfileSourceInternalDTDDictionaries`, current models to
 unchanged `ProfileModelDictionaries`, source Container to
@@ -1392,8 +1588,8 @@ and source Sounds to `ProfileSourceInternalDTDSoundsDictionaries`
 (`musicxml-4.0/source-internal-dtd-sounds-dictionaries`), each with the exact
 engine-returned catalog digest. Raw MXL accepts source rows only.
 
-`InspectXML` accepts the new Container profile; `InspectXMLWithDictionaries`
-accepts the new Sounds profile. Neither adds a Document model or decode root.
+`InspectXML` accepts the new Container profile and, with `Dictionaries`, the
+new Sounds profile. Neither adds a Document model or decode root.
 Sounds remains an explicit standalone input or compatible snapshot admission:
 public graph/MXL traversal still selects musical children and does not discover
 Sounds from filenames or infer auxiliary inputs.
@@ -1435,8 +1631,8 @@ unavailable and empty selections do not implicitly open the bundled source. The
 assessed-loader defaults are the specific exception above; a custom source with
 empty selections is rejected there. Caller-provided sources remain supported.
 
-Any binary referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries`
-embeds all five component assets, including both CC BY-SA 4.0 IPA bundles,
+Any binary referencing one of the entry points listed under
+[Scenarios](#scenarios) embeds all five component assets, including both CC BY-SA 4.0 IPA bundles,
 regardless of options or custom/nil dictionary sources. Direct use of
 `BundledDictionarySource` also retains all five. Selections control runtime
 import and assessment; they do not prune the binary's asset references. The
@@ -1727,6 +1923,8 @@ Errors defined outside `errors.go`:
 - `ErrInvalidDecodeOptions`, `ErrInvalidEncodeOptions`, and
   `ErrInvalidMXLOptions` report invalid transport options. Invalid
   assessment options are reported as `*validation.ConfigurationError`.
+  `ErrInvalidConfiguration`, which is `validation.ErrInvalidConfiguration`,
+  matches all four.
 
 All exported error types tolerate a nil receiver in `Error` and `Unwrap`.
 

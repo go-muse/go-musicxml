@@ -8,7 +8,7 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-func dictionaryAssessmentConfig(ctx context.Context, options DictionaryAssessmentOptions, target validation.Target) (assessmentRunConfig, error) {
+func dictionaryAssessmentConfig(ctx context.Context, options dictionaryAssessmentOptions, target validation.Target) (assessmentRunConfig, error) {
 	var cfg assessmentRunConfig
 	if err := assessmentContext(ctx, "canceled-before-dictionaries"); err != nil {
 		return cfg, err
@@ -49,12 +49,13 @@ func dictionaryAssessmentConfig(ctx context.Context, options DictionaryAssessmen
 	return cfg, loadErr
 }
 
-// InspectXMLWithDictionaries assesses original bytes with explicitly selected
-// pinned dictionary capabilities. It does not load a dictionary implicitly.
-// Only the explicit internal-DTD dictionary profile elects DTD composition.
-// Source owns its reader; this call
-// closes only streams returned by the selected DictionarySource.
-func InspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options DictionaryAssessmentOptions) (report validation.Report, err error) {
+// inspectXMLWithDictionaries assesses original bytes with explicitly selected
+// pinned dictionary capabilities, for InspectXML with Dictionaries or an empty
+// profile. It does not load a dictionary implicitly. Only the explicit
+// internal-DTD dictionary profile elects DTD composition. The caller owns its
+// reader; this call closes only streams returned by the selected
+// DictionarySource.
+func inspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options dictionaryAssessmentOptions) (report validation.Report, err error) {
 	if dictionaryNil(reader) {
 		return report, ErrNilReader
 	}
@@ -76,10 +77,11 @@ func InspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options D
 	return report, errors.Join(loadErr, inputErr, finishErr)
 }
 
-// AssessModelWithDictionaries directly assesses the current generated model and
-// selected dictionary evidence. It never reconstructs original lexical values,
-// namespaces or discarded xsi:type declarations by encoding the model.
-func AssessModelWithDictionaries(ctx context.Context, document Document, options DictionaryAssessmentOptions) (report validation.Report, err error) {
+// assessModelWithDictionaries directly assesses the current generated model
+// and selected dictionary evidence, for AssessModel with Dictionaries or an
+// empty profile. It never reconstructs original lexical values, namespaces or
+// discarded xsi:type declarations by encoding the model.
+func assessModelWithDictionaries(ctx context.Context, document Document, options dictionaryAssessmentOptions) (report validation.Report, err error) {
 	if err := assessmentContext(ctx, "canceled-before-model"); err != nil {
 		return report, err
 	}
@@ -93,21 +95,4 @@ func AssessModelWithDictionaries(ctx context.Context, document Document, options
 	defer func() { err = errors.Join(err, cfg.Dictionaries.Close()) }()
 	report, _, runErr := assessModelWithConfig(ctx, document, cfg, modelWalkOptions{})
 	return report, errors.Join(loadErr, runErr)
-}
-
-// DecodeAssessedWithDictionaries uses the same mandatory source/model pipeline
-// as DecodeAssessed. Nil/empty options use bundled required dictionary data.
-// Explicit dictionary options must include canonical SMuFL and IPA representation
-// relations. Their Source is honored without fallback, including unavailable or
-// failed inputs; selections cannot disable required checks. One set is imported
-// and shared by both stages of each call, without cross-call verified-set reuse.
-// Any operation or acceptance failure discards Document.
-//
-// Referencing this loader embeds all five bundled components regardless of
-// options, including custom sources. Distribute the notice/license files listed
-// in THIRD_PARTY_NOTICES.md. A DOCTYPE external subset is read from the bundled
-// official MusicXML DTDs or options.Decode.DTD; an unrecognized one cannot
-// satisfy this loader. Ordinary Decode provides conversion only, not validation.
-func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (DecodeResult, error) {
-	return decodeValidated(ctx, reader, options.Decode, options.Assessment)
 }

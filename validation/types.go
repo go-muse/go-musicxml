@@ -108,6 +108,16 @@ type Evidence[T any] struct {
 	Cause  *DecisionRef
 }
 
+// Known returns known evidence of value.
+func Known[T any](value T) Evidence[T] {
+	return Evidence[T]{State: EvidenceKnown, Value: value}
+}
+
+// Unknown returns unknown evidence with a reason code.
+func Unknown[T any](reason Code) Evidence[T] {
+	return Evidence[T]{State: EvidenceUnknown, Reason: reason}
+}
+
 // AtomicKind is the exact value family of an Atomic fact.
 type AtomicKind string
 

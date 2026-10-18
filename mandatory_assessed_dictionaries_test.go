@@ -17,9 +17,9 @@ func TestMandatoryAssessedDictionariesDefaultAndExplicitShareEvidence(t *testing
 		t.Run(fmt.Sprintf("explicit=%v", explicit), func(t *testing.T) {
 			calls := make(map[validation.DictionaryManifestID]int)
 			var bodies []*mandatoryDictionaryBody
-			var options *DictionaryAssessmentOptions
+			var options *dictionaryAssessmentOptions
 			if explicit {
-				options = &DictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
+				options = &dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
 					Selections: mandatoryDictionarySelections(),
 					Source: dictionaryImportSourceFunc(func(ctx context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
 						calls[request.Manifest]++
@@ -33,21 +33,21 @@ func TestMandatoryAssessedDictionariesDefaultAndExplicitShareEvidence(t *testing
 					}),
 				}}
 			}
-			result, err := DecodeAssessedWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), DecodeDictionaryAssessmentOptions{Assessment: options})
+			result, err := decodeAssessedWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), decodeDictionaryTestOptions{Assessment: options})
 			if err != nil || result.Document == nil {
 				t.Fatalf("dictionary-backed load: document=%T error=%v", result.Document, err)
 			}
 			mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
 			mandatorySatisfiedReport(t, result.Model, ProfileModelSemantics, validation.TargetModel)
-			controlOptions := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: DictionaryOptions{
+			controlOptions := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: DictionaryOptions{
 				Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
 			}}
-			sourceControl, err := InspectXMLWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), controlOptions)
+			sourceControl, err := inspectXMLWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), controlOptions)
 			if err != nil || !reflect.DeepEqual(sourceControl, result.Source) {
 				t.Fatalf("complete source report differs from standalone assessment: error=%v", err)
 			}
 			controlOptions.Assessment.Profile = ProfileModelSemantics
-			modelControl, err := AssessModelWithDictionaries(context.Background(), result.Document, controlOptions)
+			modelControl, err := assessModelWithDictionaries(context.Background(), result.Document, controlOptions)
 			if err != nil || !reflect.DeepEqual(modelControl, result.Model) {
 				t.Fatalf("complete model report differs from standalone assessment: error=%v", err)
 			}
@@ -113,8 +113,8 @@ func TestMandatoryAssessedDictionariesNeverRepairExplicitUnavailableOverride(t *
 					}
 				})
 			}
-			options := DictionaryAssessmentOptions{Dictionaries: DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: source}}
-			result, err := DecodeAssessedWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), DecodeDictionaryAssessmentOptions{Assessment: &options})
+			options := dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: source}}
+			result, err := decodeAssessedWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), decodeDictionaryTestOptions{Assessment: &options})
 			if result.Document != nil || err == nil || result.Source.Satisfied() || result.Model.Requested {
 				t.Fatalf("explicit override silently repaired: document=%T source-satisfied=%v model-requested=%v error=%v", result.Document, result.Source.Satisfied(), result.Model.Requested, err)
 			}
@@ -154,14 +154,14 @@ func TestMandatoryAssessedDictionariesRejectPartialSelectionBeforeIO(t *testing.
 	for _, selected := range [][]validation.DictionarySelection{nil, selections[:1], selections[1:]} {
 		calls := 0
 		reader := &assessmentCountingReader{source: strings.NewReader(mandatoryDictionaryScore())}
-		options := DictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
+		options := dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
 			Selections: selected,
 			Source: dictionaryImportSourceFunc(func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error) {
 				calls++
 				return DictionaryComponentResult{}, errors.New("unexpected provider call")
 			}),
 		}}
-		result, err := DecodeAssessedWithDictionaries(context.Background(), reader, DecodeDictionaryAssessmentOptions{Assessment: &options})
+		result, err := decodeAssessedWithDictionaries(context.Background(), reader, decodeDictionaryTestOptions{Assessment: &options})
 		if !errors.Is(err, validation.ErrInvalidConfiguration) || result.Document != nil || reader.reads != 0 || calls != 0 {
 			t.Fatalf("partial selection touched I/O: selections=%v document=%T reads=%d provider-calls=%d error=%v", selected, result.Document, reader.reads, calls, err)
 		}
@@ -174,7 +174,7 @@ func TestMandatoryAssessedDictionariesRejectCorruptIPAAtStartup(t *testing.T) {
 			calls := 0
 			var bodies []*mandatoryDictionaryBody
 			reader := &assessmentCountingReader{source: strings.NewReader(mandatoryDictionaryScore())}
-			options := DictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
+			options := dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
 				Selections: mandatoryDictionarySelections(),
 				Source: dictionaryImportSourceFunc(func(ctx context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
 					calls++
@@ -190,7 +190,7 @@ func TestMandatoryAssessedDictionariesRejectCorruptIPAAtStartup(t *testing.T) {
 					return result, err
 				}),
 			}}
-			result, err := DecodeAssessedWithDictionaries(context.Background(), reader, DecodeDictionaryAssessmentOptions{Assessment: &options})
+			result, err := decodeAssessedWithDictionaries(context.Background(), reader, decodeDictionaryTestOptions{Assessment: &options})
 			var configuration *validation.ConfigurationError
 			if !errors.Is(err, validation.ErrInvalidConfiguration) || !errors.As(err, &configuration) || configuration.Field != "dictionary IPA representation" || configuration.Reason != "source SHA-256 mismatch" {
 				t.Fatalf("corrupt IPA override did not preserve its startup failure: %v", err)
@@ -220,10 +220,10 @@ func TestMandatoryAssessedLoadingSharesNodeBudgetAcrossStages(t *testing.T) {
 		t.Fatalf("standalone controls changed under their sufficient shared cap: source=%d model=%d", limitedSourceNodes, limitedModelNodes)
 	}
 	t.Logf("source nodes=%d model nodes=%d; each standalone stage fits %d, combined needs %d", sourceNodes, modelNodes, standaloneLimit, combined)
-	for _, wrapper := range []bool{false, true} {
+	for _, explicit := range []bool{false, true} {
 		for _, limit := range []int64{standaloneLimit, combined - 1, combined} {
-			t.Run(fmt.Sprintf("%s/nodes=%d", mandatoryLoaderName(wrapper), limit), func(t *testing.T) {
-				result, err := mandatoryDecode(wrapper, context.Background(), strings.NewReader(source), &AssessmentOptions{Budgets: validation.Budgets{MaxNodes: limit}})
+			t.Run(fmt.Sprintf("%s/nodes=%d", mandatoryLoaderName(explicit), limit), func(t *testing.T) {
+				result, err := mandatoryDecode(explicit, context.Background(), strings.NewReader(source), &AssessmentOptions{Budgets: validation.Budgets{MaxNodes: limit}})
 				mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
 				if limit == combined {
 					if err != nil || result.Document == nil {
@@ -249,7 +249,7 @@ func TestMandatoryAssessedLoadingModelCancellationPreservesSourceAndReleasesOwne
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			observed := &mandatoryModelCancelContext{Context: ctx, cancel: cancel, sourceNodes: sourceNodes, enabled: cancelModel}
-			options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: DictionaryOptions{
+			options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: DictionaryOptions{
 				Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
 			}}
 			cfg, err := dictionaryAssessmentConfig(observed, options, validation.TargetSource)
@@ -268,7 +268,7 @@ func TestMandatoryAssessedLoadingModelCancellationPreservesSourceAndReleasesOwne
 			if err != nil {
 				t.Fatal(err)
 			}
-			result, err := decodeAssessedRun(observed, run, modelCfg, nil)
+			result, err := decodeAssessedRun(observed, run, modelCfg, nil, false)
 			err = errors.Join(err, cfg.Dictionaries.Close())
 			mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
 			if result.Conversion.State != validation.ConversionConverted || !result.Model.Requested {

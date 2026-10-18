@@ -14,8 +14,9 @@ type reportLeaseNoCopy struct{}
 func (*reportLeaseNoCopy) Lock()   {}
 func (*reportLeaseNoCopy) Unlock() {}
 
-// ReportLease keeps a finished report's context projection charged to its root
-// account while another assessment stage runs. It owns accounting only: the
+// ReportLease keeps a finished report's context projection, or a finished
+// bundle's measured storage, charged to its root account while another
+// assessment stage runs. It owns accounting only: the
 // returned Report remains caller-owned and is not invalidated by Close. Its
 // diagnostic quotas remain cumulative independently of this lease.
 //

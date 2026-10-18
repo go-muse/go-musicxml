@@ -25,7 +25,7 @@ func reviewBudgetScore(measures int) string {
 }
 func TestReviewDefaultBudgetOriginGraph(t *testing.T) {
 	input := reviewBudgetScore(500)
-	b, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
+	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 	if err != nil {
 		t.Fatalf("%d source bytes: %v", len(input), err)
 	}
@@ -125,8 +125,8 @@ func reviewBudgetFragmentScore() string {
 	return source.String()
 }
 
-func reviewBudgetFragmentOptions(buffer int64) LinkedDictionaryAssessmentOptions {
-	return LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{
+func reviewBudgetFragmentOptions(buffer int64) linkedDictionaryAssessmentOptions {
+	return linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{
 		Graph:        AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: buffer}},
 		Identity:     ResourceIdentity{RetrievalURI: "https://budget.test/score.musicxml"},
 		Dependencies: []ResourceDependency{ResourceDocuments},
@@ -137,7 +137,7 @@ func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
 	source := reviewBudgetFragmentScore()
 	// This deliberately isolates work; it is not an all-default capacity claim.
 	options := reviewBudgetFragmentOptions(512 << 20)
-	bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
+	bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
 	if err != nil || !bundle.EnumerationComplete() || !bundle.Satisfied() {
 		t.Fatalf("three shorthand links failed at default work budget: %v %+v", err, bundle.PackageReport())
 	}
@@ -188,7 +188,7 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 			if len(source) != tc.bytes {
 				t.Fatalf("fixture bytes=%d, want %d", len(source), tc.bytes)
 			}
-			bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
+			bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 			if tc.refuses {
 				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42054060, 25064543)
 			} else {
@@ -207,7 +207,7 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	if len(source) != 86052 {
 		t.Fatalf("fixture bytes=%d, want 86052", len(source))
 	}
-	bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0))
+	bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0))
 	// Historical live-byte witnesses were 57,607,574 and then 54,998,870;
 	// declaration-canonical role reuse lowers only the live side again.
 	// The external-DTD closure wording adds 202 live and 104 requested bytes:
@@ -238,8 +238,8 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 					t.Fatalf("fixture bytes=%d, want %d", len(source), tc.bytes)
 				}
 				limit := tc.used + tc.requested - short
-				options := LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}}
-				bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
+				options := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}}
+				bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
 				if short == 0 {
 					reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
 				} else {

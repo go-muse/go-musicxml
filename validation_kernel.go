@@ -13,18 +13,15 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// ValidationIssue describes one XSD validation failure.
-//
-// The field contents depend on the operation that reports the issue:
-//
-//   - Validate: Constraint is the failure reason code, such as "datatype", or
-//     "representation" for a model value that cannot be written as XML, and
-//     Message describes the offending value.
-//   - DecodeAssessed and DecodeAssessedWithDictionaries: Constraint is the
-//     violated rule ID and Message is the failure reason code.
+// ValidationIssue describes one validation failure. Every operation that
+// reports issues, Validate as well as DecodeAssessed and DecodeMXLAssessed,
+// fills the fields the same way: Constraint is the failure reason code, such
+// as "datatype", or "representation" for a model value that cannot be written
+// as XML; Message is the offending value when the rule reports one, and may be
+// empty; Rule is the ID of the violated rule.
 //
 // Use the validation.Report returned by the assessment functions for a
-// uniform, structured view.
+// complete, structured view.
 type ValidationIssue struct {
 	// Path locates the failing element or attribute.
 	Path string
@@ -32,9 +29,12 @@ type ValidationIssue struct {
 	Constraint string
 	// Message describes the failure; see the type comment.
 	Message string
+	// Rule is the ID of the violated rule.
+	Rule string
 }
 
-// String returns the issue path and message.
+// String returns the issue path and message, or the constraint when the
+// message is empty.
 func (i ValidationIssue) String() string { return xsd.Issue(i).String() }
 
 type validationKernelIssue = xsd.Issue
