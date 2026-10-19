@@ -169,20 +169,24 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 	for _, tc := range []struct {
 		measures, bytes int
 		refuses         bool
+		used, requested int64
 	}{
 		// Historical d336f089 boundary: 531 completed; 532 refused at
 		// used44,066,863/requested23,115,219. Both now complete after
 		// compact facts and session-wide context-role reuse.
-		{531, 71197, false},
-		{532, 71331, false},
+		{531, 71197, false, 0, 0},
+		{532, 71331, false, 0, 0},
 		// The first compact-fact checkpoint completed 568 and refused 569 at
 		// used42,495,274/requested24,717,911. Declaration-canonical role reuse
 		// now admits both and moves the adjacent default boundary to 576/577.
-		// The current-state schema-hint wording adds 84 live bytes.
-		{568, 76155, false},
-		{569, 76289, false},
-		{576, 77227, false},
-		{577, 77361, true},
+		// The current-state schema-hint wording adds 84 live bytes. The source
+		// representability rule's retained definitions and per-node results
+		// move the boundary to 571/572.
+		{568, 76155, false, 0, 0},
+		{569, 76289, false, 0, 0},
+		{571, 76557, false, 0, 0},
+		{572, 76691, true, 42277605, 24848717},
+		{577, 77361, true, 42642960, 25065297},
 	} {
 		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
 			source := reviewBudgetScore(tc.measures)
@@ -191,7 +195,7 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 			}
 			bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 			if tc.refuses {
-				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42054144, 25064543)
+				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, tc.used, tc.requested)
 			} else {
 				reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
 			}
@@ -213,8 +217,9 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	// declaration-canonical role reuse lowers only the live side again.
 	// The external-DTD closure wording adds 202 live and 104 requested bytes:
 	// the graph and intrinsic source profile texts are charged as retained
-	// strings. The current-state schema-hint wording adds 84 live bytes.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54486900, 34741264)
+	// strings. The current-state schema-hint wording adds 84 live bytes, and
+	// the source representability rule adds its definitions and node results.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54809900, 34742018)
 	t.Logf("source bytes=%d err=%v", len(source), err)
 }
 
@@ -229,8 +234,8 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 		measures, bytes int
 		used, requested int64
 	}{
-		{569, 76289, 41477704, 24718015},
-		{577, 77361, 42054144, 25064543},
+		{569, 76289, 42058392, 24718769},
+		{577, 77361, 42642960, 25065297},
 	} {
 		for _, short := range []int64{0, 1} {
 			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {
