@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"strings"
+	"unsafe"
 )
 
 // ContextProperty identifies one reviewed scalar fact or typed context payload.
@@ -64,7 +65,9 @@ func validContextProperty(p ContextProperty) bool {
 	return dictionaryPropertyValid(p) || resourcePropertyValid(p) || contextLocalPropertyValid(p) || contextSpanPropertyValid(p) || contextRepeatPropertyValid(p) || contextPerformancePropertyValid(p)
 }
 
-const contextResultReserveBytes int64 = 1536
+// contextResultBytes is one ContextResult record in Report.Context. The
+// backing array is accounted exactly by growContextResults.
+var contextResultBytes = int64(unsafe.Sizeof(ContextResult{}))
 
 // publishContextResult is transactional with respect to visibility and live
 // retention. Cumulative work/fact counters are never refunded on interruption.
@@ -149,7 +152,9 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 			}
 		}
 	}()
-	cost := contextResultReserveBytes + int64(len(in.Provider.ID)+len(in.Subject.DocumentID)+len(in.Property)) + contextAtomicBytes(in.Value.Value) + evidenceLogicalBytes(in.Value)
+	// The record itself lives in the backing array; its three cloned strings
+	// are separate allocations.
+	cost := allocationSlack(int64(len(in.Provider.ID))) + allocationSlack(int64(len(in.Subject.DocumentID))) + allocationSlack(int64(len(in.Property))) + contextAtomicBytes(in.Value.Value) + evidenceLogicalBytes(in.Value)
 	if err = s.account.Check(BudgetScalarBytes, atomicLogicalBytes(in.Value.Value)); err != nil {
 		return err
 	}
@@ -166,11 +171,11 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	out.Property = ContextProperty(strings.Clone(string(in.Property)))
 	out.Value = cloneEvidence(in.Value)
 	out.Value.Value = cloneAtomic(in.Value.Value)
-	originBytes, e := rationalCheckedMul(BudgetBufferedBytes, int64(len(in.Origins)), 384)
+	originBytes, e := rationalCheckedMul(BudgetBufferedBytes, int64(len(in.Origins)), int64(unsafe.Sizeof(Location{})))
 	if e != nil {
 		return e
 	}
-	if err = s.retain(originBytes); err != nil {
+	if err = s.retain(allocationSlack(originBytes)); err != nil {
 		return err
 	}
 	for _, origin := range in.Origins {
@@ -221,14 +226,43 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	if err = s.step(ctx, 1); err != nil {
 		return err
 	}
-	// The per-record reserve covers geometric slice backing growth and the
-	// simultaneous old/new backing arrays; payload allocations were precharged.
+	if len(s.contextResults) == cap(s.contextResults) {
+		if err = s.growContextResults(); err != nil {
+			return err
+		}
+	}
 	s.contextResults = append(s.contextResults, out)
 	// The projection owns these charges independently of intrinsic facts and
 	// provider scratch. A retained-report finalizer can transfer the admitted
 	// subtotal without copying or temporarily releasing the live projection.
 	s.contextReportRetained += s.retained - before
 	return nil
+}
+
+// growContextResults doubles the Report.Context backing array. The charge for
+// a backing array of capacity c is contextBackingBytes(c): the new array is
+// admitted before allocation, both coexist during the copy, and the old
+// array's charge is released afterward. A rollback that restores an earlier
+// slice header thereby restores the charge for its capacity too.
+func (s *Session) growContextResults() error {
+	old := cap(s.contextResults)
+	grown := max(8, 2*old)
+	if err := s.retain(contextBackingBytes(grown)); err != nil {
+		return err
+	}
+	next := make([]ContextResult, len(s.contextResults), grown)
+	copy(next, s.contextResults)
+	// The old array is not cleared: a span rollback may restore its header.
+	s.contextResults = next
+	if released := contextBackingBytes(old); released != 0 {
+		_ = s.account.Release(BudgetBufferedBytes, released)
+		s.retained -= released
+	}
+	return nil
+}
+
+func contextBackingBytes(capacity int) int64 {
+	return allocationSlack(int64(capacity) * contextResultBytes)
 }
 
 type contextService struct {

@@ -351,7 +351,7 @@ func stateClone[T any](v T) T { return stateCopy(reflect.ValueOf(v)).Interface()
 // Each copied record reserves its own growth allowance; unrelated history never
 // inflates query retention. Traversal work is charged before the actual copy.
 func stateRetainCopy(ctx context.Context, s *Session, v any) error {
-	n, e := stateMeasure(ctx, s, reflect.ValueOf(v))
+	n, e := retainedLayoutBytes(ctx, s, reflect.ValueOf(v))
 	if e != nil {
 		return e
 	}
@@ -375,7 +375,7 @@ func stateRetainCount(s *Session, count int, width int64) error {
 	return s.retain(n)
 }
 func stateReserve(ctx context.Context, s *Session, value any) (int64, error) {
-	n, e := stateMeasure(ctx, s, reflect.ValueOf(value))
+	n, e := retainedLayoutBytes(ctx, s, reflect.ValueOf(value))
 	if e != nil {
 		return 0, e
 	}

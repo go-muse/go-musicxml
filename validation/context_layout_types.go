@@ -80,11 +80,11 @@ func cloneLayoutContext(ctx context.Context, s *Session, p *LayoutContextResult)
 }
 
 // layoutContextSize counts the flat object once, every owned string/cause, and
-// the immutable numeric storage retained by all four wrappers. The fixed 512
-// byte allowance covers numeric object headers and allocator rounding; report
-// backing-array growth is independently covered by publishContextResult.
+// the immutable numeric storage retained by all four wrappers. The object and
+// each owned string are rounded up by allocationSlack; report backing-array
+// growth is independently covered by publishContextResult.
 func layoutContextSize(p LayoutContextResult) (size, work int64, err error) {
-	size = int64(unsafe.Sizeof(LayoutContextResult{})) + 512
+	size = allocationSlack(int64(unsafe.Sizeof(LayoutContextResult{})))
 	work = 16
 	add := func(n int64) {
 		if err != nil {
@@ -97,6 +97,9 @@ func layoutContextSize(p LayoutContextResult) (size, work int64, err error) {
 	}
 	for _, v := range []string{p.Scope.DocumentID, p.Origin.DocumentID, p.Part.Value.DocumentID, p.Page.Value.DocumentID, p.System.Value.DocumentID, p.Basis, string(p.Unit), string(p.Provenance), string(p.Raw.Value.Kind)} {
 		add(int64(len(v)))
+		if err == nil && v != "" {
+			size, err = rationalCheckedAdd(BudgetBufferedBytes, size, allocationSlack(int64(len(v)))-int64(len(v)))
+		}
 	}
 	add(layoutEvidenceBytes(p.Part))
 	add(layoutEvidenceBytes(p.Page))
