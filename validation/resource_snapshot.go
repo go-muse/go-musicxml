@@ -81,6 +81,9 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}
+	if s.omitContext {
+		return nil, contract("resource snapshot", "requires the context projection that RunOptions.OmitContext omits")
+	}
 	h := ResourceSnapshotHeader{DocumentID: s.documentID, Root: NodeRef{DocumentID: s.documentID}, Profile: s.profile.ID, CatalogDigest: s.profile.CatalogDigest, Target: s.profile.Target, InputComplete: s.inputComplete, Syntax: report.Syntax, Name: Evidence[QName]{State: EvidenceUnknown, Reason: "resource-root-unavailable"}, Assembly: Evidence[Assembly]{State: EvidenceUnknown, Reason: "resource-assembly-unavailable"}, ScopeComplete: Evidence[bool]{State: EvidenceUnknown, Reason: "resource-scope-incomplete"}}
 	if s.rejectedRootName.Local != "" {
 		h.Name = Evidence[QName]{State: EvidenceKnown, Value: s.rejectedRootName}

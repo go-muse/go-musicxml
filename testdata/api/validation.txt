@@ -1511,8 +1511,9 @@ type RunOptions struct, comparable
 type RunOptions struct, field Account *Account
 type RunOptions struct, field Budgets Budgets
 type RunOptions struct, field DocumentID string
+type RunOptions struct, field OmitContext bool
 type RunOptions struct, field Profile ProfileID
-type RunOptions struct, field order DocumentID Profile Budgets Account
+type RunOptions struct, field order DocumentID Profile Budgets Account OmitContext
 type SMuFLDictionaryData struct, field Glyphs []SMuFLGlyph
 type SMuFLDictionaryData struct, field Ranges []SMuFLRange
 type SMuFLDictionaryData struct, field order Glyphs Ranges

@@ -241,3 +241,92 @@ func TestStrictLoadingCancellationDuringImport(t *testing.T) {
 	}
 	cancel()
 }
+
+func withoutContext(r validation.Report) validation.Report {
+	r.Context = nil
+	return r
+}
+
+// OmitContext leaves Report.Context empty and changes nothing else: on corpus
+// files strict and lenient loading, source inspection (including the source
+// origins of the internal-DTD profile) and model assessment give the same
+// decisions, counts and findings with and without the projection.
+func TestOmitContextKeepsEveryVerdict(t *testing.T) {
+	names, err := filepath.Glob(filepath.Join("testdata", "corpus", "musicxml-test-suite", "*.xml"))
+	if err != nil || len(names) < 100 {
+		t.Fatalf("corpus: %d files, %v", len(names), err)
+	}
+	stride := 2
+	if raceEnabled || testing.Short() {
+		stride = 30
+	}
+	projected := 0
+	for i := 0; i < len(names); i += stride {
+		data, err := os.ReadFile(names[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+		name := filepath.Base(names[i])
+		for _, lenient := range []bool{false, true} {
+			with, withErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient})
+			without, withoutErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient, Assessment: &AssessmentOptions{OmitContext: true}})
+			if len(without.SourceLine.Context) != 0 || len(without.ModelLine.Context) != 0 {
+				t.Fatalf("%s: omitted projection kept %d/%d records", name, len(without.SourceLine.Context), len(without.ModelLine.Context))
+			}
+			if (withErr == nil) != (withoutErr == nil) || with.Accepted != without.Accepted || !reflect.DeepEqual(withoutContext(with.SourceLine), without.SourceLine) || !reflect.DeepEqual(withoutContext(with.ModelLine), without.ModelLine) || !reflect.DeepEqual(with.Conversion, without.Conversion) {
+				t.Errorf("%s lenient=%v: verdicts differ without the projection: errors %v / %v", name, lenient, withErr, withoutErr)
+			}
+			projected += len(with.SourceLine.Context) + len(with.ModelLine.Context)
+			if lenient && with.Document != nil {
+				for _, profile := range []validation.ProfileID{"", ProfileModelXSD} {
+					a, aErr := AssessModel(context.Background(), with.Document, AssessmentOptions{Profile: profile})
+					b, bErr := AssessModel(context.Background(), with.Document, AssessmentOptions{Profile: profile, OmitContext: true})
+					if (aErr == nil) != (bErr == nil) || len(b.Context) != 0 || !reflect.DeepEqual(withoutContext(a), b) {
+						t.Errorf("%s AssessModel %q: verdicts differ without the projection: errors %v / %v", name, profile, aErr, bErr)
+					}
+				}
+			}
+		}
+		for _, profile := range []validation.ProfileID{ProfileSourceInternalDTD, ""} {
+			a, aErr := InspectXML(context.Background(), bytes.NewReader(data), AssessmentOptions{Profile: profile})
+			b, bErr := InspectXML(context.Background(), bytes.NewReader(data), AssessmentOptions{Profile: profile, OmitContext: true})
+			if (aErr == nil) != (bErr == nil) || len(b.Context) != 0 || !reflect.DeepEqual(withoutContext(a), b) {
+				t.Errorf("%s InspectXML %q: verdicts differ without the projection: errors %v / %v", name, profile, aErr, bErr)
+			}
+		}
+	}
+	if projected == 0 {
+		t.Fatal("no projection to omit")
+	}
+}
+
+// Omitting the projection lowers the buffered storage strict loading needs:
+// the smallest buffer that accepts 01a with the projection exceeds the one
+// without it by at least a third.
+func TestOmitContextLowersTheBufferedStorage(t *testing.T) {
+	if raceEnabled {
+		t.Skip("binary search is slow under the race detector")
+	}
+	data, err := os.ReadFile(filepath.Join("testdata", "corpus", "musicxml-test-suite", "01a-Pitches-Pitches.xml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	minimal := func(omit bool) int64 {
+		lo, hi := int64(0), int64(256<<20)
+		for hi-lo > 64<<10 {
+			mid := lo + (hi-lo)/2
+			_, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &AssessmentOptions{OmitContext: omit, Budgets: validation.Budgets{MaxBufferedBytes: mid}}})
+			if err == nil {
+				hi = mid
+			} else {
+				lo = mid
+			}
+		}
+		return hi
+	}
+	with, without := minimal(false), minimal(true)
+	t.Logf("minimal buffer: %d with the projection, %d without", with, without)
+	if without*3 > with*2 {
+		t.Fatalf("omitting the projection saved too little: %d with, %d without", with, without)
+	}
+}

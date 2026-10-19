@@ -39,6 +39,12 @@ type AssessmentOptions struct {
 	// those profiles require; with an explicit profile, nil keeps the
 	// profile's dictionary-free behaviour.
 	Dictionaries *DictionaryOptions
+	// OmitContext leaves Report.Context empty in every report the call
+	// returns, including both reports of DecodeAssessed. Every decision,
+	// count and finding is the same as with the projection; the call only
+	// keeps no copy of it, which lowers the buffered storage it needs (see
+	// validation.RunOptions.OmitContext).
+	OmitContext bool
 }
 
 // DecodeAssessmentOptions configures strict loading (scenario 2). Nil
@@ -315,7 +321,7 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	if err != nil {
 		return nil, err
 	}
-	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine, DTD: assessment.DTD}, ByteOwner: sourceBytesPrimary}
+	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine, DTD: assessment.DTD, OmitContext: assessment.OmitContext}, ByteOwner: sourceBytesPrimary}
 	return newSourceAssessmentRunWithConfig(ctx, reader, decode, config, converting)
 }
 

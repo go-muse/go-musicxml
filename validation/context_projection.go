@@ -162,6 +162,10 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	if err = s.step(ctx, work); err != nil {
 		return err
 	}
+	if s.omitContext {
+		// The result is counted and checked, but the report keeps no copy.
+		return nil
+	}
 	if err = s.retain(cost); err != nil {
 		return err
 	}

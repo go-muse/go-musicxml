@@ -110,7 +110,7 @@ func assessedSourceLine(normalized dictionaryAssessmentOptions) (assessmentRunCo
 		return source, err
 	}
 	source.Account, source.Profile, source.Engine, source.DocumentID = account, ProfileSourceLine, engine, sourceDocumentID
-	source.DTD = normalized.Assessment.DTD
+	source.DTD, source.OmitContext = normalized.Assessment.DTD, normalized.Assessment.OmitContext
 	return source, nil
 }
 

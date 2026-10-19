@@ -91,3 +91,42 @@ func TestContextAttributeTablesSharedOnlyWhenBuilt(t *testing.T) {
 		s.cleanup()
 	}
 }
+
+// A session that omits the projection publishes no context records, keeps
+// the source-origin index its verdicts read, and refuses a resource snapshot,
+// which needs the projection; the refusal releases everything.
+func TestOmitContextSessionPublishesNoRecords(t *testing.T) {
+	row := ContextResult{Provider: RuleKey{"omit", 1}, Subject: NodeRef{"source", 1}, Property: ContextPropertySpanNormalDots, Value: Evidence[Atomic]{State: EvidenceAbsent}}
+	s := rationalSession(t, Budgets{})
+	s.omitContext = true
+	facts := rationalUsage(t, s, BudgetContextFacts)
+	if err := s.publishContextResult(context.Background(), row); err != nil {
+		t.Fatal(err)
+	}
+	if len(s.contextResults) != 0 || s.retained != 0 || s.contextReportRetained != 0 || rationalUsage(t, s, BudgetContextFacts) != facts+1 {
+		t.Fatalf("omitted record kept: records=%d retained=%d facts=%d", len(s.contextResults), s.retained, rationalUsage(t, s, BudgetContextFacts)-facts)
+	}
+	s.cleanup()
+
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: localBuiltin("string")}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	session, err := sourceSchemaEngineFor(t, schema, XSDCheckContent).Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test", OmitContext: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = session.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
+		t.Fatal(err)
+	}
+	if err = session.CloseNode(context.Background(), schemaLexemeEnd("value")); err != nil {
+		t.Fatal(err)
+	}
+	_, snapshot, err := session.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
+	if snapshot != nil || !errors.Is(err, ErrInvalidConfiguration) {
+		t.Fatalf("snapshot of an omitted projection: snapshot=%v err=%v", snapshot != nil, err)
+	}
+	if used := rationalUsage(t, session, BudgetBufferedBytes); used != 0 {
+		t.Fatalf("refused snapshot left %d bytes", used)
+	}
+}
