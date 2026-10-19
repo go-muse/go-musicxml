@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -77,3 +78,25 @@ func TestEntryPointsRejectTypedNilStreams(t *testing.T) {
 		t.Errorf("Report.Format: %v", err)
 	}
 }
+
+// A resolver that returns a typed-nil body returns no body: the contract check
+// rejects the known result, and no method is called on the nil value.
+func TestResourceResolverTypedNilBodyIsAbsent(t *testing.T) {
+	t.Parallel()
+
+	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="child.opus"/></opus>`
+	for name, body := range map[string]io.ReadCloser{"*os.File": (*os.File)(nil), "func": readCloserFunc(nil)} {
+		resolver := graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
+			return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "child", Representation: validation.ResourceSourceXML, Digest: strings.Repeat("a", 64)}, RetrievalURI: "https://e.test/child.opus", Body: body}, nil
+		})
+		_, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+		if !errors.Is(err, validation.ErrInvalidConfiguration) {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
+}
+
+type readCloserFunc func([]byte) (int, error)
+
+func (f readCloserFunc) Read(p []byte) (int, error) { return f(p) }
+func (f readCloserFunc) Close() error               { return nil }

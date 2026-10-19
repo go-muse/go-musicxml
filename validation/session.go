@@ -68,9 +68,9 @@ type ExcludedRootError struct {
 // Error identifies the excluded root and selected profile.
 func (e *ExcludedRootError) Error() string {
 	if e == nil {
-		return "validation: nil unsupported root error"
+		return "validation: nil excluded root error"
 	}
-	return fmt.Sprintf("validation: root {%s}%s is unsupported by profile %s", e.Name.Space, e.Name.Local, e.Profile)
+	return fmt.Sprintf("validation: root {%s}%s is excluded by profile %s", e.Name.Space, e.Name.Local, e.Profile)
 }
 
 // Unwrap classifies unsupported roots as incomplete assessment.

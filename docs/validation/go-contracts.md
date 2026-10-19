@@ -356,7 +356,7 @@ consumed. Its target comes only from `Catalog.Profile(opts.Profile).Target`;
 `RunOptions.DocumentID` must be nonempty and binds the session before input;
 all local input events, their locations and local subject references must agree
 with it. Cross-document Cause/Related/Origins references keep their own IDs. The
-root Open has Parent=0, all real nodes have nonzero IDs, and FactView.DocumentID
+root OpenNode has Parent=0, all real nodes have nonzero IDs, and FactView.DocumentID
 returns this bound identity. Each linked occurrence receives its own ID.
 Public wrappers require their corresponding target (source for InspectXML/strict
 decode, model for Assess) before reading. A mismatch is a configuration error,

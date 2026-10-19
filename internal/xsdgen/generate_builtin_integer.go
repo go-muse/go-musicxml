@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strconv"
 )
 
 // namedBuiltinType is a built-in integer type that fields reference through a
@@ -56,16 +57,29 @@ func builtinKey(declaration *Declaration) string {
 // memberGoType derives.
 func (r *simpleTypeRenderer) fieldGoType(declaration *Declaration) (GoType, error) {
 	named, found := namedBuiltin(declaration)
-	if !found {
+	if !found || !r.namedBuiltins {
 		return r.memberGoType(SimpleTypeMember{Declaration: declaration})
 	}
-	var manifest *NameManifest
-	if r.index != nil {
-		manifest = r.index.names
+	if name, assigned := r.builtinNames[declaration.Name.Local]; assigned {
+		value := named.GoType
+		value.Expression = name
+		return value, nil
 	}
-	name, err := manifest.Assign(builtinKey(declaration), named.Expression)
-	if err != nil {
-		return GoType{}, err
+	var name string
+	if r.index != nil && r.index.names != nil {
+		var err error
+		if name, err = r.index.names.Assign(builtinKey(declaration), named.Expression); err != nil {
+			return GoType{}, err
+		}
+	} else {
+		// Without a manifest, avoid the names of this generation's types.
+		name = named.Expression
+		for suffix := 2; r.takenNames[name] != ""; suffix++ {
+			name = named.Expression + strconv.Itoa(suffix)
+		}
+	}
+	if r.takenNames != nil {
+		r.takenNames[name] = "built-in type " + declaration.Name.Local
 	}
 	if r.builtinNames == nil {
 		r.builtinNames = make(map[string]string)

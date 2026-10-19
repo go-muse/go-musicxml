@@ -97,6 +97,13 @@ type simpleTypeRenderer struct {
 	plans      map[*Declaration]*SimpleTypeDefinition
 	kindStates map[*Declaration]resolveState
 	kinds      map[*Declaration]GoTypeKind
+	// namedBuiltins makes fields of built-in integer types use the named types
+	// of namedBuiltinTypes. Only the complex generation sets it, because only
+	// it declares those types; other generations keep raw Go integers.
+	namedBuiltins bool
+	// takenNames holds the package-scope type names of this generation, so
+	// that a named built-in type avoids them when there is no manifest.
+	takenNames map[string]string
 	// builtinNames maps the built-in types that fields reference by name to
 	// their Go names.
 	builtinNames map[string]string

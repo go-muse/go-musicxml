@@ -156,7 +156,7 @@ parents, target/document locations, evidence and balanced closure are validated.
 Retained facts are copied. The current implementation retains a bounded fact set
 until finalization; it does not promise streaming constant memory.
 
-Independent local rules execute at `Close`; pending document, context and
+Independent local rules execute at `CloseNode`; pending document, context and
 reference obligations finalize in schedule order. Every event error is terminal.
 Later events are rejected without further assessment. Call `Finish` even after
 failure or cancellation: it releases the session's live depth/buffer charges,
@@ -190,7 +190,7 @@ now implements opt-in source/model orchestration; see the source scope. A clean
 EOF can coexist with `SyntaxIncomplete`, while acceptance still requires both
 input and syntax completion.
 
-A nil operation error from `Close` or `Finish` does not mean acceptance.
+A nil operation error from `CloseNode` or `Finish` does not mean acceptance.
 Violations and evidence-only unknown/unsupported outcomes live in the report.
 Use `Report.Satisfied()` for its explicit acceptance axes: requested matching
 profile/target, complete input and assessment, appropriate syntax, conformant
@@ -261,9 +261,9 @@ that every other quota can accommodate an input of that size.
 | `MaxExternalBytes` | 64 MiB | Cumulative resolved/decompressed bytes; future package/loader owner. |
 | `MaxBufferedBytes` | 64 MiB | Live logical retained bytes; core facts, compact success/not-applicable tables, problem-dependency state, document aggregates, context/identity and report-profile metadata; future adapters own their private buffers. |
 | `MaxDepth` | 1,024 | Live open fact scopes, charged/released by the session; future private traversal/link scopes must share the account without charging the same scope twice. |
-| `MaxNodes` | 1,000,000 | Cumulative `Open` node attempts, charged by the core after event admission. |
+| `MaxNodes` | 1,000,000 | Cumulative `OpenNode` node attempts, charged by the core after event admission. |
 | `MaxAttributes` | 4,000,000 | Cumulative admitted owner-slot attribute attempts, charged by the core. |
-| `MaxEvents` | 8,000,000 | Cumulative admitted `Open`/`Attribute`/`Close` attempts; future raw-token work is a distinct additional unit. |
+| `MaxEvents` | 8,000,000 | Cumulative admitted `OpenNode`/`Attribute`/`CloseNode` attempts; future raw-token work is a distinct additional unit. |
 | `MaxScalarBytes` | 1 MiB | Per-item lexeme/value payload cap via `Check`; no cumulative scalar quota. |
 | `MaxIDs` | 1,000,000 | Cumulative retained declaration and reference slots, charged by generic identity plans. |
 | `MaxRuleSteps` | 20,000,000 | Cumulative dispatch, dependency, search/index and comparison work; byte-proportional value work where implemented. |

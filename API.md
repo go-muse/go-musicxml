@@ -64,8 +64,8 @@ promise before v1. Each row names what changed and what to use instead.
 | A typed-nil reader or writer, such as a nil `*os.File`, panicked or failed with a read error | Every reader and writer entry point returns `ErrNilReader` or `ErrNilWriter`; `validation.Report.Format` returns `ErrInvalidConfiguration` |
 | `(*validation.DictionarySet)(nil).Close()` returned `ErrInvalidConfiguration` | It returns nil; a zero set is still rejected |
 | `==` on `validation.Integer`, `Decimal`, `Rational` compiled and compared pointers | It does not compile; use `Equal` or `Cmp`. The same holds for the structs that contain them: `Atomic`, `AttributeFact`, `ChildValueRequirement`, `ContainerContextResult`, `ContextPosition` (and its alias `SpanPosition`), `LayoutContextResult`, `NavigationInstrumentState`, `NavigationListeningStatement`, `NavigationPassFrame`, `NavigationPerformance`, `NodeEnd`, `PackageImageAdvice`, `ResourceAttribute`, `ResourceImageContext`, `ResourceInstrumentContext`, `ResourceLinkContext`, `Scalar`, `SoundMappingContextResult`, `TimingAdjustment`, `TimingBend`, `TimingDonor`, `TimingPercent` and `TimingTuning` |
-| Generated fields of schema type `xs:positiveInteger`, `xs:nonNegativeInteger`, `xs:integer` were `uint64`/`int64` | They are `PositiveInteger`, `NonNegativeInteger`, `Integer`; convert with `PositiveInteger(n)` or `uint64(v)` |
-| 19 generated structs, such as `Forward` and `Frame`, had `MarshalXML`/`UnmarshalXML` | They have none; encoding/xml handles them through the field types |
+| Generated fields of schema type `xs:positiveInteger`, `xs:nonNegativeInteger`, `xs:integer` were `uint64`/`int64` | They are `PositiveInteger`, `NonNegativeInteger`, `Integer`; convert with `PositiveInteger(n)` and `uint64(v)`, or `Integer(n)` and `int64(v)` |
+| 25 generated structs, such as `Note`, `Attributes` and `Forward`, had `MarshalXML`/`UnmarshalXML` | They have none; encoding/xml handles them through the field types |
 | `PlayContent.Ipa`, `Play.AddIpa` | `PlayContent.IPA`, `Play.AddIPA` |
 | `validation.Session.Open`, `Session.Close` | `Session.OpenNode`, `Session.CloseNode`; `SessionError.Operation` reports the new names |
 | `validation.ContextConsumerSpec`, `validation.TimelineConsumerSpec` | `validation.ConsumerSpec` |
@@ -1021,10 +1021,9 @@ not establish measure capacity or endpoint containment. See the
 
 The built-in profiles bind these sealed contracts through the module's
 internal plan constructors (see [Adapter entry points](#adapter-entry-points)).
-The legacy figure-number plan still accepts the nonempty ASCII-digit subset and returns
-Unsupported for other spellings, with its existing mandatory/normative binding
-contract. Selecting it imposes a caller-chosen overconstraint; its result is not
-MusicXML numeric validity. It is not selected by built-in conformance profiles.
+The legacy figure-number plan, which accepted only the nonempty ASCII-digit
+subset, is no longer selectable: no built-in profile uses it, and its
+constructor is internal since v0.2. Its tests remain.
 The Opus layout plan is separately
 bound to the Opus assembly and projects only local score pagination hints;
 missing new-page remains application-dependent and no linked score is opened. `ContextPlanSpec` binds the exact selected timeline
@@ -1088,7 +1087,12 @@ registers them as typed hooks in the module-internal package
 `internal/validationlink`, and the root package looks them up at
 initialization. Their data types, such as `ContextPlanSpec`, `ConsumerSpec`,
 `TimelinePlanSpec`, `SourceOriginContextResult` and the `Package*` observation
-types, stay exported because reports and results refer to them. Where this
+types, stay exported. Some of them appear in reports and results. Others,
+such as the spec types, `DictionaryOperation`, `PackageIdentity`,
+`PackageEdgeObservation` and `SourceEntityDeclarations`, appear only in the
+hook signatures that the root package spells out, so they have no use outside
+the module, and neither do `NewPackageCatalog`, `ResourceAdoption` and the
+snapshot from `Session.FinishWithResourceSnapshot` without a package session. Where this
 document names a hidden constructor or method, it describes how the built-in
 profiles use it. The hidden entry points are:
 
@@ -2092,7 +2096,7 @@ does not change the `Report` or options struct shapes.
 
 `ProfileSourceLinks` and `ProfileModelLinks` select XSD/local prerequisites plus
 bounded local resource projections, without timeline, package parsing, URI
-resolution or I/O. the internal `NewLocalLinkContextPlan` binds exact MusicXML or
+resolution or I/O. The internal `NewLocalLinkContextPlan` binds exact MusicXML or
 Opus uses; the internal `NewSchemaHintContextPlan` binds standard xsi hint discovery
 for one exact supported assembly. Existing eight profiles and option shapes are
 unchanged.
@@ -2385,8 +2389,9 @@ when that assembly has no selected DTD ID consumer. A true result reports
 selection only; it is no certificate of completed enumeration, valid declarations
 or available DTD identity evidence.
 
-A catalog may explicitly elect `NewXMLFragmentLinkContextPlan(schema,
-sourceInfoset)` for the registered XML-media fragment baseline. This adds the
+The resource-graph profiles elect the internal XML-fragment link plan
+(`NewXMLFragmentLinkContextPlan(schema, sourceInfoset)` before v0.2) for the
+registered XML-media fragment baseline. This adds the
 XPointer Framework and mandatory `element()` scheme, and pins that interpretation
 in the catalog digest. `sourceInfoset=true` requires the selected source
 provenance/declaration capabilities and joins DTD and XSD IDs; `false` uses the

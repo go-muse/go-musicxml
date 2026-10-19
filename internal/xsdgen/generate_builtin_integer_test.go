@@ -85,3 +85,66 @@ func builtinEntries(manifest *NameManifest) map[string]string {
 	}
 	return entries
 }
+
+// Only the complex generation declares the named types, so an element
+// generation keeps raw Go integers and compiles on its own.
+func TestElementGenerationKeepsRawBuiltinIntegers(t *testing.T) {
+	t.Parallel()
+
+	index, err := NewIndex(&Set{Files: []*SchemaFile{parseSchemaFile(t, "types.xsd", `
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="count" type="xs:nonNegativeInteger"/>
+	<xs:element name="pair">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="n" type="xs:positiveInteger"/>
+				<xs:element name="i" type="xs:integer" minOccurs="0"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>`)}})
+	require.NoError(t, err)
+	index.SetNameManifest(NewNameManifest())
+	elements, err := GenerateElements(index, "example", QName{Local: "count"}, QName{Local: "pair"})
+	require.NoError(t, err)
+	source := string(elements)
+	for _, name := range []string{"PositiveInteger", "NonNegativeInteger", "Integer"} {
+		assert.NotRegexp(t, `\b`+name+`\b`, source, "the element generation does not declare %s", name)
+	}
+	assert.Contains(t, source, "uint64")
+	assert.Empty(t, builtinEntries(index.names), "no named type was assigned")
+	typeCheckGenerated(t, elements)
+}
+
+// Without a manifest the named type avoids the schema's own type names, and
+// model metadata keeps the unsigned kind.
+func TestNamedBuiltinAvoidsSchemaNamesWithoutManifest(t *testing.T) {
+	t.Parallel()
+
+	index, err := NewIndex(&Set{Files: []*SchemaFile{parseSchemaFile(t, "types.xsd", `
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:simpleType name="positive-integer">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:complexType name="holder">
+		<xs:sequence>
+			<xs:element name="label" type="positive-integer"/>
+			<xs:element name="count" type="xs:positiveInteger"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>`)}})
+	require.NoError(t, err)
+	simple, err := GenerateSimpleTypes(index, "example")
+	require.NoError(t, err)
+	complex, err := GenerateComplexTypesWithOptions(index, "example", ComplexGenerationOptions{ModelMetadata: true})
+	require.NoError(t, err)
+	source := string(complex)
+	assert.Contains(t, string(simple), "type PositiveInteger string")
+	assert.Contains(t, source, "type PositiveInteger2 uint64")
+	assert.Contains(t, source, "\tLabel PositiveInteger  `xml:\"label\"`")
+	assert.Contains(t, source, "\tCount PositiveInteger2 `xml:\"count\"`")
+	assert.Contains(t, source, `{Name: "Count", Index: []int{1}, XML: modelName{Local: "count"}, Optional: false, Repeated: false, Kind: modelUnsigned}`)
+	plain, err := GenerateComplexTypes(index, "example")
+	require.NoError(t, err)
+	typeCheckGenerated(t, simple, plain)
+}

@@ -43,9 +43,9 @@ type sourceEntityDeclarations struct {
 }
 
 // sourceEntityDeclarations admits one immutable source declaration snapshot.
-// Call immediately after root Open selects its assembly, before any Attribute,
-// CompleteAttributes, child Open or Close. The active assembly must select an
-// available NewXSDPlanWithSourceDeclarations operation. Omitting this event
+// Call immediately after root OpenNode selects its assembly, before any
+// Attribute, CompleteAttributes, child OpenNode or CloseNode. The active
+// assembly must select an available declaration-aware XSD operation. Omitting this event
 // leaves declaration membership unavailable only when its datatype is reached.
 // Every rejection is terminal; Finish still releases all owned live gauges.
 func (s *Session) sourceEntityDeclarations(ctx context.Context, facts SourceEntityDeclarations) (err error) {

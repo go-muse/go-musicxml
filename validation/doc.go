@@ -36,8 +36,8 @@
 // # Comparing values
 //
 // Integer, Decimal and Rational hold internal pointers. They and the structs
-// that contain them, such as Atomic, Scalar and ContextPosition, compile with
-// == but do not compare numeric values; use the Equal and Cmp methods. The
+// that contain them, such as Atomic, Scalar and ContextPosition, are not
+// comparable with == and cannot be map keys; use the Equal and Cmp methods. The
 // identifier types RuleKey, NodeRef, QName, DeclarationID, ComponentID and
 // ResourcePin contain only comparable scalar fields and are suitable map keys.
 //

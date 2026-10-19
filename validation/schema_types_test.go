@@ -67,6 +67,16 @@ func TestConvertGraphRejectsOtherShapes(t *testing.T) {
 	if err := xsd.ConvertGraph(target, sharedSchemaGraph()); err == nil {
 		t.Fatal("a non-pointer target was accepted")
 	}
+	if err := xsd.ConvertGraph(&target, nil); err == nil {
+		t.Fatal("a nil source was accepted")
+	}
+	if _, err := xsd.CompileGraph(nil, xsd.CompileLimits{}); err == nil {
+		t.Fatal("a nil graph was compiled")
+	}
+	stale := SchemaData{Types: map[QName]*SchemaType{{Local: "stale"}: {}}}
+	if err := xsd.ConvertGraph(&stale, xsd.SchemaData{}); err != nil || stale.Types != nil {
+		t.Fatalf("conversion kept the target's previous maps: %v %v", err, stale.Types)
+	}
 	huge := xsd.SchemaData{Types: map[xsd.QName]*xsd.TypeSchema{{Local: "large"}: {Simple: &xsd.SimpleSchema{Members: make([]*xsd.SimpleMember, 65537)}}}}
 	if err := xsd.ConvertGraph(&target, huge); err == nil {
 		t.Fatal("conversion ignored the compile limits")

@@ -142,8 +142,8 @@ type Account struct {
 }
 
 // NewBudgetAccount validates limits and substitutes finite defaults for zeros.
-// Large cumulative limits remain int64 even on 32-bit hosts; AllocationSize
-// separately validates each concrete allocation before host-int conversion.
+// Large cumulative limits remain int64 even on 32-bit hosts; each concrete
+// allocation is validated separately before host-int conversion.
 func NewBudgetAccount(limits Budgets) (*Account, error) {
 	defaults := DefaultBudgets()
 	fields, fallback := budgetValues(&limits), budgetValues(&defaults)

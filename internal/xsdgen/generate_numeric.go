@@ -58,7 +58,7 @@ func (r *simpleTypeRenderer) renderNumericXMLMethods(target *bytes.Buffer, name 
 }
 
 func (r *simpleTypeRenderer) declarationXMLType(declaration *Declaration) string {
-	if _, named := namedBuiltin(declaration); named {
+	if _, named := namedBuiltin(declaration); named && r.namedBuiltins {
 		return ""
 	}
 	if declaration.Kind == DeclarationBuiltinSimpleType {

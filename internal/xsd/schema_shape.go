@@ -15,35 +15,60 @@ func schemaMapName(key reflect.Value) QName {
 // checkSchemaShape reports whether value is a struct of the shape of
 // SchemaData, so that the reflective graph copy can move it between families.
 func checkSchemaShape(value reflect.Value) error {
-	if !value.IsValid() || !sameSchemaShape(value.Type(), schemaDataType, map[[2]reflect.Type]bool{}) {
+	if !value.IsValid() {
+		return fmt.Errorf("xsd: a nil schema graph does not have the shape of SchemaData")
+	}
+	if !sameSchemaShape(value.Type(), schemaDataType, newShapeMatch()) {
 		return fmt.Errorf("xsd: %v does not have the shape of SchemaData", value.Type())
 	}
 	return nil
 }
 
-// sameSchemaShape compares field names and kinds at every level. Recursive
+// shapeMatch records the type correspondence of a shape comparison.
+type shapeMatch struct {
+	seen          map[[2]reflect.Type]bool
+	forward, back map[reflect.Type]reflect.Type
+}
+
+func newShapeMatch() *shapeMatch {
+	return &shapeMatch{seen: map[[2]reflect.Type]bool{}, forward: map[reflect.Type]reflect.Type{}, back: map[reflect.Type]reflect.Type{}}
+}
+
+// sameSchemaShape compares field names and kinds at every level. Composite
+// types must correspond one to one, because the copy assigns a pointer, map or
+// slice made for one position to every position that shares it. Recursive
 // types are assumed equal while they are being compared.
-func sameSchemaShape(a, b reflect.Type, seen map[[2]reflect.Type]bool) bool {
+func sameSchemaShape(a, b reflect.Type, match *shapeMatch) bool {
 	if a == nil || b == nil || a.Kind() != b.Kind() {
 		return false
 	}
+	switch a.Kind() {
+	case reflect.Pointer, reflect.Slice, reflect.Map, reflect.Struct:
+		if prior, ok := match.forward[a]; ok && prior != b {
+			return false
+		}
+		if prior, ok := match.back[b]; ok && prior != a {
+			return false
+		}
+		match.forward[a], match.back[b] = b, a
+	}
 	pair := [2]reflect.Type{a, b}
-	if seen[pair] {
+	if match.seen[pair] {
 		return true
 	}
-	seen[pair] = true
+	match.seen[pair] = true
 	switch a.Kind() {
 	case reflect.Pointer, reflect.Slice:
-		return sameSchemaShape(a.Elem(), b.Elem(), seen)
+		return sameSchemaShape(a.Elem(), b.Elem(), match)
 	case reflect.Map:
-		return sameSchemaShape(a.Key(), b.Key(), seen) && sameSchemaShape(a.Elem(), b.Elem(), seen)
+		return sameSchemaShape(a.Key(), b.Key(), match) && sameSchemaShape(a.Elem(), b.Elem(), match)
 	case reflect.Struct:
 		if a.NumField() != b.NumField() {
 			return false
 		}
 		for i := range a.NumField() {
 			fa, fb := a.Field(i), b.Field(i)
-			if fa.Name != fb.Name || !fa.IsExported() || !sameSchemaShape(fa.Type, fb.Type, seen) {
+			if fa.Name != fb.Name || !fa.IsExported() || !sameSchemaShape(fa.Type, fb.Type, match) {
 				return false
 			}
 		}

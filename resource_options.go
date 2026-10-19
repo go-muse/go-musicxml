@@ -135,6 +135,8 @@ func validateLinkedAssessmentOptionsAccount(ctx context.Context, o LinkedAssessm
 	out.account, out.identity, out.resolver, out.dtd = account, o.Identity, o.Resolver, o.Graph.DTD
 	if nilValue(out.resolver) {
 		out.resolver = nil
+	} else {
+		out.resolver = absentTypedNilBodies{out.resolver}
 	}
 	out.selected = make(map[ResourceDependency]bool, len(o.Dependencies))
 	for _, kind := range o.Dependencies {
@@ -148,4 +150,16 @@ func newResourceRunIdentity() (string, error) {
 		return "", err
 	}
 	return "resource-run-" + hex.EncodeToString(value[:]), nil
+}
+
+// absentTypedNilBodies treats a typed-nil ResourceResult.Body, such as a nil
+// *os.File, as no body, so that no method is called on it.
+type absentTypedNilBodies struct{ resolver validation.ResourceResolver }
+
+func (r absentTypedNilBodies) Resolve(ctx context.Context, request validation.ResourceRequest) (validation.ResourceResult, error) {
+	result, err := r.resolver.Resolve(ctx, request)
+	if result.Body != nil && nilValue(result.Body) {
+		result.Body = nil
+	}
+	return result, err
 }

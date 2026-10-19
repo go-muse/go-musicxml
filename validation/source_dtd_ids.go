@@ -72,7 +72,7 @@ func (e *Engine) sourceDTDIDsSelected(profile ProfileID) bool {
 }
 
 // sourceDTDIDDomain admits exactly one owned declaration-domain seal immediately
-// after root Open and before any root attribute. Missing input is unavailable.
+// after root OpenNode and before any root attribute. Missing input is unavailable.
 func (s *Session) sourceDTDIDDomain(ctx context.Context, f SourceDTDIDDomain) (err error) {
 	if err = s.event(ctx, "SourceDTDIDDomain"); err != nil {
 		return err

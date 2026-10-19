@@ -13,7 +13,7 @@ func TestSchemaShapeComparesNamesAndKinds(t *testing.T) {
 		Local int
 	}
 	same := func(a, b any) bool {
-		return sameSchemaShape(reflect.TypeOf(a), reflect.TypeOf(b), map[[2]reflect.Type]bool{})
+		return sameSchemaShape(reflect.TypeOf(a), reflect.TypeOf(b), newShapeMatch())
 	}
 	if !same(name{}, QName{}) || !same(map[name]*[]uint8{}, map[QName]*[]Derivation{}) {
 		t.Fatal("a mirror of the same shape was rejected")
@@ -27,6 +27,17 @@ func TestSchemaShapeComparesNamesAndKinds(t *testing.T) {
 		t.Error("map keys or values of another shape were accepted")
 	}
 	type hidden struct{ space, Local string }
+	type split struct {
+		Left, Right *QName
+	}
+	type twin struct{ Space, Local string }
+	type mixed struct {
+		Left  *QName
+		Right *twin
+	}
+	if same(mixed{}, split{}) {
+		t.Error("two source types for one target type were accepted")
+	}
 	if same(hidden{}, hidden{}) {
 		t.Error("an unexported field was accepted")
 	}

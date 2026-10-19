@@ -187,3 +187,16 @@ func TestSessionRejectsKnownPayloadOnProvenAbsentAttribute(t *testing.T) {
 		}
 	}
 }
+
+func TestSessionErrorsNameTheNodeEvents(t *testing.T) {
+	ctx := context.Background()
+	_, s := sessionFixture(t, Budgets{})
+	var sessionErr *SessionError
+	if err := s.CloseNode(ctx, factEnd(1)); !errors.As(err, &sessionErr) || sessionErr.Operation != "CloseNode" {
+		t.Fatalf("unbalanced close: %v", err)
+	}
+	_, s = sessionFixture(t, Budgets{})
+	if err := s.OpenNode(ctx, factHeader(2, 1, "test.root", "root")); !errors.As(err, &sessionErr) || sessionErr.Operation != "OpenNode" {
+		t.Fatalf("root with a parent: %v", err)
+	}
+}

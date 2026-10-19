@@ -22,7 +22,8 @@ or changed identifier to its replacement.
   typed-nil stream, such as a nil `*os.File` from a failed `os.Open`, with
   `ErrNilReader` or `ErrNilWriter` instead of panicking or returning a read
   error. `validation.Report.Format` and `FormatLocalized` reject a typed-nil
-  writer with `ErrInvalidConfiguration`.
+  writer with `ErrInvalidConfiguration`. A typed-nil `ResourceResult.Body`
+  from a resource resolver counts as no body.
 - `validation.Integer`, `validation.Decimal` and `validation.Rational` are no
   longer comparable, so neither are the 23 structs that contain them, such as
   `validation.Atomic`, `validation.Scalar` and `validation.ContextPosition`.
@@ -32,10 +33,11 @@ or changed identifier to its replacement.
   `xs:nonNegativeInteger` or `xs:integer` (35 fields, such as
   `Attributes.Staves`, `Fret.Value` and `Transpose.Diatonic`) have the new
   named types `PositiveInteger`, `NonNegativeInteger` and `Integer` instead of
-  `uint64`/`int64`. The named types decode their own lexical forms, so 19
-  structs, such as `Forward`, `Direction` and `Frame`, no longer have
+  `uint64`/`int64`. The named types decode their own lexical forms, so 25
+  structs, such as `Note`, `Attributes` and `Forward`, no longer have
   `MarshalXML`/`UnmarshalXML` methods that existed only to decode `+1`.
-  Convert with `PositiveInteger(n)` or `uint64(v)`.
+  Convert with `PositiveInteger(n)` and `uint64(v)`, or `Integer(n)` and
+  `int64(v)`.
 - `PlayContent.Ipa` and `Play.AddIpa` are renamed `IPA` and `AddIPA`.
 - `validation.Session.Open` and `Close` are renamed `OpenNode` and `CloseNode`,
   so that the node events are not mistaken for resource management;
@@ -43,7 +45,8 @@ or changed identifier to its replacement.
 - `validation.ContextConsumerSpec` and `validation.TimelineConsumerSpec`, which
   had the same fields, are merged into `validation.ConsumerSpec`.
 - `validation.UnsupportedRootError` is renamed `validation.ExcludedRootError`,
-  so that it no longer shares a name with `musicxml.UnsupportedRootError`.
+  so that it no longer shares a name with `musicxml.UnsupportedRootError`; its
+  message says "is excluded by profile".
 - The planning inventory moves from package `validation` to the new package
   `validation/inventory`: `validation.MusicXML40Inventory` becomes
   `inventory.MusicXML40`, `validation.Inventory` becomes `inventory.Snapshot`,

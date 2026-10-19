@@ -139,6 +139,8 @@ func GenerateComplexTypesWithOptions(
 		renderer.usedTypeNames[name] = describeDeclaration(declaration)
 		renderer.ownerKeys[name] = componentKey(declaration, "type")
 	}
+	simpleRenderer.namedBuiltins = true
+	simpleRenderer.takenNames = renderer.usedTypeNames
 
 	var body bytes.Buffer
 	for planIndex := range complexPlans {

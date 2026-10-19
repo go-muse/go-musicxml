@@ -133,10 +133,9 @@ const (
 // Atomic is a tagged exact value. Only its selected field may be populated;
 // Boolean uses Text "true" or "false". Numeric wrappers are immutable values.
 //
-// Atomic, and structs that contain it such as Scalar, compile with == but
-// compare the Integer and Decimal wrappers by internal pointer. Compare the
-// Kind and the selected field instead, using Integer.Equal or Decimal.Equal
-// for numbers, and do not use these structs as map keys.
+// Atomic, and structs that contain it such as Scalar, are not comparable with
+// == and cannot be map keys. Compare the Kind and the selected field instead,
+// using Integer.Equal or Decimal.Equal for numbers.
 type Atomic struct {
 	Kind    AtomicKind
 	Text    string

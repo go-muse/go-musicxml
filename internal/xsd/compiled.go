@@ -282,8 +282,8 @@ func CompileGraph(data any, limits CompileLimits) (*Compiled, error) {
 	return compileGraph(source, limits)
 }
 
-// ConvertGraph copies the schema graph source into *target, both of the shape
-// of SchemaData, within the default compile limits. The copy preserves sharing,
+// ConvertGraph replaces *target with a copy of the schema graph source, both of
+// the shape of SchemaData, within the default compile limits. The copy preserves sharing,
 // interior pointers and cycles.
 func ConvertGraph(target, source any) error {
 	from, to := reflect.ValueOf(source), reflect.ValueOf(target)
@@ -303,6 +303,7 @@ func ConvertGraph(target, source any) error {
 	if err := b.audit(from); err != nil {
 		return err
 	}
+	to.Elem().Set(reflect.Zero(to.Elem().Type()))
 	copySchemaGraphInto(from, to.Elem())
 	return nil
 }
