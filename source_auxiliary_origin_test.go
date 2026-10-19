@@ -25,7 +25,7 @@ func auxiliaryOriginTestEngine(t *testing.T, assembly validation.Assembly, proje
 	if err != nil {
 		t.Fatal(err)
 	}
-	origin, err := validation.NewSourceOriginPlan(assembly)
+	origin, err := validationNewSourceOriginPlan(assembly)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestSourceAuxiliaryOriginExactRootRouting(t *testing.T) {
 }
 
 func TestSourceContainerMetadataConstructorContract(t *testing.T) {
-	if _, err := validation.NewSourceContainerMetadataContextPlan(nil); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err := validationNewSourceContainerMetadataContextPlan(nil); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatalf("nil schema accepted: %v", err)
 	}
 	for _, input := range []struct {
@@ -143,7 +143,7 @@ func TestSourceContainerMetadataConstructorContract(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		plan, err := validation.NewSourceContainerMetadataContextPlan(schema)
+		plan, err := validationNewSourceContainerMetadataContextPlan(schema)
 		if input.assembly != validation.AssemblyContainer {
 			if !errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("wrong assembly %s accepted: %v", input.assembly, err)
@@ -153,7 +153,7 @@ func TestSourceContainerMetadataConstructorContract(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		legacy, err := validation.NewContainerMetadataContextPlan(schema)
+		legacy, err := validationNewContainerMetadataContextPlan(schema)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -164,10 +164,10 @@ func TestSourceContainerMetadataConstructorContract(t *testing.T) {
 		if oldProfile.CatalogDigest == sourceProfile.CatalogDigest {
 			t.Fatal("source Container mode omitted from catalog digest")
 		}
-		if key, ok := sourceEngine.SourceAttributeLexicalProvider(sourceProfile.ID, input.assembly); !ok || key != originKey {
+		if key, ok := validationEngineSourceAttributeLexicalProvider(sourceEngine, sourceProfile.ID, input.assembly); !ok || key != originKey {
 			t.Fatal("source metadata alone did not elect lexical ingress")
 		}
-		if _, ok := oldEngine.SourceAttributeLexicalProvider(oldProfile.ID, input.assembly); ok {
+		if _, ok := validationEngineSourceAttributeLexicalProvider(oldEngine, oldProfile.ID, input.assembly); ok {
 			t.Fatal("legacy metadata elected lexical ingress")
 		}
 		assembly := validation.AssemblyContainer

@@ -82,7 +82,7 @@ func startConfiguredResourceGraph(ctx context.Context, cfg resourceRunOptions, p
 	g.packages = make(map[validation.PackageID]*graphPackage)
 	g.packageContexts = make(map[graphPackageKey]*graphPackage)
 	g.packageDocuments = make(map[validation.ResourceAssessmentID]string)
-	g.session, err = catalog.Begin(ctx, validation.RunOptions{DocumentID: namespace + "-package", Profile: profile, Account: cfg.account})
+	g.session, err = validationCompiledPackageCatalogBegin(catalog, ctx, validation.RunOptions{DocumentID: namespace + "-package", Profile: profile, Account: cfg.account})
 	if err != nil {
 		g.close()
 		return nil, err
@@ -93,7 +93,7 @@ func (g *resourceGraphRun) reserve(n int64) error {
 	if err := g.ctx.Err(); err != nil {
 		return err
 	}
-	if _, err := validation.AllocationSize(n); err != nil {
+	if _, err := validationAllocationSize(n); err != nil {
 		return err
 	}
 	if err := g.options.account.Charge(validation.BudgetBufferedBytes, n); err != nil {
@@ -152,9 +152,9 @@ func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error
 	var e error
 	if g.retainBundle {
 		// The caller keeps the bundle's storage charged while it continues.
-		b, g.bundleLease, e = g.session.FinishWithRetainedBundle(g.ctx, end)
+		b, g.bundleLease, e = validationPackageSessionFinishWithRetainedBundle(g.session, g.ctx, end)
 	} else {
-		b, e = g.session.Finish(g.ctx, end)
+		b, e = validationPackageSessionFinish(g.session, g.ctx, end)
 	}
 	g.close()
 	return b, joinResourceErrors(joinResourceErrors(err, e), g.dictionaryErr)
@@ -234,17 +234,17 @@ func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin val
 	if result.Snapshot == nil || shouldRetainMalformedIntrinsicWithoutAssembly(result) || pin.Representation == validation.ResourceSourceXML && !result.DigestComplete {
 		return g.finish(g.retainUntransferredIntrinsic(result, pin, nil))
 	}
-	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin, BaseURI: g.options.identity.RetrievalURI}); err != nil {
+	if err := validationPackageSessionOpenPackage(g.session, g.ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin, BaseURI: g.options.identity.RetrievalURI}); err != nil {
 		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
 	}
 	if err := g.observeBoundaryFileMetadata(&graphPackage{id: "root", pin: pin}, g.options.identity.RetrievalURI); err != nil {
 		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
 	}
-	rid, err := g.session.AddResource(g.ctx, pin, result.Snapshot, true)
+	rid, err := validationPackageSessionAddResource(g.session, g.ctx, pin, result.Snapshot, true)
 	if err != nil {
 		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
 	}
-	aid, err := g.session.AdoptResource(g.ctx, rid, validation.ResourceAdoptionOptions{DocumentID: id, Root: true, Package: "root", BaseURI: g.options.identity.RetrievalURI})
+	aid, err := validationPackageSessionAdoptResource(g.session, g.ctx, rid, validation.ResourceAdoptionOptions{DocumentID: id, Root: true, Package: "root", BaseURI: g.options.identity.RetrievalURI})
 	if err != nil {
 		return g.finish(errors.Join(result.Err, err))
 	}
@@ -267,7 +267,7 @@ func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin val
 	}
 	if err == nil {
 		known := validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}
-		err = g.session.SealEnumeration(g.ctx, validation.PackageEnumeration{Package: "root", Entries: known, Rootfiles: known, Edges: known, Roles: known})
+		err = validationPackageSessionSealEnumeration(g.session, g.ctx, validation.PackageEnumeration{Package: "root", Entries: known, Rootfiles: known, Edges: known, Roles: known})
 	}
 	return g.finish(err)
 }
@@ -281,7 +281,7 @@ func (g *resourceGraphRun) retainUntransferredIntrinsic(result resourceIntrinsic
 		err = joinResourceErrors(err, result.Snapshot.Close())
 	}
 	if result.Report.Requested {
-		err = joinResourceErrors(err, g.session.RecordResourceFailure(g.ctx, pin, result.Report, err))
+		err = joinResourceErrors(err, validationPackageSessionRecordResourceFailure(g.session, g.ctx, pin, result.Report, err))
 	}
 	return err
 }

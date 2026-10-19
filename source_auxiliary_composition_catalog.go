@@ -47,13 +47,13 @@ func buildSourceAuxiliaryCompositionDefinitions() (*assessmentDefinitions, error
 		switch {
 		case strings.HasPrefix(string(r.Key.ID), "MX40-SOURCE-XSD-"):
 			check := validation.XSDCheck(strings.TrimPrefix(string(r.Key.ID), "MX40-SOURCE-XSD-"+string(assembly)+"-"))
-			plan, err = validation.NewXSDPlanWithSourceDeclarations(schema, check)
+			plan, err = validationNewXSDPlanWithSourceDeclarations(schema, check)
 			r.Text.Explanation += " Assess the effective source infoset and only actually-read bounded internal declarations; unavailable declaration evidence remains incomplete."
 		case r.Key.ID == "MX40-CONTEXT-container-metadata":
-			plan, err = validation.NewSourceContainerMetadataContextPlan(schema)
+			plan, err = validationNewSourceContainerMetadataContextPlan(schema)
 			r.Text.Explanation += " Effective DTD values may select rootfiles while physical Raw is independently absent or unavailable."
 		case strings.HasPrefix(string(r.Key.ID), "MX40-RESOURCE-schema-hints/"):
-			plan, err = validation.NewSourceSchemaHintContextPlan(schema)
+			plan, err = validationNewSourceSchemaHintContextPlan(schema)
 			r.Text.Explanation += " Effective DTD hints remain separate from independently retained physical occurrence and lexical evidence."
 		default:
 			changed = false // Sounds mapping fields already describe effective supplied data.
@@ -101,7 +101,7 @@ func buildSourceAuxiliaryCompositionDefinitions() (*assessmentDefinitions, error
 			d.plans = append(d.plans, validation.PlanBinding{ID: r.Predicate, Plan: plan})
 			dictionaryRequire(p, r.Key)
 		}
-		plan, e := validation.NewSourceOriginPlan(assembly)
+		plan, e := validationNewSourceOriginPlan(assembly)
 		if e != nil {
 			return nil, e
 		}

@@ -190,7 +190,7 @@ func (g *resourceGraphRun) newPackageAtEntry(pin validation.ResourcePin, parent 
 	if parent == "" {
 		id = "root"
 	}
-	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: id, Parent: parent, Representation: pin.Representation, Pin: pin, BaseURI: retrieval, ArchiveEntry: entry, PinUnavailable: pin.Representation == validation.ResourceRawMXL && pin.Digest == ""}); err != nil {
+	if err := validationPackageSessionOpenPackage(g.session, g.ctx, validation.PackageIdentity{ID: id, Parent: parent, Representation: pin.Representation, Pin: pin, BaseURI: retrieval, ArchiveEntry: entry, PinUnavailable: pin.Representation == validation.ResourceRawMXL && pin.Digest == ""}); err != nil {
 		return nil, err
 	}
 	p := &graphPackage{id: id, parent: parent, depth: 1, pin: pin, archive: a, archiveEntry: strings.Clone(entry), entries: make(map[string]validation.PackageFactID), entriesComplete: packageUnknown[bool]("entry-inventory-unavailable"), rootsComplete: packageUnknown[bool]("rootfile-inventory-unavailable")}
@@ -243,7 +243,7 @@ func (g *resourceGraphRun) importRawPackageAtEntry(a *mxlAssessmentArchive, pin 
 			m.ByteLength = packageKnown(uint64(len(content.data)))
 			m.ContentComplete = packageKnown(true)
 		}
-		observationErr := g.session.ObserveMimetype(g.ctx, m)
+		observationErr := validationPackageSessionObserveMimetype(g.session, g.ctx, m)
 		if err = errors.Join(readErr, observationErr); err != nil {
 			return nil, resourceURIBase{}, p.id, err
 		}
@@ -260,7 +260,7 @@ func (g *resourceGraphRun) importRawPackageAtEntry(a *mxlAssessmentArchive, pin 
 	if err != nil || container == nil {
 		return nil, resourceURIBase{}, p.id, err
 	}
-	aid, err := g.session.AdoptResource(g.ctx, container.id, validation.ResourceAdoptionOptions{DocumentID: g.next("container"), Package: p.id, BaseURI: retrieval, ArchiveEntry: mxlContainerPath})
+	aid, err := validationPackageSessionAdoptResource(g.session, g.ctx, container.id, validation.ResourceAdoptionOptions{DocumentID: g.next("container"), Package: p.id, BaseURI: retrieval, ArchiveEntry: mxlContainerPath})
 	if err != nil {
 		return nil, resourceURIBase{}, p.id, err
 	}
@@ -366,7 +366,7 @@ func (g *resourceGraphRun) recordPackageEntry(p *graphPackage, e validation.Pack
 	if err := g.reserve(256 + 2*int64(len(e.Name))); err != nil {
 		return err
 	}
-	if err := g.session.ObserveEntry(g.ctx, e); err != nil {
+	if err := validationPackageSessionObserveEntry(g.session, g.ctx, e); err != nil {
 		return err
 	}
 	if len(e.RawName) == 0 {
@@ -398,7 +398,7 @@ func (g *resourceGraphRun) assessVerifiedPackageSource(p *graphPackage, path str
 	if result.Snapshot == nil || shouldRetainMalformedIntrinsicWithoutAssembly(result) {
 		return nil, doc, g.retainUntransferredIntrinsic(result, pin, nil)
 	}
-	id, err := g.session.AddResource(g.ctx, pin, result.Snapshot, true)
+	id, err := validationPackageSessionAddResource(g.session, g.ctx, pin, result.Snapshot, true)
 	if err != nil {
 		return nil, doc, g.retainUntransferredIntrinsic(result, pin, err)
 	}
@@ -418,7 +418,7 @@ func atomicPackageString(v validation.Evidence[validation.Atomic]) validation.Ev
 	return packageKnown(v.Value.Text)
 }
 func (g *resourceGraphRun) consumeContainer(p *graphPackage, aid validation.ResourceAdoptionID, retrieval string, isPrimary bool) error {
-	adoption, err := g.session.Adoption(g.ctx, aid)
+	adoption, err := validationPackageSessionAdoption(g.session, g.ctx, aid)
 	if err != nil {
 		return err
 	}
@@ -476,7 +476,7 @@ func (g *resourceGraphRun) consumeContainer(p *graphPackage, aid validation.Reso
 			return err
 		}
 		err = g.loadRootfile(p, &r, retrieval, isPrimary && r.Ordinal == 1)
-		if terminal := g.session.TerminalCause(); terminal != nil {
+		if terminal := validationPackageSessionTerminalCause(g.session); terminal != nil {
 			err = joinResourceErrors(err, terminal)
 		} else {
 			err = errors.Join(err, g.recordRootfile(p, r))
@@ -573,7 +573,7 @@ func (g *resourceGraphRun) adoptPackageResource(resource *graphResource, doc str
 	if !root {
 		doc = g.next("rootfile")
 	}
-	aid, err := g.session.AdoptResource(g.ctx, resource.id, validation.ResourceAdoptionOptions{DocumentID: doc, Root: root, Package: pkg, BaseURI: base.RetrievalURI, ArchiveEntry: base.Entry})
+	aid, err := validationPackageSessionAdoptResource(g.session, g.ctx, resource.id, validation.ResourceAdoptionOptions{DocumentID: doc, Root: root, Package: pkg, BaseURI: base.RetrievalURI, ArchiveEntry: base.Entry})
 	if err != nil {
 		return err
 	}
@@ -615,7 +615,7 @@ func (g *resourceGraphRun) archiveDocumentInventory(item graphExpansion, path st
 	if err := g.ctx.Err(); err != nil {
 		return unavailable, false, err
 	}
-	if err := g.session.TerminalCause(); err != nil {
+	if err := validationPackageSessionTerminalCause(g.session); err != nil {
 		return unavailable, false, err
 	}
 	if err := g.options.account.Charge(validation.BudgetRuleSteps, int64(len(path))+1); err != nil {
@@ -678,7 +678,7 @@ func (g *resourceGraphRun) sealPackages() error {
 	for _, item := range g.packageList {
 		// Roles seals completion of the selected ingestion pass. It does not
 		// assert provider authority or broaden an incomplete role universe.
-		if err := g.session.SealEnumeration(g.ctx, validation.PackageEnumeration{Package: item.id, Entries: item.entriesComplete, Rootfiles: item.rootsComplete, Edges: packageKnown(true), Roles: packageKnown(true)}); err != nil {
+		if err := validationPackageSessionSealEnumeration(g.session, g.ctx, validation.PackageEnumeration{Package: item.id, Entries: item.entriesComplete, Rootfiles: item.rootsComplete, Edges: packageKnown(true), Roles: packageKnown(true)}); err != nil {
 			return err
 		}
 	}
@@ -688,7 +688,7 @@ func (g *resourceGraphRun) sealPackages() error {
 // recordRootfile transfers a measured owned observation into the package's
 // metadata inventory; cleanup releases it after all metadata consumers finish.
 func (g *resourceGraphRun) recordRootfile(p *graphPackage, r validation.PackageRootfileObservation) error {
-	if err := g.session.ObserveRootfile(g.ctx, r); err != nil {
+	if err := validationPackageSessionObserveRootfile(g.session, g.ctx, r); err != nil {
 		return err
 	}
 	release, err := resourceWorkingLease(g.ctx, g.options.account, r)

@@ -69,7 +69,7 @@ func (g *resourceGraphRun) enqueue(r *graphResource, adoption validation.Resourc
 	if err := g.ctx.Err(); err != nil {
 		return err
 	}
-	owner, ownerErr := g.session.ExpansionOwner(g.ctx, adoption)
+	owner, ownerErr := validationPackageSessionExpansionOwner(g.session, g.ctx, adoption)
 	if ownerErr != nil {
 		return ownerErr
 	}
@@ -97,7 +97,7 @@ func (g *resourceGraphRun) walkResources() error {
 		if err := g.options.account.Charge(validation.BudgetRuleSteps, 1); err != nil {
 			return err
 		}
-		a, err := g.session.Adoption(g.ctx, item.adoption)
+		a, err := validationPackageSessionAdoption(g.session, g.ctx, item.adoption)
 		if err != nil {
 			return err
 		}
@@ -137,7 +137,7 @@ func (g *resourceGraphRun) walkResources() error {
 			}
 		}
 		completeness := a.Header().ScopeComplete
-		if err = g.session.SealResourceExpansion(g.ctx, item.adoption, completeness); err != nil {
+		if err = validationPackageSessionSealResourceExpansion(g.session, g.ctx, item.adoption, completeness); err != nil {
 			return err
 		}
 	}
@@ -236,14 +236,14 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 			}
 		}
 	}
-	if terminal := g.session.TerminalCause(); terminal != nil {
+	if terminal := validationPackageSessionTerminalCause(g.session); terminal != nil {
 		return joinResourceErrors(loadErr, terminal)
 	}
 	// A retained intrinsic snapshot can prove its observed root even when that
 	// child failed syntax or root support. Preserve that evidence, but never
 	// expand more work after interruption or a child operation error.
 	if child != nil && g.ctx.Err() == nil && !errors.Is(loadErr, validation.ErrResourceLimit) && !errors.Is(loadErr, ErrMXLTooLarge) && !errors.Is(loadErr, context.Canceled) && !errors.Is(loadErr, context.DeadlineExceeded) {
-		aid, e := g.session.AdoptResource(g.ctx, child.id, validation.ResourceAdoptionOptions{DocumentID: g.next("adoption"), Package: childPackage, BaseURI: childBase.RetrievalURI, ArchiveEntry: childBase.Entry})
+		aid, e := validationPackageSessionAdoptResource(g.session, g.ctx, child.id, validation.ResourceAdoptionOptions{DocumentID: g.next("adoption"), Package: childPackage, BaseURI: childBase.RetrievalURI, ArchiveEntry: childBase.Entry})
 		if e != nil {
 			return errors.Join(loadErr, e)
 		}
@@ -268,7 +268,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 		}
 	}
 	g.sequence++
-	edgeErr := g.session.ObserveEdge(g.ctx, validation.PackageEdgeObservation{ID: validation.PackageFactID(g.sequence), Source: item.adoption, Template: index, Target: target, Indirection: packageKnown(childIndirect), Fragment: fragment, FragmentTarget: fragmentTarget})
+	edgeErr := validationPackageSessionObserveEdge(g.session, g.ctx, validation.PackageEdgeObservation{ID: validation.PackageFactID(g.sequence), Source: item.adoption, Template: index, Target: target, Indirection: packageKnown(childIndirect), Fragment: fragment, FragmentTarget: fragmentTarget})
 	if edgeErr == nil && target.State == validation.EvidenceKnown && child != nil && !childIndirect {
 		if e := g.reserve(512); e != nil {
 			return errors.Join(loadErr, e)
@@ -382,7 +382,7 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint6
 	if intrinsic.Snapshot == nil || shouldRetainMalformedIntrinsicWithoutAssembly(intrinsic) {
 		return nil, base, item.pkg, unknown, indirect, g.retainUntransferredIntrinsic(intrinsic, result.Pin, nil)
 	}
-	id, err := g.session.AddResource(g.ctx, result.Pin, intrinsic.Snapshot, true)
+	id, err := validationPackageSessionAddResource(g.session, g.ctx, result.Pin, intrinsic.Snapshot, true)
 	if err != nil {
 		return nil, base, item.pkg, unknown, indirect, g.retainUntransferredIntrinsic(intrinsic, result.Pin, err)
 	}
@@ -396,7 +396,7 @@ func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fr
 	if fragment.State != validation.EvidenceKnown {
 		return validation.Evidence[validation.NodeRef]{State: fragment.State, Reason: fragment.Reason, Cause: fragment.Cause}, nil
 	}
-	a, err := g.session.Adoption(g.ctx, aid)
+	a, err := validationPackageSessionAdoption(g.session, g.ctx, aid)
 	if err != nil {
 		return validation.Evidence[validation.NodeRef]{}, err
 	}

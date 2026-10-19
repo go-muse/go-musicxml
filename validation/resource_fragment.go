@@ -75,7 +75,7 @@ func (s *Session) resourceFragments(ctx context.Context) (*resourceFragmentSnaps
 	if err != nil {
 		return nil, err
 	}
-	if _, err = AllocationSize(size); err != nil {
+	if _, err = allocationSize(size); err != nil {
 		return nil, err
 	}
 	if err = s.retain(size); err != nil {

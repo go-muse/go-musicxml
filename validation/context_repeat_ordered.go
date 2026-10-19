@@ -45,7 +45,7 @@ func contextRepeatSelectedMeasureEqual(ctx context.Context, s *Session, source, 
 	if err != nil {
 		return Evidence[bool]{}, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return Evidence[bool]{}, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {

@@ -218,7 +218,7 @@ func (a *mxlAssessmentArchive) reserve(n int64) error {
 	if n < 0 || n > math.MaxInt64-a.retained {
 		return &validation.ResourceError{Kind: validation.BudgetBufferedBytes, Limit: math.MaxInt64, Used: a.retained, Requested: n}
 	}
-	if _, err := validation.AllocationSize(n); err != nil {
+	if _, err := validationAllocationSize(n); err != nil {
 		return err
 	}
 	if err := a.account.Charge(validation.BudgetBufferedBytes, n); err != nil {
@@ -310,7 +310,7 @@ func (a *mxlAssessmentArchive) readBounded(reader io.Reader, limit int64, kind v
 				if err = a.reserve(capacity); err != nil {
 					return data, err
 				}
-				size, err := validation.AllocationSize(capacity)
+				size, err := validationAllocationSize(capacity)
 				if err != nil {
 					a.release(capacity)
 					return data, err
@@ -562,7 +562,7 @@ func (a *mxlAssessmentArchive) observe() error {
 	if err = a.reserve(allowance); err != nil {
 		return err
 	}
-	length, err := validation.AllocationSize(count)
+	length, err := validationAllocationSize(count)
 	if err != nil {
 		return err
 	}
@@ -854,7 +854,7 @@ func mxlZIPInventoryAllowance(count, variable int64) (int64, error) {
 		return 0, overflow()
 	}
 	allowance += count * mxlZIPEntryAllowance
-	if _, err := validation.AllocationSize(allowance); err != nil {
+	if _, err := validationAllocationSize(allowance); err != nil {
 		return 0, err
 	}
 	return allowance, nil

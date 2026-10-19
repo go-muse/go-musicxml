@@ -54,16 +54,16 @@ func TestPackageReviewUnverifiedPinsDoNotProveAncestry(t *testing.T) {
 	p := packageTestIdentity()
 	p.PinUnavailable = true
 	p.Pin.Digest = ""
-	if err := s.OpenPackage(context.Background(), p); err != nil {
+	if err := s.openPackage(context.Background(), p); err != nil {
 		t.Fatal(err)
 	}
 	child := p
 	child.ID = "inner"
 	child.Parent = p.ID
-	if err := s.OpenPackage(context.Background(), child); err != nil {
+	if err := s.openPackage(context.Background(), child); err != nil {
 		t.Errorf("unverified identity used as ancestry proof: %v", err)
 	}
-	b, _ := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	b, _ := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if b.Satisfied() {
 		t.Error("unverified boundary certified completion")
 	}
@@ -71,14 +71,14 @@ func TestPackageReviewUnverifiedPinsDoNotProveAncestry(t *testing.T) {
 
 func TestPackageReviewRawNameAdmissionLinearAndOwned(t *testing.T) {
 	s := beginPackageFixture(t, PackageCheckMimetypeStored)
-	if err := s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err := s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
 	for i := 0; i < 128; i++ {
 		e := packageTestEntry(PackageFactID(i+1), "")
 		e.RawName = []byte(fmt.Sprintf("%04d", i) + strings.Repeat("x", 4091) + "\xff")
 		e.UTF8Name = Evidence[bool]{State: EvidenceKnown, Value: false}
-		if err := s.ObserveEntry(context.Background(), e); err != nil {
+		if err := s.observeEntry(context.Background(), e); err != nil {
 			t.Errorf("entry %d: %v", i, err)
 			break
 		}
@@ -91,10 +91,10 @@ func TestPackageReviewRawNameAdmissionLinearAndOwned(t *testing.T) {
 	duplicate := packageTestEntry(129, "")
 	duplicate.RawName = []byte("0000" + strings.Repeat("x", 4091) + "\xff")
 	duplicate.UTF8Name = Evidence[bool]{State: EvidenceKnown, Value: false}
-	if err := s.ObserveEntry(context.Background(), duplicate); !errors.Is(err, ErrInvalidConfiguration) {
+	if err := s.observeEntry(context.Background(), duplicate); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Errorf("original raw key not retained independently: %v", err)
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 	if used, _ := s.account.Usage(BudgetBufferedBytes); used != 0 {
 		t.Errorf("leaked %d bytes", used)
 	}
@@ -105,11 +105,11 @@ func reviewEdgeFixture(t *testing.T) (*PackageSession, ResourceAdoptionID, Resou
 	s, root, _ := packageAdviceFixtureCheck(t, PackageCheckLinkTarget)
 	a := s.adoptions[root]
 	a.resource.snapshot.contexts = []ContextResult{{Subject: NodeRef{"source", 2}, Resource: &ResourceContextResult{Link: &ResourceLinkContext{Kind: ResourceScoreLink, Href: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "child.xml#"}}}}}}}
-	source, err := s.AdoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "source-view", BaseURI: "source-view"})
+	source, err := s.adoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "source-view", BaseURI: "source-view"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	target, err := s.AdoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "target-view", BaseURI: "target-view"})
+	target, err := s.adoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "target-view", BaseURI: "target-view"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,11 +142,11 @@ func TestPackageReviewEdgeFragmentContracts(t *testing.T) {
 				fragment.Reason = "unresolved"
 			}
 			e := PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: fragment, FragmentTarget: Evidence[NodeRef]{State: EvidenceKnown, Value: node}}
-			err := s.ObserveEdge(context.Background(), e)
+			err := s.observeEdge(context.Background(), e)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("error=%v wantErr=%t", err, tc.wantErr)
 			}
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 		})
 	}
 }
@@ -156,11 +156,11 @@ func TestPackageReviewEdgeFindingsIdentifyTemplate(t *testing.T) {
 	a.resource.snapshot.contexts = append(a.resource.snapshot.contexts, stateClone(a.resource.snapshot.contexts[0]))
 	for i := 0; i < 2; i++ {
 		e := PackageEdgeObservation{ID: PackageFactID(i + 1), Source: source, Template: uint64(i), Target: Evidence[ResourceAdoptionID]{State: EvidenceUnknown, Reason: "unresolved"}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}
-		if err := s.ObserveEdge(context.Background(), e); err != nil {
+		if err := s.observeEdge(context.Background(), e); err != nil {
 			t.Fatal(err)
 		}
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{})
+	b, err := s.finish(context.Background(), PackageCompletion{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,26 +201,26 @@ func TestPackageReviewRejectedRelationsDoNotRequireResource(t *testing.T) {
 		t.Run(kind, func(t *testing.T) {
 			s, source, _ := reviewEdgeFixture(t)
 			snapshot, _ := interruptionSnapshot(t, s.account, "optional", "1")
-			id, err := s.AddResource(context.Background(), interruptionPin("optional"), snapshot, false)
+			id, err := s.addResource(context.Background(), interruptionPin("optional"), snapshot, false)
 			if err != nil {
 				t.Fatal(err)
 			}
 			resource := s.resources[id]
 			if kind == "edge" {
-				target, err := s.AdoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "optional-view"})
+				target, err := s.adoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "optional-view"})
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 10, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"optional-view", 1}}})
+				err = s.observeEdge(context.Background(), PackageEdgeObservation{ID: 10, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"optional-view", 1}}})
 				if err == nil {
 					t.Fatal("contradictory edge accepted")
 				}
 			} else {
 				// An existing entry owns ID 10, so the rootfile fails final subject admission.
-				if err = s.ObserveEntry(context.Background(), packageTestEntry(10, "optional.xml")); err != nil {
+				if err = s.observeEntry(context.Background(), packageTestEntry(10, "optional.xml")); err != nil {
 					t.Fatal(err)
 				}
-				err = s.ObserveRootfile(context.Background(), PackageRootfileObservation{ID: 10, Package: "outer", Source: NodeRef{"container", 1}, Location: Location{Target: TargetPackage, DocumentID: "package", Path: "/rootfile[1]"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown, Value: "optional.xml"}, MediaType: Evidence[string]{State: EvidenceAbsent}, Entry: Evidence[PackageFactID]{State: EvidenceKnown, Value: 10}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceKnown, Value: id}, Indirection: Evidence[bool]{State: EvidenceKnown}})
+				err = s.observeRootfile(context.Background(), PackageRootfileObservation{ID: 10, Package: "outer", Source: NodeRef{"container", 1}, Location: Location{Target: TargetPackage, DocumentID: "package", Path: "/rootfile[1]"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown, Value: "optional.xml"}, MediaType: Evidence[string]{State: EvidenceAbsent}, Entry: Evidence[PackageFactID]{State: EvidenceKnown, Value: 10}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceKnown, Value: id}, Indirection: Evidence[bool]{State: EvidenceKnown}})
 				if err == nil {
 					t.Fatal("duplicate subject accepted")
 				}
@@ -228,7 +228,7 @@ func TestPackageReviewRejectedRelationsDoNotRequireResource(t *testing.T) {
 			if resource.required {
 				t.Error("rejected relation marked optional resource required")
 			}
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 		})
 	}
 }

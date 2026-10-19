@@ -97,13 +97,13 @@ func buildSpanTestEngine(withTimeline bool) (spanEngineFixture, error) {
 			owners = append(owners, validation.ReferenceOwner{Declaration: part.Declaration, Attribute: a, Rule: validation.RuleKey{ID: validation.RuleID("MX40-LOCAL-part-id-target/use-" + strconv.Itoa(i+1)), Revision: 1}})
 		}
 		timeline = validation.RuleKey{ID: "span-test.timeline", Revision: 1}
-		p, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: owners})
+		p, err := validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: owners})
 		if err != nil {
 			return spanEngineFixture{}, err
 		}
 		add(timeline, p, nil)
 	}
-	p, err := validation.NewSpanContextPlan(validation.ContextPlanSpec{Schema: schema, TimelineProvider: timeline})
+	p, err := validationNewSpanContextPlan(validation.ContextPlanSpec{Schema: schema, TimelineProvider: timeline})
 	if err != nil {
 		return spanEngineFixture{}, err
 	}

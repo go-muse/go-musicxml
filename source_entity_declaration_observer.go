@@ -95,7 +95,7 @@ func (r *sourceXMLTokenReader) exportEntityDeclarations(ctx context.Context, doc
 			}
 		}
 	}
-	if _, err := validation.AllocationSize(temporary); err != nil {
+	if _, err := validationAllocationSize(temporary); err != nil {
 		return err
 	}
 	if err := r.account.Charge(validation.BudgetBufferedBytes, temporary); err != nil {

@@ -10,13 +10,13 @@ func dtdIDSnapshotFixture(t *testing.T) *Session {
 	t.Helper()
 	s, k := dtdIDSession(t)
 	f := dtdIDAdmittedAttribute(t, s, k, "a", "value")
-	if e := s.SourceDTDIDAttribute(context.Background(), f); e != nil {
+	if e := s.sourceDTDIDAttribute(context.Background(), f); e != nil {
 		t.Fatal(e)
 	}
 	if e := s.CloseNode(context.Background(), schemaLexemeEnd("1")); e != nil {
 		t.Fatal(e)
 	}
-	if e := s.CompleteSourceDTDIDs(context.Background(), "source"); e != nil {
+	if e := s.completeSourceDTDIDs(context.Background(), "source"); e != nil {
 		t.Fatal(e)
 	}
 	return s

@@ -115,7 +115,7 @@ func TestSourceLocalPresenceExplicitCompositionExecutes(t *testing.T) {
 		if err = s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 			t.Fatal(err)
 		}
-		if err = s.SourceEntityDeclarations(context.Background(), entitySnapshot(true)); err != nil {
+		if err = s.sourceEntityDeclarations(context.Background(), entitySnapshot(true)); err != nil {
 			t.Fatal(err)
 		}
 		attrs := []struct{ name, value string }{{"dacapo", "no"}}

@@ -52,6 +52,17 @@ or changed identifier to its replacement.
   instead of aliasing internal types, with documented fields; their fields and
   constants are unchanged. `validation.SchemaName` is removed: expanded names
   are `validation.QName`. Compiled schema digests are unchanged.
+- The adapter entry points of package `validation` are no longer exported. The
+  root package reaches them through typed hooks that `validation` registers in
+  the module-internal package `internal/validationlink`. Removed: 26
+  MusicXML-specific plan constructors (such as `NewTimelinePlan`,
+  `NewChordDurationPlan`, `NewPerformanceContextPlan` and
+  `NewXSDPlanWithSourceDeclarations`), the `Source*` methods of `Engine` and
+  `Session`, `CompiledPackageCatalog.Begin`, every method of `PackageSession`
+  (now an opaque type) and `AllocationSize`. Their data types stay exported.
+  API.md, "Adapter entry points", lists them. The generic constructors,
+  `NewXSDPlan`, `NewModelRepresentationPlan` and the fact-session events are
+  unchanged.
 
 ### Added
 

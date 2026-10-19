@@ -51,7 +51,7 @@ func (g *resourceGraphRun) observePackageRoles() error {
 		if !relevant {
 			continue
 		}
-		if err := g.session.SealResourceMembers(g.ctx, p.id, packageKnown(true)); err != nil {
+		if err := validationPackageSessionSealResourceMembers(g.session, g.ctx, p.id, packageKnown(true)); err != nil {
 			return err
 		}
 		if err := g.observePackageRoleScope(p); err != nil {
@@ -77,7 +77,7 @@ func (g *resourceGraphRun) observePackageRoleScope(p *graphPackage) error {
 		return &validation.IncompleteError{Reason: "package-role-scope-too-large", Cause: fmt.Errorf("%w: fixed limit of 65536 exact member contexts (observed %d)", validation.ErrResourceLimit, count)}
 	}
 	size := 1024 + count*4096
-	if _, err := validation.AllocationSize(size); err != nil {
+	if _, err := validationAllocationSize(size); err != nil {
 		return err
 	}
 	if err := g.options.account.Charge(validation.BudgetBufferedBytes, size); err != nil {
@@ -160,7 +160,7 @@ func (g *resourceGraphRun) observePackageRoleScope(p *graphPackage) error {
 		if state == validation.EvidenceAbsent {
 			state = validation.EvidenceUnknown
 		}
-		return g.session.ObserveRoles(g.ctx, validation.ResourceRoleResult{Request: q, ScopeComplete: validation.Evidence[bool]{State: state, Reason: result.Reason}})
+		return validationPackageSessionObserveRoles(g.session, g.ctx, validation.ResourceRoleResult{Request: q, ScopeComplete: validation.Evidence[bool]{State: state, Reason: result.Reason}})
 	}
-	return g.session.ObserveRoles(g.ctx, *result.Roles)
+	return validationPackageSessionObserveRoles(g.session, g.ctx, *result.Roles)
 }

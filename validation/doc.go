@@ -21,19 +21,17 @@
 // Rational) and the *ContextResult projections.
 //
 // Catalog API: NewCatalog, the generic New*Plan constructors, CompileSchema
-// and the Schema* metadata aliases, NewEngine, Engine.Begin and the Session
-// fact events Open, Attribute, CompleteAttributes, Close and Finish. They let a
-// caller assess its own fact stream; see the Engine example.
+// and the Schema* metadata types, NewEngine, Engine.Begin and the Session
+// fact events OpenNode, Attribute, CompleteAttributes, CloseNode and Finish.
+// They let a caller assess its own fact stream; see the Engine example.
 //
-// Adapter API: hooks that let the root musicxml package stream source-parser,
-// MXL-package and resource facts into an engine: the Session and Engine
-// Source* methods, CompleteSourceDTDIDs, SourceEntityDeclarations,
-// FinishWithRetainedReport, FinishWithResourceSnapshot, PackageSession and
-// AllocationSize. Their doc comments carry an "Adapter API" paragraph. They
-// are exported because the root package is a separate package; application
-// code is not expected to need them. Similarly, MusicXML-specific plan
-// constructors such as NewChordDurationPlan validate schema roles that only
-// the root package's compiled MusicXML schemas provide.
+// Adapter entry points, which let the root musicxml package stream
+// source-parser, MXL-package and resource facts into an engine, are not
+// exported: the source-ingress methods of Session and Engine, package sessions,
+// the MusicXML-specific plan constructors and the allocation-size helper are
+// registered as typed hooks in the module-internal package validationlink.
+// FinishWithRetainedReport and FinishWithResourceSnapshot stay exported; their
+// doc comments carry an "Adapter API" paragraph.
 //
 // # Comparing values
 //

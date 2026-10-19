@@ -42,16 +42,13 @@ type sourceEntityDeclarations struct {
 	origins map[uint64]Evidence[Location]
 }
 
-// SourceEntityDeclarations admits one immutable source declaration snapshot.
+// sourceEntityDeclarations admits one immutable source declaration snapshot.
 // Call immediately after root Open selects its assembly, before any Attribute,
 // CompleteAttributes, child Open or Close. The active assembly must select an
 // available NewXSDPlanWithSourceDeclarations operation. Omitting this event
 // leaves declaration membership unavailable only when its datatype is reached.
 // Every rejection is terminal; Finish still releases all owned live gauges.
-//
-// Adapter API: the root musicxml package uses this to stream facts into an
-// engine; application code is not expected to call it.
-func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEntityDeclarations) (err error) {
+func (s *Session) sourceEntityDeclarations(ctx context.Context, facts SourceEntityDeclarations) (err error) {
 	if err = s.event(ctx, "SourceEntityDeclarations"); err != nil {
 		return err
 	}

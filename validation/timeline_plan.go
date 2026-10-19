@@ -34,10 +34,10 @@ type timelineConsumerPlan struct {
 	revision uint32
 }
 
-// NewTimelinePlan creates the sealed document-scoped MusicXML timeline service.
+// newTimelinePlan creates the sealed document-scoped MusicXML timeline service.
 // It compiles fixed typed roles from exact schema identities once; it does not
 // add generic musical semantics to context keys or prerequisite relations.
-func NewTimelinePlan(spec TimelinePlanSpec) (Plan, error) {
+func newTimelinePlan(spec TimelinePlanSpec) (Plan, error) {
 	if len(spec.PartOwners) != 2 {
 		return Plan{}, contract("timeline part owners", "both exact score hierarchy owner references required")
 	}
@@ -48,15 +48,15 @@ func NewTimelinePlan(spec TimelinePlanSpec) (Plan, error) {
 	return checkedPlan(Plan{kind: planTimeline, timeline: &timelinePlan{Schema: spec.Schema, PartOwners: spec.PartOwners, Bindings: bindings, revision: timelineSemanticRevision}})
 }
 
-// NewChordDurationPlan compares each duration-bearing chord tone against its
+// newChordDurationPlan compares each duration-bearing chord tone against its
 // established principal non-chord note through the exact selected service.
-func NewChordDurationPlan(spec ConsumerSpec) (Plan, error) {
+func newChordDurationPlan(spec ConsumerSpec) (Plan, error) {
 	return newTimelineConsumer(planChordDuration, spec)
 }
 
-// NewNumeralKeyPlan requires a valid local numeral-key or an explicitly encoded
+// newNumeralKeyPlan requires a valid local numeral-key or an explicitly encoded
 // applicable effective key at the enclosing harmony's musical position/staff.
-func NewNumeralKeyPlan(spec ConsumerSpec) (Plan, error) {
+func newNumeralKeyPlan(spec ConsumerSpec) (Plan, error) {
 	return newTimelineConsumer(planNumeralKey, spec)
 }
 func newTimelineConsumer(kind planKind, spec ConsumerSpec) (Plan, error) {

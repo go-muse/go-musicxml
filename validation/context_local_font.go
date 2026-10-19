@@ -58,7 +58,7 @@ func localFontCategoriesOwned(ctx context.Context, s *Session, raw Evidence[Atom
 		return Evidence[Atomic]{}, nil, err
 	}
 	release := func() { _ = s.account.Release(BudgetBufferedBytes, reservation) }
-	size, err := AllocationSize(cost)
+	size, err := allocationSize(cost)
 	if err != nil {
 		release()
 		return Evidence[Atomic]{}, nil, err

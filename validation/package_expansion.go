@@ -30,10 +30,10 @@ type ResourceAdoptionContext struct {
 	ExpansionComplete     Evidence[bool]
 }
 
-// ExpansionOwner returns the first adoption in an exact assessment, package,
+// expansionOwner returns the first adoption in an exact assessment, package,
 // effective base URI and archive-entry context. An alias retains its own document
 // identity and quota charge; it cannot certify until this owner is sealed.
-func (s *PackageSession) ExpansionOwner(ctx context.Context, id ResourceAdoptionID) (ResourceAdoptionID, error) {
+func (s *PackageSession) expansionOwner(ctx context.Context, id ResourceAdoptionID) (ResourceAdoptionID, error) {
 	if err := s.event(ctx, "ExpansionOwner"); err != nil {
 		return "", err
 	}
@@ -44,11 +44,11 @@ func (s *PackageSession) ExpansionOwner(ctx context.Context, id ResourceAdoption
 	return a.expansion.owner, nil
 }
 
-// SealResourceExpansion closes only the owner after its template/metadata walk.
+// sealResourceExpansion closes only the owner after its template/metadata walk.
 // Complete assertion requires intrinsic scope completeness and exactly one
 // selected edge for every outgoing non-bookmark template. Partial scope remains
 // incomplete independently of package inventory or aliases pointing back to it.
-func (s *PackageSession) SealResourceExpansion(ctx context.Context, id ResourceAdoptionID, complete Evidence[bool]) error {
+func (s *PackageSession) sealResourceExpansion(ctx context.Context, id ResourceAdoptionID, complete Evidence[bool]) error {
 	if err := s.event(ctx, "SealResourceExpansion"); err != nil {
 		return err
 	}
@@ -106,13 +106,13 @@ func (s *PackageSession) newExpansion(id ResourceAdoptionID, r ResourceAssessmen
 	return expansion
 }
 
-// SealResourceMembers closes the package's admitted expansion-context inventory
+// sealResourceMembers closes the package's admitted expansion-context inventory
 // after graph discovery and before complete role proofs. It is distinct from
 // raw entry enumeration: an unread physical member still prevents role-universe
 // exclusion. Exact aliases remain permitted; new contexts are rejected.
 // A complete seal requires every existing expansion owner to be complete. Failed
 // or canceled admission never changes the seal; partial seals cannot prove roles.
-func (s *PackageSession) SealResourceMembers(ctx context.Context, pkg PackageID, complete Evidence[bool]) error {
+func (s *PackageSession) sealResourceMembers(ctx context.Context, pkg PackageID, complete Evidence[bool]) error {
 	if err := s.event(ctx, "SealResourceMembers"); err != nil {
 		return err
 	}

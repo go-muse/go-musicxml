@@ -16,7 +16,7 @@ func TestSourceEntityDeclarationNameScanPollsCancellation(t *testing.T) {
 	}
 	probe := &rationalCancelContext{Context: ctx, at: 8}
 	facts := entitySnapshot(true, entityRow(strings.Repeat("a", 65536), true, 1))
-	err := s.SourceEntityDeclarations(probe, facts)
+	err := s.sourceEntityDeclarations(probe, facts)
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("large name scan did not observe bounded cancellation: %v", err)
 	}
@@ -55,7 +55,7 @@ func TestSourceEntityDeclarationMalformedMetadataIsRejected(t *testing.T) {
 			}
 			facts := entitySnapshot(true, entityRow("asset", true, 1))
 			tc.change(&facts)
-			err := s.SourceEntityDeclarations(context.Background(), facts)
+			err := s.sourceEntityDeclarations(context.Background(), facts)
 			if err == nil {
 				t.Fatal("malformed facts accepted")
 			}

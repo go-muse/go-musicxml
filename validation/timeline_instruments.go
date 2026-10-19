@@ -79,7 +79,7 @@ func (h *timelineState) addNoteInstruments(ctx context.Context, s *Session, n no
 	if err := stateRetainCount(s, len(n.References), 128); err != nil {
 		return err
 	}
-	if _, err := AllocationSize(int64(len(n.References))); err != nil {
+	if _, err := allocationSize(int64(len(n.References))); err != nil {
 		return err
 	}
 	var refs []Evidence[NodeRef]

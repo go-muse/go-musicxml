@@ -36,7 +36,7 @@ func (o *sourceFactObserver) publishSourceOrigin(frame *sourceObserverFrame, att
 		default:
 			return &validation.ConfigurationError{Field: "source origin", Reason: "exact supported source root required"}
 		}
-		key, ok := o.origins.engine.SourceOriginProvider(o.origins.profile, assembly)
+		key, ok := validationEngineSourceOriginProvider(o.origins.engine, o.origins.profile, assembly)
 		if !ok {
 			return &validation.ConfigurationError{Field: "source origin", Reason: "selected assembly provider is unavailable"}
 		}
@@ -109,7 +109,7 @@ func (o *sourceFactObserver) publishSourceOrigin(frame *sourceObserverFrame, att
 			}
 		}
 	}
-	return o.origins.session.SourceOrigin(o.ctx, o.origins.key, out)
+	return validationSessionSourceOrigin(o.origins.session, o.ctx, o.origins.key, out)
 }
 
 func (o *sourceFactObserver) sourceOriginSite(span sourceXMLSpan) validation.Evidence[validation.Location] {
@@ -141,5 +141,5 @@ func (o *sourceFactObserver) sealSourceOrigins(ctx context.Context) error {
 	if o.dtdUnavailable {
 		complete = validation.Evidence[bool]{State: validation.EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
 	}
-	return o.origins.session.CompleteSourceOrigins(ctx, o.origins.key, complete)
+	return validationSessionCompleteSourceOrigins(o.origins.session, ctx, o.origins.key, complete)
 }

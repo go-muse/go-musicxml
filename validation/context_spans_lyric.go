@@ -38,7 +38,7 @@ func spanLyricIdentity(r *contextReader, n *factNode, scratch *spanScratch) span
 		value.available = stateUnknown[bool]("context-interrupted")
 		return value
 	}
-	allocation, err := AllocationSize(bytes - 64)
+	allocation, err := allocationSize(bytes - 64)
 	if err != nil {
 		r.err = err
 		value.available = stateUnknown[bool]("context-interrupted")

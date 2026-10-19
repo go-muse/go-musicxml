@@ -33,11 +33,11 @@ type dictionaryPlan struct {
 	Digest    string
 }
 
-// NewDictionaryPlan binds one exact dictionary consumer to the compiled
+// newDictionaryPlan binds one exact dictionary consumer to the compiled
 // MusicXML or source-only sounds assembly. It neither selects nor loads data.
 // The canonical and IPA operations require mandatory node predicates; sounds
 // and rendering are context providers. No timeline service is selected.
-func NewDictionaryPlan(schema *CompiledSchema, operation DictionaryOperation) (Plan, error) {
+func newDictionaryPlan(schema *CompiledSchema, operation DictionaryOperation) (Plan, error) {
 	if schema == nil || schema.kernel == nil || (schema.assembly != AssemblyMusicXML && schema.assembly != AssemblySounds) {
 		return Plan{}, contract("dictionary schema", "compiled MusicXML or sounds assembly required")
 	}

@@ -66,13 +66,13 @@ func TestContextOpusAssemblyContract(t *testing.T) {
 	}
 	opus := d.schemas[validation.AssemblyOpus]
 	music := d.schemas[validation.AssemblyMusicXML]
-	if _, err = validation.NewOpusLayoutContextPlan(music); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err = validationNewOpusLayoutContextPlan(music); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatalf("Opus plan accepted MusicXML: %v", err)
 	}
-	if _, err = validation.NewLocalContextPlan(opus); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err = validationNewLocalContextPlan(opus); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatalf("MusicXML plan accepted Opus: %v", err)
 	}
-	plan, err := validation.NewOpusLayoutContextPlan(opus)
+	plan, err := validationNewOpusLayoutContextPlan(opus)
 	if err != nil {
 		t.Fatal(err)
 	}

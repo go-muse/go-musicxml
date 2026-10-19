@@ -21,14 +21,14 @@ func reviewUnadoptedResource(t *testing.T) (*PackageSession, ResourceAssessmentI
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: child.account})
+	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: child.account})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err = s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
-	id, err := s.AddResource(context.Background(), interruptionPin("unadopted"), snapshot, false)
+	id, err := s.addResource(context.Background(), interruptionPin("unadopted"), snapshot, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func reviewUnadoptedResource(t *testing.T) (*PackageSession, ResourceAssessmentI
 func TestPackageReviewRootfileSourceIsProvenanceNotAdoptionProof(t *testing.T) {
 	for _, valid := range []bool{true, false} {
 		s := beginPackageFixture(t, PackageCheckFirstRootMusicXML)
-		if err := s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+		if err := s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 			t.Fatal(err)
 		}
 		source := NodeRef{"adapter-provenance", 77}
@@ -46,7 +46,7 @@ func TestPackageReviewRootfileSourceIsProvenanceNotAdoptionProof(t *testing.T) {
 			source.Node = 0
 		}
 		v := PackageRootfileObservation{ID: 1, Package: "outer", Source: source, Location: Location{Target: TargetPackage, DocumentID: "package", Path: "/rootfile[1]"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown, Value: "score.musicxml"}, MediaType: Evidence[string]{State: EvidenceAbsent}, Entry: Evidence[PackageFactID]{State: EvidenceUnknown, Reason: "unavailable"}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceUnknown, Reason: "unavailable"}, Indirection: Evidence[bool]{State: EvidenceKnown}}
-		err := s.ObserveRootfile(context.Background(), v)
+		err := s.observeRootfile(context.Background(), v)
 		if valid && err != nil {
 			t.Errorf("well-formed provenance refused: %v", err)
 		}
@@ -56,7 +56,7 @@ func TestPackageReviewRootfileSourceIsProvenanceNotAdoptionProof(t *testing.T) {
 				t.Errorf("source shape error promises unsupported occurrence proof: %v", err)
 			}
 		}
-		b, _ := s.Finish(context.Background(), PackageCompletion{})
+		b, _ := s.finish(context.Background(), PackageCompletion{})
 		if b.Satisfied() {
 			t.Error("source provenance certified missing resource")
 		}
@@ -86,11 +86,11 @@ func TestPackageReviewUnknownAssemblyIsConsistentlyRefused(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			s, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: child.account})
+			s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: child.account})
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, err = s.AddResource(context.Background(), interruptionPin("unknown-assembly"), snapshot, true)
+			_, err = s.addResource(context.Background(), interruptionPin("unknown-assembly"), snapshot, true)
 			var invalid *ConfigurationError
 			if !errors.As(err, &invalid) || invalid.Reason != "established intrinsic assembly required" {
 				t.Errorf("satisfied=%t multiple=%t unknown assembly was not explicitly refused: %v", valid, multiple, err)
@@ -102,29 +102,29 @@ func TestPackageReviewUnknownAssemblyIsConsistentlyRefused(t *testing.T) {
 				t.Error("assembly guessed from matching row")
 			}
 			_ = snapshot.Close()
-			failureErr := s.RecordResourceFailure(context.Background(), interruptionPin("unknown-assembly"), original, err)
+			failureErr := s.recordResourceFailure(context.Background(), interruptionPin("unknown-assembly"), original, err)
 			if !errors.Is(failureErr, ErrInvalidConfiguration) || s.failure == nil || s.failure.Counts != original.Counts || s.failure.Conformance != original.Conformance {
 				t.Errorf("refused assembly lost original results: %+v error=%v", s.failure, failureErr)
 			}
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 		}
 	}
 }
 
 func TestPackageReviewRootCannotAliasEarlierLinkedOccurrence(t *testing.T) {
 	s, id := reviewUnadoptedResource(t)
-	first, err := s.AdoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "linked-first"})
+	first, err := s.adoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "linked-first"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = s.AdoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true})
+	_, err = s.adoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true})
 	if !errors.Is(err, ErrInvalidConfiguration) {
 		t.Errorf("root aliased an earlier linked context: %v", err)
 	}
 	if len(s.adoptions) != 1 || s.rootAdoption || s.resources[id].required || s.adoptions[first].expansion.owner != first {
 		t.Error("rejected root changed adoption ownership or requirements")
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 }
 func TestPackageReviewAliasRefusalsExplainExpansionOwnership(t *testing.T) {
 	for _, kind := range []string{"edge", "association", "image"} {
@@ -136,40 +136,40 @@ func TestPackageReviewAliasRefusalsExplainExpansionOwnership(t *testing.T) {
 				var source ResourceAdoptionID
 				s, source, _ = reviewEdgeFixture(t)
 				a := s.adoptions[source]
-				alias, e := s.AdoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "alias", BaseURI: a.expansion.key.baseURI})
+				alias, e := s.adoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "alias", BaseURI: a.expansion.key.baseURI})
 				if e != nil {
 					t.Fatal(e)
 				}
-				err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 10, Source: alias})
+				err = s.observeEdge(context.Background(), PackageEdgeObservation{ID: 10, Source: alias})
 			case "association":
 				var q AssociationRequest
 				s, q = packageAssociationFixture(t)
 				a := s.adoptionForPin(context.Background(), q.Source, q.SourcePart.DocumentID)
-				if _, e := s.AdoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "alias"}); e != nil {
+				if _, e := s.adoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "alias"}); e != nil {
 					t.Fatal(e)
 				}
 				q.SourcePart.DocumentID = "alias"
 				q.SourceInstrument.DocumentID = "alias"
 				q.PartLink.DocumentID = "alias"
 				q.InstrumentLink.DocumentID = "alias"
-				err = s.ObserveAssociation(context.Background(), q, packageAssociationReply(q, Evidence[bool]{State: EvidenceKnown, Value: true}))
+				err = s.observeAssociation(context.Background(), q, packageAssociationReply(q, Evidence[bool]{State: EvidenceKnown, Value: true}))
 			case "image":
 				var source ResourceAdoptionID
 				var pin ResourcePin
 				s, source, pin = packageAdviceFixture(t)
 				a := s.adoptions[source]
-				alias, e := s.AdoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "alias"})
+				alias, e := s.adoptResource(context.Background(), a.resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "alias"})
 				if e != nil {
 					t.Fatal(e)
 				}
 				q := ImageMetadataRequest{ID: "image", Package: "outer", Source: pin, Subject: NodeRef{"alias", 2}, Href: "image.png", MediaType: "image/png"}
-				err = s.ObserveImageMetadata(context.Background(), alias, 0, q, ResourceResult{RequestID: q.ID, State: EvidenceUnknown, Reason: "unavailable"})
+				err = s.observeImageMetadata(context.Background(), alias, 0, q, ResourceResult{RequestID: q.ID, State: EvidenceUnknown, Reason: "unavailable"})
 			}
 			var contract *ConfigurationError
 			if !errors.As(err, &contract) || contract.Reason != "source adoption is not the expansion owner" {
 				t.Errorf("alias refusal misdescribed: %v", err)
 			}
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 		})
 	}
 }
@@ -207,7 +207,7 @@ func TestPackageReviewFailureIngressRejectsContradictionsTransactionally(t *test
 			case "terminal-reason":
 				report.Terminal = &TerminalSummary{Category: CategorySyntax, Reason: Code(strings.Repeat("x", reportTerminalBytes+1))}
 			}
-			err := s.RecordResourceFailure(ctx, pin, report, errors.New("later failure"))
+			err := s.recordResourceFailure(ctx, pin, report, errors.New("later failure"))
 			if !errors.Is(err, ErrInvalidConfiguration) {
 				t.Errorf("contradictory failure admitted: %v", err)
 			}
@@ -217,7 +217,7 @@ func TestPackageReviewFailureIngressRejectsContradictionsTransactionally(t *test
 			if len(s.resources) != 1 || s.resources[id].required {
 				t.Error("rejected failure altered canonical resource")
 			}
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 		})
 	}
 }
@@ -233,12 +233,12 @@ func TestPackageReviewFailureIngressAfterTerminalPreservesIndependentFacts(t *te
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	before, _ := s.account.Usage(BudgetRuleSteps)
-	err = s.RecordResourceFailure(ctx, interruptionPin("failed-original"), report, stop)
+	err = s.recordResourceFailure(ctx, interruptionPin("failed-original"), report, stop)
 	after, _ := s.account.Usage(BudgetRuleSteps)
 	if !errors.Is(err, stop) || after != before || s.failure == nil || s.failure.Counts.Fail != report.Counts.Fail {
 		t.Errorf("prepaid terminal capture lost independent facts: %v summary=%+v steps=%d", err, s.failure, after-before)
 	}
-	b, _ := s.Finish(context.Background(), PackageCompletion{})
+	b, _ := s.finish(context.Background(), PackageCompletion{})
 	if b.Satisfied() {
 		t.Error("failure-only ingress certified success")
 	}
@@ -267,7 +267,7 @@ func TestPackageReviewFailureAfterTerminalDoesNoNewRetentionWork(t *testing.T) {
 		stop := errors.New("original terminal")
 		s.fail(stop)
 		before, _ := s.account.Usage(BudgetRuleSteps)
-		err = s.RecordResourceFailure(context.Background(), interruptionPin("failed-original"), report, stop)
+		err = s.recordResourceFailure(context.Background(), interruptionPin("failed-original"), report, stop)
 		after, _ := s.account.Usage(BudgetRuleSteps)
 		if !errors.Is(err, stop) || before != after || s.output.failureReport != nil {
 			t.Errorf("exhausted=%t post-terminal work changed: steps %d fullReport=%t error=%v", exhausted, after-before, s.output.failureReport != nil, err)
@@ -278,17 +278,17 @@ func TestPackageReviewFailureAfterTerminalDoesNoNewRetentionWork(t *testing.T) {
 		if held != 0 {
 			_ = s.account.Release(BudgetBufferedBytes, held)
 		}
-		_, _ = s.Finish(context.Background(), PackageCompletion{})
+		_, _ = s.finish(context.Background(), PackageCompletion{})
 	}
 }
 func TestPackageReviewInvalidFailureCannotOverwriteProvenBlocker(t *testing.T) {
 	s := beginPackageFixture(t, PackageCheckMimetypeStored)
-	if err := s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err := s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
 	entry := packageTestEntry(1, "mimetype")
 	entry.Local.Method.Value = 8
-	if err := s.ObserveEntry(context.Background(), entry); err != nil {
+	if err := s.observeEntry(context.Background(), entry); err != nil {
 		t.Fatal(err)
 	}
 	stop := errors.New("original terminal")
@@ -299,10 +299,10 @@ func TestPackageReviewInvalidFailureCannotOverwriteProvenBlocker(t *testing.T) {
 		t.Fatal(err)
 	}
 	report.Conformance = "bogus"
-	if err = s.RecordResourceFailure(context.Background(), interruptionPin("unadmitted"), report, stop); !errors.Is(err, ErrInvalidConfiguration) {
+	if err = s.recordResourceFailure(context.Background(), interruptionPin("unadmitted"), report, stop); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Errorf("invalid metadata accepted: %v", err)
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{})
+	b, err := s.finish(context.Background(), PackageCompletion{})
 	if !errors.Is(err, stop) || !errors.Is(err, ErrInvalidConfiguration) || b.PackageReport().Counts.Fail != 1 || len(b.PackageReport().Findings) != 1 {
 		t.Errorf("original blocker lost: %+v error=%v", b.PackageReport(), err)
 	}
@@ -313,18 +313,18 @@ func TestPackageReviewInvalidFailureCannotOverwriteProvenBlocker(t *testing.T) {
 
 func TestPackageReviewRootOwnsFreshContextAfterDifferentLinkedContext(t *testing.T) {
 	s, id := reviewUnadoptedResource(t)
-	linked, err := s.AdoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "linked-first", BaseURI: "https://example.test/linked/"})
+	linked, err := s.adoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "linked-first", BaseURI: "https://example.test/linked/"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	root, err := s.AdoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true, BaseURI: "https://example.test/primary/"})
+	root, err := s.adoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true, BaseURI: "https://example.test/primary/"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if s.adoptions[root].expansion.owner != root || s.adoptions[linked].expansion.owner != linked || !s.rootAdoption {
 		t.Error("different exact contexts lost independent ownership")
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 }
 
 func TestPackageReviewTerminalFailureCaptureDoesNotScaleWithReport(t *testing.T) {
@@ -348,7 +348,7 @@ func TestPackageReviewTerminalFailureCaptureDoesNotScaleWithReport(t *testing.T)
 		return testing.AllocsPerRun(25, func() {
 			s.failure = nil
 			s.terminal = stop
-			if err := s.RecordResourceFailure(context.Background(), pin, report, stop); !errors.Is(err, stop) {
+			if err := s.recordResourceFailure(context.Background(), pin, report, stop); !errors.Is(err, stop) {
 				t.Fatal(err)
 			}
 		})
@@ -362,5 +362,5 @@ func TestPackageReviewTerminalFailureCaptureDoesNotScaleWithReport(t *testing.T)
 	if s.failure == nil || s.failure.Counts != large.Counts || s.failure.Conformance != large.Conformance || !s.failure.DiagnosticsTruncated || !s.failure.MetadataTruncated {
 		t.Fatalf("large report independent truth lost: %+v", s.failure)
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 }

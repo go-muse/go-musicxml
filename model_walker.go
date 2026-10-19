@@ -121,7 +121,7 @@ func (w *modelWalker) step() error {
 	return w.account.Charge(validation.BudgetEvents, 1)
 }
 func (w *modelWalker) retain(frame *modelWalkFrame, amount int64) error {
-	if _, err := validation.AllocationSize(amount); err != nil {
+	if _, err := validationAllocationSize(amount); err != nil {
 		return err
 	}
 	if err := w.account.Charge(validation.BudgetBufferedBytes, amount); err != nil {
@@ -202,7 +202,7 @@ func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kin
 			return &validation.ResourceError{Kind: validation.BudgetBufferedBytes, Limit: math.MaxInt64}
 		}
 		capacity := max(8, 2*int64(cap(w.stack)))
-		size, err := validation.AllocationSize(capacity * 8)
+		size, err := validationAllocationSize(capacity * 8)
 		if err != nil {
 			return err
 		}
@@ -223,7 +223,7 @@ func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kin
 			return &validation.ResourceError{Kind: validation.BudgetBufferedBytes, Limit: math.MaxInt64}
 		}
 		capacity := max(8, 2*int64(w.activeCapacity))
-		size, err := validation.AllocationSize(capacity)
+		size, err := validationAllocationSize(capacity)
 		if err != nil {
 			return err
 		}
@@ -564,7 +564,7 @@ func (w *modelWalker) problem(frame *modelWalkFrame, axis validation.ModelAxis, 
 	}
 	// Explicit exact growth accounts the transient replacement before releasing
 	// the previous backing array. Strings above are retained with the frame.
-	count, err := validation.AllocationSize(int64(len(frame.problems)+1) * 256)
+	count, err := validationAllocationSize(int64(len(frame.problems)+1) * 256)
 	if err != nil {
 		return err
 	}

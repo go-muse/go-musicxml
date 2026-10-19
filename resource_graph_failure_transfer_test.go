@@ -71,7 +71,7 @@ func (c *qaPostExportBufferContext) Err() error {
 		pc, _, _, ok := runtime.Caller(2)
 		if ok {
 			f := runtime.FuncForPC(pc)
-			if f != nil && strings.HasSuffix(f.Name(), ".(*PackageSession)."+c.stage) {
+			if f != nil && strings.HasSuffix(f.Name(), ".(*PackageSession)."+strings.ToLower(c.stage[:1])+c.stage[1:]) {
 				matched := c.ancestor == ""
 				if !matched {
 					var callers [24]uintptr

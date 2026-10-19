@@ -117,7 +117,7 @@ func resourceRecordMeasureAs(ctx context.Context, a *Account, v reflect.Value, t
 	default:
 		return 0, contract("resource record payload", "unsupported private payload")
 	}
-	if _, err := AllocationSize(total); err != nil {
+	if _, err := allocationSize(total); err != nil {
 		return 0, err
 	}
 	return total, nil

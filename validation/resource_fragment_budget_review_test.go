@@ -112,13 +112,13 @@ func reviewFragmentSnapshotSession(t *testing.T) *Session {
 	t.Helper()
 	s, key := dtdIDSession(t)
 	f := dtdIDAdmittedAttribute(t, s, key, "a", "value")
-	if err := s.SourceDTDIDAttribute(context.Background(), f); err != nil {
+	if err := s.sourceDTDIDAttribute(context.Background(), f); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CloseNode(context.Background(), schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.CompleteSourceDTDIDs(context.Background(), "source"); err != nil {
+	if err := s.completeSourceDTDIDs(context.Background(), "source"); err != nil {
 		t.Fatal(err)
 	}
 	return s
@@ -162,20 +162,20 @@ func TestReviewFragmentIndexSnapshotAdmissionAndReuse(t *testing.T) {
 		t.Fatal(err)
 	}
 	p := originTransportPackage(t, snap, s.account, nil)
-	rid, err := p.AddResource(context.Background(), originTransportPin(), snap, true)
+	rid, err := p.addResource(context.Background(), originTransportPin(), snap, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	cached, err := p.AddResource(context.Background(), originTransportPin(), snap, true)
+	cached, err := p.addResource(context.Background(), originTransportPin(), snap, true)
 	if err != nil || cached != rid {
 		t.Fatalf("cached transfer %v", err)
 	}
 	for _, doc := range []string{"adopted-a", "adopted-b", "adopted-a-longer-identity"} {
-		aid, e := p.AdoptResource(context.Background(), rid, ResourceAdoptionOptions{Package: "outer", DocumentID: doc})
+		aid, e := p.adoptResource(context.Background(), rid, ResourceAdoptionOptions{Package: "outer", DocumentID: doc})
 		if e != nil {
 			t.Fatal(e)
 		}
-		view, e := p.Adoption(context.Background(), aid)
+		view, e := p.adoption(context.Background(), aid)
 		if e != nil {
 			t.Fatal(e)
 		}

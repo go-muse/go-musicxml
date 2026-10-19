@@ -69,7 +69,7 @@ func cloneLayoutContext(ctx context.Context, s *Session, p *LayoutContextResult)
 	if err = s.step(ctx, work); err != nil {
 		return nil, err
 	}
-	if _, err = AllocationSize(size); err != nil {
+	if _, err = allocationSize(size); err != nil {
 		return nil, err
 	}
 	if err = s.retain(size); err != nil {

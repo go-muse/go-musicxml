@@ -358,7 +358,7 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		return run, errors.Join(cause, finishErr)
 	}
 	internalDTD, sourceDeclarations, captureAttributeLexical := sourceDTDPolicy(config.Profile)
-	sourceDTDIDs := config.Engine.SourceDTDIDsSelected(config.Profile)
+	sourceDTDIDs := validationEngineSourceDTDIDsSelected(config.Engine, config.Profile)
 	// Profiles that read DTD declarations also read a bundled or caller
 	// external subset; the others keep reporting it as unread.
 	var dtd *sourceDTDResolver

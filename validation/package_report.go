@@ -122,8 +122,8 @@ type ResourceAdoption struct {
 	value *packageAdoption
 }
 
-// Adoption obtains a package-owned view without exposing a transferred snapshot.
-func (s *PackageSession) Adoption(ctx context.Context, id ResourceAdoptionID) (*ResourceAdoption, error) {
+// adoption obtains a package-owned view without exposing a transferred snapshot.
+func (s *PackageSession) adoption(ctx context.Context, id ResourceAdoptionID) (*ResourceAdoption, error) {
 	if err := s.event(ctx, "Adoption"); err != nil {
 		return nil, err
 	}
@@ -222,9 +222,9 @@ func (a *ResourceAdoption) Report(ctx context.Context) (Report, error) {
 	return resourceLiveCopy(ctx, a.owner.account, v.report, v.header.DocumentID, a.value.documentID)
 }
 
-// Finish is terminal even when canceled. It preserves admitted known findings,
+// finish is terminal even when canceled. It preserves admitted known findings,
 // publishes one immutable bundle and releases all live owners exactly once.
-func (s *PackageSession) Finish(ctx context.Context, end PackageCompletion) (AssessmentBundle, error) {
+func (s *PackageSession) finish(ctx context.Context, end PackageCompletion) (AssessmentBundle, error) {
 	if s == nil || s.finished || s.account == nil || s.accumulator == nil {
 		return AssessmentBundle{}, &SessionError{Operation: "package Finish", Reason: "already finished or uninitialized"}
 	}

@@ -252,8 +252,8 @@ func TestReviewGraphArchiveInventoryPrerequisiteLookup(t *testing.T) {
 				cancel()
 				wantErr = context.Canceled
 			case "terminated":
-				wantErr = g.session.ObserveEdge(ctx, validation.PackageEdgeObservation{})
-				if wantErr == nil || g.session.TerminalCause() == nil {
+				wantErr = validationPackageSessionObserveEdge(g.session, ctx, validation.PackageEdgeObservation{})
+				if wantErr == nil || validationPackageSessionTerminalCause(g.session) == nil {
 					t.Fatal("fixture failed to terminate session")
 				}
 			case "work-refused":

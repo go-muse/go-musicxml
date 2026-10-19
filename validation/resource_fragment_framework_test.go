@@ -187,10 +187,10 @@ func TestXMLFragmentUnavailableTargetRetainsEvidenceWithUnicodeData(t *testing.T
 				wantOutcome, wantReason = OutcomeUnknown, target.Reason
 			}
 			edge := PackageEdgeObservation{ID: 1, Source: source, Target: target, Indirection: stateKnown(false), Fragment: stateKnown("unknown(\x00)element(/1)"), FragmentTarget: stateUnknown[NodeRef]("target-unavailable")}
-			if err := s.ObserveEdge(context.Background(), edge); err != nil {
+			if err := s.observeEdge(context.Background(), edge); err != nil {
 				t.Fatalf("valid Unicode scheme data lost unavailable-target evidence: %v", err)
 			}
-			bundle, err := s.Finish(context.Background(), PackageCompletion{})
+			bundle, err := s.finish(context.Background(), PackageCompletion{})
 			if err != nil {
 				t.Fatal(err)
 			}

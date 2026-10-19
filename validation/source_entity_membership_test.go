@@ -151,7 +151,7 @@ func TestSourceEntityDeclarationsAdmissionAndOwnership(t *testing.T) {
 			}
 			f := entitySnapshot(true, entityRow("asset", true, 1))
 			tc.mutate(&f)
-			err := s.SourceEntityDeclarations(ctx, f)
+			err := s.sourceEntityDeclarations(ctx, f)
 			if err == nil {
 				t.Fatal("invalid declaration facts admitted")
 			}
@@ -167,7 +167,7 @@ func TestSourceEntityDeclarationsAdmissionAndOwnership(t *testing.T) {
 	}
 	f := entitySnapshot(true, entityRow("asset", false, 1))
 	f.Declarations[0].Origin = Evidence[Location]{State: EvidenceKnown, Value: Location{Target: TargetSource, DocumentID: "source", Path: "/!DOCTYPE/!ENTITY[1]", Position: &SourcePosition{ByteOffset: 17, CoordinateSpace: "original-bytes"}}}
-	if err := s.SourceEntityDeclarations(ctx, f); err != nil {
+	if err := s.sourceEntityDeclarations(ctx, f); err != nil {
 		t.Fatal(err)
 	}
 	f.Declarations[0].Unparsed = true
@@ -193,7 +193,7 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
+	if err := s.sourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CloseNode(ctx, schemaLexemeEnd("missing")); err != nil {
@@ -211,7 +211,7 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
+	if err := s.sourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompleteAttributes(ctx, 1, Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
@@ -309,7 +309,7 @@ func TestSourceEntityDeclarationsDiagnosticCapKeepsFailure(t *testing.T) {
 	if err = s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
+	if err = s.sourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
 		t.Fatal(err)
 	}
 	if err = s.CloseNode(ctx, schemaLexemeEnd("missing")); err != nil {

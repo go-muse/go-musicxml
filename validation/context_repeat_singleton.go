@@ -72,7 +72,7 @@ func contextRepeatProveSingletons(r *contextReader, timeline *timelineService, r
 	if err != nil {
 		return err
 	}
-	capacity, err := AllocationSize(count)
+	capacity, err := allocationSize(count)
 	if err != nil {
 		return err
 	}

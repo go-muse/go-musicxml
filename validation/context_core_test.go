@@ -49,10 +49,10 @@ func TestContextProjectionQuotaBeforeAllocation(t *testing.T) {
 	}
 }
 func TestContextPlanRejectsInvalidSchema(t *testing.T) {
-	if _, err := NewLocalContextPlan(nil); !errors.Is(err, ErrInvalidConfiguration) {
+	if _, err := newLocalContextPlan(nil); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Fatalf("got %v", err)
 	}
-	if _, err := NewSpanContextPlan(ContextPlanSpec{}); !errors.Is(err, ErrInvalidConfiguration) {
+	if _, err := newSpanContextPlan(ContextPlanSpec{}); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Fatalf("got %v", err)
 	}
 }

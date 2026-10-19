@@ -316,14 +316,14 @@ func NewXSDPlan(schema *CompiledSchema, check XSDCheck) (Plan, error) {
 	return checkedPlan(Plan{kind: planXSD, schema: schema, xsdCheck: check})
 }
 
-// NewXSDPlanWithSourceDeclarations selects the bounded source-document
+// newXSDPlanWithSourceDeclarations selects the bounded source-document
 // ENTITY/ENTITIES declaration prerequisite for this composite operation. Direct
 // built-in types and restriction descendants use effective general-entity facts;
 // reached arbitrary constructed ENTITY-bearing list/union semantics remain
 // unavailable under the pinned XSD 1.0 contract. All selected XSD operations in
 // an assembly must agree on this mode. Only source-target rules are accepted.
 // The Session must receive SourceEntityDeclarations before root attribute facts.
-func NewXSDPlanWithSourceDeclarations(schema *CompiledSchema, check XSDCheck) (Plan, error) {
+func newXSDPlanWithSourceDeclarations(schema *CompiledSchema, check XSDCheck) (Plan, error) {
 	return checkedPlan(Plan{kind: planXSD, schema: schema, xsdCheck: check, xsdMode: xsdSourceDeclarationsV1})
 }
 

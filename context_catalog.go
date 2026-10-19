@@ -61,12 +61,12 @@ func buildContextAssessmentDefinitions() (*assessmentDefinitions, error) {
 		timeline               bool
 		plan                   func() (validation.Plan, error)
 	}{
-		{"local", "Local contextual defaults and applicability", "Project reviewed use-specific defaults, inheritance and applicability from exact source or current-model evidence; unknown presence never activates a default.", []string{"MX40-PROSE-printout-conditional-default", "MX40-PROSE-direction-format-inheritance", "MX40-PROSE-lyric-defaults"}, 2160, false, func() (validation.Plan, error) { return validation.NewLocalContextPlan(schema) }},
-		{"spans", "Type-specific span correspondence", "Retain document-overlap identity separately from musical endpoint roles, including implied visual ties, beams, tuplets, lyrics and part-list intervals; no universal balance or staff/voice partition.", []string{"MX40-PROSE-number-level-overlap", "MX40-PROSE-tied-number-implied", "MX40-PROSE-part-group-boundaries"}, 287, true, func() (validation.Plan, error) { return validation.NewSpanContextPlan(spec) }},
-		{"graphical-repeats", "Graphical repeat ranges", "Project beat/measure/slash display scopes and proven content relations without synthesizing missing music or using XML strings as musical equality.", []string{"MX40-PROSE-beat-repeat-content", "MX40-PROSE-measure-repeat-content", "MX40-PROSE-slash-start-stop"}, 2907, true, func() (validation.Plan, error) { return validation.NewRepeatContextPlan(spec) }},
-		{"navigation", "Bounded repeat navigation and pass context", "Keep typed navigation targets, exact repeat/pass evidence and proven traversal separate from graphical repetition; unresolved edges and limits are not MusicXML violations.", []string{"MX40-PROSE-repeat-backward-attributes", "MX40-PROSE-sound-jump-passes", "MX40-PROSE-unknown-ending-number"}, 4125, true, func() (validation.Plan, error) { return validation.NewNavigationContextPlan(spec) }},
-		{"layout", "Scoped layout applicability", "Project score defaults and page/system/measure-local overrides, preserving first-visible-staff and geometry availability without constructing a full engraver.", []string{"MX40-PROSE-staff-layout-scope", "MX40-PROSE-system-layout-scope", "MX40-PROSE-page-layout-fallback"}, 4479, true, func() (validation.Plan, error) { return validation.NewLayoutContextPlan(spec) }},
-		{"performance", "Encoded performance and timing context", "Project documented performance defaults and exact accepted timing facts, keeping cue silence, swing eligibility, signed adjustments and intent-dependent realization distinct.", []string{"MX40-PROSE-cue-silent", "MX40-PROSE-swing-applicability", "MX40-PROSE-grace-time-semantics", "MX40-PROSE-transpose-additive"}, 4214, true, func() (validation.Plan, error) { return validation.NewPerformanceContextPlan(spec) }},
+		{"local", "Local contextual defaults and applicability", "Project reviewed use-specific defaults, inheritance and applicability from exact source or current-model evidence; unknown presence never activates a default.", []string{"MX40-PROSE-printout-conditional-default", "MX40-PROSE-direction-format-inheritance", "MX40-PROSE-lyric-defaults"}, 2160, false, func() (validation.Plan, error) { return validationNewLocalContextPlan(schema) }},
+		{"spans", "Type-specific span correspondence", "Retain document-overlap identity separately from musical endpoint roles, including implied visual ties, beams, tuplets, lyrics and part-list intervals; no universal balance or staff/voice partition.", []string{"MX40-PROSE-number-level-overlap", "MX40-PROSE-tied-number-implied", "MX40-PROSE-part-group-boundaries"}, 287, true, func() (validation.Plan, error) { return validationNewSpanContextPlan(spec) }},
+		{"graphical-repeats", "Graphical repeat ranges", "Project beat/measure/slash display scopes and proven content relations without synthesizing missing music or using XML strings as musical equality.", []string{"MX40-PROSE-beat-repeat-content", "MX40-PROSE-measure-repeat-content", "MX40-PROSE-slash-start-stop"}, 2907, true, func() (validation.Plan, error) { return validationNewRepeatContextPlan(spec) }},
+		{"navigation", "Bounded repeat navigation and pass context", "Keep typed navigation targets, exact repeat/pass evidence and proven traversal separate from graphical repetition; unresolved edges and limits are not MusicXML violations.", []string{"MX40-PROSE-repeat-backward-attributes", "MX40-PROSE-sound-jump-passes", "MX40-PROSE-unknown-ending-number"}, 4125, true, func() (validation.Plan, error) { return validationNewNavigationContextPlan(spec) }},
+		{"layout", "Scoped layout applicability", "Project score defaults and page/system/measure-local overrides, preserving first-visible-staff and geometry availability without constructing a full engraver.", []string{"MX40-PROSE-staff-layout-scope", "MX40-PROSE-system-layout-scope", "MX40-PROSE-page-layout-fallback"}, 4479, true, func() (validation.Plan, error) { return validationNewLayoutContextPlan(spec) }},
+		{"performance", "Encoded performance and timing context", "Project documented performance defaults and exact accepted timing facts, keeping cue silence, swing eligibility, signed adjustments and intent-dependent realization distinct.", []string{"MX40-PROSE-cue-silent", "MX40-PROSE-swing-applicability", "MX40-PROSE-grace-time-semantics", "MX40-PROSE-transpose-additive"}, 4214, true, func() (validation.Plan, error) { return validationNewPerformanceContextPlan(spec) }},
 	}
 	for _, f := range families {
 		plan, err := f.plan()
@@ -83,7 +83,7 @@ func buildContextAssessmentDefinitions() (*assessmentDefinitions, error) {
 	}
 
 	opusAssembly := validation.AssemblyOpus
-	opusPlan, err := validation.NewOpusLayoutContextPlan(d.schemas[opusAssembly])
+	opusPlan, err := validationNewOpusLayoutContextPlan(d.schemas[opusAssembly])
 	if err != nil {
 		return nil, err
 	}
@@ -96,9 +96,9 @@ func buildContextAssessmentDefinitions() (*assessmentDefinitions, error) {
 		line                                      int
 		makePlan                                  func(validation.ConsumerSpec) (validation.Plan, error)
 	}{
-		{"bend-release-negative", "bend", "Negative release distance after an established bend", "For an established release-after-bend gesture the exact bend-alter must be negative. Lone, pre-bend or ambiguous gestures do not establish this antecedent.", "performance", 4744, validation.NewBendReleaseSignPlan},
-		{"beat-repeat-content", "beat-repeat", "Encoded music for a graphical beat repeat", "A graphical repeat does not supply missing musical events. Consume only proved scoped content correspondence; unresolved timing or equivalence remains incomplete.", "graphical-repeats", 2907, validation.NewGraphicalRepeatContentPlan},
-		{"measure-repeat-content", "measure-repeat", "Encoded music for a graphical measure repeat", "Repeated musical content must be encoded in the affected measures. Exact supported content proofs are separate from unspecified broader event-equivalence policies.", "graphical-repeats", 3048, validation.NewGraphicalRepeatContentPlan},
+		{"bend-release-negative", "bend", "Negative release distance after an established bend", "For an established release-after-bend gesture the exact bend-alter must be negative. Lone, pre-bend or ambiguous gestures do not establish this antecedent.", "performance", 4744, validationNewBendReleaseSignPlan},
+		{"beat-repeat-content", "beat-repeat", "Encoded music for a graphical beat repeat", "A graphical repeat does not supply missing musical events. Consume only proved scoped content correspondence; unresolved timing or equivalence remains incomplete.", "graphical-repeats", 2907, validationNewGraphicalRepeatContentPlan},
+		{"measure-repeat-content", "measure-repeat", "Encoded music for a graphical measure repeat", "Repeated musical content must be encoded in the affected measures. Exact supported content proofs are separate from unspecified broader event-equivalence policies.", "graphical-repeats", 3048, validationNewGraphicalRepeatContentPlan},
 	} {
 		provider := validation.RuleKey{ID: validation.RuleID("MX40-CONTEXT-" + consumer.provider), Revision: 1}
 		plan, err := consumer.makePlan(validation.ConsumerSpec{Schema: schema, Provider: provider})
@@ -124,7 +124,7 @@ func buildContextAssessmentDefinitions() (*assessmentDefinitions, error) {
 		order = append(order, owner)
 	}
 	slices.SortFunc(order, func(a, b validation.ComponentID) int { return cmp.Compare(a.Name.Local, b.Name.Local) })
-	plan, err := validation.NewTimeOnlyOrderPlan(schema)
+	plan, err := validationNewTimeOnlyOrderPlan(schema)
 	if err != nil {
 		return nil, err
 	}

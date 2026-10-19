@@ -278,7 +278,7 @@ func TestBarlineLocationPlanRequiresExactNodeAndTimelineContract(t *testing.T) {
 	schema := localSchema(t)
 	key := RuleKey{"timeline", 1}
 	for _, spec := range []ContextPlanSpec{{}, {Schema: schema}, {TimelineProvider: key}} {
-		if _, err := NewBarlineLocationPlan(spec); !errors.Is(err, ErrInvalidConfiguration) {
+		if _, err := newBarlineLocationPlan(spec); !errors.Is(err, ErrInvalidConfiguration) {
 			t.Fatalf("accepted incomplete spec: %+v %v", spec, err)
 		}
 	}

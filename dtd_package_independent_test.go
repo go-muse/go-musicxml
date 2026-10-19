@@ -386,7 +386,7 @@ func TestDTDPkgIndependentRejectedTransfersKeepSnapshotOwned(t *testing.T) {
 				ctx, cancel = context.WithCancel(ctx)
 				cancel()
 			}
-			if _, err = s.AddResource(ctx, pin, out.Snapshot, true); err == nil {
+			if _, err = validationPackageSessionAddResource(s, ctx, pin, out.Snapshot, true); err == nil {
 				t.Fatal("invalid transfer accepted")
 			}
 			_, _ = g.finish(err)
@@ -566,7 +566,7 @@ func TestDTDPkgIndependentCapabilitiesPartitionExactSnapshotIdentity(t *testing.
 		// An editable returned report cannot replace the core snapshot identity.
 		out.Report.Profile.CatalogDigest = "forged"
 		out.Report.Profile.ID = ProfileSourceDictionaries
-		id, err := g.session.AddResource(ctx, pin, out.Snapshot, true)
+		id, err := validationPackageSessionAddResource(g.session, ctx, pin, out.Snapshot, true)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -650,7 +650,7 @@ func TestDTDPkgIndependentExactIntrinsicRowsAcceptOnlyTheirTargets(t *testing.T)
 				if h.Assembly.State != validation.EvidenceKnown || h.Assembly.Value != row.assembly || h.Target != target || h.Profile != row.profile || h.CatalogDigest != exact.CatalogDigest {
 					t.Fatalf("wrong intrinsic interpretation: %+v", h)
 				}
-				id, err := g.session.AddResource(ctx, pin, out.Snapshot, true)
+				id, err := validationPackageSessionAddResource(g.session, ctx, pin, out.Snapshot, true)
 				if row.model && !pkg.models {
 					if err == nil || id != "" {
 						t.Fatal("raw source package admitted current model")

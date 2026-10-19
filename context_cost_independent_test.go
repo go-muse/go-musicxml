@@ -35,17 +35,17 @@ func TestIndependentContextFamilyCostAttribution(t *testing.T) {
 				var plan validation.Plan
 				switch family {
 				case "local":
-					plan, err = validation.NewLocalContextPlan(schema)
+					plan, err = validationNewLocalContextPlan(schema)
 				case "spans":
-					plan, err = validation.NewSpanContextPlan(spec)
+					plan, err = validationNewSpanContextPlan(spec)
 				case "graphical-repeats":
-					plan, err = validation.NewRepeatContextPlan(spec)
+					plan, err = validationNewRepeatContextPlan(spec)
 				case "navigation":
-					plan, err = validation.NewNavigationContextPlan(spec)
+					plan, err = validationNewNavigationContextPlan(spec)
 				case "layout":
-					plan, err = validation.NewLayoutContextPlan(spec)
+					plan, err = validationNewLayoutContextPlan(spec)
 				case "performance":
-					plan, err = validation.NewPerformanceContextPlan(spec)
+					plan, err = validationNewPerformanceContextPlan(spec)
 				}
 				if err != nil {
 					t.Fatal(err)

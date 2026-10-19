@@ -66,7 +66,7 @@ func (h *timelineState) queryKeyPresenceScope(ctx context.Context, s *Session, p
 	if err != nil {
 		return stateResult[bool]{}, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return stateResult[bool]{}, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
@@ -218,10 +218,10 @@ func (h *timelineState) queryStafflessKeyPresence(ctx context.Context, s *Sessio
 	if err != nil {
 		return stateResult[bool]{}, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return stateResult[bool]{}, err
 	}
-	capacity, err := AllocationSize(count)
+	capacity, err := allocationSize(count)
 	if err != nil {
 		return stateResult[bool]{}, err
 	}

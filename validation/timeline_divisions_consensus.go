@@ -62,7 +62,7 @@ func (h *timelineState) queryDivisions(ctx context.Context, s *Session, pos musi
 	if err != nil {
 		return stateResult[Decimal]{}, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return stateResult[Decimal]{}, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {

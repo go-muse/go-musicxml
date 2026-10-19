@@ -68,18 +68,18 @@ func appendLinkAssessmentDefinitions(d *assessmentDefinitions) (*assessmentDefin
 	}
 	for _, assembly := range []validation.Assembly{validation.AssemblyMusicXML, validation.AssemblyOpus} {
 		schema := d.schemas[assembly]
-		plan, err := validation.NewLocalLinkContextPlan(schema)
+		plan, err := validationNewLocalLinkContextPlan(schema)
 		if err != nil {
 			return nil, err
 		}
 		add(assembly, "MX40-RESOURCE-local-links/"+string(assembly), "Local resource and attachment context", "Retain exact assembly-qualified local resource templates and existing typed references without fetching or inventing target requirements.", plan, []validation.SourceRef{{IDs: []string{"MX40-PROSE-link-element-position", "MX40-PROSE-image-scaling", "MX40-PROSE-group-link-match"}, URL: localSchemaSource(2354), Locator: "Exact local MusicXML/Opus link use bindings; external resolution excluded"}, {IDs: []string{"MX40-PROSE-xlink-actuate-behavior", "MX40-PROSE-xlink-show-behavior"}, URL: "https://www.w3.org/TR/2001/REC-xlink-20010627/#link-behaviors", Locator: "XLink 1.0 section 5.6 intended behavior; no application or retrieval authority"}, {IDs: []string{"MX40-PROSE-xlink-show-default"}, URL: localSchemaSource(2369), Locator: "MusicXML link-attributes defaults; exact Opus counterpart opus.xsd lines 52-53"}})
-		hints, err := validation.NewSchemaHintContextPlan(schema)
+		hints, err := validationNewSchemaHintContextPlan(schema)
 		if err != nil {
 			return nil, err
 		}
 		add(assembly, "MX40-RESOURCE-schema-hints/"+string(assembly), "Schema hint discovery pairs", "Preserve complete pairs and unmatched trailing URI independently of the accepted list(anyURI) datatype; no hinted schema is loaded or selected.", hints, []validation.SourceRef{{IDs: []string{"REQ-DEF-XSI-SCHEMALOC", "REQ-DEF-XSI-NONAMESPACE"}, URL: "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc", Locator: "XML Schema 1.0 Second Edition Part 1 section 4.3.2"}})
 	}
-	opus, err := validation.NewOpusLayoutContextPlan(d.schemas[validation.AssemblyOpus])
+	opus, err := validationNewOpusLayoutContextPlan(d.schemas[validation.AssemblyOpus])
 	if err != nil {
 		return nil, err
 	}

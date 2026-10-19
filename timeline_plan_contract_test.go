@@ -105,16 +105,16 @@ func timelineContractCatalog(t *testing.T, s *validation.CompiledSchema, provide
 }
 func timelineContractPlans(t *testing.T, s *validation.CompiledSchema, numeral bool) (validation.Plan, validation.Plan) {
 	t.Helper()
-	p, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: timelineContractOwners(t, s)})
+	p, err := validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: timelineContractOwners(t, s)})
 	if err != nil {
 		t.Fatal(err)
 	}
 	spec := validation.ConsumerSpec{Schema: s, Provider: validation.RuleKey{ID: "z-timeline", Revision: 1}}
 	var c validation.Plan
 	if numeral {
-		c, err = validation.NewNumeralKeyPlan(spec)
+		c, err = validationNewNumeralKeyPlan(spec)
 	} else {
-		c, err = validation.NewChordDurationPlan(spec)
+		c, err = validationNewChordDurationPlan(spec)
 	}
 	if err != nil {
 		t.Fatal(err)
@@ -143,12 +143,12 @@ func TestTimelinePlanSealedConfiguration(t *testing.T) {
 			p := good
 			p.PartOwners = append([]validation.ReferenceOwner(nil), good.PartOwners...)
 			tc.change(&p)
-			if _, err := validation.NewTimelinePlan(p); !errors.Is(err, validation.ErrInvalidConfiguration) {
+			if _, err := validationNewTimelinePlan(p); !errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("accepted invalid contract: %v", err)
 			}
 		})
 	}
-	for _, makePlan := range []func(validation.ConsumerSpec) (validation.Plan, error){validation.NewChordDurationPlan, validation.NewNumeralKeyPlan} {
+	for _, makePlan := range []func(validation.ConsumerSpec) (validation.Plan, error){validationNewChordDurationPlan, validationNewNumeralKeyPlan} {
 		for _, spec := range []validation.ConsumerSpec{{}, {Schema: s}, {Schema: s, Provider: validation.RuleKey{ID: "z-timeline"}}, {Provider: validation.RuleKey{ID: "z-timeline", Revision: 1}}} {
 			if _, err := makePlan(spec); !errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("accepted consumer %+v: %v", spec, err)
@@ -217,7 +217,7 @@ func TestTimelineCatalogRequiresExactProvider(t *testing.T) {
 func TestTimelineCatalogOwnershipDigestAndOrder(t *testing.T) {
 	s := timelineContractSchema(t)
 	spec := validation.TimelinePlanSpec{Schema: s, PartOwners: timelineContractOwners(t, s)}
-	p, err := validation.NewTimelinePlan(spec)
+	p, err := validationNewTimelinePlan(spec)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,7 +238,7 @@ func TestTimelineCatalogOwnershipDigestAndOrder(t *testing.T) {
 	}
 	owners := timelineContractOwners(t, s)
 	slices.Reverse(owners)
-	b[1].Plan, err = validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: owners})
+	b[1].Plan, err = validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: owners})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -332,7 +332,7 @@ func TestTimelinePlanRejectsMalformedPinnedRoleShapes(t *testing.T) {
 				typ.Complex = &complex
 				data.Types[key] = &typ
 			})
-			if _, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: timelineContractOwners(t, s)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
+			if _, err := validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: timelineContractOwners(t, s)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("accepted malformed role shape: %v", err)
 			}
 		})
@@ -353,7 +353,7 @@ func TestTimelineCatalogSelectionSchemaAndImplicitCycles(t *testing.T) {
 		{"owner revision", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
 			owners := timelineContractOwners(t, s)
 			owners[0].Rule.Revision++
-			b[1].Plan, _ = validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: owners})
+			b[1].Plan, _ = validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: owners})
 			return r, p, b
 		}},
 		{"owner target mismatch", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
@@ -370,7 +370,7 @@ func TestTimelineCatalogSelectionSchemaAndImplicitCycles(t *testing.T) {
 			return r, p, b
 		}},
 		{"consumer schema mismatch", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
-			b[0].Plan, _ = validation.NewChordDurationPlan(validation.ConsumerSpec{Schema: other, Provider: r[1].Key})
+			b[0].Plan, _ = validationNewChordDurationPlan(validation.ConsumerSpec{Schema: other, Provider: r[1].Key})
 			return r, p, b
 		}},
 		{"selected XSD schema mismatch", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
@@ -411,7 +411,7 @@ func TestTimelinePlansSnapshotSchemaHandlesAndProviderRevision(t *testing.T) {
 	}
 	replacement := r[1].Key
 	replacement.Revision++
-	b[0].Plan, err = validation.NewChordDurationPlan(validation.ConsumerSpec{Schema: s, Provider: replacement})
+	b[0].Plan, err = validationNewChordDurationPlan(validation.ConsumerSpec{Schema: s, Provider: replacement})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -475,7 +475,7 @@ func TestTimelinePlanRejectsWrongNamedScalarFamilies(t *testing.T) {
 				tc.change(&typ)
 				d.Types[key] = &typ
 			})
-			if _, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: timelineContractOwners(t, schema)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
+			if _, err := validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: timelineContractOwners(t, schema)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("accepted wrong underlying scalar/complex family: %v", err)
 			}
 		})
@@ -504,7 +504,7 @@ func TestTimelinePlanRequiresRetainedCompositeDiscriminators(t *testing.T) {
 				typ.Complex = &c
 				data.Types[key] = &typ
 			})
-			if _, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: timelineContractOwners(t, schema)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
+			if _, err := validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: timelineContractOwners(t, schema)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("accepted missing retained discriminator: %v", err)
 			}
 		})

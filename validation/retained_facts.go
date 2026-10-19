@@ -417,7 +417,7 @@ func growFactSlice[T retainedFactSlot](ctx context.Context, s *Session, v []T) (
 	if err != nil {
 		return v, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return v, err
 	}
 	if err = s.retain(bytes); err != nil {
@@ -455,7 +455,7 @@ func (s *Session) growFactNodes(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return err
 	}
 	if err = s.retain(bytes); err != nil {
@@ -510,7 +510,7 @@ func retainedFactSize(parts ...int64) (int64, error) {
 			return 0, err
 		}
 	}
-	if _, err := AllocationSize(n); err != nil {
+	if _, err := allocationSize(n); err != nil {
 		return 0, err
 	}
 	return n, nil

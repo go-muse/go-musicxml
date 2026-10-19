@@ -236,16 +236,16 @@ func TestSharedBudgetAccountConcurrentAggregateQuota(t *testing.T) {
 func TestAllocationSizeChecksHostIntWithoutNarrowingLimits(t *testing.T) {
 	max := int64(^uint(0) >> 1)
 	for _, n := range []int64{0, 1, max} {
-		got, err := AllocationSize(n)
+		got, err := allocationSize(n)
 		if err != nil || int64(got) != n {
 			t.Errorf("AllocationSize(%d) = %d,%v", n, got, err)
 		}
 	}
-	if _, err := AllocationSize(-1); !errors.Is(err, ErrInvalidConfiguration) {
+	if _, err := allocationSize(-1); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Errorf("negative allocation = %v", err)
 	}
 	if strconv.IntSize == 32 {
-		if _, err := AllocationSize(max + 1); !errors.Is(err, ErrResourceLimit) {
+		if _, err := allocationSize(max + 1); !errors.Is(err, ErrResourceLimit) {
 			t.Errorf("host overflow = %v", err)
 		}
 	}

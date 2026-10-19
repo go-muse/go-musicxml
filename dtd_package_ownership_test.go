@@ -59,7 +59,7 @@ func TestDTDPackageCompositionTransferIdentityAndCallerOwnership(t *testing.T) {
 				pin.Digest = ""
 				pin.SnapshotID = "current"
 			}
-			id, err := g.session.AddResource(ctx, pin, result.Snapshot, true)
+			id, err := validationPackageSessionAddResource(g.session, ctx, pin, result.Snapshot, true)
 			if mode == "exact" {
 				if err != nil || id == "" {
 					t.Fatal(err)
@@ -107,7 +107,7 @@ func TestDTDPackageCompositionExplicitSoundsAdoption(t *testing.T) {
 		t.Fatal(err)
 	}
 	pin := g.primaryPin(validation.ResourceSourceXML, strings.Repeat("a", 64))
-	if err = g.session.OpenPackage(ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); err != nil {
+	if err = validationPackageSessionOpenPackage(g.session, ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); err != nil {
 		t.Fatal(err)
 	}
 	input := []byte(`<!DOCTYPE sounds [<!ATTLIST sound id CDATA "brass.alphorn"><!ENTITY alternatives "<any primary='yes'>A</any><any>B</any>">]><sounds><sound>&alternatives;</sound><sound id="custom.sound"/></sounds>`)
@@ -116,11 +116,11 @@ func TestDTDPackageCompositionExplicitSoundsAdoption(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, document := range []string{"sounds-first", "sounds-second"} {
-		aid, e := g.session.AdoptResource(ctx, resource.id, validation.ResourceAdoptionOptions{DocumentID: document, Package: "root", ArchiveEntry: document + ".xml", BaseURI: "https://sounds.test/" + document + "/"})
+		aid, e := validationPackageSessionAdoptResource(g.session, ctx, resource.id, validation.ResourceAdoptionOptions{DocumentID: document, Package: "root", ArchiveEntry: document + ".xml", BaseURI: "https://sounds.test/" + document + "/"})
 		if e != nil {
 			t.Fatal(e)
 		}
-		adoption, e := g.session.Adoption(ctx, aid)
+		adoption, e := validationPackageSessionAdoption(g.session, ctx, aid)
 		if e != nil {
 			t.Fatal(e)
 		}

@@ -192,7 +192,7 @@ func rationalSum(kind BudgetKind, values ...int64) (int64, error) {
 	}
 	return sum, nil
 }
-func rationalAllocation(bytes int64) (int, error) { return AllocationSize(bytes) }
+func rationalAllocation(bytes int64) (int, error) { return allocationSize(bytes) }
 func rationalMagnitude(bits int64) int64 {
 	n := bits / 8
 	if bits%8 != 0 {

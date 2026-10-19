@@ -37,18 +37,18 @@ func TestPackageMimetypeLocalHeaderExtraScope(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := beginPackageFixture(t, PackageCheckMimetypeNoExtra)
-			if err := s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+			if err := s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 				t.Fatal(err)
 			}
 			e := packageTestEntry(1, "mimetype")
 			tc.change(&e)
-			if err := s.ObserveEntry(context.Background(), e); err != nil {
+			if err := s.observeEntry(context.Background(), e); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+			if err := s.sealEnumeration(context.Background(), completePackage("outer")); err != nil {
 				t.Fatal(err)
 			}
-			b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+			b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -77,7 +77,7 @@ func TestPackageMimetypeLocalHeaderExtraScope(t *testing.T) {
 func TestPackageMimetypeLocalExtraFailureSurvivesUnavailableCentralAndCancellation(t *testing.T) {
 	for _, cancelFinish := range []bool{false, true} {
 		s := beginPackageFixture(t, PackageCheckMimetypeNoExtra)
-		if err := s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+		if err := s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 			t.Fatal(err)
 		}
 		e := packageTestEntry(1, "mimetype")
@@ -85,14 +85,14 @@ func TestPackageMimetypeLocalExtraFailureSurvivesUnavailableCentralAndCancellati
 		e.Central.Present = Evidence[bool]{State: EvidenceUnknown, Reason: "malformed-central-record"}
 		e.Central.ExtraLength = Evidence[uint64]{State: EvidenceUnknown, Reason: "malformed-central-record"}
 		e.HeaderAssociation = Evidence[bool]{State: EvidenceUnknown, Reason: "unavailable-association"}
-		if err := s.ObserveEntry(context.Background(), e); err != nil {
+		if err := s.observeEntry(context.Background(), e); err != nil {
 			t.Fatal(err)
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		if cancelFinish {
 			cancel()
 		}
-		b, err := s.Finish(ctx, PackageCompletion{})
+		b, err := s.finish(ctx, PackageCompletion{})
 		cancel()
 		if cancelFinish && !errors.Is(err, context.Canceled) || !cancelFinish && err != nil {
 			t.Fatal(err)

@@ -98,7 +98,7 @@ func cloneDictionaryContext(ctx context.Context, s *Session, p *DictionaryContex
 	if err != nil {
 		return nil, err
 	}
-	if _, err = AllocationSize(size); err != nil {
+	if _, err = allocationSize(size); err != nil {
 		return nil, err
 	}
 	if err = s.retain(size); err != nil {

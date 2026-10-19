@@ -75,7 +75,7 @@ func fragmentCompositionSource(t *testing.T, engine *validation.Engine, profile 
 			_, _ = run.finish(nil)
 		}
 	}()
-	dtdIDs := engine.SourceDTDIDsSelected(profile)
+	dtdIDs := validationEngineSourceDTDIDsSelected(engine, profile)
 	lexical, err := newSourceXMLTokenReader(strings.NewReader(source), sourceXMLConfig{
 		Context: ctx, Account: account, ByteOwner: sourceBytesPrimary,
 		InternalDTD: sourceInfoset, CaptureAttributeLexical: sourceInfoset, CaptureDTDIDs: dtdIDs,
@@ -174,17 +174,17 @@ func newFragmentCompositionPackage(t *testing.T, account *validation.Account, re
 	if err != nil {
 		t.Fatal(err)
 	}
-	session, err := catalog.Begin(context.Background(), validation.RunOptions{DocumentID: "fragment-package", Profile: profile.Profile.ID, Account: account})
+	session, err := validationCompiledPackageCatalogBegin(catalog, context.Background(), validation.RunOptions{DocumentID: "fragment-package", Profile: profile.Profile.ID, Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
 	p := &fragmentCompositionPackage{session: session}
 	t.Cleanup(func() {
 		if !p.finished {
-			_, _ = session.Finish(context.Background(), validation.PackageCompletion{})
+			_, _ = validationPackageSessionFinish(session, context.Background(), validation.PackageCompletion{})
 		}
 	})
-	if err = session.OpenPackage(context.Background(), validation.PackageIdentity{ID: "outer", Representation: validation.ResourceSourceXML,
+	if err = validationPackageSessionOpenPackage(session, context.Background(), validation.PackageIdentity{ID: "outer", Representation: validation.ResourceSourceXML,
 		Pin: validation.ResourcePin{CanonicalID: "fragment-boundary", Representation: validation.ResourceSourceXML, Digest: strings.Repeat("a", 64)},
 	}); err != nil {
 		t.Fatal(err)
@@ -194,7 +194,7 @@ func newFragmentCompositionPackage(t *testing.T, account *validation.Account, re
 
 func (p *fragmentCompositionPackage) add(t *testing.T, resource fragmentCompositionResource) validation.ResourceAssessmentID {
 	t.Helper()
-	id, err := p.session.AddResource(context.Background(), resource.pin, resource.snapshot, true)
+	id, err := validationPackageSessionAddResource(p.session, context.Background(), resource.pin, resource.snapshot, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,12 +203,12 @@ func (p *fragmentCompositionPackage) add(t *testing.T, resource fragmentComposit
 
 func (p *fragmentCompositionPackage) adopt(t *testing.T, resource validation.ResourceAssessmentID, documentID string, root bool) (validation.ResourceAdoptionID, *validation.ResourceAdoption) {
 	t.Helper()
-	id, err := p.session.AdoptResource(context.Background(), resource, validation.ResourceAdoptionOptions{Package: "outer", DocumentID: documentID, Root: root})
+	id, err := validationPackageSessionAdoptResource(p.session, context.Background(), resource, validation.ResourceAdoptionOptions{Package: "outer", DocumentID: documentID, Root: root})
 	if err != nil {
 		t.Fatal(err)
 	}
 	p.adoptions = append(p.adoptions, id)
-	view, err := p.session.Adoption(context.Background(), id)
+	view, err := validationPackageSessionAdoption(p.session, context.Background(), id)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,22 +221,22 @@ func (p *fragmentCompositionPackage) finish(t *testing.T) validation.AssessmentB
 	complete := validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}
 	sealed := make(map[validation.ResourceAdoptionID]bool)
 	for _, id := range p.adoptions {
-		owner, err := p.session.ExpansionOwner(ctx, id)
+		owner, err := validationPackageSessionExpansionOwner(p.session, ctx, id)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if !sealed[owner] {
-			if err = p.session.SealResourceExpansion(ctx, owner, complete); err != nil {
+			if err = validationPackageSessionSealResourceExpansion(p.session, ctx, owner, complete); err != nil {
 				t.Fatal(err)
 			}
 			sealed[owner] = true
 		}
 	}
-	if err := p.session.SealEnumeration(ctx, validation.PackageEnumeration{Package: "outer", Entries: complete, Rootfiles: complete, Edges: complete, Roles: complete}); err != nil {
+	if err := validationPackageSessionSealEnumeration(p.session, ctx, validation.PackageEnumeration{Package: "outer", Entries: complete, Rootfiles: complete, Edges: complete, Roles: complete}); err != nil {
 		t.Fatal(err)
 	}
 	p.finished = true
-	bundle, err := p.session.Finish(ctx, validation.PackageCompletion{InputComplete: true})
+	bundle, err := validationPackageSessionFinish(p.session, ctx, validation.PackageCompletion{InputComplete: true})
 	if err != nil || !bundle.EnumerationComplete() {
 		t.Fatalf("package finish: complete=%t err=%v", bundle.EnumerationComplete(), err)
 	}
@@ -325,7 +325,7 @@ func TestXMLFragmentCompositionSourceOrderAndRepeatedAdoption(t *testing.T) {
 			adoption, view = secondID, second
 		}
 		resolved := fragmentCompositionResolve(t, view, "element(/1/4/1/1)", validation.EvidenceKnown, 9)
-		err = p.session.ObserveEdge(context.Background(), validation.PackageEdgeObservation{
+		err = validationPackageSessionObserveEdge(p.session, context.Background(), validation.PackageEdgeObservation{
 			ID: validation.PackageFactID(edges + 1), Source: rootID, Template: uint64(i),
 			Target:      validation.Evidence[validation.ResourceAdoptionID]{State: validation.EvidenceKnown, Value: adoption},
 			Indirection: validation.Evidence[bool]{State: validation.EvidenceKnown, Value: false},
@@ -544,7 +544,7 @@ func TestXMLFragmentCompositionOldProfilesAndIndirectionStayGated(t *testing.T) 
 			if row.Resource == nil || row.Resource.Link == nil {
 				continue
 			}
-			err = p.session.ObserveEdge(context.Background(), validation.PackageEdgeObservation{
+			err = validationPackageSessionObserveEdge(p.session, context.Background(), validation.PackageEdgeObservation{
 				ID: 1, Source: sourceID, Template: uint64(i),
 				Target:      validation.Evidence[validation.ResourceAdoptionID]{State: validation.EvidenceKnown, Value: targetID},
 				Indirection: validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true},

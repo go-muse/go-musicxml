@@ -148,7 +148,7 @@ func TestAuxiliarySoundsAssemblyAndSourceOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	plan, err := validation.NewSoundsMappingContextPlan(sounds)
+	plan, err := validationNewSoundsMappingContextPlan(sounds)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,11 +160,11 @@ func TestAuxiliarySoundsAssemblyAndSourceOnly(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err = validation.NewSoundsMappingContextPlan(schema); !errors.Is(err, validation.ErrInvalidConfiguration) {
+		if _, err = validationNewSoundsMappingContextPlan(schema); !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Fatalf("wrong assembly accepted %s: %v", entry.assembly, err)
 		}
 	}
-	if _, err = validation.NewLocalContextPlan(sounds); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err = validationNewLocalContextPlan(sounds); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatal("score plan accepted sounds")
 	}
 	for _, bad := range []string{"target", "assembly", "role"} {

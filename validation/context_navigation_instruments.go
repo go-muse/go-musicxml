@@ -188,7 +188,7 @@ func navigationBuildInstrumentIndex(ctx context.Context, s *Session, timeline *t
 			return nil, err
 		}
 	}
-	n, err := AllocationSize(count)
+	n, err := allocationSize(count)
 	if err != nil {
 		return nil, err
 	}

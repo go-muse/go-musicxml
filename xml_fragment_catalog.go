@@ -31,7 +31,7 @@ func electXMLFragmentBaseline(d *assessmentDefinitions, sourceInfoset bool) erro
 		if strings.HasSuffix(r.Predicate, "/xml-fragments-v1") {
 			return &validation.ConfigurationError{Field: "XML fragment definitions", Reason: "baseline already elected"}
 		}
-		plan, err := validation.NewXMLFragmentLinkContextPlan(d.schemas[assembly], sourceInfoset)
+		plan, err := validationNewXMLFragmentLinkContextPlan(d.schemas[assembly], sourceInfoset)
 		if err != nil {
 			return err
 		}

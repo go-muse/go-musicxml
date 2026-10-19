@@ -91,7 +91,7 @@ func buildSourceXSDProfileEngine(internalDTD bool) (*validation.Engine, error) {
 			profile.Support = append(profile.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 		}
 		if internalDTD {
-			plan, err := validation.NewSourceOriginPlan(input.assembly)
+			plan, err := validationNewSourceOriginPlan(input.assembly)
 			if err != nil {
 				return nil, err
 			}

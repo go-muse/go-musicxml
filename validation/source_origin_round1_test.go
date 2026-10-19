@@ -17,7 +17,7 @@ func TestSourceOriginRequiresCompleteAttributeEnumeration(t *testing.T) {
 				if err := s.OpenNode(ctx, h); err != nil {
 					t.Fatal(err)
 				}
-				if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
+				if err := s.sourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
 					t.Fatal(err)
 				}
 				if scope == "child" {
@@ -29,7 +29,7 @@ func TestSourceOriginRequiresCompleteAttributeEnumeration(t *testing.T) {
 					}
 					origin := sourceOriginPhysical()
 					origin.Subject.Node = 2
-					if err := s.SourceOrigin(ctx, key, origin); err != nil {
+					if err := s.sourceOrigin(ctx, key, origin); err != nil {
 						t.Fatal(err)
 					}
 					end := schemaLexemeEnd("1")
@@ -46,7 +46,7 @@ func TestSourceOriginRequiresCompleteAttributeEnumeration(t *testing.T) {
 				if err := s.CloseNode(ctx, end); err != nil {
 					t.Fatal(err)
 				}
-				if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
+				if err := s.completeSourceOrigins(ctx, key, stateKnown(true)); err != nil {
 					t.Fatal(err)
 				}
 				s.inputComplete = true
@@ -95,7 +95,7 @@ func TestSourceOriginIngressValidatesPayloadOnce(t *testing.T) {
 			t.Fatal(err)
 		}
 		before := rationalUsage(t, s, BudgetRuleSteps)
-		if err := s.SourceOrigin(ctx, key, in); err != nil {
+		if err := s.sourceOrigin(ctx, key, in); err != nil {
 			t.Fatal(err)
 		}
 		ingress := rationalUsage(t, s, BudgetRuleSteps) - before

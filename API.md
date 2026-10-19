@@ -54,6 +54,27 @@ comparable: `==` on them, or on structs that contain them such as
 cannot be map keys. Compare them with their `Equal` and `Cmp` methods, and
 compare containing structs field by field.
 
+## Migrating to v0.2
+
+v0.2 removes duplicates and tightens types; the project has no compatibility
+promise before v1. Each row names what changed and what to use instead.
+
+| Before v0.2 | v0.2 |
+| --- | --- |
+| A typed-nil reader or writer, such as a nil `*os.File`, panicked or failed with a read error | Every reader and writer entry point returns `ErrNilReader` or `ErrNilWriter`; `validation.Report.Format` returns `ErrInvalidConfiguration` |
+| `(*validation.DictionarySet)(nil).Close()` returned `ErrInvalidConfiguration` | It returns nil; a zero set is still rejected |
+| `==` on `validation.Integer`, `Decimal`, `Rational` compiled and compared pointers | It does not compile; use `Equal` or `Cmp`. The same holds for the structs that contain them: `Atomic`, `AttributeFact`, `ChildValueRequirement`, `ContainerContextResult`, `ContextPosition` (and its alias `SpanPosition`), `LayoutContextResult`, `NavigationInstrumentState`, `NavigationListeningStatement`, `NavigationPassFrame`, `NavigationPerformance`, `NodeEnd`, `PackageImageAdvice`, `ResourceAttribute`, `ResourceImageContext`, `ResourceInstrumentContext`, `ResourceLinkContext`, `Scalar`, `SoundMappingContextResult`, `TimingAdjustment`, `TimingBend`, `TimingDonor`, `TimingPercent` and `TimingTuning` |
+| Generated fields of schema type `xs:positiveInteger`, `xs:nonNegativeInteger`, `xs:integer` were `uint64`/`int64` | They are `PositiveInteger`, `NonNegativeInteger`, `Integer`; convert with `PositiveInteger(n)` or `uint64(v)` |
+| 19 generated structs, such as `Forward` and `Frame`, had `MarshalXML`/`UnmarshalXML` | They have none; encoding/xml handles them through the field types |
+| `PlayContent.Ipa`, `Play.AddIpa` | `PlayContent.IPA`, `Play.AddIPA` |
+| `validation.Session.Open`, `Session.Close` | `Session.OpenNode`, `Session.CloseNode`; `SessionError.Operation` reports the new names |
+| `validation.ContextConsumerSpec`, `validation.TimelineConsumerSpec` | `validation.ConsumerSpec` |
+| `validation.UnsupportedRootError` | `validation.ExcludedRootError` |
+| `validation.MusicXML40Inventory`, `validation.Inventory`, `validation.InventoryX` | `inventory.MusicXML40`, `inventory.Snapshot`, `inventory.X` in package `validation/inventory` |
+| `validation.Schema*` were aliases of internal types | They are types of package `validation` with the same fields |
+| `validation.SchemaName` | `validation.QName` |
+| The MusicXML-specific plan constructors, the `Source*` methods of `Engine` and `Session`, `CompiledPackageCatalog.Begin`, the methods of `PackageSession` and `AllocationSize` | Not exported; see [Adapter entry points](#adapter-entry-points). The built-in profiles and entry points such as `InspectXML`, `InspectMXL` and `AssessMXLPackage` cover them |
+
 ## Scenarios
 
 Three scenarios cover loading and checking MusicXML. Each has one function per
@@ -998,16 +1019,13 @@ extent just like other positive non-backup advancement; this comparison does
 not establish measure capacity or endpoint containment. See the
 [bounded terminal-range contract](docs/validation/context-assessment-scope.md#graphical-beat-repeat-terminal-extent).
 
-Catalog users can bind the same sealed contracts with `NewLocalContextPlan`,
-`NewSpanContextPlan`, `NewRepeatContextPlan`, `NewNavigationContextPlan`,
-`NewLayoutContextPlan`, `NewPerformanceContextPlan`, `NewTimeOnlyOrderPlan`,
-`NewBendReleaseSignPlan` and `NewGraphicalRepeatContentPlan`.
-`NewFigureNumberNumericPlan` is deprecated but retained for explicit legacy
-custom catalogs: it still accepts the nonempty ASCII-digit subset and returns
+The built-in profiles bind these sealed contracts through the module's
+internal plan constructors (see [Adapter entry points](#adapter-entry-points)).
+The legacy figure-number plan still accepts the nonempty ASCII-digit subset and returns
 Unsupported for other spellings, with its existing mandatory/normative binding
 contract. Selecting it imposes a caller-chosen overconstraint; its result is not
 MusicXML numeric validity. It is not selected by built-in conformance profiles.
-`NewOpusLayoutContextPlan` is separately
+The Opus layout plan is separately
 bound to the Opus assembly and projects only local score pagination hints;
 missing new-page remains application-dependent and no linked score is opened. `ContextPlanSpec` binds the exact selected timeline
 provider where needed; `ConsumerSpec` binds an exact type-specific
@@ -1052,8 +1070,7 @@ source/model contract and deliberately retained normative boundaries.
 
 The `validation` subpackage exports `NewCatalog`, eight generic sealed typed-plan
 constructors, the sealed shared-schema `NewXSDPlan`, bounded local relation and
-typed-reference constructors, `NewModelRepresentationPlan`, `NewTimelinePlan`,
-`NewChordDurationPlan`, `NewNumeralKeyPlan`, `NewEngine`, and
+typed-reference constructors, `NewModelRepresentationPlan`, `NewEngine`, and
 explicit-profile fact sessions using `OpenNode`, `Attribute`, optional
 `CompleteAttributes`/`ModelRepresentation`, `CloseNode` and `Finish`. The optional
 attribute-closure event seals explicit start-tag enumeration before children;
@@ -1061,6 +1078,42 @@ it enables truthful prefix assessment when an ancestor never closes. Catalogs ar
 facts and return independently owned reports. Exact selectors distinguish schema
 assemblies and declaration/use occurrences. There is no default MusicXML profile,
 resolver or package-assessment entry point.
+
+### Adapter entry points
+
+The MusicXML-specific plan constructors, the source-ingress methods of
+`Engine` and `Session`, package sessions and `AllocationSize` serve the root
+package's own adapters. Since v0.2 they are not exported: package `validation`
+registers them as typed hooks in the module-internal package
+`internal/validationlink`, and the root package looks them up at
+initialization. Their data types, such as `ContextPlanSpec`, `ConsumerSpec`,
+`TimelinePlanSpec`, `SourceOriginContextResult` and the `Package*` observation
+types, stay exported because reports and results refer to them. Where this
+document names a hidden constructor or method, it describes how the built-in
+profiles use it. The hidden entry points are:
+
+- the plan constructors `NewBarlineLocationPlan`, `NewBendReleaseSignPlan`,
+  `NewChordDurationPlan`, `NewContainerMetadataContextPlan`,
+  `NewDictionaryPlan`, `NewFigureNumberNumericPlan`,
+  `NewGraphicalRepeatContentPlan`, `NewLayoutContextPlan`,
+  `NewLocalContextPlan`, `NewLocalLinkContextPlan`,
+  `NewNavigationContextPlan`, `NewNumeralKeyPlan`,
+  `NewOpusLayoutContextPlan`, `NewPerformanceContextPlan`,
+  `NewRepeatContextPlan`, `NewSchemaHintContextPlan`,
+  `NewSoundsMappingContextPlan`, `NewSourceContainerMetadataContextPlan`,
+  `NewSourceLocalLinkContextPlan`, `NewSourceOriginPlan`,
+  `NewSourceSchemaHintContextPlan`, `NewSpanContextPlan`,
+  `NewTimeOnlyOrderPlan`, `NewTimelinePlan`, `NewXMLFragmentLinkContextPlan`
+  and `NewXSDPlanWithSourceDeclarations`;
+- `Engine.SourceAttributeLexicalProvider`, `Engine.SourceDTDIDsSelected` and
+  `Engine.SourceOriginProvider`;
+- `Session.CompleteSourceDTDIDs`, `Session.CompleteSourceOrigins`,
+  `Session.SourceAttributeLexical`, `Session.SourceDTDIDAttribute`,
+  `Session.SourceDTDIDDomain`, `Session.SourceDTDIDsSelected`,
+  `Session.SourceEntityDeclarations` and `Session.SourceOrigin`;
+- `CompiledPackageCatalog.Begin` and every method of `PackageSession`, which
+  remains an opaque type;
+- `AllocationSize`.
 The root package provides the explicit source and direct-model adapters described
 here. The [exported example](validation/example_test.go) uses synthetic facts.
 
@@ -1411,9 +1464,9 @@ This additive public struct field requires migration of external **unkeyed**
 `ContextResult` literals; use keyed fields. Its `omitempty` tag preserves old
 profile JSON when no source-origin payload is present. Existing profile digests
 and revisions are frozen; the new profile uses distinct operation revisions.
-Custom source engines can select `NewSourceOriginPlan`, discover its exact
-assembly provider with `Engine.SourceOriginProvider`, submit `Session.SourceOrigin`
-and seal occurrence enumeration with `Session.CompleteSourceOrigins`. The session
+The root adapter selects the source-origin plan, discovers its exact assembly
+provider, submits each origin and seals occurrence enumeration through the
+hooks described in [Adapter entry points](#adapter-entry-points). The session
 checks admitted occurrence ownership, duplicate slots, assembly, completeness,
 owned copies and the shared account. Current-model and resource-snapshot export
 do not support this source-only evidence; a failed export preserves the intrinsic
@@ -1486,11 +1539,12 @@ unavailable. This does not perform general DTD validation or retrieve entity
 payloads. Schema-literal conversion remains independent of instance membership;
 applied effective instance values retain their own membership obligation.
 
-Custom source catalogs can use `NewXSDPlanWithSourceDeclarations`. Every selected
+The internal declaration-aware XSD plan (`NewXSDPlanWithSourceDeclarations`
+before v0.2) serves the internal-DTD profiles. Every selected
 XSD operation sharing an assembly/run must agree on the mode, and unsupported
-plans cannot enable runtime facts. Submit `SourceEntityDeclarations` containing
-owned-input `SourceEntityDeclaration` rows through
-`Session.SourceEntityDeclarations` immediately after root `OpenNode`, before any
+plans cannot enable runtime facts. The root adapter submits
+`SourceEntityDeclarations` containing owned-input `SourceEntityDeclaration` rows
+immediately after root `OpenNode`, before any
 attribute, child or closing event. Rows contain only effective first general
 bindings, with positive unique document-local sequence IDs and independently
 available original-byte origins. The session copies them under the shared
@@ -1504,9 +1558,9 @@ constructors and old catalogs are not reinterpreted.
 
 `NewSourceLocalLinkContextPlan` and `NewSourceSchemaHintContextPlan` preserve
 physical `ResourceAttribute.Presence` and `Raw` separately from effective
-`Value`. Discover the exact selected origin provider through
-`Engine.SourceAttributeLexicalProvider` and submit actually retained
-XML-normalized physical spelling through `Session.SourceAttributeLexical`, after
+`Value`. The root adapter discovers the exact selected origin provider and
+submits actually retained XML-normalized physical spelling through internal
+hooks, after
 the matching attribute and origin events while the owner is open. DTD defaults
 and entity-generated markup have absent physical spelling. Unretained or
 general-entity-transformed original spelling is unavailable rather than
@@ -1726,7 +1780,7 @@ transport is separate from `ResourceResolver` and its four dependency classes.
 
 Core consumers use immutable typed data; they never parse JSON/XML or run
 provider-supplied expressions. `LookupDictionaryManifest` returns owned fixed
-metadata, without loading or activating anything. `NewDictionaryPlan` binds a
+metadata, without loading or activating anything. The internal dictionary plan binds a
 closed `DictionaryOperation` to the reviewed compiled MusicXML or sounds schema;
 it does not select data. Canonical-name and IPA operations are mandatory node
 predicates; standard sounds and rendering are context providers.
@@ -1983,7 +2037,7 @@ identities and digests. `AssessmentOptions` and `validation.Report` retain their
 existing fields. A foreign or wrong root is a profile-admission error; ordinary
 in-scope schema violations appear in the report with a nil operation error.
 
-The container profile selects `validation.NewContainerMetadataContextPlan` in
+The container profile selects the internal `NewContainerMetadataContextPlan` in
 addition to its XSD operations. Its exact source-only provider publishes
 `ContextPropertyContainerMetadata` records with an optional
 `ContextResult.Container` payload of type `ContainerContextResult`:
@@ -2006,7 +2060,7 @@ XML or exporting a generic fact tree. They do not prove ZIP properties, entry
 existence, rootfile target kind, media-type classification or score/part ordering.
 A consumer must also honor the containing assessment's input/syntax completeness.
 The sounds profile additionally selects
-`validation.NewSoundsMappingContextPlan`. Its sealed source-only provider adds
+the internal `NewSoundsMappingContextPlan`. Its sealed source-only provider adds
 `ContextPropertySoundMapping` records with a `ContextResult.SoundMapping`
 payload of type `SoundMappingContextResult`:
 
@@ -2038,8 +2092,8 @@ does not change the `Report` or options struct shapes.
 
 `ProfileSourceLinks` and `ProfileModelLinks` select XSD/local prerequisites plus
 bounded local resource projections, without timeline, package parsing, URI
-resolution or I/O. `validation.NewLocalLinkContextPlan` binds exact MusicXML or
-Opus uses; `validation.NewSchemaHintContextPlan` binds standard xsi hint discovery
+resolution or I/O. the internal `NewLocalLinkContextPlan` binds exact MusicXML or
+Opus uses; the internal `NewSchemaHintContextPlan` binds standard xsi hint discovery
 for one exact supported assembly. Existing eight profiles and option shapes are
 unchanged.
 
@@ -2245,8 +2299,8 @@ restriction. All eight earlier profile identities, digests and report shapes are
 unchanged. See [package profile scope](docs/validation/package-profile-scope.md)
 for the sealed check inventory and provenance.
 
-`CompiledPackageCatalog.Begin` creates a typed `PackageSession` over one shared
-account. `OpenPackage` establishes acyclic encapsulation with independent entry
+The internal package-session hook (`CompiledPackageCatalog.Begin` before
+v0.2) creates a typed `PackageSession` over one shared account. `OpenPackage` establishes acyclic encapsulation with independent entry
 namespaces; linked cycles use fresh adoptions of canonical intrinsic assessments.
 `AddResource` transfers only a core-created snapshot on the identical account.
 It requires an established assembly matching the fixed target/profile/catalog
@@ -2324,10 +2378,9 @@ selection authority incomplete, without inventing DTD validation findings.
 No external declarations are fetched and current models never manufacture
 historical DTD absence or IDs.
 
-`Engine.SourceDTDIDsSelected(profile)` is a profile-wide selection query used
+The internal engine query for DTD ID selection is profile-wide and is used
 before parsing the root to decide whether the scanner should capture DTD ID
-facts. `Session.SourceDTDIDsSelected()` is the narrower, admitted-root assembly
-query: it returns false before an admitted root, for a current-model target, or
+facts. The session query is the narrower, admitted-root assembly query: it returns false before an admitted root, for a current-model target, or
 when that assembly has no selected DTD ID consumer. A true result reports
 selection only; it is no certificate of completed enumeration, valid declarations
 or available DTD identity evidence.

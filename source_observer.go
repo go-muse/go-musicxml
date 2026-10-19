@@ -78,6 +78,9 @@ func newSourceFactObserverWithIdentity(ctx context.Context, sink sourceFactSink,
 	if err := account.Charge(validation.BudgetBufferedBytes, fixed); err != nil {
 		return nil, err
 	}
+	if session, ok := sink.(*validation.Session); ok {
+		sink = sessionSourceSink{session}
+	}
 	return &sourceFactObserver{ctx: ctx, sink: sink, account: account, documentID: documentID, entry: entry, bindings: map[string]string{"xml": "http://www.w3.org/XML/1998/namespace"}, retained: fixed}, nil
 }
 
@@ -105,7 +108,7 @@ func (o *sourceFactObserver) observeSource(token xml.Token, meta sourceXMLTokenM
 		if size > int64(frame.text.Cap()) {
 			capacity := max(size, 2*int64(frame.text.Cap()), 32)
 			capacity = min(capacity, o.account.Limits().MaxScalarBytes)
-			count, err := validation.AllocationSize(capacity)
+			count, err := validationAllocationSize(capacity)
 			if err != nil {
 				return err
 			}
@@ -515,3 +518,38 @@ func (s *observingXMLSource) Skip() error {
 	}
 	return nil
 }
+
+// sessionSourceSink gives a validation.Session the optional source methods
+// that the observer discovers by type assertion. Package validation registers
+// them as hooks rather than exporting them.
+type sessionSourceSink struct{ *validation.Session }
+
+func (s sessionSourceSink) SourceAttributeLexical(ctx context.Context, provider validation.RuleKey, subject validation.NodeRef, attribute validation.QName, raw validation.Evidence[string]) error {
+	return validationSessionSourceAttributeLexical(s.Session, ctx, provider, subject, attribute, raw)
+}
+
+func (s sessionSourceSink) SourceDTDIDsSelected() bool {
+	return validationSessionSourceDTDIDsSelected(s.Session)
+}
+
+func (s sessionSourceSink) SourceDTDIDDomain(ctx context.Context, f validation.SourceDTDIDDomain) error {
+	return validationSessionSourceDTDIDDomain(s.Session, ctx, f)
+}
+
+func (s sessionSourceSink) SourceDTDIDAttribute(ctx context.Context, f validation.SourceDTDIDAttribute) error {
+	return validationSessionSourceDTDIDAttribute(s.Session, ctx, f)
+}
+
+func (s sessionSourceSink) CompleteSourceDTDIDs(ctx context.Context, documentID string) error {
+	return validationSessionCompleteSourceDTDIDs(s.Session, ctx, documentID)
+}
+
+func (s sessionSourceSink) SourceEntityDeclarations(ctx context.Context, facts validation.SourceEntityDeclarations) error {
+	return validationSessionSourceEntityDeclarations(s.Session, ctx, facts)
+}
+
+var (
+	_ sourceAttributeLexicalSink  = sessionSourceSink{}
+	_ sourceDTDIDSink             = sessionSourceSink{}
+	_ sourceEntityDeclarationSink = sessionSourceSink{}
+)

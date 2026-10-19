@@ -20,7 +20,7 @@ func sourceOriginFixture(t *testing.T, limits Budgets) (*Engine, *Session, RuleK
 		rules = append(rules, r)
 		plans = append(plans, PlanBinding{ID: r.Predicate, Plan: base.catalog.plans[r.Predicate]})
 	}
-	plan, err := NewSourceOriginPlan(AssemblyMusicXML)
+	plan, err := newSourceOriginPlan(AssemblyMusicXML)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,10 +50,10 @@ func sourceOriginPhysical() SourceOriginContextResult {
 func TestSourceOriginOwnedIngressAndReport(t *testing.T) {
 	e, s, key := sourceOriginFixture(t, Budgets{})
 	ctx := context.Background()
-	if got, ok := e.SourceOriginProvider("source-schema-test", AssemblyMusicXML); !ok || got != key {
+	if got, ok := e.sourceOriginProvider("source-schema-test", AssemblyMusicXML); !ok || got != key {
 		t.Fatalf("provider %v %v", got, ok)
 	}
-	if _, ok := e.SourceOriginProvider("missing", AssemblyMusicXML); ok {
+	if _, ok := e.sourceOriginProvider("missing", AssemblyMusicXML); ok {
 		t.Fatal("unknown profile selected")
 	}
 	h := schemaPendingHeader()
@@ -62,14 +62,14 @@ func TestSourceOriginOwnedIngressAndReport(t *testing.T) {
 		t.Fatal(err)
 	}
 	in := sourceOriginPhysical()
-	if err := s.SourceOrigin(ctx, key, in); err != nil {
+	if err := s.sourceOrigin(ctx, key, in); err != nil {
 		t.Fatal(err)
 	}
 	in.Physical.Value.Position.ByteOffset = 999
 	if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
+	if err := s.completeSourceOrigins(ctx, key, stateKnown(true)); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -126,13 +126,13 @@ func TestSourceOriginSnapshotExplicitlyExportsOwnedOrigins(t *testing.T) {
 	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
+	if err := s.sourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
+	if err := s.completeSourceOrigins(ctx, key, stateKnown(true)); err != nil {
 		t.Fatal(err)
 	}
 	r, snapshot, err := s.FinishWithResourceSnapshot(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -172,7 +172,7 @@ func TestSourceOriginDefaultAndEntityAttributeOwnership(t *testing.T) {
 			if err := s.Attribute(ctx, sourceOriginAttribute(name, Location{Target: TargetSource, DocumentID: "source", Path: "/root/@value"})); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.SourceOrigin(ctx, key, in); err != nil {
+			if err := s.sourceOrigin(ctx, key, in); err != nil {
 				t.Fatal(err)
 			}
 			name.Local = "changed"
@@ -222,7 +222,7 @@ func TestSourceOriginRejectsUnownedAndContradictoryIngress(t *testing.T) {
 			in := sourceOriginPhysical()
 			change(&in)
 			before := s.retained
-			if err := s.SourceOrigin(ctx, key, in); err == nil {
+			if err := s.sourceOrigin(ctx, key, in); err == nil {
 				t.Fatal("accepted malformed origin")
 			}
 			if len(s.contextResults) != 0 || len(s.sourceOriginSeen) != 0 || s.retained != before {
@@ -251,7 +251,7 @@ func TestSourceOriginProviderAndPhaseGates(t *testing.T) {
 					t.Fatal(err)
 				}
 			case "duplicate":
-				if err := s.SourceOrigin(ctx, key, in); err != nil {
+				if err := s.sourceOrigin(ctx, key, in); err != nil {
 					t.Fatal(err)
 				}
 			case "absent-attribute":
@@ -266,7 +266,7 @@ func TestSourceOriginProviderAndPhaseGates(t *testing.T) {
 			case "unselected":
 				s.catalog.sourceOrigins = nil
 			}
-			if err := s.SourceOrigin(ctx, key, in); err == nil {
+			if err := s.sourceOrigin(ctx, key, in); err == nil {
 				t.Fatal("accepted wrong provider or lifecycle")
 			}
 		})
@@ -283,12 +283,12 @@ func TestSourceOriginSealCoverageAndAvailability(t *testing.T) {
 				t.Fatal(err)
 			}
 			if mode != "missing-origin" {
-				if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
+				if err := s.sourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
 					t.Fatal(err)
 				}
 			}
 			if mode == "early" {
-				if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err == nil {
+				if err := s.completeSourceOrigins(ctx, key, stateKnown(true)); err == nil {
 					t.Fatal("early seal")
 				}
 				s.cleanup()
@@ -314,7 +314,7 @@ func TestSourceOriginSealCoverageAndAvailability(t *testing.T) {
 			if mode == "known-false" {
 				complete = stateKnown(false)
 			}
-			err := s.CompleteSourceOrigins(ctx, key, complete)
+			err := s.completeSourceOrigins(ctx, key, complete)
 			if mode == "missing-origin" {
 				if !errors.Is(err, ErrInvalidConfiguration) {
 					t.Fatalf("missing coverage %v", err)
@@ -326,7 +326,7 @@ func TestSourceOriginSealCoverageAndAvailability(t *testing.T) {
 				t.Fatal(err)
 			}
 			if mode == "double" {
-				if err := s.CompleteSourceOrigins(ctx, key, complete); err == nil {
+				if err := s.completeSourceOrigins(ctx, key, complete); err == nil {
 					t.Fatal("double seal")
 				}
 				s.cleanup()
@@ -472,13 +472,13 @@ func TestSourceOriginCatalogSelectionIsSealed(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if got, ok := e.SourceOriginProvider(p[0].ID, AssemblyMusicXML); ok || got != (RuleKey{}) {
+			if got, ok := e.sourceOriginProvider(p[0].ID, AssemblyMusicXML); ok || got != (RuleKey{}) {
 				t.Fatalf("nonavailable plan selected %v %v, original %v", got, ok, key)
 			}
 		})
 	}
 	for _, assembly := range []Assembly{"", "unknown"} {
-		if _, err := NewSourceOriginPlan(assembly); !errors.Is(err, ErrInvalidConfiguration) {
+		if _, err := newSourceOriginPlan(assembly); !errors.Is(err, ErrInvalidConfiguration) {
 			t.Fatalf("invalid assembly accepted %q: %v", assembly, err)
 		}
 	}
@@ -491,7 +491,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 		t.Fatal(err)
 	}
 	counter := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
-	if err := probe.SourceOrigin(counter, key, sourceOriginPhysical()); err != nil {
+	if err := probe.sourceOrigin(counter, key, sourceOriginPhysical()); err != nil {
 		t.Fatal(err)
 	}
 	calls := counter.calls
@@ -502,7 +502,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 			t.Fatal(err)
 		}
 		before := s.retained
-		err := s.SourceOrigin(&rationalCancelContext{Context: context.Background(), at: at}, key, sourceOriginPhysical())
+		err := s.sourceOrigin(&rationalCancelContext{Context: context.Background(), at: at}, key, sourceOriginPhysical())
 		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || len(s.sourceOriginSeen) != 0 || s.retained != before {
 			t.Fatalf("ingress cancel %d/%d: %v retained %d/%d", at, calls, err, s.retained, before)
 		}
@@ -514,7 +514,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
+	if err := s.sourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
 		t.Fatal(err)
 	}
 	a := sourceOriginAttribute(QName{Local: "x"}, h.Location)
@@ -524,7 +524,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 	in := sourceOriginPhysical()
 	in.Attribute = &a.Name
 	before := s.retained
-	if err := s.SourceOrigin(ctx, key, in); !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 1 || len(s.sourceOriginSeen) != 1 || s.retained != before {
+	if err := s.sourceOrigin(ctx, key, in); !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 1 || len(s.sourceOriginSeen) != 1 || s.retained != before {
 		t.Fatalf("fact cap: %v", err)
 	}
 }
@@ -581,13 +581,13 @@ func TestSourceOriginUnavailableComponentsRemainIncomplete(t *testing.T) {
 				in.Kind = SourceOriginUnavailable
 				in.Specified = stateUnknown[bool]("specifiedness-unavailable")
 			}
-			if err := s.SourceOrigin(ctx, key, in); err != nil {
+			if err := s.sourceOrigin(ctx, key, in); err != nil {
 				t.Fatal(err)
 			}
 			if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
+			if err := s.completeSourceOrigins(ctx, key, stateKnown(true)); err != nil {
 				t.Fatal(err)
 			}
 			r, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -624,7 +624,7 @@ func TestSourceOriginPhysicalDeclaredAttributeAndEntityValue(t *testing.T) {
 			in.Use = in.Physical
 			in.Ancestry = []SourceOriginStep{{Entity: "e", Declaration: in.Declaration, Use: in.Use}}
 		}
-		if err := s.SourceOrigin(ctx, key, in); err != nil {
+		if err := s.sourceOrigin(ctx, key, in); err != nil {
 			t.Fatalf("declared physical attribute entity=%v: %v", entity, err)
 		}
 		if !s.contextResults[0].SourceOrigin.Specified.Value {
@@ -689,7 +689,7 @@ func TestSourceOriginEventAndScalarBoundaries(t *testing.T) {
 			t.Fatal(err)
 		}
 		before := s.retained
-		err := s.SourceOrigin(ctx, key, sourceOriginPhysical())
+		err := s.sourceOrigin(ctx, key, sourceOriginPhysical())
 		if events == 2 {
 			if err != nil {
 				t.Fatal(err)
@@ -753,7 +753,7 @@ func TestSourceOriginSyntheticPositionAndClosedOwnerAreRejected(t *testing.T) {
 				}
 				in.Subject.Node = 2
 			}
-			if err := s.SourceOrigin(ctx, key, in); err == nil || len(s.contextResults) != 0 {
+			if err := s.sourceOrigin(ctx, key, in); err == nil || len(s.contextResults) != 0 {
 				t.Fatalf("contradiction accepted %v", err)
 			}
 		})
@@ -769,7 +769,7 @@ func TestSourceOriginTerminalPrefixSurvivesFinish(t *testing.T) {
 		t.Fatal(err)
 	}
 	in := sourceOriginPhysical()
-	if err := s.SourceOrigin(ctx, key, in); err != nil {
+	if err := s.sourceOrigin(ctx, key, in); err != nil {
 		t.Fatal(err)
 	}
 	in.Physical.Value.Position.ByteOffset = 999

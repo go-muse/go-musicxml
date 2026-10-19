@@ -342,7 +342,7 @@ func sourceDeclarationLifecycleEngine(t *testing.T) *validation.Engine {
 	if err != nil {
 		t.Fatal(err)
 	}
-	plan, err := validation.NewXSDPlanWithSourceDeclarations(schema, validation.XSDCheckScalar)
+	plan, err := validationNewXSDPlanWithSourceDeclarations(schema, validation.XSDCheckScalar)
 	if err != nil {
 		t.Fatal(err)
 	}

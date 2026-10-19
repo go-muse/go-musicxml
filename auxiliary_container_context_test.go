@@ -170,11 +170,11 @@ func TestAuxiliaryContainerMetadataSealedPlan(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	plan, err := validation.NewContainerMetadataContextPlan(schema)
+	plan, err := validationNewContainerMetadataContextPlan(schema)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := validation.NewContainerMetadataContextPlan(nil); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err := validationNewContainerMetadataContextPlan(nil); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatalf("nil schema accepted: %v", err)
 	}
 	for _, entry := range []struct {
@@ -185,7 +185,7 @@ func TestAuxiliaryContainerMetadataSealedPlan(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := validation.NewContainerMetadataContextPlan(other); !errors.Is(err, validation.ErrInvalidConfiguration) {
+		if _, err := validationNewContainerMetadataContextPlan(other); !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Fatalf("wrong assembly accepted: %s %v", entry.assembly, err)
 		}
 	}
@@ -236,7 +236,7 @@ func TestAuxiliaryContainerMetadataSchemaAndDigestBinding(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
-		projection, err := validation.NewContainerMetadataContextPlan(contextSchema)
+		projection, err := validationNewContainerMetadataContextPlan(contextSchema)
 		if err != nil {
 			return nil, err
 		}
@@ -278,7 +278,7 @@ func TestAuxiliaryContainerMetadataSchemaAndDigestBinding(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := validation.NewContainerMetadataContextPlan(wrongRoot); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err := validationNewContainerMetadataContextPlan(wrongRoot); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatalf("wrong global root type accepted: %v", err)
 	}
 }

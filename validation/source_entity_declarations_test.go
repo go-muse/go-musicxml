@@ -32,7 +32,7 @@ func entityDeclarationDefinitions(t *testing.T, schema *CompiledSchema, checks .
 	for _, k := range p.Required {
 		r := old.catalog.rules[k]
 		rules = append(rules, r)
-		plan, err := NewXSDPlanWithSourceDeclarations(schema, old.catalog.plans[r.Predicate].xsdCheck)
+		plan, err := newXSDPlanWithSourceDeclarations(schema, old.catalog.plans[r.Predicate].xsdCheck)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -79,7 +79,7 @@ func entityDeclarationAssess(t *testing.T, e *Engine, value string, facts *Sourc
 		t.Fatal(err)
 	}
 	if facts != nil {
-		if err := s.SourceEntityDeclarations(ctx, *facts); err != nil {
+		if err := s.sourceEntityDeclarations(ctx, *facts); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -98,7 +98,7 @@ func TestSourceEntityDeclarationsCatalogModesAndLegacyDigest(t *testing.T) {
 	schema := entityDeclarationSchema(t, entityBuiltin("ENTITY"))
 	r, p, b := entityDeclarationDefinitions(t, schema, XSDCheckScalar, XSDCheckAttributes)
 	legacy, _ := NewXSDPlan(schema, XSDCheckScalar)
-	modern, _ := NewXSDPlanWithSourceDeclarations(schema, XSDCheckScalar)
+	modern, _ := newXSDPlanWithSourceDeclarations(schema, XSDCheckScalar)
 	oldJSON, _ := json.Marshal(legacy.digestValue())
 	expected, _ := json.Marshal(struct {
 		Kind           planKind
@@ -152,7 +152,7 @@ func TestSourceEntityDeclarationsAdmissionPhase(t *testing.T) {
 			if phase == "unselected" {
 				r, p, b := entityDeclarationDefinitions(t, schema, XSDCheckScalar)
 				b[0].Plan, _ = NewXSDPlan(schema, XSDCheckScalar)
-				extra, _ := NewXSDPlanWithSourceDeclarations(schema, XSDCheckScalar)
+				extra, _ := newXSDPlanWithSourceDeclarations(schema, XSDCheckScalar)
 				b = append(b, PlanBinding{ID: "unselected", Plan: extra})
 				c, err := NewCatalog(r, p, b)
 				if err != nil {
@@ -179,7 +179,7 @@ func TestSourceEntityDeclarationsAdmissionPhase(t *testing.T) {
 			}
 			switch phase {
 			case "duplicate":
-				if err := s.SourceEntityDeclarations(ctx, f); err != nil {
+				if err := s.sourceEntityDeclarations(ctx, f); err != nil {
 					t.Fatal(err)
 				}
 			case "after-attribute":
@@ -205,7 +205,7 @@ func TestSourceEntityDeclarationsAdmissionPhase(t *testing.T) {
 			case "finished":
 				_, _ = s.Finish(ctx, Completion{Syntax: SyntaxIncomplete})
 			}
-			err := s.SourceEntityDeclarations(ctx, f)
+			err := s.sourceEntityDeclarations(ctx, f)
 			if err == nil {
 				t.Fatal("late/wrong-mode facts admitted")
 			}
@@ -223,7 +223,7 @@ func TestSourceEntityDeclarationNamesUseSourceLimits(t *testing.T) {
 			t.Fatal(err)
 		}
 		f := entitySnapshot(true, entityRow(name, true, 1))
-		if err := s.SourceEntityDeclarations(context.Background(), f); err != nil {
+		if err := s.sourceEntityDeclarations(context.Background(), f); err != nil {
 			t.Fatalf("legal source name: %v", err)
 		}
 		_, _ = s.Finish(context.Background(), Completion{Syntax: SyntaxIncomplete})
@@ -240,7 +240,7 @@ func TestSourceEntityDeclarationsAdmissionBudgetsAndCancellation(t *testing.T) {
 	}
 	beforeBytes, _ := baseline.account.Usage(BudgetBufferedBytes)
 	beforeSteps, _ := baseline.account.Usage(BudgetRuleSteps)
-	if err := baseline.SourceEntityDeclarations(ctx, facts); err != nil {
+	if err := baseline.sourceEntityDeclarations(ctx, facts); err != nil {
 		t.Fatal(err)
 	}
 	afterBytes, _ := baseline.account.Usage(BudgetBufferedBytes)
@@ -263,7 +263,7 @@ func TestSourceEntityDeclarationsAdmissionBudgetsAndCancellation(t *testing.T) {
 			if err := s.account.Charge(kind, held); err != nil {
 				t.Fatal(err)
 			}
-			err := s.SourceEntityDeclarations(ctx, facts)
+			err := s.sourceEntityDeclarations(ctx, facts)
 			if (short == 0 && err != nil) || (short == 1 && !errors.Is(err, ErrResourceLimit)) {
 				t.Fatalf("%s short=%d: %v", kind, short, err)
 			}
@@ -282,7 +282,7 @@ func TestSourceEntityDeclarationsAdmissionBudgetsAndCancellation(t *testing.T) {
 	}
 	cancelled, cancel := context.WithCancel(ctx)
 	cancel()
-	err := s.SourceEntityDeclarations(cancelled, facts)
+	err := s.sourceEntityDeclarations(cancelled, facts)
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("cancellation: %v", err)
 	}

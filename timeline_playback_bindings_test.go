@@ -29,7 +29,7 @@ func TestTimelinePlaybackRequiresExactNavigationAndNoteRoles(t *testing.T) {
 				typ.Complex = &c
 				data.Types[key] = &typ
 			})
-			if _, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: timelineContractOwners(t, schema)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
+			if _, err := validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: timelineContractOwners(t, schema)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("accepted missing navigation/note role: %v", err)
 			}
 		})

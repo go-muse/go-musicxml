@@ -62,9 +62,9 @@ type packageAssociation struct {
 // parser, resolver invocation, XML Open method, arbitrary facts or callbacks.
 // Every ingress error is terminal; Finish must run once even after cancellation.
 //
-// Adapter API: the root musicxml package drives package sessions through
-// InspectMXL, AssessMXLPackage and the resource-graph functions; application
-// code is not expected to call PackageSession methods directly.
+// It is an opaque handle outside this module: the root musicxml package drives
+// package sessions through registered hooks behind InspectMXL,
+// AssessMXLPackage and the resource-graph functions.
 type PackageSession struct {
 	catalog         *CompiledPackageCatalog
 	profile         Profile
@@ -106,9 +106,9 @@ type PackageSession struct {
 	failure         *ResourceFailureSummary
 }
 
-// Begin validates configuration/cancellation before allocating a package run.
+// begin validates configuration/cancellation before allocating a package run.
 // A supplied Account is shared by identity, never copied or replaced.
-func (c *CompiledPackageCatalog) Begin(ctx context.Context, opts RunOptions) (*PackageSession, error) {
+func (c *CompiledPackageCatalog) begin(ctx context.Context, opts RunOptions) (*PackageSession, error) {
 	if ctx == nil {
 		return nil, contract("context", "must not be nil")
 	}
@@ -147,10 +147,10 @@ func (c *CompiledPackageCatalog) Begin(ctx context.Context, opts RunOptions) (*P
 	return s, nil
 }
 
-// TerminalCause returns the accumulated terminal error without charging work or
+// terminalCause returns the accumulated terminal error without charging work or
 // changing session state. It remains available after Finish; nil means no terminal
 // error was recorded. Ordinary ingress is still refused after a terminal error.
-func (s *PackageSession) TerminalCause() error {
+func (s *PackageSession) terminalCause() error {
 	if s == nil {
 		return nil
 	}
@@ -192,7 +192,7 @@ func (s *PackageSession) fail(err error) error {
 	return err
 }
 func (s *PackageSession) retain(n int64) error {
-	if _, err := AllocationSize(n); err != nil {
+	if _, err := allocationSize(n); err != nil {
 		return s.fail(err)
 	}
 	if err := s.account.Charge(BudgetBufferedBytes, n); err != nil {
@@ -235,9 +235,9 @@ func (s *PackageSession) location(pkg PackageID) Location {
 	return Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/package[" + string(pkg) + "]"}
 }
 
-// OpenPackage admits one acyclic encapsulation boundary, keeping sibling entry
+// openPackage admits one acyclic encapsulation boundary, keeping sibling entry
 // namespaces distinct. Source/current graph boundaries make no raw ZIP claim.
-func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) error {
+func (s *PackageSession) openPackage(ctx context.Context, p PackageIdentity) error {
 	if err := s.event(ctx, "OpenPackage"); err != nil {
 		return err
 	}
@@ -326,10 +326,10 @@ func validateZIPHeader(h ZIPHeaderObservation) error {
 	return nil
 }
 
-// ObserveEntry copies exact independent local/central observations. It records
+// observeEntry copies exact independent local/central observations. It records
 // already proven local failures immediately, so later cancellation cannot erase
 // them; global enumeration is assessed independently at terminal completion.
-func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObservation) error {
+func (s *PackageSession) observeEntry(ctx context.Context, e PackageEntryObservation) error {
 	if err := s.event(ctx, "ObserveEntry"); err != nil {
 		return err
 	}
@@ -409,9 +409,9 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 	return s.evaluateBoundary(ctx, s.boundaries[e.Package])
 }
 
-// ObserveMimetype copies at most 64 original initial bytes, never stripped or
+// observeMimetype copies at most 64 original initial bytes, never stripped or
 // transcoded text. Prefix and length consistency is validated before copying.
-func (s *PackageSession) ObserveMimetype(ctx context.Context, m PackageMimetypeObservation) error {
+func (s *PackageSession) observeMimetype(ctx context.Context, m PackageMimetypeObservation) error {
 	if err := s.event(ctx, "ObserveMimetype"); err != nil {
 		return err
 	}
@@ -445,11 +445,11 @@ func (s *PackageSession) ObserveMimetype(ctx context.Context, m PackageMimetypeO
 	return s.evaluateBoundary(ctx, s.boundaries[e.Package])
 }
 
-// ObserveRootfile preserves adapter-observed encoded order and causal scalar
+// observeRootfile preserves adapter-observed encoded order and causal scalar
 // states. Source is well-formed provenance supplied by the adapter, not a checked
 // membership claim about an adopted container snapshot. Raw adapters remain
 // responsible for original container parsing and exact rootfile projection.
-func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileObservation) error {
+func (s *PackageSession) observeRootfile(ctx context.Context, r PackageRootfileObservation) error {
 	if err := s.event(ctx, "ObserveRootfile"); err != nil {
 		return err
 	}
@@ -521,8 +521,8 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 	return s.evaluateBoundary(ctx, b)
 }
 
-// SealEnumeration records each independent complete/incomplete scope exactly once.
-func (s *PackageSession) SealEnumeration(ctx context.Context, e PackageEnumeration) error {
+// sealEnumeration records each independent complete/incomplete scope exactly once.
+func (s *PackageSession) sealEnumeration(ctx context.Context, e PackageEnumeration) error {
 	if err := s.event(ctx, "SealEnumeration"); err != nil {
 		return err
 	}
@@ -549,10 +549,10 @@ func (s *PackageSession) SealEnumeration(ctx context.Context, e PackageEnumerati
 	return s.evaluateBoundary(ctx, b)
 }
 
-// AddResource transfers an immutable core-created snapshot on the same Account.
+// addResource transfers an immutable core-created snapshot on the same Account.
 // Rejected transfers preserve its sole caller owner; no arbitrary Report can
 // certify success. A duplicate identical transferred pointer is idempotent.
-func (s *PackageSession) AddResource(ctx context.Context, pin ResourcePin, snapshot *ResourceSnapshot, required bool) (ResourceAssessmentID, error) {
+func (s *PackageSession) addResource(ctx context.Context, pin ResourcePin, snapshot *ResourceSnapshot, required bool) (ResourceAssessmentID, error) {
 	if err := s.event(ctx, "AddResource"); err != nil {
 		return "", err
 	}
@@ -623,9 +623,9 @@ func (s *PackageSession) AddResource(ctx context.Context, pin ResourcePin, snaps
 	return id, nil
 }
 
-// AdoptResource allocates one distinct occurrence view and charges every linked
+// adoptResource allocates one distinct occurrence view and charges every linked
 // adoption, including cache hits and back-edges. Root is explicit and unique.
-func (s *PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmentID, opts ResourceAdoptionOptions) (ResourceAdoptionID, error) {
+func (s *PackageSession) adoptResource(ctx context.Context, id ResourceAssessmentID, opts ResourceAdoptionOptions) (ResourceAdoptionID, error) {
 	if err := s.event(ctx, "AdoptResource"); err != nil {
 		return "", err
 	}
@@ -675,14 +675,14 @@ func (s *PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmen
 	return aid, nil
 }
 
-// RecordResourceFailure is failure-only ingress after a child could not produce
+// recordResourceFailure is failure-only ingress after a child could not produce
 // an admitted snapshot. It cannot certify success. One pre-reserved terminal
 // summary preserves exact known truth when a full report copy is refused. This
 // prepaid failure-only ingress is allowed after a terminal error or cancellation;
 // it admits no normal work then and makes no new rule-step charge. Context must
 // still be nonnil, and contradictory identity/report metadata is rejected before
 // storing anything. A transferred assessment must use its existing report.
-func (s *PackageSession) RecordResourceFailure(ctx context.Context, pin ResourcePin, report Report, cause error) error {
+func (s *PackageSession) recordResourceFailure(ctx context.Context, pin ResourcePin, report Report, cause error) error {
 	if s == nil || s.finished || s.account == nil || s.failure != nil {
 		return &SessionError{Operation: "RecordResourceFailure", Reason: "closed package or terminal resource already recorded"}
 	}

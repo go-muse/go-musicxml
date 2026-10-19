@@ -46,7 +46,7 @@ func (c *graphLeaseContext) Err() error {
 		association = association || strings.HasSuffix(name, ".(*resourceGraphRun).walkAssociation")
 		fragment = fragment || strings.HasSuffix(name, ".(*resourceGraphRun).resolveFragment")
 		walk = walk || strings.HasSuffix(name, ".(*resourceGraphRun).walkResources")
-		adoption = adoption || strings.HasSuffix(name, ".(*PackageSession).Adoption")
+		adoption = adoption || strings.HasSuffix(name, ".(*PackageSession).adoption")
 	}
 	used, _ := c.account.Usage(validation.BudgetBufferedBytes)
 	switch {

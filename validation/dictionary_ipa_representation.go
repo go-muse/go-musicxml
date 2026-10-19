@@ -323,10 +323,10 @@ func ipaRepresentationNormalize(ctx context.Context, a *Account, p *ipaRepresent
 	if e != nil {
 		return nil, false, e
 	}
-	if _, err = AllocationSize(size); err != nil {
+	if _, err = allocationSize(size); err != nil {
 		return nil, false, err
 	}
-	length, e := AllocationSize(count)
+	length, e := allocationSize(count)
 	if e != nil {
 		return nil, false, e
 	}

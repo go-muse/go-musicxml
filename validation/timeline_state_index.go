@@ -62,7 +62,7 @@ func stateIndex[T any](ctx context.Context, s *Session, h *stateHistory[T]) (*st
 	if e != nil {
 		return nil, e
 	}
-	if _, e = AllocationSize(cost); e != nil {
+	if _, e = allocationSize(cost); e != nil {
 		return nil, e
 	}
 	if e = s.retain(cost); e != nil {

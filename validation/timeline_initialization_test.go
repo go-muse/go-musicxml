@@ -14,7 +14,7 @@ func TestTimelineInitializationFailureIsCachedAndCallerOwned(t *testing.T) {
 	for i := range errs {
 		wg.Go(func() {
 			copy := *schema
-			_, errs[i] = NewChordDurationPlan(ConsumerSpec{Schema: &copy, Provider: RuleKey{ID: "provider", Revision: 1}})
+			_, errs[i] = newChordDurationPlan(ConsumerSpec{Schema: &copy, Provider: RuleKey{ID: "provider", Revision: 1}})
 		})
 	}
 	wg.Wait()

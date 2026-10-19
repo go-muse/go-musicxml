@@ -17,7 +17,7 @@ func dtdIDSession(t *testing.T) (*Session, RuleKey) {
 	if e := s.OpenNode(context.Background(), schemaPendingHeader()); e != nil {
 		t.Fatal(e)
 	}
-	if e := s.SourceDTDIDDomain(context.Background(), SourceDTDIDDomain{"source", stateKnown(true)}); e != nil {
+	if e := s.sourceDTDIDDomain(context.Background(), SourceDTDIDDomain{"source", stateKnown(true)}); e != nil {
 		t.Fatal(e)
 	}
 	return s, key
@@ -33,7 +33,7 @@ func dtdIDAdmittedAttribute(t *testing.T, s *Session, key RuleKey, name string, 
 	if e := s.Attribute(context.Background(), a); e != nil {
 		t.Fatal(e)
 	}
-	if e := s.SourceOrigin(context.Background(), key, origin); e != nil {
+	if e := s.sourceOrigin(context.Background(), key, origin); e != nil {
 		t.Fatal(e)
 	}
 	return SourceDTDIDAttribute{Subject: NodeRef{"source", 1}, Attribute: q, Value: value, IsID: stateKnown(true), Declaration: &SourceDTDIDDeclaration{Sequence: 1, Element: "root", Attribute: name, DefaultKind: "implied", Origin: stateKnown(Location{Target: TargetSource, DocumentID: "source", Position: &SourcePosition{CoordinateSpace: "original-bytes", ByteOffset: 5}})}, Specified: stateKnown(true), Use: origin.Physical}
@@ -61,7 +61,7 @@ func TestSourceDTDIDIngressRejectsForgedOccurrence(t *testing.T) {
 			s, key := dtdIDSession(t)
 			f := dtdIDAdmittedAttribute(t, s, key, "a", "  exact  ")
 			tc.mutate(&f)
-			if e := s.SourceDTDIDAttribute(context.Background(), f); !errors.Is(e, ErrInvalidConfiguration) {
+			if e := s.sourceDTDIDAttribute(context.Background(), f); !errors.Is(e, ErrInvalidConfiguration) {
 				t.Fatalf("forged event admitted: %v", e)
 			}
 			s.cleanup()
@@ -76,7 +76,7 @@ func TestSourceDTDIDIngressOwnershipSealsAndDuplicateBinding(t *testing.T) {
 		s, key := dtdIDSession(t)
 		defer s.cleanup()
 		f := dtdIDAdmittedAttribute(t, s, key, "a", "value")
-		if e := s.SourceDTDIDAttribute(context.Background(), f); e != nil {
+		if e := s.sourceDTDIDAttribute(context.Background(), f); e != nil {
 			t.Fatal(e)
 		}
 		f.Declaration.Origin.Value.Position.ByteOffset = 99
@@ -84,7 +84,7 @@ func TestSourceDTDIDIngressOwnershipSealsAndDuplicateBinding(t *testing.T) {
 		if s.dtdIDs.IDs[0].Declaration.Origin.Value.Position.ByteOffset != 5 || s.dtdIDs.IDs[0].Declaration.Element != "root" {
 			t.Fatal("borrowed declaration")
 		}
-		if e := s.SourceDTDIDAttribute(context.Background(), s.dtdIDs.IDs[0]); e == nil {
+		if e := s.sourceDTDIDAttribute(context.Background(), s.dtdIDs.IDs[0]); e == nil {
 			t.Fatal("duplicate admitted")
 		}
 	})
@@ -92,11 +92,11 @@ func TestSourceDTDIDIngressOwnershipSealsAndDuplicateBinding(t *testing.T) {
 		s, key := dtdIDSession(t)
 		defer s.cleanup()
 		f := dtdIDAdmittedAttribute(t, s, key, "a", "value")
-		if e := s.SourceDTDIDAttribute(context.Background(), f); e != nil {
+		if e := s.sourceDTDIDAttribute(context.Background(), f); e != nil {
 			t.Fatal(e)
 		}
 		g := dtdIDAdmittedAttribute(t, s, key, "b", "other")
-		if e := s.SourceDTDIDAttribute(context.Background(), g); e == nil {
+		if e := s.sourceDTDIDAttribute(context.Background(), g); e == nil {
 			t.Fatal("sequence reused")
 		}
 	})
@@ -107,7 +107,7 @@ func TestSourceDTDIDIngressOwnershipSealsAndDuplicateBinding(t *testing.T) {
 		if e := s.CloseNode(context.Background(), schemaLexemeEnd("1")); e != nil {
 			t.Fatal(e)
 		}
-		if e := s.CompleteSourceDTDIDs(context.Background(), "source"); e == nil {
+		if e := s.completeSourceDTDIDs(context.Background(), "source"); e == nil {
 			t.Fatal("missing occurrence sealed")
 		}
 	})
@@ -115,13 +115,13 @@ func TestSourceDTDIDIngressOwnershipSealsAndDuplicateBinding(t *testing.T) {
 func TestSourceDTDIDSnapshotOwnershipAndAccounting(t *testing.T) {
 	s, key := dtdIDSession(t)
 	f := dtdIDAdmittedAttribute(t, s, key, "a", "value")
-	if e := s.SourceDTDIDAttribute(context.Background(), f); e != nil {
+	if e := s.sourceDTDIDAttribute(context.Background(), f); e != nil {
 		t.Fatal(e)
 	}
 	if e := s.CloseNode(context.Background(), schemaLexemeEnd("1")); e != nil {
 		t.Fatal(e)
 	}
-	if e := s.CompleteSourceDTDIDs(context.Background(), "source"); e != nil {
+	if e := s.completeSourceDTDIDs(context.Background(), "source"); e != nil {
 		t.Fatal(e)
 	}
 	_, snap, e := s.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})

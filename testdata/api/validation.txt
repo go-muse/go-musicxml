@@ -461,7 +461,6 @@ const XSDCheckContent XSDCheck = "content"
 const XSDCheckDeclaration XSDCheck = "declaration"
 const XSDCheckIdentity XSDCheck = "identity"
 const XSDCheckScalar XSDCheck = "scalar"
-func AllocationSize(bytes int64) (int, error)
 func ClassifyResourceMediaType(ctx context.Context, account *Account, value string) (Evidence[ResourceRepresentation], error)
 func CompileSchema(assembly Assembly, data SchemaData) (*CompiledSchema, error)
 func DefaultBudgets() Budgets
@@ -471,58 +470,32 @@ func NewAtomicComparisonPlan(comparison Comparison, expected Atomic) (Plan, erro
 func NewAttributeImpliesRelatedChildPlan(attribute AttributeSelector, expected Atomic, relation RelationKind, children []DeclarationID) (Plan, error)
 func NewAttributeNumberOrTokensPlan(attribute AttributeSelector, tokens []string, minimum Decimal, maximum Decimal) (Plan, error)
 func NewAttributePresencePlan(attribute AttributeSelector, required bool) (Plan, error)
-func NewBarlineLocationPlan(spec ContextPlanSpec) (Plan, error)
-func NewBendReleaseSignPlan(spec ConsumerSpec) (Plan, error)
 func NewBudgetAccount(limits Budgets) (*Account, error)
 func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding) (*CompiledCatalog, error)
 func NewChildCountPlan(children []DeclarationID, minimum int64, maximum int64) (Plan, error)
-func NewChordDurationPlan(spec ConsumerSpec) (Plan, error)
-func NewContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error)
 func NewContextComparisonPlan(key string, relation RelationKind, comparison Comparison, expected Atomic) (Plan, error)
 func NewContextDefaultPlan(key string, relation RelationKind, attribute AttributeSelector, fallback Atomic) (Plan, error)
 func NewContextValuePlan(key string, relation RelationKind, value Atomic) (Plan, error)
 func NewDecimal(value *big.Rat) (Decimal, error)
-func NewDictionaryPlan(schema *CompiledSchema, operation DictionaryOperation) (Plan, error)
 func NewDictionarySet(ctx context.Context, a *Account, selections []DictionarySelection, imports []DictionaryImport) (_ *DictionarySet, err error)
 func NewDistinctChildAttributePlan(children []DeclarationID, attribute AttributeSelector) (Plan, error)
 func NewDocumentChildPresencePlan(markers []DeclarationID) (Plan, error)
 func NewDocumentMarkerValuesPlan(markers []DeclarationID, requirements []ChildValueRequirement) (Plan, error)
 func NewEngine(catalog *CompiledCatalog) (*Engine, error)
-func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error)
-func NewGraphicalRepeatContentPlan(spec ConsumerSpec) (Plan, error)
 func NewIdentityDeclarationPlan(index string, attribute AttributeSelector) (Plan, error)
 func NewIdentityReferencePlan(index string, attribute AttributeSelector) (Plan, error)
 func NewInteger(value *big.Int) (Integer, error)
-func NewLayoutContextPlan(spec ContextPlanSpec) (Plan, error)
-func NewLocalContextPlan(schema *CompiledSchema) (Plan, error)
-func NewLocalLinkContextPlan(schema *CompiledSchema) (Plan, error)
 func NewModelRepresentationPlan(assembly Assembly) (Plan, error)
-func NewNavigationContextPlan(spec ContextPlanSpec) (Plan, error)
-func NewNumeralKeyPlan(spec ConsumerSpec) (Plan, error)
-func NewOpusLayoutContextPlan(schema *CompiledSchema) (Plan, error)
 func NewPackageCatalog(rules []PackageRuleBinding, profiles []PackageProfileBinding) (*CompiledPackageCatalog, error)
 func NewPackagePlan(check PackageCheck) (PackagePlan, error)
-func NewPerformanceContextPlan(spec ContextPlanSpec) (Plan, error)
 func NewPresenceImpliesAttributePlan(triggers []AttributeSelector, owner Selector, attribute AttributeSelector, expected Atomic) (Plan, error)
 func NewPresentAttributeValuePlan(attribute AttributeSelector, values []Atomic) (Plan, error)
 func NewRational(value *big.Rat) (Rational, error)
-func NewRepeatContextPlan(spec ContextPlanSpec) (Plan, error)
 func NewScalarOneOfPlan(values []Atomic) (Plan, error)
-func NewSchemaHintContextPlan(schema *CompiledSchema) (Plan, error)
-func NewSoundsMappingContextPlan(schema *CompiledSchema) (Plan, error)
 func NewSourceAttributeValuePlan(attribute AttributeSelector, values []Atomic) (Plan, error)
-func NewSourceContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error)
-func NewSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error)
-func NewSourceOriginPlan(assembly Assembly) (Plan, error)
 func NewSourcePresenceImpliesAttributePlan(triggers []AttributeSelector, owner Selector, attribute AttributeSelector, expected Atomic) (Plan, error)
-func NewSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error)
-func NewSpanContextPlan(spec ContextPlanSpec) (Plan, error)
-func NewTimeOnlyOrderPlan(schema *CompiledSchema) (Plan, error)
-func NewTimelinePlan(spec TimelinePlanSpec) (Plan, error)
 func NewTypedReferencePlan(spec ReferencePlanSpec) (Plan, error)
-func NewXMLFragmentLinkContextPlan(schema *CompiledSchema, sourceInfoset bool) (Plan, error)
 func NewXSDPlan(schema *CompiledSchema, check XSDCheck) (Plan, error)
-func NewXSDPlanWithSourceDeclarations(schema *CompiledSchema, check XSDCheck) (Plan, error)
 func Unknown[T any](reason Code) Evidence[T]
 func ValidateResourceRequest(q ResourceRequest) error
 func ValidateResourceResult(q ResourceRequest, r ResourceResult) error
@@ -633,7 +606,6 @@ type CompiledCatalog, method (*CompiledCatalog) Profile(id ProfileID) (Profile, 
 type CompiledCatalog, method (*CompiledCatalog) Rule(key RuleKey) (RuleDefinition, bool)
 type CompiledCatalog, method (*CompiledCatalog) Schedule(id ProfileID) ([]RuleKey, bool)
 type CompiledPackageCatalog struct, not comparable
-type CompiledPackageCatalog, method (*CompiledPackageCatalog) Begin(ctx context.Context, opts RunOptions) (*PackageSession, error)
 type CompiledPackageCatalog, method (*CompiledPackageCatalog) Profile(id ProfileID) (Profile, bool)
 type CompiledPackageCatalog, method (*CompiledPackageCatalog) Rule(key RuleKey) (PackageRuleBinding, bool)
 type CompiledSchema struct, comparable
@@ -843,9 +815,6 @@ type Engine struct, comparable
 type Engine, method (*Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error)
 type Engine, method (*Engine) BeginWithDictionaries(ctx context.Context, opts RunOptions, set *DictionarySet) (*Session, error)
 type Engine, method (*Engine) Profile(id ProfileID) (Profile, bool)
-type Engine, method (*Engine) SourceAttributeLexicalProvider(profile ProfileID, assembly Assembly) (RuleKey, bool)
-type Engine, method (*Engine) SourceDTDIDsSelected(profile ProfileID) bool
-type Engine, method (*Engine) SourceOriginProvider(profile ProfileID, assembly Assembly) (RuleKey, bool)
 type Evidence struct, field Cause *DecisionRef
 type Evidence struct, field Reason Code
 type Evidence struct, field State EvidenceState
@@ -1214,26 +1183,6 @@ type PackageRuleBinding struct, not comparable
 type PackageSelector struct, comparable
 type PackageSelector struct, field Kind PackageSubjectKind
 type PackageSession struct, not comparable
-type PackageSession, method (*PackageSession) AddResource(ctx context.Context, pin ResourcePin, snapshot *ResourceSnapshot, required bool) (ResourceAssessmentID, error)
-type PackageSession, method (*PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmentID, opts ResourceAdoptionOptions) (ResourceAdoptionID, error)
-type PackageSession, method (*PackageSession) Adoption(ctx context.Context, id ResourceAdoptionID) (*ResourceAdoption, error)
-type PackageSession, method (*PackageSession) ExpansionOwner(ctx context.Context, id ResourceAdoptionID) (ResourceAdoptionID, error)
-type PackageSession, method (*PackageSession) Finish(ctx context.Context, end PackageCompletion) (AssessmentBundle, error)
-type PackageSession, method (*PackageSession) FinishWithRetainedBundle(ctx context.Context, end PackageCompletion) (AssessmentBundle, *ReportLease, error)
-type PackageSession, method (*PackageSession) ObserveAssociation(ctx context.Context, q AssociationRequest, r AssociationResult) error
-type PackageSession, method (*PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservation) error
-type PackageSession, method (*PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObservation) error
-type PackageSession, method (*PackageSession) ObserveFileMetadata(ctx context.Context, v PackageFileMetadataObservation) error
-type PackageSession, method (*PackageSession) ObserveImageMetadata(ctx context.Context, source ResourceAdoptionID, template uint64, q ImageMetadataRequest, result ResourceResult) error
-type PackageSession, method (*PackageSession) ObserveMimetype(ctx context.Context, m PackageMimetypeObservation) error
-type PackageSession, method (*PackageSession) ObserveRoles(ctx context.Context, r ResourceRoleResult) error
-type PackageSession, method (*PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileObservation) error
-type PackageSession, method (*PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) error
-type PackageSession, method (*PackageSession) RecordResourceFailure(ctx context.Context, pin ResourcePin, report Report, cause error) error
-type PackageSession, method (*PackageSession) SealEnumeration(ctx context.Context, e PackageEnumeration) error
-type PackageSession, method (*PackageSession) SealResourceExpansion(ctx context.Context, id ResourceAdoptionID, complete Evidence[bool]) error
-type PackageSession, method (*PackageSession) SealResourceMembers(ctx context.Context, pkg PackageID, complete Evidence[bool]) error
-type PackageSession, method (*PackageSession) TerminalCause() error
 type PackageSubjectKind string
 type Plan struct, not comparable
 type PlanBinding struct, field ID string
@@ -1707,19 +1656,11 @@ type Session struct, not comparable
 type Session, method (*Session) Attribute(ctx context.Context, attribute AttributeFact) error
 type Session, method (*Session) CloseNode(ctx context.Context, end NodeEnd) error
 type Session, method (*Session) CompleteAttributes(ctx context.Context, id NodeID, complete Evidence[bool]) error
-type Session, method (*Session) CompleteSourceDTDIDs(ctx context.Context, doc string) error
-type Session, method (*Session) CompleteSourceOrigins(ctx context.Context, provider RuleKey, complete Evidence[bool]) error
 type Session, method (*Session) Finish(ctx context.Context, end Completion) (Report, error)
 type Session, method (*Session) FinishWithResourceSnapshot(ctx context.Context, end Completion) (Report, *ResourceSnapshot, error)
 type Session, method (*Session) FinishWithRetainedReport(ctx context.Context, end Completion) (report Report, lease *ReportLease, err error)
 type Session, method (*Session) ModelRepresentation(ctx context.Context, fact ModelRepresentationFact) error
 type Session, method (*Session) OpenNode(ctx context.Context, node NodeHeader) error
-type Session, method (*Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, subject NodeRef, attribute QName, raw Evidence[string]) (err error)
-type Session, method (*Session) SourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribute) (err error)
-type Session, method (*Session) SourceDTDIDDomain(ctx context.Context, f SourceDTDIDDomain) (err error)
-type Session, method (*Session) SourceDTDIDsSelected() bool
-type Session, method (*Session) SourceEntityDeclarations(ctx context.Context, facts SourceEntityDeclarations) (err error)
-type Session, method (*Session) SourceOrigin(ctx context.Context, provider RuleKey, in SourceOriginContextResult) (err error)
 type SessionError struct, comparable
 type SessionError struct, field Cause error
 type SessionError struct, field Operation string

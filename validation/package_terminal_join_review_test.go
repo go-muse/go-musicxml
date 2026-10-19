@@ -21,10 +21,10 @@ func TestPackageReviewTerminalJoiningPreservesContainingChain(t *testing.T) {
 		if got := s.fail(next); got != next {
 			t.Fatal("fail changed its immediate return identity")
 		}
-		if s.TerminalCause() != outer || strings.Count(s.TerminalCause().Error(), "original-transfer-refusal") != 1 {
-			t.Errorf("containing chain duplicated: %v", s.TerminalCause())
+		if s.terminalCause() != outer || strings.Count(s.terminalCause().Error(), "original-transfer-refusal") != 1 {
+			t.Errorf("containing chain duplicated: %v", s.terminalCause())
 		}
-		b, err := s.Finish(context.Background(), PackageCompletion{Cause: outer})
+		b, err := s.finish(context.Background(), PackageCompletion{Cause: outer})
 		var original *ConfigurationError
 		if !errors.Is(err, inner) || !errors.As(err, &original) || original != inner || strings.Count(err.Error(), "original-transfer-refusal") != 1 {
 			t.Errorf("finish lost identity or duplicated cause: %v", err)
@@ -41,13 +41,13 @@ func TestPackageReviewTerminalJoiningKeepsIndependentCauses(t *testing.T) {
 	second := errors.New("second-independent-refusal")
 	s.fail(first)
 	s.fail(second)
-	combined := s.TerminalCause()
+	combined := s.terminalCause()
 	s.fail(first)
 	s.fail(second)
-	if s.TerminalCause() != combined {
+	if s.terminalCause() != combined {
 		t.Fatal("already retained cause joined again")
 	}
-	_, err := s.Finish(context.Background(), PackageCompletion{Cause: combined})
+	_, err := s.finish(context.Background(), PackageCompletion{Cause: combined})
 	if !errors.Is(err, first) || !errors.Is(err, second) || strings.Count(err.Error(), first.Error()) != 1 || strings.Count(err.Error(), second.Error()) != 1 {
 		t.Fatalf("independent causes lost or duplicated: %v", err)
 	}

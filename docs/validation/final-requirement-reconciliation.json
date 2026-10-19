@@ -18611,7 +18611,7 @@
       "anchors": [
         {
           "file": "validation/package_association_test.go",
-          "text": "\ts, q := packageAssociationFixture(t)\n\tr := packageAssociationReply(q, Evidence[bool]{State: EvidenceUnknown, Reason: \"partial-table\"})\n\tr.Authority = EvidenceAuthority{}\n\tif err := s.ObserveAssociation(context.Background(), q, r); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tsealFixtureExpansions(t, s)\n\t_ = s.SealEnumeration(context.Background(), completePackage(\"outer\"))\n\tb, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})\n\tif err != nil || b.Satisfied() || b.PackageReport().Counts.Unknown != 1 {\n\t\tt.Fatalf(\"partial relation=%v %+v\", err, b.PackageReport())"
+          "text": "\ts, q := packageAssociationFixture(t)\n\tr := packageAssociationReply(q, Evidence[bool]{State: EvidenceUnknown, Reason: \"partial-table\"})\n\tr.Authority = EvidenceAuthority{}\n\tif err := s.observeAssociation(context.Background(), q, r); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tsealFixtureExpansions(t, s)\n\t_ = s.sealEnumeration(context.Background(), completePackage(\"outer\"))\n\tb, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})\n\tif err != nil || b.Satisfied() || b.PackageReport().Counts.Unknown != 1 {\n\t\tt.Fatalf(\"partial relation=%v %+v\", err, b.PackageReport())"
         },
         {
           "file": "validation/package_association_test.go",

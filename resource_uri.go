@@ -63,7 +63,7 @@ func resolveAssessmentResourceURI(ctx context.Context, account *validation.Accou
 		return out, err
 	}
 	retained := 16*n + 1024
-	if _, err := validation.AllocationSize(retained); err != nil {
+	if _, err := validationAllocationSize(retained); err != nil {
 		return out, err
 	}
 	if err := account.Charge(validation.BudgetBufferedBytes, retained); err != nil {

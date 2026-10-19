@@ -4,9 +4,9 @@ import "strings"
 
 const planSourceOrigin planKind = "source-origin"
 
-// NewSourceOriginPlan selects the bounded source-origin contract for one exact
+// newSourceOriginPlan selects the bounded source-origin contract for one exact
 // schema assembly. It consumes typed adapter facts, never XML or callbacks.
-func NewSourceOriginPlan(assembly Assembly) (Plan, error) {
+func newSourceOriginPlan(assembly Assembly) (Plan, error) {
 	return checkedPlan(Plan{kind: planSourceOrigin, sourceAssembly: assembly})
 }
 func (p Plan) validateSourceOriginFor(r RuleDefinition) error {
@@ -41,13 +41,10 @@ func validateSourceOriginProfile(c *CompiledCatalog, profile Profile, closure ma
 	return nil
 }
 
-// SourceOriginProvider returns the exact available sealed provider selected for
+// sourceOriginProvider returns the exact available sealed provider selected for
 // this source profile and assembly. Like Profile, false includes unknown IDs.
 // Catalog selection is independent of the caller's editable profile snapshots.
-//
-// Adapter API: the root musicxml package uses this to stream facts into an
-// engine; application code is not expected to call it.
-func (e *Engine) SourceOriginProvider(profile ProfileID, assembly Assembly) (RuleKey, bool) {
+func (e *Engine) sourceOriginProvider(profile ProfileID, assembly Assembly) (RuleKey, bool) {
 	if e == nil || e.catalog == nil {
 		return RuleKey{}, false
 	}

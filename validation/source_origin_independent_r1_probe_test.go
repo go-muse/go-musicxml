@@ -26,7 +26,7 @@ func TestIndependentR1PhysicalEntityAttribute(t *testing.T) {
 	if err := s.Attribute(ctx, sourceOriginAttribute(name, in.Physical.Value)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SourceOrigin(ctx, key, in); err != nil {
+	if err := s.sourceOrigin(ctx, key, in); err != nil {
 		t.Fatal(err)
 	}
 	got := s.contextResults[0].SourceOrigin
@@ -48,7 +48,7 @@ func TestIndependentR1OriginCanceledBeforeMalformed(t *testing.T) {
 	before := s.retained
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	err := s.SourceOrigin(ctx, key, in)
+	err := s.sourceOrigin(ctx, key, in)
 	if !errors.Is(err, context.Canceled) || errors.Is(err, ErrInvalidConfiguration) || len(s.contextResults) != 0 || len(s.sourceOriginSeen) != 0 || s.retained != before {
 		t.Fatalf("canceled invalid publication: err=%v retained=%d/%d", err, s.retained, before)
 	}

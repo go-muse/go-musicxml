@@ -7,7 +7,7 @@ import "github.com/go-muse/go-musicxml/validation"
 func addBarlineLocationAssessment(d *assessmentDefinitions) (validation.RuleKey, error) {
 	timeline := validation.RuleKey{ID: "MX40-TIMELINE-effective-state", Revision: 1}
 	key := validation.RuleKey{ID: "MX40-CONTEXT-barline-location", Revision: 1}
-	plan, err := validation.NewBarlineLocationPlan(validation.ContextPlanSpec{Schema: d.schemas[validation.AssemblyMusicXML], TimelineProvider: timeline})
+	plan, err := validationNewBarlineLocationPlan(validation.ContextPlanSpec{Schema: d.schemas[validation.AssemblyMusicXML], TimelineProvider: timeline})
 	if err != nil {
 		return validation.RuleKey{}, err
 	}
