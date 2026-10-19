@@ -330,3 +330,38 @@ func TestOmitContextLowersTheBufferedStorage(t *testing.T) {
 		t.Fatalf("omitting the projection saved too little: %d with, %d without", with, without)
 	}
 }
+
+// A failed process-wide import is not cached: the call imports on its own
+// account, and the next call builds the shared set. The test replaces global
+// state, so it must not run in parallel.
+func TestBundledDictionaryCacheDoesNotCacheFailure(t *testing.T) {
+	bundledDictionaryCache.mu.Lock()
+	saved := bundledDictionaryCache.set
+	bundledDictionaryCache.set = nil
+	bundledDictionaryCache.mu.Unlock()
+	t.Cleanup(func() {
+		// The set built here is left open: a view may still read it.
+		bundledDictionaryCache.mu.Lock()
+		bundledDictionaryCache.set = saved
+		bundledDictionaryCache.mu.Unlock()
+		bundledDictionaryImport = importDictionarySet
+	})
+	failures := 0
+	bundledDictionaryImport = func(ctx context.Context, a *validation.Account, o DictionaryOptions) (*validation.DictionarySet, error) {
+		if failures == 0 {
+			failures++
+			return nil, errors.New("process-wide import failed")
+		}
+		return importDictionarySet(ctx, a, o)
+	}
+	set, _, steps, _, _ := dictionaryLoadUsage(t, requiredDictionaryOptions())
+	if steps < 1_000_000 || bundledDictionaryCache.set != nil {
+		t.Fatalf("failed shared import: caller steps=%d cached=%v", steps, bundledDictionaryCache.set != nil)
+	}
+	_ = set.Close()
+	set, _, steps, _, _ = dictionaryLoadUsage(t, requiredDictionaryOptions())
+	if steps >= 100 || bundledDictionaryCache.set == nil {
+		t.Fatalf("retried shared import: caller steps=%d cached=%v", steps, bundledDictionaryCache.set != nil)
+	}
+	_ = set.Close()
+}

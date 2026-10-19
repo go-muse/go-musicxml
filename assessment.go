@@ -51,7 +51,7 @@ type AssessmentOptions struct {
 // Assessment and an empty Profile select validation line 2, ProfileSourceLine,
 // and line 3, ProfileModelSemantics. A nonempty Profile must be
 // ProfileSourceLine; it cannot narrow validation. Budgets are shared by
-// dictionary import and both lines. Decode remains the separate
+// both lines and the dictionary set of line 3. Decode remains the separate
 // conversion-only API (scenario 1).
 type DecodeAssessmentOptions struct {
 	Decode     DecodeOptions
@@ -158,8 +158,9 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // After recoverable conversion failure, the healthy parser is drained so later
 // source violations remain visible. Line 3 runs only after line 2 and
 // conversion accept the document. Both lines share one finite budget account;
-// the bundled pinned canonical SMuFL and IPA representation data serve line 3.
-// A dictionary import that fails but still returns a set keeps line 3
+// the bundled pinned canonical SMuFL and IPA representation data serve line 3,
+// which obtains them when it starts, so a document line 2 rejects never opens
+// a dictionary source. A dictionary import that fails but still returns a set keeps line 3
 // running, so that its report shows the unavailable evidence; the failure
 // still rejects the document.
 //

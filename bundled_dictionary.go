@@ -17,8 +17,11 @@ import (
 // standalone assessment. The assessed loaders select their required components
 // by default when the source is nil and selections are empty. Each Open returns
 // an independent reader over immutable embedded bytes; no file access, network
-// access or generation occurs at runtime. Each loader invocation still imports,
-// accounts, verifies and parses its selected bytes; there is no cross-call set cache.
+// access or generation occurs at runtime. The required selections of this
+// source, in their canonical order, are imported and verified once per process
+// and shared by every call that selects exactly them; each call is charged the
+// shared set's retained storage while it holds it. Any other selection is
+// imported, accounted, verified and parsed on every call.
 //
 // Any binary referencing DecodeAssessed, DecodeMXLAssessed, InspectXML,
 // AssessModel, InspectXMLWithResources, AssessModelWithResources, InspectMXL

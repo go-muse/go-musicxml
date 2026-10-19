@@ -32,7 +32,7 @@ func cachedBundledDictionarySet() *validation.DictionarySet {
 	if err != nil {
 		return nil
 	}
-	set, err := importDictionarySet(context.Background(), account, requiredDictionaryOptions())
+	set, err := bundledDictionaryImport(context.Background(), account, requiredDictionaryOptions())
 	if err != nil {
 		if set != nil {
 			_ = set.Close()
@@ -42,6 +42,9 @@ func cachedBundledDictionarySet() *validation.DictionarySet {
 	bundledDictionaryCache.set = set
 	return set
 }
+
+// bundledDictionaryImport imports the cached set; tests replace it.
+var bundledDictionaryImport = importDictionarySet
 
 // bundledRequiredDictionaries reports whether o selects exactly the required
 // relations, in their canonical order, from the bundled source.
