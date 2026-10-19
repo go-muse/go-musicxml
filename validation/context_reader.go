@@ -270,7 +270,7 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 		bound, ok := r.s.schema.nodes[n.header.ID]
 		if ok && bound.available {
 			binding, hasBinding = bound.binding, true
-			if table, ready := r.attributeCache[binding]; ready {
+			if table, ready := r.cachedAttributeTable(binding); ready {
 				return table
 			}
 		}
@@ -366,7 +366,7 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 		}
 		if known {
 			intern = true
-			if previous := r.attributeIntern[internKey]; previous != nil {
+			if previous := r.internedAttributeTable(internKey); previous != nil {
 				equal := len(previous.roles) == len(selected)
 				for _, v := range selected {
 					a, exists := previous.selectors[v.role]
@@ -383,15 +383,16 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 			}
 		}
 	}
+	shared := r.attributeTablesShared()
 	retained := int64(128)
-	if r.attributeCache == nil {
+	if shared && r.s.contextAttributeTables == nil || !shared && r.attributeCache == nil {
 		retained += 128
 	}
 	if fresh {
 		retained += 512 + int64(len(selected))*256
 		if intern {
 			retained += 384
-			if r.attributeIntern == nil {
+			if shared && r.s.contextAttributeIntern == nil || !shared && r.attributeIntern == nil {
 				retained += 128
 			}
 		}
@@ -418,17 +419,68 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 			table.roles[i] = v.role
 		}
 		if intern {
-			if r.attributeIntern == nil {
-				r.attributeIntern = make(map[contextAttributeInternKey]*contextAttributeTable)
+			if shared {
+				if r.s.contextAttributeIntern == nil {
+					r.s.contextAttributeIntern = make(map[contextSharedInternKey]*contextAttributeTable)
+				}
+				r.s.contextAttributeIntern[contextSharedInternKey{r.b, internKey}] = table
+			} else {
+				if r.attributeIntern == nil {
+					r.attributeIntern = make(map[contextAttributeInternKey]*contextAttributeTable)
+				}
+				r.attributeIntern[internKey] = table
 			}
-			r.attributeIntern[internKey] = table
 		}
+	}
+	if shared {
+		if r.s.contextAttributeTables == nil {
+			r.s.contextAttributeTables = make(map[contextAttributeTableKey]*contextAttributeTable)
+		}
+		r.s.contextAttributeTables[contextAttributeTableKey{r.b, binding}] = table
+		return table
 	}
 	if r.attributeCache == nil {
 		r.attributeCache = make(map[xsd.Binding]*contextAttributeTable)
 	}
 	r.attributeCache[binding] = table
 	return table
+}
+
+// Attribute tables of a final reader are shared by every final reader of the
+// session with the same compiled bindings. As for boundElementRoles, Finish
+// has sealed the event API and the source schema is bound and complete, so no
+// binding's attributes can change; a table depends only on the bindings, the
+// session schema and the binding's assessed attributes. Only successfully
+// built tables are stored; a failed build leaves no entry. Earlier readers and
+// private hand-built bindings keep their own caches.
+type contextAttributeTableKey struct {
+	bindings *contextBindings
+	binding  xsd.Binding
+}
+
+type contextSharedInternKey struct {
+	bindings *contextBindings
+	key      contextAttributeInternKey
+}
+
+func (r *contextReader) attributeTablesShared() bool {
+	return r.b.bindingDigest != "" && r.s.finished && r.s.schema != nil && r.s.schema.bound && r.s.schema.identityReady && r.s.schema.run != nil
+}
+
+func (r *contextReader) cachedAttributeTable(binding xsd.Binding) (*contextAttributeTable, bool) {
+	if r.attributeTablesShared() {
+		table, ready := r.s.contextAttributeTables[contextAttributeTableKey{r.b, binding}]
+		return table, ready
+	}
+	table, ready := r.attributeCache[binding]
+	return table, ready
+}
+
+func (r *contextReader) internedAttributeTable(key contextAttributeInternKey) *contextAttributeTable {
+	if r.attributeTablesShared() {
+		return r.s.contextAttributeIntern[contextSharedInternKey{r.b, key}]
+	}
+	return r.attributeIntern[key]
 }
 
 // ownerTable's compatibility path is only for private hand-built bindings.

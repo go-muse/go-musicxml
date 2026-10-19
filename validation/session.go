@@ -127,6 +127,8 @@ type Session struct {
 	sourceOriginSeal        *Evidence[bool]
 	contextServices         map[RuleKey]*contextService
 	contextElementRoles     map[contextBoundElementKey][]contextRole
+	contextAttributeTables  map[contextAttributeTableKey]*contextAttributeTable
+	contextAttributeIntern  map[contextSharedInternKey]*contextAttributeTable
 	contextResults          []ContextResult
 	contextReportRetained   int64
 	timeline                map[RuleKey]*timelineService
@@ -734,6 +736,8 @@ func (s *Session) cleanup() {
 	// Drop borrowed schema bindings before closing their run and releasing the
 	// session-owned cache allowance below.
 	s.contextElementRoles = nil
+	s.contextAttributeTables = nil
+	s.contextAttributeIntern = nil
 	if s.schema != nil && s.schema.run != nil {
 		_ = s.schema.run.Close()
 	}
