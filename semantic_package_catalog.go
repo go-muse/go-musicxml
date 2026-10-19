@@ -33,9 +33,19 @@ func semanticResourceIntrinsicProfiles() resourceIntrinsicProfiles {
 var semanticPackageAssessmentCatalog = sync.OnceValues(buildSemanticPackageAssessmentCatalog)
 
 func buildSemanticPackageAssessmentCatalog() (*validation.CompiledPackageCatalog, error) {
-	rules, profiles, err := buildPackageAssessmentDefinitions()
+	rules, profiles, err := semanticPackageAssessmentDefinitions()
 	if err != nil {
 		return nil, err
+	}
+	return validation.NewPackageCatalog(rules, profiles)
+}
+
+// semanticPackageAssessmentDefinitions composes the semantic package profiles
+// and binds each intrinsic row to its engine's current catalog digest.
+func semanticPackageAssessmentDefinitions() ([]validation.PackageRuleBinding, []validation.PackageProfileBinding, error) {
+	rules, profiles, err := buildPackageAssessmentDefinitions()
+	if err != nil {
+		return nil, nil, err
 	}
 	for i := range rules {
 		r := &rules[i].Rule
@@ -61,7 +71,7 @@ func buildSemanticPackageAssessmentCatalog() (*validation.CompiledPackageCatalog
 		case ProfileMXLModel:
 			p.Profile.ID = ProfileMXLModelSemantics
 		default:
-			return nil, &validation.ConfigurationError{Field: "semantic package profile", Reason: "unexpected base profile"}
+			return nil, nil, &validation.ConfigurationError{Field: "semantic package profile", Reason: "unexpected base profile"}
 		}
 		p.Profile.NormativeClosure = strings.Replace(p.Profile.NormativeClosure, "renderer, dictionary, automatic", "renderer, automatic", 1)
 		p.Profile.NormativeClosure += " Exact intrinsic composition selects bounded encoded MusicXML semantics, local and timeline checks, barline and graphical-repeat proofs, caller-supplied canonical and IPA evidence, and the registered XML Framework/shorthand/element fragment interpretation. Source children use actually read internal declarations, a DOCTYPE external subset read from the bundled official MusicXML DTDs or a caller DTD source and owned source origins; current models retain only current-state authority. Source Container metadata distinguishes physical and effective values. No auxiliary discovery, dictionary auto-loading, external declaration fetch, renderer or desired-score authority is introduced. Missing capabilities, incomplete identity domains, compressed-target indirection and other original package limits remain explicit. No universal conformance claim is made."
@@ -70,7 +80,7 @@ func buildSemanticPackageAssessmentCatalog() (*validation.CompiledPackageCatalog
 			switch row.Assembly {
 			case validation.AssemblyContainer, validation.AssemblySounds:
 				if row.Target != validation.TargetSource {
-					return nil, &validation.ConfigurationError{Field: "semantic auxiliary target", Reason: "source target required"}
+					return nil, nil, &validation.ConfigurationError{Field: "semantic auxiliary target", Reason: "source target required"}
 				}
 				row.Profile = bundle.container
 				if row.Assembly == validation.AssemblySounds {
@@ -83,10 +93,10 @@ func buildSemanticPackageAssessmentCatalog() (*validation.CompiledPackageCatalog
 				case validation.TargetModel:
 					row.Profile = bundle.model
 				default:
-					return nil, &validation.ConfigurationError{Field: "semantic intrinsic target", Reason: "source or current-model target required"}
+					return nil, nil, &validation.ConfigurationError{Field: "semantic intrinsic target", Reason: "source or current-model target required"}
 				}
 			default:
-				return nil, &validation.ConfigurationError{Field: "semantic intrinsic assembly", Reason: "unrecognized assembly"}
+				return nil, nil, &validation.ConfigurationError{Field: "semantic intrinsic assembly", Reason: "unrecognized assembly"}
 			}
 			var engine *validation.Engine
 			if row.Target == validation.TargetSource {
@@ -95,14 +105,14 @@ func buildSemanticPackageAssessmentCatalog() (*validation.CompiledPackageCatalog
 				engine, err = modelAssessmentEngineForProfile(row.Profile)
 			}
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			profile, ok := engine.Profile(row.Profile)
 			if !ok || profile.Target != row.Target || profile.CatalogDigest == "" {
-				return nil, &validation.ConfigurationError{Field: "semantic package intrinsic profile", Reason: "missing exact target/profile catalog interpretation"}
+				return nil, nil, &validation.ConfigurationError{Field: "semantic package intrinsic profile", Reason: "missing exact target/profile catalog interpretation"}
 			}
 			row.CatalogDigest = profile.CatalogDigest
 		}
 	}
-	return validation.NewPackageCatalog(rules, profiles)
+	return rules, profiles, nil
 }

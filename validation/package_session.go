@@ -715,6 +715,9 @@ func (s *PackageSession) recordResourceFailure(ctx context.Context, pin Resource
 	if (report.Counts.Fail != 0) != (report.Conformance == ConformanceViolated) || report.Conformance == ConformanceConformant && (report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0) {
 		return s.fail(contract("failed resource", "counts contradict conformance state"))
 	}
+	if report.ModelFailures > report.BlockingProblems {
+		return s.fail(contract("failed resource", "model failures exceed blocking problems"))
+	}
 	if report.Terminal != nil && (!validCategory(report.Terminal.Category) || !validID(string(report.Terminal.Reason)) || len(report.Terminal.Reason) > reportTerminalBytes) {
 		return s.fail(contract("failed resource", "invalid bounded terminal summary"))
 	}
@@ -740,7 +743,7 @@ func (s *PackageSession) recordResourceFailure(ctx context.Context, pin Resource
 		category = DiagnosticCategory(strings.Clone(reportBoundedValue(string(report.Terminal.Category), reportTerminalBytes)))
 		reason = Code(strings.Clone(reportBoundedValue(string(report.Terminal.Reason), reportTerminalBytes)))
 	}
-	summary := &ResourceFailureSummary{Pin: stateClone(pin), PinComplete: complete, Target: report.Target, Profile: ProfileID(strings.Clone(string(report.Profile.ID))), CatalogDigest: strings.Clone(report.Profile.CatalogDigest), Counts: report.Counts, Conformance: report.Conformance, Terminal: TerminalSummary{Category: category, Reason: reason}, DiagnosticsTruncated: true, MetadataTruncated: true}
+	summary := &ResourceFailureSummary{Pin: stateClone(pin), PinComplete: complete, Target: report.Target, Profile: ProfileID(strings.Clone(string(report.Profile.ID))), CatalogDigest: strings.Clone(report.Profile.CatalogDigest), Counts: report.Counts, ModelFailures: report.ModelFailures, Conformance: report.Conformance, Terminal: TerminalSummary{Category: category, Reason: reason}, DiagnosticsTruncated: true, MetadataTruncated: true}
 	// Attempt ordinary full retention first. Cancellation/quota refusal cannot
 	// prevent the already reserved independent count/identity summary below.
 	if s.terminal == nil && ctx.Err() == nil {

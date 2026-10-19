@@ -111,7 +111,7 @@ func buildSourceXSDProfileEngine(internalDTD bool) (*validation.Engine, error) {
 			profile.Support = append(profile.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 		}
 	}
-	catalog, err := validation.NewCatalog(rules, []validation.Profile{profile}, plans)
+	catalog, err := newCatalog(rules, []validation.Profile{profile}, plans)
 	if err != nil {
 		return nil, err
 	}

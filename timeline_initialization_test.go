@@ -149,7 +149,7 @@ func TestTimelineInitializationCannotGrowAdmittedModelCatalog(t *testing.T) {
 			t.Fatalf("%s did not retain its already compiled schema", binding.ID)
 		}
 	}
-	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	catalog, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func TestTimelineInitializationCannotGrowAdmittedModelCatalog(t *testing.T) {
 	if _, err := validation.NewCatalog(rules, profiles, plans); err != nil {
 		t.Fatalf("caller overwriting schema handle retargeted timeline plan: %v", err)
 	}
-	if _, err := validation.NewCatalog(d.rules, d.profiles, d.plans); err != nil {
+	if _, err := newCatalog(d.rules, d.profiles, d.plans); err != nil {
 		t.Fatalf("caller overwriting schema handle retargeted XSD plan: %v", err)
 	}
 }

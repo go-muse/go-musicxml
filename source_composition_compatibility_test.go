@@ -34,10 +34,12 @@ func TestSourceDeclarationCompositionPreservesProfiles(t *testing.T) {
 	}
 	for id, expected := range want {
 		// Preserve the original baseline map; only the explicitly documented
-		// figure-number and separately reviewed IPA representation migrations
-		// change exactly their enumerated identities, retaining every old capture.
+		// figure-number, separately reviewed IPA representation and model decimal
+		// contract migrations change exactly their enumerated identities,
+		// retaining every old capture.
 		expected = migrateFigureNumberProfileHash(t, id, expected)
 		expected = migrateIPARepresentationProfileHash(t, id, expected)
+		expected = migrateDecimalContractProfileHash(t, id, expected)
 		t.Run(string(id), func(t *testing.T) {
 			var engine *validation.Engine
 			var err error

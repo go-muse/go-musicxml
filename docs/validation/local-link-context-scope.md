@@ -73,6 +73,9 @@ Relative to merged PR40 `5295080`, the matching-descendant correction changes
 `ProfileSourceLinks` and `ProfileModelLinks` attachment outputs without revising
 their local-link rule keys or CatalogDigest
 `5fb200a688a054add8a551d288486d2724ff7d1530b42a3e0fbed40f3df46cb3`.
+The later model decimal contract changed that digest to
+`4988798850674ee92c815d98adf5ef81c0a06bb99c565ce6be63bb88c071af3b`
+([model assessment scope](model-assessment-scope.md)).
 A selector whose matching descendants span different parents can now produce
 Known attachment instead of Unknown `link-descendant-ordinal-interpretation`.
 This applies to both links and bookmarks; the rule revision remains 1.

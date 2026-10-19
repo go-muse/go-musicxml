@@ -8114,14 +8114,14 @@
       "function": "TestPackageEstablishedAdviceFailureSurvivesCancellation",
       "line": 125,
       "end_line_bound": 199,
-      "file_sha256": "dca9cef480918680cb0be0ea7767c3275045e23e2797efd68b4b779b2cf4a47b"
+      "file_sha256": "92a1e887755842c1bda848cceabb5e26eab6abc5bd983bd4c17dba6faab9250c"
     },
     "validation/package_interruption_test.go::TestPackageEstablishedRoleFailureSurvivesCancellation": {
       "file": "validation/package_interruption_test.go",
       "function": "TestPackageEstablishedRoleFailureSurvivesCancellation",
       "line": 42,
       "end_line_bound": 124,
-      "file_sha256": "dca9cef480918680cb0be0ea7767c3275045e23e2797efd68b4b779b2cf4a47b"
+      "file_sha256": "92a1e887755842c1bda848cceabb5e26eab6abc5bd983bd4c17dba6faab9250c"
     },
     "validation/package_roles_test.go::TestPackageCanceledMemberSealCannotCertifyInventory": {
       "file": "validation/package_roles_test.go",

@@ -636,6 +636,11 @@ beyond its Go type also makes conversion fail, so `DecodeResult.Conversion`
 reports it as unrepresentable. Union and list values are held as strings and
 are not checked.
 
+Model-category failures are not part of `Report.Counts`: `Report.ModelFailures`
+counts them, and `validation.ResourceFailureSummary.ModelFailures` keeps that
+count when a package keeps only the summary of a failed resource. Both reject
+the report or bundle like a failed normative rule.
+
 `ErrIncompleteAssessment` identifies technical incompleteness, including its presence in a joined invalid/incomplete
 result. It is the identical sentinel exported by the `validation` subpackage.
 `errors.As` can also retrieve its `*validation.IncompleteError`. A legacy
@@ -1284,11 +1289,13 @@ resource reports and its failure summary, or the failed report the summary
 retained, without copying those reports:
 
 - `Violated`: one of them is `ConformanceViolated` or counts a failed rule
-  evaluation, even when its diagnostics were truncated;
+  evaluation (`Counts.Fail + ModelFailures`), even when its diagnostics were
+  truncated;
 - `Incomplete`: anything else keeps the bundle from being satisfied, such as an
   incomplete, terminated or undetermined report without a violation,
   incomplete enumeration or a retained failure summary;
-- `Failed`: the failed evaluations they count;
+- `Failed`: the failed normative and model-category evaluations they count
+  (`Counts.Fail + ModelFailures`);
 - `Truncated`: a violated report or failure summary omitted stored
   diagnostics;
 - `Findings`: copies of the stored failed normative and model findings.

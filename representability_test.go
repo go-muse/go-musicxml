@@ -133,8 +133,11 @@ func TestRepresentabilityRejectionSurvivesDiagnosticTruncation(t *testing.T) {
 				t.Fatalf("truncated rejection: model failures=%d error=%v", result.Source.ModelFailures, err)
 			}
 			mxl, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(rawMXL(t, two)), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: budgets}}})
-			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || !mxl.Source.Failures().Violated {
+			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || !mxl.Source.Failures().Violated || mxl.Source.Failures().Failed != 2 {
 				t.Fatalf("truncated MXL rejection: failures=%+v error=%v", mxl.Source.Failures(), err)
+			}
+			if !strings.Contains(err.Error(), "failed rule evaluations: 2; diagnostic details were truncated") {
+				t.Errorf("truncation summary miscounts failures: %v", err)
 			}
 		})
 	}

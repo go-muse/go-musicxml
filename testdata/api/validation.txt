@@ -1344,12 +1344,13 @@ type ResourceFailureSummary struct, field Conformance ConformanceState
 type ResourceFailureSummary struct, field Counts Counts
 type ResourceFailureSummary struct, field DiagnosticsTruncated bool
 type ResourceFailureSummary struct, field MetadataTruncated bool
+type ResourceFailureSummary struct, field ModelFailures uint64
 type ResourceFailureSummary struct, field Pin ResourcePin
 type ResourceFailureSummary struct, field PinComplete Evidence[bool]
 type ResourceFailureSummary struct, field Profile ProfileID
 type ResourceFailureSummary struct, field Target Target
 type ResourceFailureSummary struct, field Terminal TerminalSummary
-type ResourceFailureSummary struct, field order Pin PinComplete Target Profile CatalogDigest Counts Conformance Terminal DiagnosticsTruncated MetadataTruncated
+type ResourceFailureSummary struct, field order Pin PinComplete Target Profile CatalogDigest Counts ModelFailures Conformance Terminal DiagnosticsTruncated MetadataTruncated
 type ResourceGroupContext struct, comparable
 type ResourceGroupContext struct, field Linked bool
 type ResourceGroupContext struct, field Value Evidence[string]

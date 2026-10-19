@@ -24,7 +24,7 @@ func buildSemanticAssessmentEngine(target validation.Target) (*validation.Engine
 	if err != nil {
 		return nil, err
 	}
-	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	catalog, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		return nil, err
 	}

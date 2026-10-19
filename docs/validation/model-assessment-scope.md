@@ -216,6 +216,15 @@ value whose shortest float64 form differs (MX40-SOURCE-REPRESENTABLE-*). Numeric
 fabricated canonical source spellings and remain a reached capability limit.
 NaN, infinity and invalid text are model representation/value problems.
 
+Every model profile names this contract in its normative closure; the catalog
+builder appends it to composed model profiles whose closure a composition
+replaced. The contract therefore changed the catalog digest of every catalog
+that holds a model profile, the source profiles sharing those catalogs, and
+the four package catalogs whose intrinsic bindings name model profiles. The
+tests migrate earlier captures through one documented step,
+`migrateDecimalContractCatalog` and `migrateDecimalContractProfileHash`,
+applied after the earlier migrations, which keep their own endpoints.
+
 Known scalar absence on an element-only model is distinct from unknown scalar
 content. Numeric zero must never trigger empty-element defaulting. General
 empty-model element value-constraint interpretation not needed by the pinned

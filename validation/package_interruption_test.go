@@ -238,3 +238,41 @@ func TestPackageMimetypeAdviceRequiresKnownOrderForPass(t *testing.T) {
 		t.Fatal("unknown order advice erased")
 	}
 }
+
+// A failed child's model failures reject the bundle like a violation, both
+// when the failed report is retained and when only the prepaid summary
+// survives, and they count in BundleFailures.Failed.
+func TestResourceFailureKeepsModelFailures(t *testing.T) {
+	for _, canceled := range []bool{false, true} {
+		s := beginPackageFixture(t, PackageCheckMimetypeStored)
+		child := snapshotTestSession(t, "1")
+		report, err := child.Finish(context.Background(), Completion{InputComplete: false, Syntax: SyntaxMalformed, Cause: errors.New("malformed child")})
+		if err == nil {
+			t.Fatal("bad fixture")
+		}
+		report.ModelFailures, report.BlockingProblems = 2, report.BlockingProblems+2
+		ctx, cancel := context.WithCancel(context.Background())
+		if canceled {
+			cancel()
+		}
+		_ = s.recordResourceFailure(ctx, interruptionPin("unrepresentable"), report, errors.New("snapshot unavailable"))
+		cancel()
+		b, _ := s.finish(context.Background(), PackageCompletion{})
+		summary, ok := b.Failure()
+		if !ok || summary.ModelFailures != 2 {
+			t.Fatalf("canceled=%t: summary lost model failures: %+v", canceled, summary)
+		}
+		if f := b.Failures(); !f.Violated || f.Failed != report.Counts.Fail+2 {
+			t.Errorf("canceled=%t: model failures not a violation: %+v", canceled, f)
+		}
+	}
+	// A summary cannot claim more model failures than blocking problems.
+	s := beginPackageFixture(t, PackageCheckMimetypeStored)
+	child := snapshotTestSession(t, "1")
+	report, _ := child.Finish(context.Background(), Completion{InputComplete: false, Syntax: SyntaxMalformed, Cause: errors.New("malformed child")})
+	report.ModelFailures = report.BlockingProblems + 1
+	var configuration *ConfigurationError
+	if err := s.recordResourceFailure(context.Background(), interruptionPin("overclaimed"), report, nil); !errors.As(err, &configuration) || configuration.Reason != "model failures exceed blocking problems" {
+		t.Fatalf("overclaimed model failures accepted: %v", err)
+	}
+}

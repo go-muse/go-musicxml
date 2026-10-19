@@ -63,8 +63,8 @@ func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 				t.Fatal(err)
 			}
 			p, ok := engine.Profile(id)
-			if !ok || p.CatalogDigest != tc.after {
-				t.Fatalf("catalog %s: %s expected %s (prior %s)", id, p.CatalogDigest, tc.after, tc.before)
+			if after := migrateDecimalContractCatalog(tc.after); !ok || p.CatalogDigest != after {
+				t.Fatalf("catalog %s: %s expected %s (prior %s)", id, p.CatalogDigest, after, tc.before)
 			}
 			for _, key := range p.Required {
 				if strings.Contains(string(key.ID), "/ipa-positive") && key.Revision != 2 {
@@ -85,7 +85,7 @@ func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		after := migrateCurrentStatePackageCatalog(t, tc.after)
+		after := migrateDecimalContractCatalog(migrateCurrentStatePackageCatalog(t, tc.after))
 		for _, id := range tc.ids {
 			p, ok := c.Profile(id)
 			if !ok || p.CatalogDigest != after {

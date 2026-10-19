@@ -29,7 +29,7 @@ func fragmentCompositionEngine(t *testing.T, sourceInfoset bool) *validation.Eng
 	if err = electXMLFragmentBaseline(d, sourceInfoset); err != nil {
 		t.Fatal(err)
 	}
-	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	catalog, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		t.Fatal(err)
 	}
