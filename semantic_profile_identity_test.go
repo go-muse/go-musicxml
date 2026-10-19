@@ -46,7 +46,7 @@ func TestSemanticProfilesExactFinalIdentity(t *testing.T) {
 				profile = migrateCurrentStatePackageProfileHash(t, tc.id, profile)
 			}
 			catalog, profile = migrateDecimalContractCatalog(catalog), migrateDecimalContractProfileHash(t, tc.id, profile)
-			catalog, profile = migrateValidationLinesCatalog(catalog), migrateValidationLinesProfileHash(t, tc.id, profile)
+			catalog, profile = migrateStructuralRolesCatalog(migrateValidationLinesCatalog(catalog)), migrateStructuralRolesProfileHash(t, tc.id, migrateValidationLinesProfileHash(t, tc.id, profile))
 			if !ok || p.ID != tc.id || p.Target != tc.target || p.CatalogDigest != catalog {
 				t.Fatalf("semantic identity drift: %+v", p)
 			}

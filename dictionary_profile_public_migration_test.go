@@ -55,7 +55,7 @@ func TestDictionaryProfilesPublishedBaselineMigration(t *testing.T) {
 			t.Fatalf("wrong public dictionary baseline %s: %+v", id, old)
 		}
 		current, ok := engine.Profile(id)
-		if !ok || current.Target != target || current.CatalogDigest != migrateValidationLinesCatalog(migrateDecimalContractCatalog("d8199be864c2baa081aca5887ca0ac188052ba22f6a690ea9bb3b436dc054c57")) {
+		if !ok || current.Target != target || current.CatalogDigest != migrateStructuralRolesCatalog(migrateValidationLinesCatalog(migrateDecimalContractCatalog("d8199be864c2baa081aca5887ca0ac188052ba22f6a690ea9bb3b436dc054c57"))) {
 			t.Fatalf("wrong current dictionary migration %s: %+v", id, current)
 		}
 	}

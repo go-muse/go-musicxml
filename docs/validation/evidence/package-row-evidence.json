@@ -7183,35 +7183,35 @@
       "function": "TestPackageIntrinsicSourceDiscoveryAvailableForEveryAssembly",
       "line": 235,
       "end_line_bound": 277,
-      "file_sha256": "92f507944076aaf6e6eed8283494b8e9279ab4720fa02326f1fce089bbe0415c"
+      "file_sha256": "7d32d5e7a2f2a75bafce9689cfa379a5f3a916274676a94db0b08301df5a9a71"
     },
     "package_catalog_test.go::TestPackageProfilesDoNotMutateFrozenEight": {
       "file": "package_catalog_test.go",
       "function": "TestPackageProfilesDoNotMutateFrozenEight",
       "line": 226,
       "end_line_bound": 234,
-      "file_sha256": "92f507944076aaf6e6eed8283494b8e9279ab4720fa02326f1fce089bbe0415c"
+      "file_sha256": "7d32d5e7a2f2a75bafce9689cfa379a5f3a916274676a94db0b08301df5a9a71"
     },
     "package_catalog_test.go::TestPackageProfilesExactSelectionAndMetadata": {
       "file": "package_catalog_test.go",
       "function": "TestPackageProfilesExactSelectionAndMetadata",
       "line": 14,
       "end_line_bound": 113,
-      "file_sha256": "92f507944076aaf6e6eed8283494b8e9279ab4720fa02326f1fce089bbe0415c"
+      "file_sha256": "7d32d5e7a2f2a75bafce9689cfa379a5f3a916274676a94db0b08301df5a9a71"
     },
     "package_catalog_test.go::TestPackageProfilesPinCompleteIntrinsicTable": {
       "file": "package_catalog_test.go",
       "function": "TestPackageProfilesPinCompleteIntrinsicTable",
       "line": 114,
       "end_line_bound": 161,
-      "file_sha256": "92f507944076aaf6e6eed8283494b8e9279ab4720fa02326f1fce089bbe0415c"
+      "file_sha256": "7d32d5e7a2f2a75bafce9689cfa379a5f3a916274676a94db0b08301df5a9a71"
     },
     "package_catalog_test.go::TestPackageProfilesRejectWrongEntryPointProfiles": {
       "file": "package_catalog_test.go",
       "function": "TestPackageProfilesRejectWrongEntryPointProfiles",
       "line": 206,
       "end_line_bound": 225,
-      "file_sha256": "92f507944076aaf6e6eed8283494b8e9279ab4720fa02326f1fce089bbe0415c"
+      "file_sha256": "7d32d5e7a2f2a75bafce9689cfa379a5f3a916274676a94db0b08301df5a9a71"
     },
     "package_verification_pipeline_test.go::TestPackageVerificationPipeline": {
       "file": "package_verification_pipeline_test.go",

@@ -51,7 +51,7 @@ record IDs are provenance, not a count of independent executable obligations.
 | `first-root-musicxml` | rootfile | Mandatory actual musical kind for the first encoded rootfile | `MX40-PROSE-mxl-first-root-musicxml` |
 | `rootfile-root` | rootfile | MusicXML rootfiles have unqualified score-partwise/timewise/opus roots; known nonmusical alternates are separate | `MX40-PROSE-mxl-rootfile-document-root` |
 | `first-media-type` | rootfile | Reviewed primary media-type condition with absent/present-empty distinction and bounded known type set | `MX40-PROSE-mxl-first-media-type`, `MX40-PROSE-mxl-media-type-default` |
-| `score-before-parts` | package | Mandatory only when exact scoped roles establish score plus individual parts; complete minimal packages can prove vacuity | `MX40-PROSE-mxl-score-before-parts` |
+| `score-before-parts` | package | Mandatory only when exact scoped roles establish score plus individual parts; complete minimal packages can prove vacuity; revision 2 also decides from the MusicXML link semantics when no role provider decides (part-link targets are parts and their source the score; opus score, opus-link and work/opus targets and established non-MusicXML rootfiles are not parts) | `MX40-PROSE-mxl-score-before-parts` |
 | `link-target` | edge | Exact selected link family, adopted target kind and supported fragment evidence | `MX40-PROSE-opus-link-target`, `MX40-PROSE-opus-score-target`, `MX40-PROSE-part-link-archive-root`, `MX40-PROSE-compressed-relative-links`; score work-opus schema annotation |
 | `instrument-association` | association | Exact instrument-to-part-file evidence after the existing local IDREF prerequisite | `MX40-PROSE-instrument-link-target` |
 | `group-match` | edge | Optional exact-string correspondence advice | `MX40-PROSE-group-link-match` |
@@ -130,8 +130,13 @@ after edits and for every official and test-suite file accepted as an archive.
 |---|---|---|
 | Ordinary graph/raw-MXL/current-MXL | `554a97e25d6494c2e0550519fd4f6d2a439ca2f31e01a82baa7e28a00ddd2088` | `bcc5d047e4de9f02a61cfdd86f57297f9655006ea0fb6f04ef38628d05dcc28f` |
 | Dictionary graph/raw-MXL/current-MXL | `f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44` | `bbb60bcd61359b41fda394d95e29d93c42c8c0526b101e98f375b698204d6658` |
-| Internal-DTD dictionary graph/raw-MXL/current-MXL | `69d813b09c15ea5083d382fe8864a41179e93cf52c4b04bfb140493070df7648` | `135bb292eac14befeb45ac8c96e0f950028dffa39a7a152d4b2c5759aa8a792b` |
-| Semantic graph/raw-MXL/current-MXL | `e7be6720d91cdc81becf07f5312b6c86039f27290ccb72139643186118cc4a89` | `ab43413ab5e82f27b9ffd406d542e006c2f87d6ebdcc30ea912d667100f34533` |
+| Internal-DTD dictionary graph/raw-MXL/current-MXL | `69d813b09c15ea5083d382fe8864a41179e93cf52c4b04bfb140493070df7648` | `948b7a2d4d16e42dae71c648bf566012e4aeb39591f6093eb196259b275c5dbb` |
+| Semantic graph/raw-MXL/current-MXL | `e7be6720d91cdc81becf07f5312b6c86039f27290ccb72139643186118cc4a89` | `94392cf23145a815149b494559174e9c3524d01d1cf13fe0a55c0ebb4b0520aa` |
+
+These are the digests of that step, as `current_state_package_migration_test.go`
+records them. Later steps (the decimal contract, the validation lines and the
+structural score/part roles) change them again; their migration tests chain
+on top.
 
 ## Boundaries that affect readiness
 

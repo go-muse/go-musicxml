@@ -201,6 +201,6 @@ var ruleLineGroups = []ruleLineGroup{
 		{ID: "MX40-PACKAGE-instrument-association", Revision: 1},
 		{ID: "MX40-PACKAGE-link-target", Revision: 1},
 		{ID: "MX40-PACKAGE-rootfile-root", Revision: 1},
-		{ID: "MX40-PACKAGE-score-before-parts", Revision: 1},
+		{ID: "MX40-PACKAGE-score-before-parts", Revision: 2},
 	}},
 }

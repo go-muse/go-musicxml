@@ -3,6 +3,7 @@ package validation
 import (
 	"bytes"
 	"context"
+	"strings"
 )
 
 func packageEvidenceDecision[T any](d Decision, e Evidence[T]) Decision {
@@ -466,8 +467,24 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 			return d
 		}
 	}
+	// The structure decides only where the role provider stated nothing: a
+	// known provider fact, even one that does not decide, is never overridden.
+	providerStated := false
+	if known {
+		for _, f := range roles.Resources {
+			providerStated = providerStated || f.Membership.State == EvidenceKnown
+		}
+	}
+	if !providerStated {
+		if structural, ok := s.structuralScoreParts(ctx, d, b); ok {
+			return structural
+		}
+	}
 	// Narrow complete minimal-package vacuity: only container, optional mimetype,
 	// and the sole known primary resource; no encoded external edge inventory.
+	// The structural inference decides these packages too; this branch remains
+	// for a provider that stated facts without deciding and for a primary whose
+	// assembly is unknown.
 	if b.sealed && knownComplete(b.enumeration.Entries) && knownComplete(b.enumeration.Rootfiles) && knownComplete(b.enumeration.Edges) {
 		primary := PackageFactID(0)
 		roots := 0
@@ -528,6 +545,133 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 	return d
 }
 func knownComplete(v Evidence[bool]) bool { return v.State == EvidenceKnown && v.Value }
+
+// structuralScoreParts decides score-before-parts from the normative MusicXML
+// link semantics when no role provider decided it. The container.xsd rule
+// reads: when a MusicXML file contains both a score file and separate files
+// for individual parts, the score is the file in the first rootfile, and the
+// part files can be linked from within the score. So a <part-link> target is
+// an individual part file and its source the score; an opus <score> target is
+// a score, and opus-link and work/opus targets are opus documents; a later
+// rootfile with an established non-MusicXML media type, such as a PDF
+// rendition, is not parsed as MusicXML: its declared media type is
+// authoritative, as for rootfile-root, and link-target checks the root kind
+// of the opus targets. Filenames, counts and matching IDs
+// still classify nothing. The package inventory must be sealed and complete,
+// and every document of the package must have projected its links
+// completely; ok is false when the structure decides nothing.
+func (s *PackageSession) structuralScoreParts(ctx context.Context, d Decision, b *packageBoundary) (Decision, bool) {
+	if !b.sealed || !knownComplete(b.enumeration.Entries) || !knownComplete(b.enumeration.Rootfiles) || !knownComplete(b.enumeration.Edges) {
+		return d, false
+	}
+	primary := ""
+	classified := make(map[string]bool)
+	for _, id := range s.rootfileOrder {
+		if s.scan(ctx, 1) != nil {
+			return d, false
+		}
+		r := s.rootfiles[id]
+		if r.Package != b.identity.ID {
+			continue
+		}
+		if r.FullPath.State != EvidenceKnown {
+			return d, false
+		}
+		if r.Ordinal == 1 {
+			primary = r.FullPath.Value
+			continue
+		}
+		if r.MediaType.State == EvidenceKnown {
+			media, err := ClassifyResourceMediaType(ctx, s.account, r.MediaType.Value)
+			if err != nil {
+				s.fail(err)
+				return d, false
+			}
+			if media.State == EvidenceKnown && media.Value == ResourceBinary {
+				classified[r.FullPath.Value] = true
+			}
+		}
+	}
+	if primary == "" {
+		return d, false
+	}
+	// An absent part link proves nothing unless every MusicXML and Opus
+	// document of the package projected its links completely. The container
+	// and sounds documents carry no links.
+	for _, id := range s.adoptionOrder {
+		if s.scan(ctx, 1) != nil {
+			return d, false
+		}
+		a := s.adoptions[id]
+		if a.packageID != b.identity.ID {
+			continue
+		}
+		h := a.resource.snapshot.header
+		if h.Assembly.State != EvidenceKnown {
+			return d, false
+		}
+		if h.Assembly.Value != AssemblyMusicXML && h.Assembly.Value != AssemblyOpus {
+			continue
+		}
+		if !h.LinkProjectionSelected || !knownComplete(h.ScopeComplete) {
+			return d, false
+		}
+	}
+	partLinks, primaryLinksParts := false, false
+	for _, id := range s.edgeOrder {
+		if s.scan(ctx, 1) != nil {
+			return d, false
+		}
+		e := s.edges[id]
+		a := s.adoptions[e.Source]
+		if a == nil || e.Template >= uint64(len(a.resource.snapshot.contexts)) {
+			return d, false
+		}
+		if a.packageID != b.identity.ID {
+			continue
+		}
+		v := a.resource.snapshot.contexts[e.Template]
+		if v.Resource == nil || v.Resource.Link == nil {
+			continue
+		}
+		switch v.Resource.Link.Kind {
+		case ResourcePartLink:
+			partLinks = true
+			primaryLinksParts = primaryLinksParts || a.expansion.key.archiveEntry == primary
+		case ResourceOpusScore, ResourceOpusLink, ResourceScoreWorkOpus:
+			if e.Target.State == EvidenceKnown {
+				if t := s.adoptions[e.Target.Value]; t != nil && t.packageID == b.identity.ID && t.expansion.key.archiveEntry != "" {
+					classified[t.expansion.key.archiveEntry] = true
+				}
+			}
+		}
+	}
+	// A first rootfile that links part files is the score, which satisfies
+	// the rule whatever other documents link; part links only from other
+	// documents leave it undecided.
+	if partLinks {
+		if !primaryLinksParts {
+			return d, false
+		}
+		d.Outcome, d.Reason = OutcomePass, "first-rootfile-score-links-parts"
+		return d, true
+	}
+	for _, id := range s.entryOrder {
+		if s.scan(ctx, 1) != nil {
+			return d, false
+		}
+		e := s.entries[id]
+		// A directory entry holds no file.
+		if e.Package != b.identity.ID || e.Name == "mimetype" || e.Name == "META-INF/container.xml" || e.Name == primary || strings.HasSuffix(e.Name, "/") {
+			continue
+		}
+		if len(e.RawName) != 0 || !classified[e.Name] {
+			return d, false
+		}
+	}
+	d.Outcome, d.Reason = OutcomeNotApplicable, "structural-roles-exclude-separate-parts"
+	return d, true
+}
 func packageMusicRoot(q QName) bool {
 	return q.Space == "" && (q.Local == "score-partwise" || q.Local == "score-timewise" || q.Local == "opus")
 }

@@ -80,7 +80,7 @@ func TestCurrentStatePackageMigrationAndRuleRevision(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		after := migrateValidationLinesCatalog(migrateDecimalContractCatalog(migrateCurrentStatePackageCatalog(t, tc.before)))
+		after := migrateStructuralRolesCatalog(migrateValidationLinesCatalog(migrateDecimalContractCatalog(migrateCurrentStatePackageCatalog(t, tc.before))))
 		if after == tc.before {
 			t.Fatalf("missing intentional migration of %s", tc.before)
 		}
@@ -94,7 +94,7 @@ func TestCurrentStatePackageMigrationAndRuleRevision(t *testing.T) {
 				t.Fatal(err)
 			}
 			sum := sha256.Sum256(raw)
-			if got, want := hex.EncodeToString(sum[:]), migrateValidationLinesProfileHash(t, id, migrateDecimalContractProfileHash(t, id, currentStatePackageProfileHashes[id][1])); got != want {
+			if got, want := hex.EncodeToString(sum[:]), migrateStructuralRolesProfileHash(t, id, migrateValidationLinesProfileHash(t, id, migrateDecimalContractProfileHash(t, id, currentStatePackageProfileHashes[id][1]))); got != want {
 				t.Fatalf("complete Profile JSON %s: %s, want %s", id, got, want)
 			}
 			revised := 0
@@ -102,6 +102,10 @@ func TestCurrentStatePackageMigrationAndRuleRevision(t *testing.T) {
 				want := uint32(1)
 				if key.ID == "MX40-PACKAGE-schema-hint-pairs" {
 					want, revised = 2, revised+1
+				}
+				// The later structural-roles step revises score-before-parts.
+				if key.ID == "MX40-PACKAGE-score-before-parts" {
+					want = 2
 				}
 				if key.Revision != want {
 					t.Fatalf("%s: unexpected revision %+v", id, key)

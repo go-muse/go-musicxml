@@ -2636,8 +2636,29 @@ score=false and individual-part=false evidence for that container member too.
 Role requests are dispatched only with selected `ResourceRoles`, a supplied
 resolver, a usable package inventory and a selected musical document. Plain
 XML/model roots do not themselves create package-role requests. Nested raw
-packages reached from them may do so. Neither root kind, suffix nor media type
-classifies a document as a score or individual part. Unread or unpinned entries
+packages reached from them may do so. Neither root kind nor suffix classifies a
+document as a score or individual part.
+
+Without a role provider decision, `MX40-PACKAGE-score-before-parts` (revision
+2) decides from the MusicXML link semantics, after `container.xsd`: when a
+MusicXML file has both a score and separate part files, the score is the file
+in the first rootfile, and the part files can be linked from it. In a package
+whose entries, rootfiles and edges are completely enumerated:
+
+- a `<part-link>` target is an individual part file and its source a score;
+- a first rootfile that links part files is the score, so the rule passes;
+  part links only from other documents keep it undecided;
+- without part links, an opus `<score>` target is a score, opus-link and
+  `work/opus` targets are opus documents (`MX40-PACKAGE-link-target` checks
+  their root kind), and a later rootfile with an established non-MusicXML
+  media type, such as a PDF rendition, is not MusicXML: the declared media
+  type is authoritative, as for `MX40-PACKAGE-rootfile-root`. When every
+  other entry, ignoring directory entries, is so classified, separate part
+  files are excluded and the rule does not apply; an unclassified entry, such
+  as an unlinked second MusicXML file or an image, keeps it undecided.
+
+The structure decides only where a role provider stated nothing: a known
+provider fact is never overridden, even when it decides nothing. Unread or unpinned entries
 keep the requested role universe incomplete; the literal `mimetype` metadata
 record is the only physical-entry exclusion. Complete provider coverage of a
 smaller selected table cannot establish absence of roles outside that table.
