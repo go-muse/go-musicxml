@@ -65,6 +65,23 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- `MX40-PACKAGE-score-before-parts` (revision 2) decides the score and part
+  roles from the MusicXML link semantics when no role provider decides them:
+  part-link targets are part files and their source the score, opus score,
+  opus-link and work/opus targets are not parts, and neither is a later
+  rootfile with an established non-MusicXML media type. Strict MXL loading,
+  `InspectMXL` and `AssessMXLPackage` therefore accept a package with a PDF
+  or audio rendition (including the official `90a-Compressed-MusicXML.mxl`),
+  an opus package whose scores link no part files and a score in the first
+  rootfile that links its own part files, which used to stay incomplete
+  without a role resolver. An unlinked second MusicXML file, or part links
+  only from a later document, still keep the rule undecided, and a known
+  role-provider fact is never overridden. Every package catalog
+  and package profile changes identity.
+- A later rootfile whose bytes are not XML no longer adds an internal
+  `validation: invalid session` error to the incomplete assessment of a
+  current package.
+
 - Model assessment read each `float64` decimal field as its exact binary value,
   so `0.1 + 0.2` did not equal `0.3`, and timeline rules such as
   `MX40-TIMELINE-numeral-requires-key` failed or passed falsely on models, in

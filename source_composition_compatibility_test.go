@@ -40,7 +40,7 @@ func TestSourceDeclarationCompositionPreservesProfiles(t *testing.T) {
 		expected = migrateFigureNumberProfileHash(t, id, expected)
 		expected = migrateIPARepresentationProfileHash(t, id, expected)
 		expected = migrateDecimalContractProfileHash(t, id, expected)
-		expected = migrateValidationLinesProfileHash(t, id, expected)
+		expected = migrateStructuralRolesProfileHash(t, id, migrateValidationLinesProfileHash(t, id, expected))
 		t.Run(string(id), func(t *testing.T) {
 			var engine *validation.Engine
 			var err error

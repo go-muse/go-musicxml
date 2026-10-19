@@ -52,7 +52,7 @@ func TestPackageProfilesPublishedBaselineMigration(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		after := migrateValidationLinesCatalog(migrateDecimalContractCatalog(migrateCurrentStatePackageCatalog(t, tc.after)))
+		after := migrateStructuralRolesCatalog(migrateValidationLinesCatalog(migrateDecimalContractCatalog(migrateCurrentStatePackageCatalog(t, tc.after))))
 		for _, id := range tc.ids {
 			old, ok := baseline[id]
 			if !ok || old.CatalogDigest != tc.before || old.Target != validation.TargetPackage {

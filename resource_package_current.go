@@ -206,7 +206,13 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 		} else {
 			err = g.loadRootfile(p, &root, retrieval, false)
 		}
-		err = errors.Join(err, g.recordRootfile(p, root))
+		// As for raw packages, a rootfile whose assessment terminated the
+		// package session is not observed again.
+		if terminal := validationPackageSessionTerminalCause(g.session); terminal != nil {
+			err = joinResourceErrors(err, terminal)
+		} else {
+			err = errors.Join(err, g.recordRootfile(p, root))
+		}
 		if err != nil || intrinsic.Err != nil {
 			// The admitted primary identity and its independent metadata remain
 			// available even when intrinsic model assessment was interrupted.

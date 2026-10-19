@@ -282,6 +282,8 @@ func TestLineProfilesExactIdentity(t *testing.T) {
 		ProfileSourceLine:    {"7be7564fac3908064f43eeda11d0b93023311db358110234baf8adb8467f1408", "04fb11d56a41d043451031b6133aff7afce75e187612a7330ae365bbeb484b23"},
 		ProfileMXLSourceLine: {"180ad038e9a989fcc9b35918732acb04ebb79c7610d232ebfe60baf05499197f", "ef9df24aece789802884c65bc20820c45561172d92ecdd4f2da8f0f25567a28b"},
 	} {
+		// Later identity steps migrate these captures.
+		want = [2]string{migrateStructuralRolesCatalog(want[0]), migrateStructuralRolesProfileHash(t, id, want[1])}
 		p := profiles[id]
 		raw, err := json.Marshal(p)
 		if err != nil {

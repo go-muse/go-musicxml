@@ -31,7 +31,9 @@ type MXLPackage struct {
 // MediaType is nil when the media-type attribute is absent, which means the
 // MusicXML media type. A non-nil value is the attribute as written, after
 // whitespace normalization, and is encoded even when it is empty, so a
-// decoded package keeps an empty attribute distinct from an absent one. As
+// decoded package keeps an empty attribute distinct from an absent one and
+// encodes back unchanged; assessment treats an empty value as an unresolved
+// media type. As
 // for other optional fields, == compares the pointers; compare values with
 // reflect.DeepEqual.
 type MXLRootFile struct {
