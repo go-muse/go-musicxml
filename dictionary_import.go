@@ -119,6 +119,16 @@ func loadValidatedDictionarySet(ctx context.Context, a *validation.Account, o Di
 	if err := dictionaryImportStep(ctx, a, 1); err != nil {
 		return nil, err
 	}
+	if bundledRequiredDictionaries(o) {
+		if parent := cachedBundledDictionarySet(); parent != nil {
+			return validationShareDictionarySet(ctx, parent, a)
+		}
+	}
+	return importDictionarySet(ctx, a, o)
+}
+
+// importDictionarySet opens, verifies and parses every selected component on a.
+func importDictionarySet(ctx context.Context, a *validation.Account, o DictionaryOptions) (*validation.DictionarySet, error) {
 	if len(o.Selections) == 0 {
 		return validation.NewDictionarySet(ctx, a, nil, nil)
 	}
