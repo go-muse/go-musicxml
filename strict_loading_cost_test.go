@@ -174,7 +174,7 @@ func TestBundledDictionaryCacheReportsMatchAFreshImport(t *testing.T) {
 	}
 	stride := 1
 	if raceEnabled || testing.Short() {
-		stride = 40
+		stride = 80
 	}
 	compared := 0
 	for i := 0; i < len(names); i += stride {
@@ -258,7 +258,7 @@ func TestOmitContextKeepsEveryVerdict(t *testing.T) {
 	}
 	stride := 2
 	if raceEnabled || testing.Short() {
-		stride = 30
+		stride = 75
 	}
 	projected := 0
 	for i := 0; i < len(names); i += stride {

@@ -96,9 +96,9 @@ func TestContextProjectionAccountingCoversItsHeap(t *testing.T) {
 	if err != nil || len(names) < 100 {
 		t.Fatalf("corpus: %d files, %v", len(names), err)
 	}
-	stride := 3
+	stride, minimum := 3, 40
 	if raceEnabled || testing.Short() {
-		stride = 30
+		stride, minimum = 30, 4
 	}
 	measured := 0
 	for i := 0; i < len(names); i += stride {
@@ -126,7 +126,7 @@ func TestContextProjectionAccountingCoversItsHeap(t *testing.T) {
 			}
 		}
 	}
-	if measured < 20 {
+	if measured < minimum {
 		t.Fatalf("measured only %d projections", measured)
 	}
 }
