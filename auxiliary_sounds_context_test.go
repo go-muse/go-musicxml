@@ -315,8 +315,10 @@ func TestAuxiliaryFrozenEightProfiles(t *testing.T) {
 			t.Fatal(err)
 		}
 		// Keep the original snapshot unchanged. Only the documented withdrawal
-		// of the figure-number overconstraint may migrate context reports.
+		// of the figure-number overconstraint and the model decimal contract may
+		// migrate these reports.
 		migrateFrozenFigureNumberReport(t, row.Profile.ID, expectedValue)
+		migrateFrozenDecimalContractReport(t, expectedValue)
 		if !reflect.DeepEqual(actualValue, expectedValue) {
 			t.Errorf("profile report changed beyond its documented migration: %s\n got %s\nhistorical %s", row.Profile.ID, actual, rawRows[i]["report"])
 		}

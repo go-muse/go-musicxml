@@ -117,12 +117,15 @@ type ResourceAdoptionOptions struct {
 // retention is refused or the package session is already terminal. It is
 // explicitly incomplete, not a synthetic Report.
 type ResourceFailureSummary struct {
-	Pin                                     ResourcePin
-	PinComplete                             Evidence[bool]
-	Target                                  Target
-	Profile                                 ProfileID
-	CatalogDigest                           string
-	Counts                                  Counts
+	Pin           ResourcePin
+	PinComplete   Evidence[bool]
+	Target        Target
+	Profile       ProfileID
+	CatalogDigest string
+	Counts        Counts
+	// ModelFailures is the failed report's Report.ModelFailures; a nonzero
+	// count rejects the bundle like a violation.
+	ModelFailures                           uint64
 	Conformance                             ConformanceState
 	Terminal                                TerminalSummary
 	DiagnosticsTruncated, MetadataTruncated bool

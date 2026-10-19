@@ -1483,6 +1483,8 @@ func (c *Context) AssessSimpleValue(
 			c.step(1)
 			normalized, failure := c.AssessUnionMemberValue(member, value, display)
 			if failure == nil {
+				// The value belongs to the union, whatever member supplied it.
+				normalized.Atomic = false
 				return normalized, nil
 			}
 			if TechnicalFailure(failure) {

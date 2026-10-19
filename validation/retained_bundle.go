@@ -119,8 +119,8 @@ type BundleFailures struct {
 	// without a violation, incomplete enumeration, or a retained failure
 	// summary.
 	Incomplete bool
-	// Failed counts failed rule evaluations across those reports and the
-	// failure summary.
+	// Failed counts failed normative and model-category rule evaluations
+	// across those reports and the failure summary.
 	Failed uint64
 	// Truncated reports that a violated report or failure summary omitted
 	// stored diagnostics, so Findings may not list all of its failures.
@@ -148,10 +148,10 @@ func (b AssessmentBundle) Failures() BundleFailures {
 			// The retained failed report carries the summary's counts and its
 			// diagnostics.
 			reports = append(reports, b.data.failureReport)
-		case f.Conformance == ConformanceViolated || f.Counts.Fail != 0:
+		case f.Conformance == ConformanceViolated || f.Counts.Fail != 0 || f.ModelFailures != 0:
 			out.Violated = true
 			out.Truncated = out.Truncated || f.DiagnosticsTruncated
-			out.Failed += f.Counts.Fail
+			out.Failed += f.Counts.Fail + f.ModelFailures
 		}
 	}
 	for i := range b.data.resources {
@@ -165,7 +165,7 @@ func (b AssessmentBundle) Failures() BundleFailures {
 			out.Violated = true
 			out.Truncated = out.Truncated || r.DiagnosticsTruncated
 		}
-		out.Failed += r.Counts.Fail
+		out.Failed += r.Counts.Fail + r.ModelFailures
 		if !r.Satisfied() && !(violated && reportOnlyViolated(*r)) {
 			out.Incomplete = true
 		}
@@ -180,8 +180,9 @@ func (b AssessmentBundle) Failures() BundleFailures {
 
 // reportViolated reports a proved violation, whether or not its diagnostics
 // were kept.
+// A failed model-category decision rejects the report like a violation.
 func reportViolated(r Report) bool {
-	return r.Conformance == ConformanceViolated || r.Counts.Fail != 0
+	return r.Conformance == ConformanceViolated || r.Counts.Fail != 0 || r.ModelFailures != 0
 }
 
 // reportOnlyViolated reports that every acceptance axis except conformance is
@@ -189,6 +190,6 @@ func reportViolated(r Report) bool {
 func reportOnlyViolated(r Report) bool {
 	return r.Requested && r.Profile.ID != "" && r.Target == r.Profile.Target &&
 		r.InputComplete && reportSyntaxComplete(r.Target, r.Syntax) && r.AssessmentComplete &&
-		r.BlockingProblems == 0 && r.Terminal == nil &&
+		r.BlockingProblems <= r.ModelFailures && r.Terminal == nil &&
 		r.Counts.Unknown == 0 && r.Counts.Unsupported == 0 && r.Counts.Blocked == 0
 }

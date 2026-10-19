@@ -1262,13 +1262,14 @@ type Report struct, field Counts Counts
 type Report struct, field DiagnosticsTruncated bool
 type Report struct, field Findings []Finding
 type Report struct, field InputComplete bool
+type Report struct, field ModelFailures uint64 `json:",omitempty"`
 type Report struct, field Profile Profile
 type Report struct, field Requested bool
 type Report struct, field Rules []RuleDefinition
 type Report struct, field Syntax SyntaxState
 type Report struct, field Target Target
 type Report struct, field Terminal *TerminalSummary
-type Report struct, field order Context Requested Profile Target Syntax Conformance AssessmentComplete Counts BlockingProblems Findings Rules DiagnosticsTruncated InputComplete Terminal
+type Report struct, field order Context Requested Profile Target Syntax Conformance AssessmentComplete Counts BlockingProblems ModelFailures Findings Rules DiagnosticsTruncated InputComplete Terminal
 type Report struct, not comparable
 type Report, method (Report) Format(w io.Writer) error
 type Report, method (Report) FormatLocalized(w io.Writer, translations map[RuleKey]RuleText) error
@@ -1343,12 +1344,13 @@ type ResourceFailureSummary struct, field Conformance ConformanceState
 type ResourceFailureSummary struct, field Counts Counts
 type ResourceFailureSummary struct, field DiagnosticsTruncated bool
 type ResourceFailureSummary struct, field MetadataTruncated bool
+type ResourceFailureSummary struct, field ModelFailures uint64
 type ResourceFailureSummary struct, field Pin ResourcePin
 type ResourceFailureSummary struct, field PinComplete Evidence[bool]
 type ResourceFailureSummary struct, field Profile ProfileID
 type ResourceFailureSummary struct, field Target Target
 type ResourceFailureSummary struct, field Terminal TerminalSummary
-type ResourceFailureSummary struct, field order Pin PinComplete Target Profile CatalogDigest Counts Conformance Terminal DiagnosticsTruncated MetadataTruncated
+type ResourceFailureSummary struct, field order Pin PinComplete Target Profile CatalogDigest Counts ModelFailures Conformance Terminal DiagnosticsTruncated MetadataTruncated
 type ResourceGroupContext struct, comparable
 type ResourceGroupContext struct, field Linked bool
 type ResourceGroupContext struct, field Value Evidence[string]

@@ -4,8 +4,8 @@ import (
 	"context"
 	"math"
 	"math/big"
-	"math/bits"
 	"reflect"
+	"strconv"
 	"unicode/utf8"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -143,36 +143,25 @@ func readModelScalar(ctx context.Context, account *validation.Account, value ref
 		if math.IsNaN(number) || math.IsInf(number, 0) {
 			return fail("model-nonfinite")
 		}
-		// A binary64 has at most 1074 fractional decimal places and 309 integral
-		// digits. Compute the exact binary denominator exponent without rendering.
-		raw := math.Float64bits(number)
-		fraction := raw & ((1 << 52) - 1)
-		exponent := int((raw>>52)&2047) - 1023 - 52
-		if raw>>52&2047 == 0 {
-			exponent = -1074
-		} else {
-			fraction |= 1 << 52
-		}
-		scale := 0
-		if fraction != 0 {
-			scale = max(0, -exponent-bits.TrailingZeros64(fraction))
-		}
-		minimum := int64(1)
-		if scale > 0 {
-			minimum = int64(scale) + 2
-		}
-		if number < 0 {
-			minimum++
-		}
-		if err = account.Check(validation.BudgetScalarBytes, minimum); err != nil {
+		// The model value is the shortest decimal that converts back to the same
+		// binary64, the value a decoder read from that text: 0.1 is 0.1, not the
+		// nearest binary fraction. Values whose source text has no such shortest
+		// form are caught as unrepresentable in the source line. A binary64 has at
+		// most 17 significant digits, 309 integral digits and a 324-digit
+		// fractional scale, so the rendered text is bounded before it is built.
+		if err = account.Check(validation.BudgetScalarBytes, int64(shortestDecimalBound(number))); err != nil {
 			return result, err
 		}
-		scratch := int64(4096 + scale*8)
+		scratch := int64(4096 + shortestDecimalBound(number)*8)
 		if err = account.Charge(validation.BudgetBufferedBytes, scratch); err != nil {
 			return result, err
 		}
 		result.retained = scratch
-		exact := new(big.Rat).SetFloat64(number)
+		text := strconv.FormatFloat(number, 'f', -1, 64)
+		exact, ok := new(big.Rat).SetString(text)
+		if !ok {
+			return result, modelMetadataError("unparsable shortest decimal")
+		}
 		var decimal validation.Decimal
 		decimal, err = validation.NewDecimal(exact)
 		if err != nil {
@@ -187,4 +176,26 @@ func readModelScalar(ctx context.Context, account *validation.Account, value ref
 	}
 	result.scalar.Value = validation.Evidence[validation.Atomic]{State: validation.EvidenceKnown, Value: atomic}
 	return result, nil
+}
+
+// shortestDecimalBound bounds the length of strconv.FormatFloat(number, 'f',
+// -1, 64): a sign, the integral digits, a point and the fractional digits.
+// The shortest form has at most 17 significant digits.
+func shortestDecimalBound(number float64) int {
+	if number == 0 {
+		if math.Signbit(number) {
+			return 2
+		}
+		return 1
+	}
+	// Log10 may round across a power of ten, so allow one digit either way.
+	exponent := int(math.Floor(math.Log10(math.Abs(number))))
+	bound := max(exponent+2, 1)
+	if fraction := 18 - exponent; fraction > 0 {
+		bound += 1 + fraction
+	}
+	if number < 0 {
+		bound++
+	}
+	return bound
 }

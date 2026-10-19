@@ -32,7 +32,7 @@ func sourceDTDIDOneAssemblyEngine(t *testing.T) *validation.Engine {
 			d.plans[i].Plan = plan
 		}
 	}
-	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	catalog, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -17,8 +17,8 @@ import (
 var currentStatePackageCatalogDigests = map[string]string{
 	"554a97e25d6494c2e0550519fd4f6d2a439ca2f31e01a82baa7e28a00ddd2088": "bcc5d047e4de9f02a61cfdd86f57297f9655006ea0fb6f04ef38628d05dcc28f", // ordinary
 	"f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44": "bbb60bcd61359b41fda394d95e29d93c42c8c0526b101e98f375b698204d6658", // dictionary
-	"69d813b09c15ea5083d382fe8864a41179e93cf52c4b04bfb140493070df7648": "135bb292eac14befeb45ac8c96e0f950028dffa39a7a152d4b2c5759aa8a792b", // dtd
-	"e7be6720d91cdc81becf07f5312b6c86039f27290ccb72139643186118cc4a89": "ab43413ab5e82f27b9ffd406d542e006c2f87d6ebdcc30ea912d667100f34533", // semantic
+	"69d813b09c15ea5083d382fe8864a41179e93cf52c4b04bfb140493070df7648": "948b7a2d4d16e42dae71c648bf566012e4aeb39591f6093eb196259b275c5dbb", // dtd
+	"e7be6720d91cdc81becf07f5312b6c86039f27290ccb72139643186118cc4a89": "94392cf23145a815149b494559174e9c3524d01d1cf13fe0a55c0ebb4b0520aa", // semantic
 }
 
 var currentStatePackageProfileHashes = map[validation.ProfileID][2]string{
@@ -28,12 +28,12 @@ var currentStatePackageProfileHashes = map[validation.ProfileID][2]string{
 	ProfileResourceGraphDictionaries:            {"80fb2fe78ecd080cef9a57366e81a74c830fd8f4fb186adfe4b81c1fefaf2dfe", "08830a06118f1fe882ea7211aa4b5552a97c7653cbb2a0fefa3a6e112c9e7c6f"},
 	ProfileMXLSourceDictionaries:                {"3a5b6cb1addd7da5ce1a53f50e56ecb1c5ed63ce048d0e6c42ecef855598f31c", "22c1d06c778e820b6baaa51802e0bbb9b43612e3a08d56a4b15ba0cc47853849"},
 	ProfileMXLModelDictionaries:                 {"54b724f9afa5f1465186350bfa28c107c1fd5add87803999b3475314d17c40e1", "c3e9922ed26ebe889306e07769d57f9aa5c07946a84caa1bacaae20106695b49"},
-	ProfileResourceGraphInternalDTDDictionaries: {"6485ea8f1e332cff87b0e5cff9ed73748a461c4e748f279492a724f3ee3993e0", "2a8201d4cbbbd309c33c2022ee9758c2f5bb619648ca7fc44c84fae849925271"},
-	ProfileMXLSourceInternalDTDDictionaries:     {"9e3f0119d72de817e8006031733c3aec8a9bca1f70b22a06c15cebbeb9919e94", "80f3e560e9f80ab4943f538c8260857f57f982c647c5046c12fb77222fc8c479"},
-	ProfileMXLModelInternalDTDDictionaries:      {"f25ec1936ac81d090820f665c1152b5fa6fbd8e9a93a6ac5fed7337258e370af", "10aaf874de7522b5e29dad80cfffaf11f5b3f4c44d66b44514d8cf4503a4841c"},
-	ProfileResourceGraphSemantics:               {"6a31be186ffde08b3200e47e3f4f231b1c7f4f5a85e7974b14a274babb103902", "70b1bad5f964fab8ed2bae4f193951253e3aeae8f33f77524a8de0553640e60d"},
-	ProfileMXLSourceSemantics:                   {"3f66d7fc32e67703f6f101b712b0d1590df5a73c9c38cf806569778895ee1f8e", "5b5f3a0306c4b78599d444849c9ce44c3298c7fa945d7f932a060bb32a94ae47"},
-	ProfileMXLModelSemantics:                    {"80b49b7fb23033452638593cdf7775c8db5ca39de8fe9ea7f2054c0fec87213f", "3634886c66c632ecf71cb2cbfef496d08cb0fad7b18df1b2502ed3e9c7f96cc2"},
+	ProfileResourceGraphInternalDTDDictionaries: {"6485ea8f1e332cff87b0e5cff9ed73748a461c4e748f279492a724f3ee3993e0", "7dbc72d33fa734b1dc9cf49c74272b7fd2cffb88ceeac1bc301692841101a497"},
+	ProfileMXLSourceInternalDTDDictionaries:     {"9e3f0119d72de817e8006031733c3aec8a9bca1f70b22a06c15cebbeb9919e94", "2dfa360e102b8301cf53c893eae7ee2d9d73c76fc5254bae07dddeea98f95f2e"},
+	ProfileMXLModelInternalDTDDictionaries:      {"f25ec1936ac81d090820f665c1152b5fa6fbd8e9a93a6ac5fed7337258e370af", "4d1b782b8277c653820898e2abae51d8dc0bce42301d057ecd4bf7a74a44d08e"},
+	ProfileResourceGraphSemantics:               {"6a31be186ffde08b3200e47e3f4f231b1c7f4f5a85e7974b14a274babb103902", "16ce6ba1ca182022b2de75bcb2ce1a6177284186a9d918bdef5edeb1a96612e2"},
+	ProfileMXLSourceSemantics:                   {"3f66d7fc32e67703f6f101b712b0d1590df5a73c9c38cf806569778895ee1f8e", "afaaf944f27a5a02b8beccac1f4c11eb685690ce3fd789f5aa64f43b0076b616"},
+	ProfileMXLModelSemantics:                    {"80b49b7fb23033452638593cdf7775c8db5ca39de8fe9ea7f2054c0fec87213f", "12bfdb571374eca60c2dccd68634fedfcde96a858b36d436c59d3b3d0614aa64"},
 }
 
 // migrateCurrentStatePackageCatalog returns the digest a package catalog
@@ -80,7 +80,7 @@ func TestCurrentStatePackageMigrationAndRuleRevision(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		after := migrateCurrentStatePackageCatalog(t, tc.before)
+		after := migrateDecimalContractCatalog(migrateCurrentStatePackageCatalog(t, tc.before))
 		if after == tc.before {
 			t.Fatalf("missing intentional migration of %s", tc.before)
 		}
@@ -94,7 +94,7 @@ func TestCurrentStatePackageMigrationAndRuleRevision(t *testing.T) {
 				t.Fatal(err)
 			}
 			sum := sha256.Sum256(raw)
-			if got, want := hex.EncodeToString(sum[:]), currentStatePackageProfileHashes[id][1]; got != want {
+			if got, want := hex.EncodeToString(sum[:]), migrateDecimalContractProfileHash(t, id, currentStatePackageProfileHashes[id][1]); got != want {
 				t.Fatalf("complete Profile JSON %s: %s, want %s", id, got, want)
 			}
 			revised := 0

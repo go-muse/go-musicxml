@@ -56,6 +56,8 @@ type ScalarResult struct {
 	Known, Complete, Defaulted       bool
 	Lexeme, EffectiveLexeme, Builtin string
 	Value                            SimpleValue
+	// Atomic reports an atomic simple type: neither a union nor a list.
+	Atomic bool
 }
 type AttributeResult struct {
 	Name                                           QName
@@ -632,7 +634,7 @@ func (c *Context) observeScalar(assessment SimpleAssessment, valid bool) {
 	s.scalarAssessment = assessment
 	s.scalarAssessed = valid
 	if s.attribute == (QName{}) {
-		s.scalar = ScalarResult{Known: valid, Complete: s.results.Scalar.Complete, Defaulted: s.defaulted, Lexeme: s.subject.Text, EffectiveLexeme: assessment.Lexical, Builtin: assessment.Builtin, Value: assessment.Value}
+		s.scalar = ScalarResult{Known: valid, Complete: s.results.Scalar.Complete, Defaulted: s.defaulted, Lexeme: s.subject.Text, EffectiveLexeme: assessment.Lexical, Builtin: assessment.Builtin, Value: assessment.Value, Atomic: assessment.Atomic}
 		if s.subject.CurrentModel {
 			s.scalar.Lexeme = ""
 		}
@@ -675,7 +677,7 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	}
 	s := c.local
 	use := s.run.attributeUse(s.actual, schema.Name)
-	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && !s.attributeLimited && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
+	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && !s.attributeLimited && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value, Atomic: s.scalarAssessment.Atomic}
 	if s.subject.CurrentModel {
 		scalar.Lexeme = ""
 	}

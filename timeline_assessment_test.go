@@ -118,7 +118,7 @@ func TestTimelinePreservesFrozenCatalogDigests(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, id := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal, ProfileSourceLocal} {
-		if got := catalogProfile(t, engine, id).CatalogDigest; got != "6f1950afff8e1d5a3054bd08edab85af182a7b50e7baca92b2547220dcd08881" {
+		if got := catalogProfile(t, engine, id).CatalogDigest; got != decimalContractCatalogAfter {
 			t.Errorf("frozen profile %s digest changed: %s", id, got)
 		}
 	}

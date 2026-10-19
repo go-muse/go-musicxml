@@ -60,7 +60,7 @@ func buildSourceCompositionEngine() (*validation.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
-	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	catalog, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +104,9 @@ func buildSourceCompositionDefinitions() (*assessmentDefinitions, error) {
 	if err := appendSourceOriginDefinitions(d); err != nil {
 		return nil, err
 	}
+	if err := appendSourceRepresentabilityDefinitions(d); err != nil {
+		return nil, err
+	}
 	if err := specializeSourceComposition(d); err != nil {
 		return nil, err
 	}
@@ -122,6 +125,32 @@ func appendSourceOriginDefinitions(d *assessmentDefinitions) error {
 			Targets: []validation.Target{validation.TargetSource}, Class: validation.ClassMandatory, Role: validation.RoleContextProvider, Category: validation.CategoryNormative,
 			Predicate: string(key.ID), Text: validation.RuleText{Title: "Source occurrence provenance", Explanation: "Each admitted source element and attribute occurrence retains physical specifiedness and independently available physical, declaration and reference sites. Complete enumeration is sealed explicitly; unavailable required provenance remains incomplete.", Message: "Source occurrence provenance is incomplete."},
 			Sources: []validation.SourceRef{{IDs: []string{"XML-1.0-Fifth-Edition", "XML-Infoset-Second-Edition"}, URL: "https://www.w3.org/TR/2004/REC-xml-infoset-20040204/", Locator: "2.2; 2.3; specified and origin information; bounded occurrence projection"}},
+		}
+		d.rules = append(d.rules, rule)
+		d.plans = append(d.plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})
+		for i := range d.profiles {
+			dictionaryRequire(&d.profiles[i], key)
+		}
+	}
+	return nil
+}
+
+// appendSourceRepresentabilityDefinitions adds the source-line check that the
+// generated model holds every numeric value unchanged. A value without an
+// exact Go form, such as a decimal with more than 17 significant digits or an
+// integer beyond its Go type, is a limit of the model rather than an XSD
+// violation; it still blocks strict loading, which promises a valid structure.
+func appendSourceRepresentabilityDefinitions(d *assessmentDefinitions) error {
+	for _, assembly := range []validation.Assembly{validation.AssemblyMusicXML, validation.AssemblyOpus} {
+		plan, err := validationNewXSDRepresentabilityPlan(d.schemas[assembly], true)
+		if err != nil {
+			return err
+		}
+		key := validation.RuleKey{ID: validation.RuleID("MX40-SOURCE-REPRESENTABLE-" + string(assembly)), Revision: 1}
+		rule := validation.RuleDefinition{Key: key, Selector: validation.Selector{Assembly: &assembly}, Scope: validation.ScopeNode,
+			Targets: []validation.Target{validation.TargetSource}, Class: validation.ClassMandatory, Role: validation.RolePredicate, Category: validation.CategoryModel,
+			Predicate: string(key.ID), Text: validation.RuleText{Title: "Model representability", Explanation: "Every numeric value the generated Go model holds must survive conversion unchanged: an integer within its Go type's range, and a decimal whose shortest binary64 form is the same number. This is a limit of the model, not of MusicXML.", Message: "A numeric value has no exact form in the Go model."},
+			Sources: []validation.SourceRef{{IDs: []string{"XSD-1.1-Part-2"}, URL: "https://www.w3.org/TR/xmlschema-2/#decimal", Locator: "3.2.3 decimal; 3.3.13 integer: arbitrary-precision value spaces that the model narrows"}},
 		}
 		d.rules = append(d.rules, rule)
 		d.plans = append(d.plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})

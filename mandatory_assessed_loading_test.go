@@ -114,15 +114,17 @@ func TestMandatoryAssessedLoadingCannotReturnDocumentAfterIncompleteSource(t *te
 	}
 }
 
-func TestMandatoryAssessedLoadingRejectsModelInvalidAfterDecimalUnderflow(t *testing.T) {
-	// Both positive decimal values are exact and equal in the source. The
-	// float64-backed fields become zero during ordinary, successful conversion.
+func TestMandatoryAssessedLoadingRejectsDecimalUnderflowInTheSourceLine(t *testing.T) {
+	// Both positive decimal values are exact and equal in the source, but the
+	// float64-backed fields would become zero. The source line rejects them as
+	// unrepresentable; the source stays conformant.
 	tiny := "0." + strings.Repeat("0", 399) + "1"
 	source := mandatoryScore(tiny, `<note><rest/><duration>`+tiny+`</duration></note>`)
 	sourceReport, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceSemantics})
-	if err != nil || !sourceReport.Satisfied() {
-		t.Fatalf("fixture source must satisfy semantics: conformance=%s counts=%+v error=%v findings=%s", sourceReport.Conformance, sourceReport.Counts, err, localFindings(sourceReport))
+	if err != nil || sourceReport.Satisfied() || sourceReport.Conformance != validation.ConformanceConformant || !hasRepresentabilityFailure(sourceReport) {
+		t.Fatalf("source line must reject the unrepresentable values: conformance=%s error=%v findings=%s", sourceReport.Conformance, err, localFindings(sourceReport))
 	}
+	// Scenario 3 sees the altered structure: zero values violate the model.
 	document, err := Decode(strings.NewReader(source))
 	if err != nil || document == nil {
 		t.Fatalf("fixture must convert successfully: document=%T error=%v", document, err)
@@ -134,13 +136,11 @@ func TestMandatoryAssessedLoadingRejectsModelInvalidAfterDecimalUnderflow(t *tes
 	for _, explicit := range []bool{false, true} {
 		t.Run(mandatoryLoaderName(explicit), func(t *testing.T) {
 			result, err := mandatoryDecode(explicit, context.Background(), strings.NewReader(source), nil)
-			if result.Document != nil || !errors.Is(err, ErrInvalidDocument) || result.Conversion.State != validation.ConversionConverted {
-				t.Fatalf("converted invalid model accepted: document=%T conversion=%s error=%v", result.Document, result.Conversion.State, err)
+			if result.Document != nil || !errors.Is(err, ErrInvalidDocument) || !hasRepresentabilityFailure(result.Source) {
+				t.Fatalf("unrepresentable source accepted: document=%T conversion=%s error=%v", result.Document, result.Conversion.State, err)
 			}
-			mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
-			model := mandatoryModelReport(t, result)
-			if !model.Requested || model.Profile.ID != ProfileModelSemantics || model.Conformance != validation.ConformanceViolated || model.Satisfied() {
-				t.Fatalf("independent model failure missing: requested=%v profile=%s conformance=%s", model.Requested, model.Profile.ID, model.Conformance)
+			if mandatoryModelReport(t, result).Requested {
+				t.Fatal("model assessment ran after an unaccepted source")
 			}
 		})
 	}

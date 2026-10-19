@@ -124,7 +124,7 @@
       "runtime_profile": {
         "ID": "musicxml-4.0/model-timeline",
         "MusicXMLVersion": "4.0",
-        "CatalogDigest": "cf62be51ed16c6a08609a30d78ae513e22f4f3dd3398ce4213251dd80ac043ad",
+        "CatalogDigest": "ba3068de73e238b43a8cf3ee43937f276f2c3b198d896a3eaf590627f4222677",
         "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
         "Target": "model",
         "Required": [
@@ -613,7 +613,7 @@
             "Local": "opus"
           }
         ],
-        "NormativeClosure": "Explicit bounded MusicXML 4.0 source or current-model XSD, local clauses and shared exact musical timeline/effective-state assessment. The timeline provider finalizes typed part/measure/event and state evidence; its pass does not assert that every optional or ambiguous musical fact is known. The selected mandatory consumers are principal-note chord duration bounds and explicit numeral-key or applicable encoded effective-key presence at the harmony's unshifted score origin. Ordinary exact rational positions are not rounded. Ambiguous, missing, invalid or unsupported dependent evidence remains incomplete. Existing target-specific XSD, current-model representation, source syntax and unread external-DTD limits remain active. Broader repeat/span/intent/layout/playback consumers, packages, linked scores, external dictionaries and remaining normative closure are excluded. Opus selection assesses only that document, never linked scores. Counts are selected predicate instances, not complete MusicXML coverage."
+        "NormativeClosure": "Explicit bounded MusicXML 4.0 source or current-model XSD, local clauses and shared exact musical timeline/effective-state assessment. The timeline provider finalizes typed part/measure/event and state evidence; its pass does not assert that every optional or ambiguous musical fact is known. The selected mandatory consumers are principal-note chord duration bounds and explicit numeral-key or applicable encoded effective-key presence at the harmony's unshifted score origin. Ordinary exact rational positions are not rounded. Ambiguous, missing, invalid or unsupported dependent evidence remains incomplete. Existing target-specific XSD, current-model representation, source syntax and unread external-DTD limits remain active. Broader repeat/span/intent/layout/playback consumers, packages, linked scores, external dictionaries and remaining normative closure are excluded. Opus selection assesses only that document, never linked scores. Counts are selected predicate instances, not complete MusicXML coverage. Finite float64 decimal fields mean the shortest decimal that reads back to the same float64."
       },
       "required_count": 39,
       "required_and_transitive_count": 39,
@@ -627,7 +627,7 @@
       "runtime_profile": {
         "ID": "musicxml-4.0/source-timeline",
         "MusicXMLVersion": "4.0",
-        "CatalogDigest": "cf62be51ed16c6a08609a30d78ae513e22f4f3dd3398ce4213251dd80ac043ad",
+        "CatalogDigest": "ba3068de73e238b43a8cf3ee43937f276f2c3b198d896a3eaf590627f4222677",
         "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
         "Target": "source",
         "Required": [

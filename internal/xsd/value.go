@@ -12,6 +12,8 @@ type SimpleAssessment struct {
 	Builtin string
 	Lexical string
 	Value   SimpleValue
+	// Atomic reports an atomic simple type: neither a union nor a list.
+	Atomic bool
 }
 
 type ValueDomain uint8
@@ -127,7 +129,7 @@ func (c *Context) AssessBuiltinValue(name, value, display string) (SimpleAssessm
 	}
 	semantics := builtinSemantics(name, c)
 	lexical := semantics.normalize(value, c)
-	result := SimpleAssessment{Lexical: lexical, Builtin: name}
+	result := SimpleAssessment{Lexical: lexical, Builtin: name, Atomic: BuiltinListItem(name) == ""}
 	if item := BuiltinListItem(name); item != "" {
 		result.Value.Domain = ListDomain
 		itemSemantics := builtinSemantics(item, c)

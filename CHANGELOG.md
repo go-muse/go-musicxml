@@ -7,6 +7,35 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Model assessment read each `float64` decimal field as its exact binary value,
+  so `0.1 + 0.2` did not equal `0.3`, and timeline rules such as
+  `MX40-TIMELINE-numeral-requires-key` failed or passed falsely on models, in
+  `AssessModel` and in strict loading. A decimal field now means the shortest
+  decimal that reads back to the same `float64`. Every model profile names
+  this contract in its closure, so the catalog digest of every catalog that
+  holds a model profile changes, together with its source profiles
+  (source-timeline, -context, -links, -links-dictionaries,
+  -sounds-dictionaries), and so do the four package catalogs and their
+  package profiles.
+- Strict loading rejects, in the source, every numeric value the model cannot
+  hold unchanged, with the new model-category rule
+  `MX40-SOURCE-REPRESENTABLE-musicxml`/`-opus`: a decimal with more than 17
+  significant digits, an underflow or overflow, or an integer beyond its Go
+  type. Such a value used to be accepted and changed silently, or to fail only
+  in conversion. The source stays conformant; the rejection is a
+  `*ValidationError` (`ErrInvalidDocument`). Source profile identities change.
+- A failed model-category finding in a source report or an assessment bundle
+  is a violation (`ErrInvalidDocument`), not an incomplete assessment. The new
+  `validation.Report.ModelFailures` and `ResourceFailureSummary.ModelFailures`
+  count those findings, so a resource failure kept only as a summary still
+  rejects the bundle, and `BundleFailures.Failed` counts them.
+- `DecodeMXLAssessed` decodes its root document from the DTD infoset that its
+  source stage assessed, as `DecodeAssessed` does. It used ordinary decoding,
+  so DTD defaults were missing from the model and an internal-subset entity
+  made conversion fail after an accepted source.
+
 ### Breaking changes (v0.2)
 
 The project has no compatibility promise before v1, and this release removes
@@ -521,7 +550,8 @@ or changed identifier to its replacement.
   `ProfileModelLocal`, plus `ProfileSourceLocal` for the same bounded local
   clauses on original input. Preserve the existing generated `Assess` type.
   Model reports use current field/index evidence without original XML positions;
-  finite `float64` decimals mean their exact binary rational value.
+  finite `float64` decimals mean the shortest decimal that reads back to the
+  same `float64`.
 
 - Add generated representation metadata, bounded iterative traversal,
   model-representation facts and sealed local/typed-reference plans sharing

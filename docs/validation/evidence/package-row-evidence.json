@@ -6826,56 +6826,56 @@
       "function": "TestAuxiliaryDiagnosticsCannotEraseViolation",
       "line": 323,
       "end_line_bound": 351,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliaryFrozenEightProfiles": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliaryFrozenEightProfiles",
       "line": 272,
       "end_line_bound": 322,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySoundsAssemblyAndSourceOnly": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySoundsAssemblyAndSourceOnly",
       "line": 146,
       "end_line_bound": 196,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySoundsBrokenGrammarRetainsKnownSound": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySoundsBrokenGrammarRetainsKnownSound",
       "line": 134,
       "end_line_bound": 145,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySoundsCausalInvalidFields": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySoundsCausalInvalidFields",
       "line": 96,
       "end_line_bound": 133,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySoundsDirectionalMappings": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySoundsDirectionalMappings",
       "line": 37,
       "end_line_bound": 95,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySourceOwnershipAndBudgets": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySourceOwnershipAndBudgets",
       "line": 218,
       "end_line_bound": 271,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySourceUnavailableEvidence",
       "line": 197,
       "end_line_bound": 217,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_source_assessment_test.go::TestAuxiliaryGeneratedSchemaMetadata": {
       "file": "auxiliary_source_assessment_test.go",
@@ -8114,14 +8114,14 @@
       "function": "TestPackageEstablishedAdviceFailureSurvivesCancellation",
       "line": 125,
       "end_line_bound": 199,
-      "file_sha256": "dca9cef480918680cb0be0ea7767c3275045e23e2797efd68b4b779b2cf4a47b"
+      "file_sha256": "92a1e887755842c1bda848cceabb5e26eab6abc5bd983bd4c17dba6faab9250c"
     },
     "validation/package_interruption_test.go::TestPackageEstablishedRoleFailureSurvivesCancellation": {
       "file": "validation/package_interruption_test.go",
       "function": "TestPackageEstablishedRoleFailureSurvivesCancellation",
       "line": 42,
       "end_line_bound": 124,
-      "file_sha256": "dca9cef480918680cb0be0ea7767c3275045e23e2797efd68b4b779b2cf4a47b"
+      "file_sha256": "92a1e887755842c1bda848cceabb5e26eab6abc5bd983bd4c17dba6faab9250c"
     },
     "validation/package_roles_test.go::TestPackageCanceledMemberSealCannotCertifyInventory": {
       "file": "validation/package_roles_test.go",

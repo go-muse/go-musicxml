@@ -104,7 +104,7 @@ func modelAcceptanceError(report validation.Report, status modelWalkStatus) erro
 		return nil
 	}
 	var invalid error
-	if report.Conformance == validation.ConformanceViolated || report.Counts.Fail != 0 || status.HasProblems {
+	if report.Conformance == validation.ConformanceViolated || report.Counts.Fail != 0 || report.ModelFailures != 0 || status.HasProblems {
 		issues := make([]ValidationIssue, 0)
 		for _, finding := range report.Findings {
 			if finding.Outcome == validation.OutcomeFail && (finding.Category == validation.CategoryNormative || finding.Category == validation.CategoryModel) {
@@ -113,10 +113,10 @@ func modelAcceptanceError(report validation.Report, status modelWalkStatus) erro
 		}
 		invalid = &ValidationError{Issues: issues}
 		if report.DiagnosticsTruncated {
-			invalid = fmt.Errorf("%w; model assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail)
+			invalid = fmt.Errorf("%w; model assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail+report.ModelFailures)
 		}
 	}
-	if !report.Requested || !report.InputComplete || !report.AssessmentComplete || report.Target != validation.TargetModel || report.Profile.ID != ProfileModelSemantics || report.Syntax != validation.SyntaxNotAssessed || report.BlockingProblems != 0 || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
+	if !report.Requested || !report.InputComplete || !report.AssessmentComplete || report.Target != validation.TargetModel || report.Profile.ID != ProfileModelSemantics || report.Syntax != validation.SyntaxNotAssessed || report.BlockingProblems > report.ModelFailures || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
 		return errors.Join(invalid, &validation.IncompleteError{Reason: "model-profile-not-satisfied"})
 	}
 	return invalid

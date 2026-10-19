@@ -125,7 +125,7 @@ func buildSpanTestEngine(withTimeline bool) (spanEngineFixture, error) {
 		}
 		profiles = append(profiles, base)
 	}
-	c, err := validation.NewCatalog(d.rules, profiles, d.plans)
+	c, err := newCatalog(d.rules, profiles, d.plans)
 	if err != nil {
 		return spanEngineFixture{}, err
 	}

@@ -23,7 +23,7 @@ func buildLinkAssessmentEngine() (*validation.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
-	c, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	c, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		return nil, err
 	}

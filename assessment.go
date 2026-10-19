@@ -186,28 +186,7 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 	// the existing allowlisted expanded attributes. Its namespace table is empty.
 	projected := &namespaceXMLTokenReader{source: run.source, allowQualifiedAttribute: musicXMLQualifiedAttribute}
 	modelTokens := &assessedModelTokenReader{source: projected, account: run.account, ctx: ctx, observer: run.source.observer}
-	decoder := xml.NewTokenDecoder(modelTokens)
-	start, mapErr := readRoot(decoder)
-	var document Document
-	if mapErr == nil {
-		if start.Name.Space != "" {
-			mapErr = &UnsupportedRootError{Name: start.Name}
-		} else {
-			switch start.Name.Local {
-			case "score-partwise":
-				document = &ScorePartwise{}
-			case "score-timewise":
-				document = &ScoreTimewise{}
-			case "opus":
-				document = &OpusDocument{}
-			default:
-				mapErr = &UnsupportedRootError{Name: start.Name}
-			}
-		}
-	}
-	if mapErr == nil {
-		mapErr = decoder.DecodeElement(document, &start)
-	}
+	document, mapErr := decodeProjectedDocument(xml.NewTokenDecoder(modelTokens))
 	var conversionErr error
 	conversionLocation := validation.Location{Target: validation.TargetSource, DocumentID: run.documentID, Entry: run.entry}
 	var conversionNode validation.NodeID
@@ -466,23 +445,26 @@ func sourceAcceptanceError(report validation.Report) error {
 	if report.Satisfied() {
 		return nil
 	}
-	var invalid error
-	if report.Conformance == validation.ConformanceViolated {
-		issues := make([]ValidationIssue, 0)
-		for _, finding := range report.Findings {
-			if finding.Category == validation.CategoryNormative && finding.Outcome == validation.OutcomeFail {
-				issues = append(issues, assessmentIssue(finding))
-			}
+	// A failed model-category rule, such as a value the Go model cannot hold
+	// unchanged, rejects the document like a normative violation. It is counted
+	// in ModelFailures and as a blocking problem, not in Counts.
+	issues := make([]ValidationIssue, 0)
+	for _, finding := range report.Findings {
+		if finding.Outcome == validation.OutcomeFail && (finding.Category == validation.CategoryNormative || finding.Category == validation.CategoryModel) {
+			issues = append(issues, assessmentIssue(finding))
 		}
+	}
+	var invalid error
+	if report.Conformance == validation.ConformanceViolated || report.ModelFailures != 0 {
 		invalid = &ValidationError{Issues: issues}
 		if report.DiagnosticsTruncated {
 			// Counts measure rule evaluations, not individual details. Preserve
 			// only stored details in Issues; a bounded operation summary neither
 			// invents missing locations nor consumes another diagnostic slot.
-			invalid = fmt.Errorf("%w; source assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail)
+			invalid = fmt.Errorf("%w; source assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail+report.ModelFailures)
 		}
 	}
-	if !report.AssessmentComplete || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.BlockingProblems != 0 || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
+	if !report.AssessmentComplete || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.BlockingProblems > report.ModelFailures || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
 		return errors.Join(invalid, &validation.IncompleteError{Reason: "source-profile-not-satisfied"})
 	}
 	return invalid
@@ -589,4 +571,30 @@ func (r *assessedModelTokenReader) close() error {
 	r.scopes = nil
 	r.last = assessedModelScope{}
 	return nil
+}
+
+// decodeProjectedDocument maps the document element of a namespace-projected
+// token stream into the model type its root names.
+func decodeProjectedDocument(decoder *xml.Decoder) (Document, error) {
+	start, err := readRoot(decoder)
+	if err != nil {
+		return nil, err
+	}
+	var document Document
+	switch {
+	case start.Name.Space != "":
+		return nil, &UnsupportedRootError{Name: start.Name}
+	case start.Name.Local == "score-partwise":
+		document = &ScorePartwise{}
+	case start.Name.Local == "score-timewise":
+		document = &ScoreTimewise{}
+	case start.Name.Local == "opus":
+		document = &OpusDocument{}
+	default:
+		return nil, &UnsupportedRootError{Name: start.Name}
+	}
+	if err := decoder.DecodeElement(document, &start); err != nil {
+		return document, err
+	}
+	return document, nil
 }

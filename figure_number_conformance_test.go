@@ -153,7 +153,7 @@ func legacyFigureNumberTestEngine(t *testing.T) *validation.Engine {
 			d.profiles[i].Support = append(d.profiles[i].Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 		}
 	}
-	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	catalog, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -23,7 +23,7 @@ var barlineLocationEngine = sync.OnceValues(func() (spanEngineFixture, error) {
 		d.profiles[i].Required = append(d.profiles[i].Required, key)
 		d.profiles[i].Support = append(d.profiles[i].Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 	}
-	c, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	c, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		return spanEngineFixture{}, err
 	}
@@ -36,7 +36,7 @@ var barlineBaselineEngine = sync.OnceValues(func() (spanEngineFixture, error) {
 	if err != nil {
 		return spanEngineFixture{}, err
 	}
-	c, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	c, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		return spanEngineFixture{}, err
 	}

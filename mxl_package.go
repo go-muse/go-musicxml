@@ -4,6 +4,8 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 
@@ -284,11 +286,16 @@ func (a *openedMXL) decodeDocument(
 		return nil, err
 	}
 
-	document, err := DecodeContext(
-		ctx,
-		bytes.NewReader(documentData),
-		DecodeOptions{MaxXMLDepth: limits.xmlDepth, DTD: limits.dtd},
-	)
+	var document Document
+	if limits.infoset != nil {
+		document, err = decodeInfosetDocument(ctx, bytes.NewReader(documentData), limits)
+	} else {
+		document, err = DecodeContext(
+			ctx,
+			bytes.NewReader(documentData),
+			DecodeOptions{MaxXMLDepth: limits.xmlDepth, DTD: limits.dtd},
+		)
+	}
 	if err != nil {
 		return nil, fmt.Errorf(
 			"musicxml: decode MXL root file %q: %w",
@@ -589,4 +596,29 @@ func (r contextReader) Read(p []byte) (int, error) {
 	}
 
 	return r.reader.Read(p)
+}
+
+// decodeInfosetDocument decodes a root document from its full DTD infoset,
+// with the token reader that strict loading assesses: DTD default and fixed
+// attributes are supplied, internal-subset entities expand and the external
+// subset comes from the bundled or caller DTDs. Its work is charged to
+// limits.infoset.
+func decodeInfosetDocument(ctx context.Context, reader io.Reader, limits mxlLimits) (document Document, err error) {
+	maxDepth, err := DecodeOptions{MaxXMLDepth: limits.xmlDepth}.xmlDepth()
+	if err != nil {
+		return nil, err
+	}
+	// The archive bytes are already charged as input, as for the source stage.
+	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: limits.infoset, MaxDepth: maxDepth, ByteOwner: sourceBytesAccounted, InternalDTD: true, DTD: newSourceDTDResolver(limits.dtd)})
+	if err != nil {
+		return nil, err
+	}
+	defer func() { err = errors.Join(err, lexical.Close()) }()
+	projected := &namespaceXMLTokenReader{source: xml.NewTokenDecoder(lexical), allowQualifiedAttribute: musicXMLQualifiedAttribute}
+	decoder := xml.NewTokenDecoder(projected)
+	if document, err = decodeProjectedDocument(decoder); err != nil {
+		return document, err
+	}
+	// Like DecodeContext, reject content after the document element.
+	return document, readDocumentTail(decoder)
 }

@@ -48,7 +48,8 @@ func TestDecodeAssessedSourceAndConversionDomains(t *testing.T) {
 		invalid    bool
 	}{
 		{"18446744073709551615", validation.ConformanceConformant, validation.ConversionConverted, false},
-		{"18446744073709551616", validation.ConformanceConformant, validation.ConversionUnrepresentable, false},
+		// Conformant, but the source line rejects a value the model cannot hold.
+		{"18446744073709551616", validation.ConformanceConformant, validation.ConversionUnrepresentable, true},
 		{"-1", validation.ConformanceViolated, validation.ConversionUnrepresentable, true},
 		{"1.5", validation.ConformanceViolated, validation.ConversionFailed, true},
 	} {
@@ -94,9 +95,10 @@ func TestDecodeAssessedDrainsAfterOverflowAndPreservesTailCauses(t *testing.T) {
 		name, extra, tail string
 		invalid           bool
 	}{
-		{"valid-tail", `<instruments>1</instruments>`, "", false},
+		// The overflowing staves value is itself a source-line failure.
+		{"valid-tail", `<instruments>1</instruments>`, "", true},
 		{"later-attribute-violation", `<instruments rubbish="bad">1</instruments>`, "", true},
-		{"malformed-tail", `<instruments>1</instruments>`, `<`, false},
+		{"malformed-tail", `<instruments>1</instruments>`, `<`, true},
 		{"violation-then-malformed-tail", `<instruments rubbish="bad">1</instruments>`, `<`, true},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -186,8 +188,10 @@ func TestDecodeAssessedDrainsAttributeAndChoiceConversionFailures(t *testing.T) 
 	}
 	for name, input := range cases {
 		t.Run(name, func(t *testing.T) {
+			// The source line reports the value the model cannot hold; the
+			// conversion still fails on it, and the source stays conformant.
 			result, err := DecodeAssessed(context.Background(), &onceEOFReader{input: input}, strictSourceOptions())
-			if !errors.Is(err, strconv.ErrRange) || errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionUnrepresentable || !result.Source.Satisfied() {
+			if !errors.Is(err, strconv.ErrRange) || result.Document != nil || result.Conversion.State != validation.ConversionUnrepresentable || result.Source.Satisfied() || result.Source.Conformance != validation.ConformanceConformant || !hasRepresentabilityFailure(result.Source) {
 				t.Fatalf("source/conversion=%+v error=%v", result, err)
 			}
 		})
@@ -230,7 +234,9 @@ func TestDecodeAssessedRetainsOverflowDuringInterruptedDrain(t *testing.T) {
 		}
 		result, err := DecodeAssessed(ctx, reader, strictSourceOptions())
 		cancel()
-		if !errors.Is(err, strconv.ErrRange) || !errors.Is(err, want) || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Source.InputComplete || result.Source.Syntax != validation.SyntaxIncomplete {
+		// The only invalidity is the staves value's source-line failure, when the
+		// interrupted source proved it before stopping.
+		if !errors.Is(err, strconv.ErrRange) || !errors.Is(err, want) || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) != hasRepresentabilityFailure(result.Source) || result.Document != nil || result.Source.InputComplete || result.Source.Syntax != validation.SyntaxIncomplete {
 			t.Errorf("interrupted drain: %+v error=%v", result, err)
 		}
 	}
@@ -467,7 +473,9 @@ func TestDecodeAssessedConversionDetailCannotStarveSourceFailure(t *testing.T) {
 	options := strictSourceOptions()
 	options.Assessment.Budgets.MaxDiagnostics = 1
 	result, err := DecodeAssessed(context.Background(), strings.NewReader(assessedScore("18446744073709551616", `<instruments rubbish="bad">1</instruments>`)), options)
-	if !errors.Is(err, strconv.ErrRange) || !errors.Is(err, ErrInvalidDocument) || result.Conversion.State != validation.ConversionUnrepresentable || len(result.Conversion.Findings) != 0 || len(result.Source.Findings) != 1 || result.Source.Findings[0].Category != validation.CategoryNormative || result.Source.Counts.Fail == 0 {
+	// The unrepresentable staves value and the undeclared attribute are both
+	// source failures; the one stored finding belongs to the source.
+	if !errors.Is(err, strconv.ErrRange) || !errors.Is(err, ErrInvalidDocument) || result.Conversion.State != validation.ConversionUnrepresentable || len(result.Conversion.Findings) != 0 || len(result.Source.Findings) != 1 || result.Source.Counts.Fail == 0 {
 		t.Fatalf("conversion detail stole source quota: %+v %v", result, err)
 	}
 }
@@ -555,4 +563,14 @@ func TestSourceAssessmentKeepsClosedFailureWithUnclosedAncestors(t *testing.T) {
 	if !errors.As(err, &syntax) || report.Conformance != validation.ConformanceViolated || report.AssessmentComplete || report.InputComplete {
 		t.Fatalf("closed scalar proof lost under unclosed ancestors: %+v / %v", report, err)
 	}
+}
+
+// hasRepresentabilityFailure reports a failed source representability finding.
+func hasRepresentabilityFailure(r validation.Report) bool {
+	for _, f := range r.Findings {
+		if strings.HasPrefix(string(f.Rule.ID), "MX40-SOURCE-REPRESENTABLE-") && f.Outcome == validation.OutcomeFail && f.Category == validation.CategoryModel {
+			return true
+		}
+	}
+	return false
 }

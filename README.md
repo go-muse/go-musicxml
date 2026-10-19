@@ -203,8 +203,9 @@ MusicXML violation or a readiness success.
 Always inspect `Report.Satisfied()`: a nil error alone is not acceptance.
 Ordinary violations live in the report; cancellation/resource interruptions
 return their cause and a partial report. Model locations are field/index paths
-without invented XML positions. Finite decimal fields are assessed as their
-exact current binary rational value, so `float64(0.1)` is not decimal `1/10`.
+without invented XML positions. Finite decimal fields are assessed as the
+shortest decimal that reads back to the same `float64`, so `float64(0.1)` is
+decimal `1/10`.
 Optional nil and present-zero fields remain distinct; `XMLName` is ignored
 transport metadata.
 

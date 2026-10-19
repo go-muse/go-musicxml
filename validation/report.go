@@ -76,7 +76,7 @@ func (r Report) FormatLocalized(w io.Writer, translations map[RuleKey]RuleText) 
 	out.add("Validation report\n")
 	out.add("profile=" + reportField(string(r.Profile.ID)) + " target=" + reportField(string(r.Target)) + " requested=" + strconv.FormatBool(r.Requested) + "\n")
 	out.add("syntax=" + reportField(string(r.Syntax)) + " conformance=" + reportField(string(r.Conformance)) + " assessment-complete=" + strconv.FormatBool(r.AssessmentComplete) + " input-complete=" + strconv.FormatBool(r.InputComplete) + "\n")
-	out.add(fmt.Sprintf("counts: pass=%d fail=%d not-applicable=%d unknown=%d unsupported=%d blocked=%d\nblocking-problems=%d diagnostics-truncated=%t\n", r.Counts.Pass, r.Counts.Fail, r.Counts.NotApplicable, r.Counts.Unknown, r.Counts.Unsupported, r.Counts.Blocked, r.BlockingProblems, r.DiagnosticsTruncated))
+	out.add(fmt.Sprintf("counts: pass=%d fail=%d not-applicable=%d unknown=%d unsupported=%d blocked=%d\nblocking-problems=%d model-failures=%d diagnostics-truncated=%t\n", r.Counts.Pass, r.Counts.Fail, r.Counts.NotApplicable, r.Counts.Unknown, r.Counts.Unsupported, r.Counts.Blocked, r.BlockingProblems, r.ModelFailures, r.DiagnosticsTruncated))
 	if r.Terminal != nil {
 		out.add("terminal: category=" + reportField(string(r.Terminal.Category)) + " reason=" + reportField(string(r.Terminal.Reason)) + "\n")
 	}
@@ -328,6 +328,9 @@ func (a *reportAccumulator) recordOutcome(rule RuleDefinition, decision Decision
 	} else if !optional {
 		if decision.Outcome == OutcomeFail || unresolved {
 			a.report.BlockingProblems++
+		}
+		if decision.Outcome == OutcomeFail && rule.Category == CategoryModel {
+			a.report.ModelFailures++
 		}
 		if unresolved {
 			a.report.AssessmentComplete = false

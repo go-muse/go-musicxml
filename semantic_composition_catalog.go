@@ -24,7 +24,7 @@ func buildSemanticAssessmentEngine(target validation.Target) (*validation.Engine
 	if err != nil {
 		return nil, err
 	}
-	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	catalog, err := newCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +116,9 @@ func buildSemanticAssessmentDefinitions(target validation.Target) (*assessmentDe
 	}
 	if target == validation.TargetSource {
 		if err := appendSourceOriginDefinitions(d); err != nil {
+			return nil, err
+		}
+		if err := appendSourceRepresentabilityDefinitions(d); err != nil {
 			return nil, err
 		}
 		if err := specializeSourceComposition(d); err != nil {
