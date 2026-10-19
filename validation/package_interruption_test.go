@@ -16,10 +16,10 @@ func interruptionSnapshot(t *testing.T, a *Account, doc, text string) (*Resource
 	}
 	h := schemaPendingHeader()
 	h.Location.DocumentID = doc
-	if err = s.Open(context.Background(), h); err != nil {
+	if err = s.OpenNode(context.Background(), h); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Close(context.Background(), schemaLexemeEnd(text)); err != nil {
+	if err = s.CloseNode(context.Background(), schemaLexemeEnd(text)); err != nil {
 		t.Fatal(err)
 	}
 	r, snap, err := s.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})

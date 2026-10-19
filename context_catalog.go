@@ -94,14 +94,14 @@ func buildContextAssessmentDefinitions() (*assessmentDefinitions, error) {
 	for _, consumer := range []struct {
 		id, subject, title, explanation, provider string
 		line                                      int
-		makePlan                                  func(validation.ContextConsumerSpec) (validation.Plan, error)
+		makePlan                                  func(validation.ConsumerSpec) (validation.Plan, error)
 	}{
 		{"bend-release-negative", "bend", "Negative release distance after an established bend", "For an established release-after-bend gesture the exact bend-alter must be negative. Lone, pre-bend or ambiguous gestures do not establish this antecedent.", "performance", 4744, validation.NewBendReleaseSignPlan},
 		{"beat-repeat-content", "beat-repeat", "Encoded music for a graphical beat repeat", "A graphical repeat does not supply missing musical events. Consume only proved scoped content correspondence; unresolved timing or equivalence remains incomplete.", "graphical-repeats", 2907, validation.NewGraphicalRepeatContentPlan},
 		{"measure-repeat-content", "measure-repeat", "Encoded music for a graphical measure repeat", "Repeated musical content must be encoded in the affected measures. Exact supported content proofs are separate from unspecified broader event-equivalence policies.", "graphical-repeats", 3048, validation.NewGraphicalRepeatContentPlan},
 	} {
 		provider := validation.RuleKey{ID: validation.RuleID("MX40-CONTEXT-" + consumer.provider), Revision: 1}
-		plan, err := consumer.makePlan(validation.ContextConsumerSpec{Schema: schema, Provider: provider})
+		plan, err := consumer.makePlan(validation.ConsumerSpec{Schema: schema, Provider: provider})
 		if err != nil {
 			return nil, err
 		}

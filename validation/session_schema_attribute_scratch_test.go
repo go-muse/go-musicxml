@@ -28,7 +28,7 @@ func schemaAttributeScratchFixture(t *testing.T, invalid ...bool) (*Session, *fa
 		t.Fatal(err)
 	}
 	t.Cleanup(s.cleanup)
-	if err := s.Open(context.Background(), schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	for _, item := range []struct{ name, value string }{{"a", "x"}, {"b", "yy"}} {

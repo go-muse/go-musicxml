@@ -70,7 +70,7 @@ func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Open(ctx, independentModelHeader(1, 0, "root", "Root")); err != nil {
+	if err := s.OpenNode(ctx, independentModelHeader(1, 0, "root", "Root")); err != nil {
 		t.Fatal(err)
 	}
 	broken := independentModelAttribute(1, "broken", "")
@@ -84,7 +84,7 @@ func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
 	if err := s.ModelRepresentation(ctx, fact); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, independentModelEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, independentModelEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	for _, name := range []string{"broken", "other", "good", "defaulted"} {
@@ -137,7 +137,7 @@ func TestIndependentModelKnownAttributeFailureWithPatternLimitKeepsCause(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Open(ctx, independentModelHeader(1, 0, "root", "Root")); err != nil {
+	if err := s.OpenNode(ctx, independentModelHeader(1, 0, "root", "Root")); err != nil {
 		t.Fatal(err)
 	}
 	integer, err := NewInteger(big.NewInt(4))
@@ -152,7 +152,7 @@ func TestIndependentModelKnownAttributeFailureWithPatternLimitKeepsCause(t *test
 	if err := s.ModelRepresentation(ctx, ModelRepresentationFact{Owner: 1, Complete: Evidence[bool]{State: EvidenceKnown, Value: true}}); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, independentModelEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, independentModelEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	got, err := s.schemaEffectiveScalar(ctx, 1, QName{Local: "n"})

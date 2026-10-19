@@ -138,10 +138,10 @@ func TestContextReportSurvivesFinishAndOptionalGap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Close(ctx, schemaLexemeEnd("3")); err != nil {
+	if err = s.CloseNode(ctx, schemaLexemeEnd("3")); err != nil {
 		t.Fatal(err)
 	}
 	result := ContextResult{Provider: RuleKey{"context-test", 1}, Subject: NodeRef{"source", 1}, Property: ContextPropertySpanNormalDots, Value: Evidence[Atomic]{State: EvidenceUnknown, Reason: "optional-geometry"}}

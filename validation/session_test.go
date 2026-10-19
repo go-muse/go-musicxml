@@ -34,19 +34,19 @@ func TestSessionRunsRealExactDeclarationPlan(t *testing.T) {
 		t.Run(string(rune('0'+count)), func(t *testing.T) {
 			_, s := sessionFixture(t, Budgets{})
 			ctx := context.Background()
-			if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+			if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 				t.Fatal(err)
 			}
 			for i := 0; i < count; i++ {
 				id := NodeID(i + 2)
-				if err := s.Open(ctx, factHeader(id, 1, "test.child", "child")); err != nil {
+				if err := s.OpenNode(ctx, factHeader(id, 1, "test.child", "child")); err != nil {
 					t.Fatal(err)
 				}
-				if err := s.Close(ctx, factEnd(id)); err != nil {
+				if err := s.CloseNode(ctx, factEnd(id)); err != nil {
 					t.Fatal(err)
 				}
 			}
-			if err := s.Close(ctx, factEnd(1)); err != nil {
+			if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 				t.Fatal(err)
 			}
 			r, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -69,10 +69,10 @@ func TestSessionMissingSelectionNeverDisappears(t *testing.T) {
 			_, s := sessionFixture(t, Budgets{})
 			h := factHeader(1, 0, "test.root", "root")
 			h.Declaration = Evidence[DeclarationID]{State: state, Reason: "binding-missing"}
-			if err := s.Open(context.Background(), h); err != nil {
+			if err := s.OpenNode(context.Background(), h); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.Close(context.Background(), factEnd(1)); err != nil {
+			if err := s.CloseNode(context.Background(), factEnd(1)); err != nil {
 				t.Fatal(err)
 			}
 			r, err := s.Finish(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -88,10 +88,10 @@ func TestSessionMissingSelectionNeverDisappears(t *testing.T) {
 func TestSessionTerminalCancellationPreservesEarlierFailure(t *testing.T) {
 	_, s := sessionFixture(t, Budgets{})
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, factEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	canceled, cancel := context.WithCancel(ctx)
@@ -106,21 +106,21 @@ func TestSessionTerminalCancellationPreservesEarlierFailure(t *testing.T) {
 	if _, err := s.Finish(ctx, Completion{}); !errors.Is(err, ErrInvalidSession) {
 		t.Fatalf("second finish:%v", err)
 	}
-	if err := s.Open(ctx, factHeader(2, 0, "test.root", "root")); !errors.Is(err, ErrInvalidSession) {
+	if err := s.OpenNode(ctx, factHeader(2, 0, "test.root", "root")); !errors.Is(err, ErrInvalidSession) {
 		t.Fatalf("postfinish:%v", err)
 	}
 }
 func TestSessionLifecycleViolationIsTerminal(t *testing.T) {
 	_, s := sessionFixture(t, Budgets{})
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
-	original := s.Close(ctx, factEnd(2))
+	original := s.CloseNode(ctx, factEnd(2))
 	if original == nil {
 		t.Fatal("wrong close accepted")
 	}
-	if err := s.Close(ctx, factEnd(1)); err == nil {
+	if err := s.CloseNode(ctx, factEnd(1)); err == nil {
 		t.Fatal("failed session resumed")
 	}
 	r, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -141,7 +141,7 @@ func TestSessionSharesAccountWithoutResetOrLimitOverride(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := first.Open(context.Background(), factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := first.OpenNode(context.Background(), factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 	_, _ = first.Finish(context.Background(), Completion{Syntax: SyntaxIncomplete})
@@ -151,7 +151,7 @@ func TestSessionSharesAccountWithoutResetOrLimitOverride(t *testing.T) {
 	}
 	h := factHeader(1, 0, "test.root", "root")
 	h.Location.DocumentID = "doc2"
-	if err := second.Open(context.Background(), h); !errors.Is(err, ErrResourceLimit) {
+	if err := second.OpenNode(context.Background(), h); !errors.Is(err, ErrResourceLimit) {
 		t.Fatalf("quota reset:%v", err)
 	}
 	_, _ = second.Finish(context.Background(), Completion{Syntax: SyntaxIncomplete})
@@ -169,7 +169,7 @@ func TestSessionRejectsKnownPayloadOnProvenAbsentAttribute(t *testing.T) {
 	for _, lexical := range []bool{false, true} {
 		_, s := sessionFixture(t, Budgets{})
 		ctx := context.Background()
-		if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+		if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 			t.Fatal(err)
 		}
 		attribute := AttributeFact{Owner: 1, Name: QName{Local: "id"}, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: DeclarationID{Assembly: AssemblyMusicXML, OwnerOccurrence: "test.owner", Occurrence: "test.id"}}, Presence: Evidence[bool]{State: EvidenceAbsent}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceAbsent}, Value: Evidence[Atomic]{State: EvidenceAbsent}}, Location: Location{Target: TargetSource, DocumentID: "doc", Path: "/root/@id"}}

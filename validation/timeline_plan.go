@@ -21,15 +21,6 @@ type TimelinePlanSpec struct {
 	PartOwners []ReferenceOwner
 }
 
-// TimelineConsumerSpec identifies an exact timeline provider rule revision and
-// matching schema. Consumers additionally require that exact rule with
-// DependencyRule and RelationDocument in their RuleDefinition. A valid local
-// numeral-key is an independent alternative to querying the timeline service.
-type TimelineConsumerSpec struct {
-	Schema   *CompiledSchema
-	Provider RuleKey
-}
-
 type timelinePlan struct {
 	Schema     *CompiledSchema
 	PartOwners []ReferenceOwner
@@ -59,16 +50,16 @@ func NewTimelinePlan(spec TimelinePlanSpec) (Plan, error) {
 
 // NewChordDurationPlan compares each duration-bearing chord tone against its
 // established principal non-chord note through the exact selected service.
-func NewChordDurationPlan(spec TimelineConsumerSpec) (Plan, error) {
+func NewChordDurationPlan(spec ConsumerSpec) (Plan, error) {
 	return newTimelineConsumer(planChordDuration, spec)
 }
 
 // NewNumeralKeyPlan requires a valid local numeral-key or an explicitly encoded
 // applicable effective key at the enclosing harmony's musical position/staff.
-func NewNumeralKeyPlan(spec TimelineConsumerSpec) (Plan, error) {
+func NewNumeralKeyPlan(spec ConsumerSpec) (Plan, error) {
 	return newTimelineConsumer(planNumeralKey, spec)
 }
-func newTimelineConsumer(kind planKind, spec TimelineConsumerSpec) (Plan, error) {
+func newTimelineConsumer(kind planKind, spec ConsumerSpec) (Plan, error) {
 	if !catalogKey(spec.Provider) {
 		return Plan{}, contract("timeline consumer", "exact provider rule revision required")
 	}

@@ -467,17 +467,16 @@ func CompileSchema(assembly Assembly, data SchemaData) (*CompiledSchema, error)
 func DefaultBudgets() Budgets
 func Known[T any](value T) Evidence[T]
 func LookupDictionaryManifest(id DictionaryManifestID) (DictionaryManifest, bool)
-func MusicXML40Inventory() Inventory
 func NewAtomicComparisonPlan(comparison Comparison, expected Atomic) (Plan, error)
 func NewAttributeImpliesRelatedChildPlan(attribute AttributeSelector, expected Atomic, relation RelationKind, children []DeclarationID) (Plan, error)
 func NewAttributeNumberOrTokensPlan(attribute AttributeSelector, tokens []string, minimum Decimal, maximum Decimal) (Plan, error)
 func NewAttributePresencePlan(attribute AttributeSelector, required bool) (Plan, error)
 func NewBarlineLocationPlan(spec ContextPlanSpec) (Plan, error)
-func NewBendReleaseSignPlan(spec ContextConsumerSpec) (Plan, error)
+func NewBendReleaseSignPlan(spec ConsumerSpec) (Plan, error)
 func NewBudgetAccount(limits Budgets) (*Account, error)
 func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding) (*CompiledCatalog, error)
 func NewChildCountPlan(children []DeclarationID, minimum int64, maximum int64) (Plan, error)
-func NewChordDurationPlan(spec TimelineConsumerSpec) (Plan, error)
+func NewChordDurationPlan(spec ConsumerSpec) (Plan, error)
 func NewContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error)
 func NewContextComparisonPlan(key string, relation RelationKind, comparison Comparison, expected Atomic) (Plan, error)
 func NewContextDefaultPlan(key string, relation RelationKind, attribute AttributeSelector, fallback Atomic) (Plan, error)
@@ -490,7 +489,7 @@ func NewDocumentChildPresencePlan(markers []DeclarationID) (Plan, error)
 func NewDocumentMarkerValuesPlan(markers []DeclarationID, requirements []ChildValueRequirement) (Plan, error)
 func NewEngine(catalog *CompiledCatalog) (*Engine, error)
 func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error)
-func NewGraphicalRepeatContentPlan(spec ContextConsumerSpec) (Plan, error)
+func NewGraphicalRepeatContentPlan(spec ConsumerSpec) (Plan, error)
 func NewIdentityDeclarationPlan(index string, attribute AttributeSelector) (Plan, error)
 func NewIdentityReferencePlan(index string, attribute AttributeSelector) (Plan, error)
 func NewInteger(value *big.Int) (Integer, error)
@@ -499,7 +498,7 @@ func NewLocalContextPlan(schema *CompiledSchema) (Plan, error)
 func NewLocalLinkContextPlan(schema *CompiledSchema) (Plan, error)
 func NewModelRepresentationPlan(assembly Assembly) (Plan, error)
 func NewNavigationContextPlan(spec ContextPlanSpec) (Plan, error)
-func NewNumeralKeyPlan(spec TimelineConsumerSpec) (Plan, error)
+func NewNumeralKeyPlan(spec ConsumerSpec) (Plan, error)
 func NewOpusLayoutContextPlan(schema *CompiledSchema) (Plan, error)
 func NewPackageCatalog(rules []PackageRuleBinding, profiles []PackageProfileBinding) (*CompiledPackageCatalog, error)
 func NewPackagePlan(check PackageCheck) (PackagePlan, error)
@@ -663,6 +662,10 @@ type ConfigurationError struct, field order Field Reason
 type ConfigurationError, method (*ConfigurationError) Error() string
 type ConfigurationError, method (*ConfigurationError) Unwrap() error
 type ConformanceState string
+type ConsumerSpec struct, comparable
+type ConsumerSpec struct, field Provider RuleKey
+type ConsumerSpec struct, field Schema *CompiledSchema
+type ConsumerSpec struct, field order Schema Provider
 type ContainerContextResult struct, field Container NodeRef
 type ContainerContextResult struct, field Content Evidence[bool]
 type ContainerContextResult struct, field FullPath Evidence[Atomic]
@@ -675,10 +678,6 @@ type ContainerContextResult struct, field Role ContainerContextRole
 type ContainerContextResult struct, field order Role Container Parent Ordinal FullPath MediaType FullPathRaw MediaTypeRaw Content
 type ContainerContextResult struct, not comparable
 type ContainerContextRole string
-type ContextConsumerSpec struct, comparable
-type ContextConsumerSpec struct, field Provider RuleKey
-type ContextConsumerSpec struct, field Schema *CompiledSchema
-type ContextConsumerSpec struct, field order Schema Provider
 type ContextFact struct, field Origins []Location
 type ContextFact struct, field Providers []RuleKey
 type ContextFact struct, field Value Evidence[Atomic]
@@ -860,6 +859,12 @@ type EvidenceAuthority struct, field order ID Revision Provenance ExactRelationC
 type EvidenceAuthority struct, not comparable
 type EvidenceState string
 type Evidence[T any] struct, not comparable
+type ExcludedRootError struct, comparable
+type ExcludedRootError struct, field Name QName
+type ExcludedRootError struct, field Profile ProfileID
+type ExcludedRootError struct, field order Name Profile
+type ExcludedRootError, method (*ExcludedRootError) Error() string
+type ExcludedRootError, method (*ExcludedRootError) Unwrap() error
 type Finding struct, embedded Decision Decision
 type Finding struct, field Category DiagnosticCategory
 type Finding struct, field Location Location
@@ -925,203 +930,6 @@ type IntrinsicProfileBinding struct, field CatalogDigest string
 type IntrinsicProfileBinding struct, field Profile ProfileID
 type IntrinsicProfileBinding struct, field Target Target
 type IntrinsicProfileBinding struct, field order Assembly Target Profile CatalogDigest
-type Inventory struct, field AdvisoryReviews []InventoryAdvisoryReview `json:"advisory_reviews"`
-type Inventory struct, field Capabilities []InventoryCapability `json:"capabilities"`
-type Inventory struct, field Checks []InventoryCheck `json:"checks"`
-type Inventory struct, field Contexts []InventoryContextDisposition `json:"contexts"`
-type Inventory struct, field DependencySemantics map[string]string `json:"dependency_semantics"`
-type Inventory struct, field ExternalFiles []InventoryFile `json:"external_files"`
-type Inventory struct, field Instances []InventoryInstance `json:"instances"`
-type Inventory struct, field Overlaps []InventoryOverlap `json:"overlaps"`
-type Inventory struct, field Questions []InventoryQuestion `json:"questions"`
-type Inventory struct, field Records []InventoryRecord `json:"records"`
-type Inventory struct, field RegistryCommit string `json:"registry_commit"`
-type Inventory struct, field RegistryRepository string `json:"registry_repository"`
-type Inventory struct, field Requirements []InventoryRequirement `json:"requirements"`
-type Inventory struct, field SHA256 string `json:"sha256,omitempty"`
-type Inventory struct, field SourceFiles []InventoryFile `json:"source_files"`
-type Inventory struct, field SourceSHA256 string `json:"source_sha256"`
-type Inventory struct, field Stages []InventoryStage `json:"stages"`
-type Inventory struct, field TargetPolicies map[string]InventoryTargetPolicy `json:"target_policies"`
-type Inventory struct, field Tests []InventoryTestContract `json:"tests"`
-type Inventory struct, field UpstreamMusicXMLCommit string `json:"upstream_musicxml_commit"`
-type Inventory struct, field Version string `json:"version"`
-type Inventory struct, field order Overlaps AdvisoryReviews Stages Questions Version SHA256 SourceSHA256 RegistryRepository RegistryCommit UpstreamMusicXMLCommit ExternalFiles SourceFiles Records Instances Checks Capabilities Requirements Tests Contexts TargetPolicies DependencySemantics
-type Inventory struct, not comparable
-type InventoryAdvisoryReview struct, field Decision string `json:"decision"`
-type InventoryAdvisoryReview struct, field NormativeProvenance []string `json:"normative_provenance"`
-type InventoryAdvisoryReview struct, field PrimaryCheckIDs []string `json:"primary_check_ids"`
-type InventoryAdvisoryReview struct, field Rationale string `json:"rationale"`
-type InventoryAdvisoryReview struct, field RelatedResearchIDs []string `json:"related_research_ids"`
-type InventoryAdvisoryReview struct, field RelatedXSDResearchIDs []string `json:"related_xsd_research_ids"`
-type InventoryAdvisoryReview struct, field ResearchID string `json:"research_id"`
-type InventoryAdvisoryReview struct, field ReuseCheckIDs []string `json:"reuse_check_ids"`
-type InventoryAdvisoryReview struct, field ReuseScope string `json:"reuse_scope"`
-type InventoryAdvisoryReview struct, field order ResearchID Decision RelatedResearchIDs RelatedXSDResearchIDs Rationale NormativeProvenance ReuseCheckIDs PrimaryCheckIDs ReuseScope
-type InventoryAdvisoryReview struct, not comparable
-type InventoryCapability struct, field CheckIDs []string `json:"check_ids"`
-type InventoryCapability struct, field Closure string `json:"closure"`
-type InventoryCapability struct, field ID string `json:"id"`
-type InventoryCapability struct, field Kind string `json:"kind"`
-type InventoryCapability struct, field Label string `json:"label"`
-type InventoryCapability struct, field MissingOutcome string `json:"missing_outcome"`
-type InventoryCapability struct, field ProviderRequirementIDs []string `json:"provider_requirement_ids"`
-type InventoryCapability struct, field ProviderStatus string `json:"provider_status"`
-type InventoryCapability struct, field Targets []string `json:"targets"`
-type InventoryCapability struct, field order ID Label Kind ProviderStatus ProviderRequirementIDs CheckIDs Targets Closure MissingOutcome
-type InventoryCapability struct, not comparable
-type InventoryCheck struct, field Capabilities []string `json:"capabilities"`
-type InventoryCheck struct, field CapabilityIDs []string `json:"capability_ids"`
-type InventoryCheck struct, field Closure string `json:"closure,omitempty"`
-type InventoryCheck struct, field Dependencies []string `json:"dependencies"`
-type InventoryCheck struct, field DependencyModes map[string]InventoryDependencyMode `json:"dependency_modes,omitempty"`
-type InventoryCheck struct, field ExpectedOutcomes *InventoryExpectedOutcomes `json:"expected_outcomes,omitempty"`
-type InventoryCheck struct, field ID string `json:"id"`
-type InventoryCheck struct, field ImplementationBinding string `json:"implementation_binding"`
-type InventoryCheck struct, field Inputs []string `json:"inputs"`
-type InventoryCheck struct, field ModelEvidence *InventoryModelEvidence `json:"model_evidence,omitempty"`
-type InventoryCheck struct, field ModelLimit string `json:"model_limit,omitempty"`
-type InventoryCheck struct, field NormativeProvenance []string `json:"normative_provenance"`
-type InventoryCheck struct, field ReadinessGate string `json:"readiness_gate,omitempty"`
-type InventoryCheck struct, field ResearchClauses map[string]string `json:"research_clauses,omitempty"`
-type InventoryCheck struct, field ResearchIDs []string `json:"research_ids,omitempty"`
-type InventoryCheck struct, field Revision int `json:"revision"`
-type InventoryCheck struct, field Role string `json:"role"`
-type InventoryCheck struct, field RuntimeSupport string `json:"runtime_support"`
-type InventoryCheck struct, field Selector string `json:"selector"`
-type InventoryCheck struct, field SemanticStatus string `json:"semantic_status"`
-type InventoryCheck struct, field Stage string `json:"stage"`
-type InventoryCheck struct, field Status string `json:"status"`
-type InventoryCheck struct, field Targets []string `json:"targets"`
-type InventoryCheck struct, field TestContracts []string `json:"test_contracts"`
-type InventoryCheck struct, field order ExpectedOutcomes ResearchClauses ID ResearchIDs Revision Role Inputs Selector Targets Capabilities Dependencies DependencyModes NormativeProvenance TestContracts Stage Status Closure ReadinessGate CapabilityIDs SemanticStatus ImplementationBinding ModelLimit ModelEvidence RuntimeSupport
-type InventoryCheck struct, not comparable
-type InventoryContextDisposition struct, field Closure string `json:"closure"`
-type InventoryContextDisposition struct, field Dependencies []string `json:"dependencies"`
-type InventoryContextDisposition struct, field Disposition string `json:"disposition"`
-type InventoryContextDisposition struct, field Produces *string `json:"produces"`
-type InventoryContextDisposition struct, field Rationale string `json:"rationale"`
-type InventoryContextDisposition struct, field ResearchID string `json:"research_id"`
-type InventoryContextDisposition struct, field Role string `json:"role"`
-type InventoryContextDisposition struct, field Translation string `json:"translation"`
-type InventoryContextDisposition struct, field order ResearchID Role Disposition Rationale Produces Dependencies Closure Translation
-type InventoryContextDisposition struct, not comparable
-type InventoryDependencyMode struct, comparable
-type InventoryDependencyMode struct, field Model string `json:"model"`
-type InventoryDependencyMode struct, field NotAGlobalGate string `json:"not_a_global_gate"`
-type InventoryDependencyMode struct, field Source string `json:"source"`
-type InventoryDependencyMode struct, field order Source Model NotAGlobalGate
-type InventoryExpectedOutcomes struct, field Description string
-type InventoryExpectedOutcomes struct, field Outcomes map[string]string
-type InventoryExpectedOutcomes struct, field order Description Outcomes
-type InventoryExpectedOutcomes struct, not comparable
-type InventoryExpectedOutcomes, method (*InventoryExpectedOutcomes) UnmarshalJSON(data []byte) error
-type InventoryExpectedOutcomes, method (InventoryExpectedOutcomes) MarshalJSON() ([]byte, error)
-type InventoryFile struct, comparable
-type InventoryFile struct, field Bytes int64 `json:"bytes"`
-type InventoryFile struct, field GitBlobSHA1 string `json:"git_blob_sha1,omitempty"`
-type InventoryFile struct, field Path string `json:"path"`
-type InventoryFile struct, field SHA256 string `json:"sha256"`
-type InventoryFile struct, field order Path Bytes SHA256 GitBlobSHA1
-type InventoryInstance struct, field Composition string `json:"composition"`
-type InventoryInstance struct, field DiagnosticPolicy string `json:"diagnostic_policy"`
-type InventoryInstance struct, field ID string `json:"id"`
-type InventoryInstance struct, field PlanDependencies InventoryPlanDependencies `json:"plan_dependencies"`
-type InventoryInstance struct, field RegistryPointer string `json:"registry_pointer"`
-type InventoryInstance struct, field RegistryURL string `json:"registry_url"`
-type InventoryInstance struct, field ResearchID string `json:"research_id"`
-type InventoryInstance struct, field ReuseInstances []string `json:"reuse_instances"`
-type InventoryInstance struct, field Revision int `json:"revision"`
-type InventoryInstance struct, field Role string `json:"role"`
-type InventoryInstance struct, field RuntimeSupport string `json:"runtime_support"`
-type InventoryInstance struct, field Stage string `json:"stage"`
-type InventoryInstance struct, field Status string `json:"status"`
-type InventoryInstance struct, field TargetPolicy string `json:"target_policy"`
-type InventoryInstance struct, field TemplateID string `json:"template_id"`
-type InventoryInstance struct, field order ID Revision ResearchID TemplateID Role RegistryPointer RegistryURL Composition Status Stage ReuseInstances DiagnosticPolicy PlanDependencies TargetPolicy RuntimeSupport
-type InventoryInstance struct, not comparable
-type InventoryModelEvidence struct, comparable
-type InventoryModelEvidence struct, field NamespaceClauses string `json:"namespace_clauses"`
-type InventoryModelEvidence struct, field ReadinessGate string `json:"readiness_gate"`
-type InventoryModelEvidence struct, field SourceLexicalClauses string `json:"source_lexical_clauses"`
-type InventoryModelEvidence struct, field StructureClauses string `json:"structure_clauses"`
-type InventoryModelEvidence struct, field ValueSpaceClauses string `json:"value_space_clauses"`
-type InventoryModelEvidence struct, field order SourceLexicalClauses ValueSpaceClauses StructureClauses NamespaceClauses ReadinessGate
-type InventoryOverlap struct, field AdditionalCondition string `json:"additional_condition"`
-type InventoryOverlap struct, field AdditionalConditionCheckIDs []string `json:"additional_condition_check_ids"`
-type InventoryOverlap struct, field AdditionalConditionSource string `json:"additional_condition_source"`
-type InventoryOverlap struct, field Disposition string `json:"disposition"`
-type InventoryOverlap struct, field ID string `json:"id"`
-type InventoryOverlap struct, field Justification string `json:"justification"`
-type InventoryOverlap struct, field Kind string `json:"kind"`
-type InventoryOverlap struct, field ResearchID string `json:"research_id"`
-type InventoryOverlap struct, field SharedCondition string `json:"shared_condition"`
-type InventoryOverlap struct, field XSDResearchIDs []string `json:"xsd_research_ids"`
-type InventoryOverlap struct, field order ID ResearchID Kind SharedCondition AdditionalCondition XSDResearchIDs Disposition Justification AdditionalConditionCheckIDs AdditionalConditionSource
-type InventoryOverlap struct, not comparable
-type InventoryPlanDependencies struct, field LanguageSemantics []string `json:"language_semantics"`
-type InventoryPlanDependencies struct, field SchemaComponent []string `json:"schema_component"`
-type InventoryPlanDependencies struct, field order SchemaComponent LanguageSemantics
-type InventoryPlanDependencies struct, not comparable
-type InventoryQuestion struct, field Closure string `json:"closure"`
-type InventoryQuestion struct, field ContextualResearchIDs []string `json:"contextual_research_ids"`
-type InventoryQuestion struct, field Description string `json:"description"`
-type InventoryQuestion struct, field Disposition string `json:"disposition"`
-type InventoryQuestion struct, field HardErrorBasis bool `json:"hard_error_basis"`
-type InventoryQuestion struct, field ID string `json:"id"`
-type InventoryQuestion struct, field ProposedInterpretation string `json:"proposed_interpretation"`
-type InventoryQuestion struct, field RegistryPointer string `json:"registry_pointer"`
-type InventoryQuestion struct, field RegistryURL string `json:"registry_url"`
-type InventoryQuestion struct, field Requirements []string `json:"requirements"`
-type InventoryQuestion struct, field order ID RegistryPointer RegistryURL Description Disposition ProposedInterpretation HardErrorBasis Requirements ContextualResearchIDs Closure
-type InventoryQuestion struct, not comparable
-type InventoryRecord struct, field CheckIDs []string `json:"check_ids"`
-type InventoryRecord struct, field Disposition string `json:"disposition"`
-type InventoryRecord struct, field Origin string `json:"origin"`
-type InventoryRecord struct, field RegistryPointer string `json:"registry_pointer"`
-type InventoryRecord struct, field RegistryURL string `json:"registry_url"`
-type InventoryRecord struct, field ResearchID string `json:"research_id"`
-type InventoryRecord struct, field Role string `json:"role"`
-type InventoryRecord struct, field order ResearchID Origin Role Disposition CheckIDs RegistryPointer RegistryURL
-type InventoryRecord struct, not comparable
-type InventoryRequirement struct, field Acceptance []string `json:"acceptance"`
-type InventoryRequirement struct, field Applicability string `json:"applicability"`
-type InventoryRequirement struct, field Dependencies []string `json:"dependencies"`
-type InventoryRequirement struct, field ID string `json:"id"`
-type InventoryRequirement struct, field Inputs []string `json:"inputs"`
-type InventoryRequirement struct, field NormativeProvenance []string `json:"normative_provenance"`
-type InventoryRequirement struct, field ResearchIDs []string `json:"research_ids,omitempty"`
-type InventoryRequirement struct, field Role string `json:"role"`
-type InventoryRequirement struct, field SourceBullets []string `json:"source_bullets"`
-type InventoryRequirement struct, field SourceInventory string `json:"source_inventory"`
-type InventoryRequirement struct, field Stage string `json:"stage"`
-type InventoryRequirement struct, field Status string `json:"status"`
-type InventoryRequirement struct, field Targets []string `json:"targets"`
-type InventoryRequirement struct, field TestContracts []string `json:"test_contracts"`
-type InventoryRequirement struct, field Title string `json:"title"`
-type InventoryRequirement struct, field order ID Title Role Inputs Applicability Targets Dependencies NormativeProvenance TestContracts Stage Status Acceptance SourceBullets SourceInventory ResearchIDs
-type InventoryRequirement struct, not comparable
-type InventoryStage struct, field Acceptance []string `json:"acceptance"`
-type InventoryStage struct, field DependencyInterpretation string `json:"dependency_interpretation,omitempty"`
-type InventoryStage struct, field DependsOn []string `json:"depends_on"`
-type InventoryStage struct, field ID string `json:"id"`
-type InventoryStage struct, field ScopeNote string `json:"scope_note,omitempty"`
-type InventoryStage struct, field Title string `json:"title"`
-type InventoryStage struct, field order ID Title DependsOn Acceptance DependencyInterpretation ScopeNote
-type InventoryStage struct, not comparable
-type InventoryTargetPolicy struct, comparable
-type InventoryTargetPolicy struct, field Model string `json:"model"`
-type InventoryTargetPolicy struct, field Source string `json:"source"`
-type InventoryTargetPolicy struct, field order Source Model
-type InventoryTestContract struct, field AxisStatus map[string]string `json:"axis_status"`
-type InventoryTestContract struct, field CaseInstantiationGate string `json:"case_instantiation_gate,omitempty"`
-type InventoryTestContract struct, field CheckIDs []string `json:"check_ids,omitempty"`
-type InventoryTestContract struct, field ID string `json:"id"`
-type InventoryTestContract struct, field RequirementIDs []string `json:"requirement_ids,omitempty"`
-type InventoryTestContract struct, field Status string `json:"status"`
-type InventoryTestContract struct, field Targets []string `json:"targets"`
-type InventoryTestContract struct, field order ID CheckIDs RequirementIDs Targets Status AxisStatus CaseInstantiationGate
-type InventoryTestContract struct, not comparable
 type LayoutContextResult struct, field Applicability Evidence[bool]
 type LayoutContextResult struct, field Basis string
 type LayoutContextResult struct, field Conversion Evidence[Rational]
@@ -1920,7 +1728,7 @@ type Selector struct, field Declaration *DeclarationID
 type Selector struct, field order Assembly Component Declaration
 type Session struct, not comparable
 type Session, method (*Session) Attribute(ctx context.Context, attribute AttributeFact) error
-type Session, method (*Session) Close(ctx context.Context, end NodeEnd) error
+type Session, method (*Session) CloseNode(ctx context.Context, end NodeEnd) error
 type Session, method (*Session) CompleteAttributes(ctx context.Context, id NodeID, complete Evidence[bool]) error
 type Session, method (*Session) CompleteSourceDTDIDs(ctx context.Context, doc string) error
 type Session, method (*Session) CompleteSourceOrigins(ctx context.Context, provider RuleKey, complete Evidence[bool]) error
@@ -1928,7 +1736,7 @@ type Session, method (*Session) Finish(ctx context.Context, end Completion) (Rep
 type Session, method (*Session) FinishWithResourceSnapshot(ctx context.Context, end Completion) (Report, *ResourceSnapshot, error)
 type Session, method (*Session) FinishWithRetainedReport(ctx context.Context, end Completion) (report Report, lease *ReportLease, err error)
 type Session, method (*Session) ModelRepresentation(ctx context.Context, fact ModelRepresentationFact) error
-type Session, method (*Session) Open(ctx context.Context, node NodeHeader) error
+type Session, method (*Session) OpenNode(ctx context.Context, node NodeHeader) error
 type Session, method (*Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, subject NodeRef, attribute QName, raw Evidence[string]) (err error)
 type Session, method (*Session) SourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribute) (err error)
 type Session, method (*Session) SourceDTDIDDomain(ctx context.Context, f SourceDTDIDDomain) (err error)
@@ -2039,10 +1847,6 @@ type TerminalSummary struct, comparable
 type TerminalSummary struct, field Category DiagnosticCategory
 type TerminalSummary struct, field Reason Code
 type TerminalSummary struct, field order Category Reason
-type TimelineConsumerSpec struct, comparable
-type TimelineConsumerSpec struct, field Provider RuleKey
-type TimelineConsumerSpec struct, field Schema *CompiledSchema
-type TimelineConsumerSpec struct, field order Schema Provider
 type TimelinePlanSpec struct, field PartOwners []ReferenceOwner
 type TimelinePlanSpec struct, field Schema *CompiledSchema
 type TimelinePlanSpec struct, field order Schema PartOwners
@@ -2244,12 +2048,6 @@ type TimingTuning struct, field OpenPitch Evidence[Rational]
 type TimingTuning struct, field Step Evidence[string]
 type TimingTuning struct, field order Line Octave Step Alter Capo OpenPitch AdjustedPitch
 type TimingTuning struct, not comparable
-type UnsupportedRootError struct, comparable
-type UnsupportedRootError struct, field Name QName
-type UnsupportedRootError struct, field Profile ProfileID
-type UnsupportedRootError struct, field order Name Profile
-type UnsupportedRootError, method (*UnsupportedRootError) Error() string
-type UnsupportedRootError, method (*UnsupportedRootError) Unwrap() error
 type XSDCheck string
 type ZIPHeaderObservation struct, comparable
 type ZIPHeaderObservation struct, field ExtraLength Evidence[uint64]

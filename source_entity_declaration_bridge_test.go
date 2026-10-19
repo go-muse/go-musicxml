@@ -20,17 +20,17 @@ type sourceDeclarationTestSink struct {
 	inspect      func(validation.SourceEntityDeclarations) error
 }
 
-func (s *sourceDeclarationTestSink) Open(ctx context.Context, h validation.NodeHeader) error {
+func (s *sourceDeclarationTestSink) OpenNode(ctx context.Context, h validation.NodeHeader) error {
 	s.events = append(s.events, "open")
-	return s.recordingSourceFacts.Open(ctx, h)
+	return s.recordingSourceFacts.OpenNode(ctx, h)
 }
 func (s *sourceDeclarationTestSink) Attribute(ctx context.Context, a validation.AttributeFact) error {
 	s.events = append(s.events, "attribute")
 	return s.recordingSourceFacts.Attribute(ctx, a)
 }
-func (s *sourceDeclarationTestSink) Close(ctx context.Context, e validation.NodeEnd) error {
+func (s *sourceDeclarationTestSink) CloseNode(ctx context.Context, e validation.NodeEnd) error {
 	s.events = append(s.events, "close")
-	return s.recordingSourceFacts.Close(ctx, e)
+	return s.recordingSourceFacts.CloseNode(ctx, e)
 }
 func (s *sourceDeclarationTestSink) SourceEntityDeclarations(_ context.Context, f validation.SourceEntityDeclarations) error {
 	s.events = append(s.events, "declarations")
@@ -430,7 +430,7 @@ type sourceDeclarationRejectingSink struct {
 	rejection error
 }
 
-func (s *sourceDeclarationRejectingSink) Open(context.Context, validation.NodeHeader) error {
+func (s *sourceDeclarationRejectingSink) OpenNode(context.Context, validation.NodeHeader) error {
 	return s.rejection
 }
 func TestSourceDeclarationObserverRequiresRootAdmissionAndSharedAccount(t *testing.T) {

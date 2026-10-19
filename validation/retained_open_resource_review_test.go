@@ -18,7 +18,7 @@ func TestRetainedFactOpenHeaderScratchRefusalIsResourceError(t *testing.T) {
 	if err := a.Charge(BudgetBufferedBytes, hold); err != nil {
 		t.Fatal(err)
 	}
-	err := s.Open(context.Background(), factHeader(1, 0, "test.root", "root"))
+	err := s.OpenNode(context.Background(), factHeader(1, 0, "test.root", "root"))
 	var resource *ResourceError
 	var session *SessionError
 	if !errors.As(err, &resource) || !errors.Is(err, ErrResourceLimit) || errors.Is(err, ErrInvalidSession) || errors.As(err, &session) {

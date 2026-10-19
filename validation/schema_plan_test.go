@@ -75,10 +75,10 @@ func TestSourceSchemaPendingBindingExecutesSharedScalar(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := session.Open(ctx, schemaPendingHeader()); err != nil {
+			if err := session.OpenNode(ctx, schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
-			if err := session.Close(ctx, schemaLexemeEnd(value)); err != nil {
+			if err := session.CloseNode(ctx, schemaLexemeEnd(value)); err != nil {
 				t.Fatal(err)
 			}
 			report, err := session.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -102,10 +102,10 @@ func TestSourceSchemaRootClosedFailureSurvivesTailError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := session.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Close(ctx, schemaLexemeEnd("bad")); err != nil {
+	if err := session.CloseNode(ctx, schemaLexemeEnd("bad")); err != nil {
 		t.Fatal(err)
 	}
 	cause := errors.New("malformed trailing source")
@@ -143,10 +143,10 @@ func TestSourceSchemaEOFAndSyntaxIncompleteAreIndependent(t *testing.T) {
 	header := schemaPendingHeader()
 	header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
 	header.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
-	if err := session.Open(ctx, header); err != nil {
+	if err := session.OpenNode(ctx, header); err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Close(ctx, schemaLexemeEnd("1")); err != nil {
+	if err := session.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
 	report, err := session.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxIncomplete})
@@ -161,7 +161,7 @@ func TestSourceSchemaProvedFailurePrecedesBufferCache(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := session.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	used, _ := session.account.Usage(BudgetBufferedBytes)
@@ -190,7 +190,7 @@ func TestSourceSchemaClosedChildFailureSurvivesUnclosedParent(t *testing.T) {
 		t.Fatal(err)
 	}
 	root := schemaPendingHeader()
-	if err := session.Open(ctx, root); err != nil {
+	if err := session.OpenNode(ctx, root); err != nil {
 		t.Fatal(err)
 	}
 	if err := session.CompleteAttributes(ctx, root.ID, Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
@@ -201,12 +201,12 @@ func TestSourceSchemaClosedChildFailureSurvivesUnclosedParent(t *testing.T) {
 	child.Parent = 1
 	child.Name = QName{Local: "child"}
 	child.Location.Path = "/root/child"
-	if err := session.Open(ctx, child); err != nil {
+	if err := session.OpenNode(ctx, child); err != nil {
 		t.Fatal(err)
 	}
 	end := schemaLexemeEnd("bad")
 	end.ID = 2
-	if err := session.Close(ctx, end); err != nil {
+	if err := session.CloseNode(ctx, end); err != nil {
 		t.Fatal(err)
 	}
 	cause := errors.New("unclosed root at end")
@@ -222,7 +222,7 @@ func TestSourceSchemaCompositeAppendsDetailsWithoutRecount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := session.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	rule := session.catalog.rules[session.profile.Required[0]]
@@ -252,7 +252,7 @@ func TestSourceSchemaKnownProofPrecedesLaterCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := session.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	run, err := xsd.NewRun(session.schema.active.kernel, schemaMeter{session})

@@ -37,6 +37,17 @@ or changed identifier to its replacement.
   `MarshalXML`/`UnmarshalXML` methods that existed only to decode `+1`.
   Convert with `PositiveInteger(n)` or `uint64(v)`.
 - `PlayContent.Ipa` and `Play.AddIpa` are renamed `IPA` and `AddIPA`.
+- `validation.Session.Open` and `Close` are renamed `OpenNode` and `CloseNode`,
+  so that the node events are not mistaken for resource management;
+  `SessionError.Operation` reports the new names.
+- `validation.ContextConsumerSpec` and `validation.TimelineConsumerSpec`, which
+  had the same fields, are merged into `validation.ConsumerSpec`.
+- `validation.UnsupportedRootError` is renamed `validation.ExcludedRootError`,
+  so that it no longer shares a name with `musicxml.UnsupportedRootError`.
+- The planning inventory moves from package `validation` to the new package
+  `validation/inventory`: `validation.MusicXML40Inventory` becomes
+  `inventory.MusicXML40`, `validation.Inventory` becomes `inventory.Snapshot`,
+  and each `validation.InventoryX` type becomes `inventory.X`.
 
 ### Added
 

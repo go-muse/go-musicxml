@@ -1010,7 +1010,7 @@ MusicXML numeric validity. It is not selected by built-in conformance profiles.
 `NewOpusLayoutContextPlan` is separately
 bound to the Opus assembly and projects only local score pagination hints;
 missing new-page remains application-dependent and no linked score is opened. `ContextPlanSpec` binds the exact selected timeline
-provider where needed; `ContextConsumerSpec` binds an exact type-specific
+provider where needed; `ConsumerSpec` binds an exact type-specific
 provider. There are no caller expressions, evaluator callbacks or unmetered
 post-Finish queries. Configuration is schema-bound and revisioned separately
 from the accepted timeline contract.
@@ -1054,8 +1054,8 @@ The `validation` subpackage exports `NewCatalog`, eight generic sealed typed-pla
 constructors, the sealed shared-schema `NewXSDPlan`, bounded local relation and
 typed-reference constructors, `NewModelRepresentationPlan`, `NewTimelinePlan`,
 `NewChordDurationPlan`, `NewNumeralKeyPlan`, `NewEngine`, and
-explicit-profile fact sessions using `Open`, `Attribute`, optional
-`CompleteAttributes`/`ModelRepresentation`, `Close` and `Finish`. The optional
+explicit-profile fact sessions using `OpenNode`, `Attribute`, optional
+`CompleteAttributes`/`ModelRepresentation`, `CloseNode` and `Finish`. The optional
 attribute-closure event seals explicit start-tag enumeration before children;
 it enables truthful prefix assessment when an ancestor never closes. Catalogs are immutable; sessions copy retained
 facts and return independently owned reports. Exact selectors distinguish schema
@@ -1080,15 +1080,15 @@ These sealed constructors require bounded exact selectors/parameters and copy
 retained inputs. They are not a callback ABI or a linked-resource resolver.
 
 `NewTimelinePlan(TimelinePlanSpec)` requires the exact compiled MusicXML schema
-and both part-reference owners. `NewChordDurationPlan(TimelineConsumerSpec)` and
-`NewNumeralKeyPlan(TimelineConsumerSpec)` require the matching schema and exact
+and both part-reference owners. `NewChordDurationPlan(ConsumerSpec)` and
+`NewNumeralKeyPlan(ConsumerSpec)` require the matching schema and exact
 provider rule/revision; their rule definitions must also declare that document
 dependency. Sealed role/type validation rejects similarly named but incompatible
 schema declarations. These plans do not add generic interpretation to unrelated
 context keys or expose mutable session state.
 
 `Session.ModelRepresentation` accepts one bounded `ModelRepresentationFact` for
-the currently open model occurrence before `Close`. `ModelProblem` identifies a
+the currently open model occurrence before `CloseNode`. `ModelProblem` identifies a
 scalar, exact attribute, children or node axis through the `ModelAxis` constants.
 The session copies the examination and establishes a real required model decision
 before exposing causal invalid evidence. The corresponding
@@ -1100,7 +1100,7 @@ supported roots and normative closure. `CompiledCatalog.Schedule` exposes each
 rule once in final-evaluation order, after derived context-provider/identity
 phase ordering; these edges do not add rules or semantic dependencies. Catalog
 digests cover canonical metadata and typed plan parameters.
-`MusicXML40Inventory` is a separate pinned inspection snapshot of 2,560 research records, not executable rule coverage.
+`inventory.MusicXML40` (package `validation/inventory`) is a separate pinned inspection snapshot of 2,560 research records, not executable rule coverage.
 
 `Report.Satisfied()` evaluates independent syntax, input/assessment completion,
 conformance and blocker axes. A nil operation error alone is not acceptance.
@@ -1490,7 +1490,7 @@ Custom source catalogs can use `NewXSDPlanWithSourceDeclarations`. Every selecte
 XSD operation sharing an assembly/run must agree on the mode, and unsupported
 plans cannot enable runtime facts. Submit `SourceEntityDeclarations` containing
 owned-input `SourceEntityDeclaration` rows through
-`Session.SourceEntityDeclarations` immediately after root `Open`, before any
+`Session.SourceEntityDeclarations` immediately after root `OpenNode`, before any
 attribute, child or closing event. Rows contain only effective first general
 bindings, with positive unique document-local sequence IDs and independently
 available original-byte origins. The session copies them under the shared

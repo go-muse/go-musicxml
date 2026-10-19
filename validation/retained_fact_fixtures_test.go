@@ -145,16 +145,16 @@ func TestFlatFactStorageAmortizedAndExactWorkBoundaries(t *testing.T) {
 				}
 				t.Cleanup(s.cleanup)
 				account := s.account
-				err = s.Open(ctx, factHeader(1, 0, "test.root", "root"))
+				err = s.OpenNode(ctx, factHeader(1, 0, "test.root", "root"))
 				for i := 0; err == nil && i < count; i++ {
 					id := NodeID(i + 2)
-					err = s.Open(ctx, factHeader(id, 1, "test.child", "child"))
+					err = s.OpenNode(ctx, factHeader(id, 1, "test.child", "child"))
 					if err == nil {
-						err = s.Close(ctx, factEnd(id))
+						err = s.CloseNode(ctx, factEnd(id))
 					}
 				}
 				if err == nil {
-					err = s.Close(ctx, factEnd(1))
+					err = s.CloseNode(ctx, factEnd(1))
 				}
 				if short == 0 {
 					if err != nil {

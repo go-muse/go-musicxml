@@ -13,7 +13,7 @@ func TestIndependentR1PhysicalEntityAttribute(t *testing.T) {
 	ctx := context.Background()
 	h := schemaPendingHeader()
 	h.Location = sourceOriginPhysical().Physical.Value
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	name := QName{Local: "a"}
@@ -40,7 +40,7 @@ func TestIndependentR1OriginCanceledBeforeMalformed(t *testing.T) {
 	defer s.cleanup()
 	h := schemaPendingHeader()
 	h.Location = sourceOriginPhysical().Physical.Value
-	if err := s.Open(context.Background(), h); err != nil {
+	if err := s.OpenNode(context.Background(), h); err != nil {
 		t.Fatal(err)
 	}
 	in := sourceOriginPhysical()

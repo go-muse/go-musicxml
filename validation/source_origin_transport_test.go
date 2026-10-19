@@ -64,7 +64,7 @@ func originTransportSession(t *testing.T, e *Engine, key RuleKey, opts RunOption
 	if root.Physical.State == EvidenceKnown {
 		h.Location = stateClone(root.Physical.Value)
 	}
-	if err = s.Open(ctx, h); err != nil {
+	if err = s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	if err = s.SourceOrigin(ctx, key, root); err != nil {
@@ -82,7 +82,7 @@ func originTransportSession(t *testing.T, e *Engine, key RuleKey, opts RunOption
 			t.Fatal(err)
 		}
 	}
-	if err = s.Close(ctx, schemaLexemeEnd(text)); err != nil {
+	if err = s.CloseNode(ctx, schemaLexemeEnd(text)); err != nil {
 		t.Fatal(err)
 	}
 	switch seal {

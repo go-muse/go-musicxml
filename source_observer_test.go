@@ -20,7 +20,7 @@ type recordingSourceFacts struct {
 	ends       []validation.NodeEnd
 }
 
-func (r *recordingSourceFacts) Open(_ context.Context, h validation.NodeHeader) error {
+func (r *recordingSourceFacts) OpenNode(_ context.Context, h validation.NodeHeader) error {
 	h.Bindings = append([]validation.Binding(nil), h.Bindings...)
 	r.headers = append(r.headers, h)
 	return nil
@@ -32,7 +32,7 @@ func (r *recordingSourceFacts) Attribute(_ context.Context, a validation.Attribu
 func (r *recordingSourceFacts) CompleteAttributes(context.Context, validation.NodeID, validation.Evidence[bool]) error {
 	return nil
 }
-func (r *recordingSourceFacts) Close(_ context.Context, e validation.NodeEnd) error {
+func (r *recordingSourceFacts) CloseNode(_ context.Context, e validation.NodeEnd) error {
 	r.ends = append(r.ends, e)
 	return nil
 }

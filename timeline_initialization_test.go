@@ -41,9 +41,9 @@ func TestTimelineConstructorsShareImmutableBindings(t *testing.T) {
 			case 0:
 				plans[i], errs[i] = validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: &copy, PartOwners: owners})
 			case 1:
-				plans[i], errs[i] = validation.NewChordDurationPlan(validation.TimelineConsumerSpec{Schema: &copy, Provider: validation.RuleKey{ID: "provider", Revision: 1}})
+				plans[i], errs[i] = validation.NewChordDurationPlan(validation.ConsumerSpec{Schema: &copy, Provider: validation.RuleKey{ID: "provider", Revision: 1}})
 			case 2:
-				plans[i], errs[i] = validation.NewNumeralKeyPlan(validation.TimelineConsumerSpec{Schema: &copy, Provider: validation.RuleKey{ID: "provider", Revision: 1}})
+				plans[i], errs[i] = validation.NewNumeralKeyPlan(validation.ConsumerSpec{Schema: &copy, Provider: validation.RuleKey{ID: "provider", Revision: 1}})
 			}
 		})
 	}
@@ -94,7 +94,7 @@ func TestTimelineCatalogKeepsSharedImmutableBindings(t *testing.T) {
 func TestTimelineBindingInitializationSeparatesSchemasAndErrors(t *testing.T) {
 	first := timelineContractSchema(t)
 	second := timelineContractSchema(t)
-	spec := validation.TimelineConsumerSpec{Provider: validation.RuleKey{ID: "provider", Revision: 1}}
+	spec := validation.ConsumerSpec{Provider: validation.RuleKey{ID: "provider", Revision: 1}}
 	spec.Schema = first
 	a, err := validation.NewChordDurationPlan(spec)
 	if err != nil {
@@ -125,7 +125,7 @@ func TestTimelineBindingInitializationSeparatesSchemasAndErrors(t *testing.T) {
 	if !errors.As(err, &again) || *again != want {
 		t.Fatalf("caller mutation poisoned a later constructor error: %v", err)
 	}
-	if _, err := validation.NewNumeralKeyPlan(validation.TimelineConsumerSpec{Schema: first, Provider: spec.Provider}); err != nil {
+	if _, err := validation.NewNumeralKeyPlan(validation.ConsumerSpec{Schema: first, Provider: spec.Provider}); err != nil {
 		t.Fatalf("invalid schema poisoned independent valid schema: %v", err)
 	}
 }

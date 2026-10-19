@@ -17,9 +17,9 @@ type spanGapSink struct {
 	gapName string
 }
 
-func (s *spanGapSink) Open(ctx context.Context, n validation.NodeHeader) error {
+func (s *spanGapSink) OpenNode(ctx context.Context, n validation.NodeHeader) error {
 	s.headers[n.ID] = n
-	return s.Session.Open(ctx, n)
+	return s.Session.OpenNode(ctx, n)
 }
 func (s *spanGapSink) CompleteAttributes(ctx context.Context, id validation.NodeID, v validation.Evidence[bool]) error {
 	if "@"+s.headers[id].Name.Local == s.gapName {
@@ -27,14 +27,14 @@ func (s *spanGapSink) CompleteAttributes(ctx context.Context, id validation.Node
 	}
 	return s.Session.CompleteAttributes(ctx, id, v)
 }
-func (s *spanGapSink) Close(ctx context.Context, n validation.NodeEnd) error {
+func (s *spanGapSink) CloseNode(ctx context.Context, n validation.NodeEnd) error {
 	if s.headers[n.ID].Name.Local == s.gapName {
 		n.ChildrenComplete = validation.Evidence[bool]{State: validation.EvidenceUnknown, Reason: "test-span-enumeration-gap"}
 	}
 	if "@"+s.headers[n.ID].Name.Local == s.gapName {
 		n.AttributesComplete = validation.Evidence[bool]{State: validation.EvidenceUnknown, Reason: "test-span-attributes-gap"}
 	}
-	return s.Session.Close(ctx, n)
+	return s.Session.CloseNode(ctx, n)
 }
 
 type spanEngineFixture struct {

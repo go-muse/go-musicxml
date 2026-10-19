@@ -10,7 +10,7 @@ func TestReviewTerminalClassification(t *testing.T) {
 	resource := &ResourceError{Kind: BudgetRuleSteps, Limit: 1, Used: 1, Requested: 1}
 	configuration := contract("test", "bad configuration")
 	lifecycle := &SessionError{Operation: "test", Reason: "bad lifecycle", Cause: configuration}
-	unsupported := &UnsupportedRootError{Name: QName{Local: "other"}, Profile: "test.source"}
+	unsupported := &ExcludedRootError{Name: QName{Local: "other"}, Profile: "test.source"}
 	transport := errors.New("transport interrupted")
 	cases := []struct {
 		name     string

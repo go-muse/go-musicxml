@@ -115,7 +115,7 @@ func reviewFragmentSnapshotSession(t *testing.T) *Session {
 	if err := s.SourceDTDIDAttribute(context.Background(), f); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(context.Background(), schemaLexemeEnd("1")); err != nil {
+	if err := s.CloseNode(context.Background(), schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompleteSourceDTDIDs(context.Background(), "source"); err != nil {

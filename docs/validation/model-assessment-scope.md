@@ -296,7 +296,7 @@ No artificial input-byte charge is invented for the caller's existing graph.
 These accounting mechanisms also serve legacy `Validate`, but its private quota
 policy above deliberately differs from the finite assessed defaults.
 
-Model-representation preparation at `Close` uses an immutable compiled ordered
+Model-representation preparation at `CloseNode` uses an immutable compiled ordered
 subset, rather than reclassifying every selected rule for each node; full rule
 assessment still visits the selected schedule. The distinct-child operator
 selects and materializes each effective child value once per evaluation. Exact
@@ -459,7 +459,7 @@ and acceptance of this batch's measured tradeoff. Owner: **shared validation
 kernel/session workstream**, with **batch 9 final reconciliation** responsible
 for an explicit disposition; earlier dependency-appropriate work may address it.
 The retained cost areas are `Run.Bind` per-node state, child witnesses,
-`recordXSDResult`, `Open` header copies and `cacheDecision`.
+`recordXSDResult`, `OpenNode` header copies and `cacheDecision`.
 
 The matched warmed `BenchmarkValidate` evidence on `MozaChloSample.musicxml`
 (Go 1.27.2, linux/amd64, AMD EPYC 9V74, GOMAXPROCS=4, five alternating

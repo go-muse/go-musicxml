@@ -14,15 +14,15 @@ type timelineGapSink struct {
 	gapName string
 }
 
-func (s *timelineGapSink) Open(ctx context.Context, n validation.NodeHeader) error {
+func (s *timelineGapSink) OpenNode(ctx context.Context, n validation.NodeHeader) error {
 	s.headers[n.ID] = n
-	return s.Session.Open(ctx, n)
+	return s.Session.OpenNode(ctx, n)
 }
-func (s *timelineGapSink) Close(ctx context.Context, n validation.NodeEnd) error {
+func (s *timelineGapSink) CloseNode(ctx context.Context, n validation.NodeEnd) error {
 	if s.headers[n.ID].Name.Local == s.gapName {
 		n.ChildrenComplete = validation.Evidence[bool]{State: validation.EvidenceUnknown, Reason: "test-hierarchy-enumeration-gap"}
 	}
-	return s.Session.Close(ctx, n)
+	return s.Session.CloseNode(ctx, n)
 }
 func TestTimelineHierarchyGapCannotProveMissingKey(t *testing.T) {
 	source := (localFixture{body: timelineNumeral("", "")}).xml()

@@ -72,7 +72,7 @@ Changing semantics requires a new rule revision; changes to metadata, provenance
 or profile claims also change the digest. Authors own semantic revision policy:
 compilation does not compare a catalog with previously published versions.
 
-`MusicXML40Inventory()` instead returns independently owned inspection data
+`inventory.MusicXML40()` instead returns independently owned inspection data
 compiled from committed [planning files](plan). Its registry commit is
 `3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c`. It preserves all 2,560 research records
 (2,218 XSD and 342 prose), 2,218 parameterized instances, 418 planned checks,
@@ -150,7 +150,7 @@ magnitude and canonical text, excluding fixed Go object overhead.
 
 ## Session lifecycle and acceptance
 
-Use `Open`, `Attribute`, `Close`, then exactly one `Finish`. Attributes precede
+Use `OpenNode`, `Attribute`, `CloseNode`, then exactly one `Finish`. Attributes precede
 children on their open owner. Node IDs are nonzero and unique per document;
 parents, target/document locations, evidence and balanced closure are validated.
 Retained facts are copied. The current implementation retains a bounded fact set

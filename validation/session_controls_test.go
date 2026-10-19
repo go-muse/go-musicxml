@@ -9,31 +9,31 @@ import (
 
 func TestQAControlLifecycleMatrix(t *testing.T) {
 	cases := map[string]func(*Session) error{
-		"zero-node": func(s *Session) error { return s.Open(context.Background(), factHeader(0, 0, "test.root", "root")) },
+		"zero-node": func(s *Session) error { return s.OpenNode(context.Background(), factHeader(0, 0, "test.root", "root")) },
 		"cross-document": func(s *Session) error {
 			h := factHeader(1, 0, "test.root", "root")
 			h.Location.DocumentID = "foreign"
-			return s.Open(context.Background(), h)
+			return s.OpenNode(context.Background(), h)
 		},
 		"bad-target": func(s *Session) error {
 			h := factHeader(1, 0, "test.root", "root")
 			h.Location.Target = TargetModel
-			return s.Open(context.Background(), h)
+			return s.OpenNode(context.Background(), h)
 		},
 		"wrong-parent": func(s *Session) error {
 			qaOpenRoot(t, s)
-			return s.Open(context.Background(), factHeader(2, 9, "test.child", "child"))
+			return s.OpenNode(context.Background(), factHeader(2, 9, "test.child", "child"))
 		},
 		"duplicate-id": func(s *Session) error {
 			qaOpenRoot(t, s)
-			return s.Open(context.Background(), factHeader(1, 1, "test.child", "child"))
+			return s.OpenNode(context.Background(), factHeader(1, 1, "test.child", "child"))
 		},
 		"duplicate-root": func(s *Session) error {
 			qaOpenRoot(t, s)
 			qaClose(t, s, factEnd(1))
-			return s.Open(context.Background(), factHeader(2, 0, "test.root", "root"))
+			return s.OpenNode(context.Background(), factHeader(2, 0, "test.root", "root"))
 		},
-		"wrong-close": func(s *Session) error { qaOpenRoot(t, s); return s.Close(context.Background(), factEnd(2)) },
+		"wrong-close": func(s *Session) error { qaOpenRoot(t, s); return s.CloseNode(context.Background(), factEnd(2)) },
 		"wrong-attribute-owner": func(s *Session) error {
 			qaOpenRoot(t, s)
 			a := ciStringNode(2, "K").attributes[0]
@@ -45,7 +45,7 @@ func TestQAControlLifecycleMatrix(t *testing.T) {
 			a := ciStringNode(1, "K").attributes[0]
 			return s.Attribute(context.Background(), a)
 		},
-		"nil-event-context": func(s *Session) error { return s.Open(nil, factHeader(1, 0, "test.root", "root")) },
+		"nil-event-context": func(s *Session) error { return s.OpenNode(nil, factHeader(1, 0, "test.root", "root")) },
 	}
 	for name, invalid := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -56,7 +56,7 @@ func TestQAControlLifecycleMatrix(t *testing.T) {
 			}
 			used, _ := s.account.Usage(BudgetEvents)
 			count := len(s.decisions)
-			if err := s.Open(context.Background(), factHeader(99, 0, "test.root", "root")); !errors.Is(err, first) {
+			if err := s.OpenNode(context.Background(), factHeader(99, 0, "test.root", "root")); !errors.Is(err, first) {
 				t.Fatalf("later event lost cause: %v", err)
 			}
 			after, _ := s.account.Usage(BudgetEvents)
@@ -101,7 +101,7 @@ func TestQAControlCancellationJoiningAndCleanup(t *testing.T) {
 	if err := s.Attribute(context.Background(), AttributeFact{}); !errors.Is(err, ErrInvalidSession) {
 		t.Fatal("post-Finish attribute not rejected")
 	}
-	if err := s.Close(context.Background(), factEnd(1)); !errors.Is(err, ErrInvalidSession) {
+	if err := s.CloseNode(context.Background(), factEnd(1)); !errors.Is(err, ErrInvalidSession) {
 		t.Fatal("post-Finish close not rejected")
 	}
 }
@@ -126,7 +126,7 @@ func TestQAControlFailedPartialAcquisitionDoesNotReleaseSibling(t *testing.T) {
 	}
 	h := factHeader(1, 0, "test.root", "root")
 	h.Location.DocumentID = "other"
-	if err := two.Open(context.Background(), h); !errors.Is(err, ErrResourceLimit) {
+	if err := two.OpenNode(context.Background(), h); !errors.Is(err, ErrResourceLimit) {
 		t.Fatal("expected header buffer acquisition failure")
 	}
 	_, _ = two.Finish(context.Background(), Completion{Syntax: SyntaxIncomplete})
@@ -157,11 +157,11 @@ func TestQAControlConcurrentSessionIsolation(t *testing.T) {
 				return
 			}
 			ctx := context.Background()
-			if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+			if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 				t.Error(err)
 				return
 			}
-			if err := s.Close(ctx, factEnd(1)); err != nil {
+			if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 				t.Error(err)
 				return
 			}
@@ -250,7 +250,7 @@ func TestQAControlReportDoesNotAliasPositionOrCausalInput(t *testing.T) {
 	h.Location.Position = &SourcePosition{Line: 12, Column: 4, CoordinateSpace: "source"}
 	cause := &DecisionRef{Rule: RuleKey{ID: "upstream", Revision: 2}, Subject: NodeRef{DocumentID: "other-doc", Node: 3}}
 	h.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "invalid-binding", Cause: cause}
-	if err := s.Open(context.Background(), h); err != nil {
+	if err := s.OpenNode(context.Background(), h); err != nil {
 		t.Fatal(err)
 	}
 	h.Location.Position.Line = 999

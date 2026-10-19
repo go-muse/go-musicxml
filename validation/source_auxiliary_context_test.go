@@ -240,7 +240,7 @@ func TestSourceAuxiliaryHintOnlyEffectiveAndPhysicalValues(t *testing.T) {
 				h := schemaPendingHeader()
 				h.Name.Local = string(assembly)
 				h.Location = sourceOriginPhysical().Physical.Value
-				if err := s.Open(ctx, h); err != nil {
+				if err := s.OpenNode(ctx, h); err != nil {
 					t.Fatal(err)
 				}
 				if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
@@ -258,7 +258,7 @@ func TestSourceAuxiliaryHintOnlyEffectiveAndPhysicalValues(t *testing.T) {
 						t.Fatal(err)
 					}
 				}
-				if err := s.Close(ctx, schemaLexemeEnd("value")); err != nil {
+				if err := s.CloseNode(ctx, schemaLexemeEnd("value")); err != nil {
 					t.Fatal(err)
 				}
 				if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {

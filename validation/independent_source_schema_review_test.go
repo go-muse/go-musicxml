@@ -69,7 +69,7 @@ func qaDuplicateIDReport(t *testing.T, requires bool) Report {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	for id := NodeID(2); id <= 3; id++ {
@@ -78,7 +78,7 @@ func qaDuplicateIDReport(t *testing.T, requires bool) Report {
 		h.Parent = 1
 		h.Name = QName{Local: "child"}
 		h.Location.Path = "/root/child"
-		if err = s.Open(ctx, h); err != nil {
+		if err = s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
 		a := AttributeFact{Owner: id, Name: QName{Local: "id"}, Declaration: Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "schema-binding-pending"}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceKnown, Value: "same"}, Value: Evidence[Atomic]{State: EvidenceUnknown, Reason: "schema-binding-pending"}}, Location: h.Location}
@@ -87,11 +87,11 @@ func qaDuplicateIDReport(t *testing.T, requires bool) Report {
 		}
 		end := schemaLexemeEnd("")
 		end.ID = id
-		if err = s.Close(ctx, end); err != nil {
+		if err = s.CloseNode(ctx, end); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err = s.Close(ctx, schemaLexemeEnd("")); err != nil {
+	if err = s.CloseNode(ctx, schemaLexemeEnd("")); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -128,10 +128,10 @@ func TestIndependentCatalogOwnsSchemaHandle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := session.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Close(ctx, schemaLexemeEnd("not an integer")); err != nil {
+	if err := session.CloseNode(ctx, schemaLexemeEnd("not an integer")); err != nil {
 		t.Fatal(err)
 	}
 	report, err := session.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -154,14 +154,14 @@ func TestIndependentAbsentAttributeIsNotInventedBySchemaBridge(t *testing.T) {
 		t.Fatal(err)
 	}
 	h := schemaPendingHeader()
-	if err := session.Open(ctx, h); err != nil {
+	if err := session.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	a := AttributeFact{Owner: 1, Name: QName{Local: "absent"}, Declaration: Evidence[DeclarationID]{State: EvidenceAbsent}, Presence: Evidence[bool]{State: EvidenceAbsent}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceAbsent}, Value: Evidence[Atomic]{State: EvidenceAbsent}}, Location: h.Location}
 	if err := session.Attribute(ctx, a); err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Close(ctx, schemaLexemeEnd("")); err != nil {
+	if err := session.CloseNode(ctx, schemaLexemeEnd("")); err != nil {
 		t.Fatal(err)
 	}
 	report, err := session.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -187,7 +187,7 @@ func TestIndependentUnknownOrderDoesNotProveSequenceViolation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := session.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	for i, name := range []string{"b", "a"} {
@@ -196,18 +196,18 @@ func TestIndependentUnknownOrderDoesNotProveSequenceViolation(t *testing.T) {
 		h.Parent = 1
 		h.Name = QName{Local: name}
 		h.Location.Path = "/root/" + name
-		if err := session.Open(ctx, h); err != nil {
+		if err := session.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
 		end := schemaLexemeEnd("")
 		end.ID = h.ID
-		if err := session.Close(ctx, end); err != nil {
+		if err := session.CloseNode(ctx, end); err != nil {
 			t.Fatal(err)
 		}
 	}
 	end := schemaLexemeEnd("")
 	end.Order = Evidence[OrderKind]{State: EvidenceUnsupported, Reason: "original-order-unavailable"}
-	if err := session.Close(ctx, end); err != nil {
+	if err := session.CloseNode(ctx, end); err != nil {
 		t.Fatal(err)
 	}
 	report, err := session.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})

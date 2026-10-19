@@ -14,7 +14,7 @@ func dtdIDSession(t *testing.T) (*Session, RuleKey) {
 	s.catalog.fragmentModes = map[ProfileID]map[Assembly]fragmentMode{s.profile.ID: {AssemblyMusicXML: fragmentJoinedShorthand}}
 	s.catalog.fragmentDTDs = map[ProfileID]map[Assembly]bool{s.profile.ID: {AssemblyMusicXML: true}}
 	s.catalog.sourceDeclarations = map[ProfileID]map[Assembly]xsdPlanMode{s.profile.ID: {AssemblyMusicXML: xsdSourceDeclarationsV1}}
-	if e := s.Open(context.Background(), schemaPendingHeader()); e != nil {
+	if e := s.OpenNode(context.Background(), schemaPendingHeader()); e != nil {
 		t.Fatal(e)
 	}
 	if e := s.SourceDTDIDDomain(context.Background(), SourceDTDIDDomain{"source", stateKnown(true)}); e != nil {
@@ -104,7 +104,7 @@ func TestSourceDTDIDIngressOwnershipSealsAndDuplicateBinding(t *testing.T) {
 		s, key := dtdIDSession(t)
 		defer s.cleanup()
 		_ = dtdIDAdmittedAttribute(t, s, key, "a", "value")
-		if e := s.Close(context.Background(), schemaLexemeEnd("1")); e != nil {
+		if e := s.CloseNode(context.Background(), schemaLexemeEnd("1")); e != nil {
 			t.Fatal(e)
 		}
 		if e := s.CompleteSourceDTDIDs(context.Background(), "source"); e == nil {
@@ -118,7 +118,7 @@ func TestSourceDTDIDSnapshotOwnershipAndAccounting(t *testing.T) {
 	if e := s.SourceDTDIDAttribute(context.Background(), f); e != nil {
 		t.Fatal(e)
 	}
-	if e := s.Close(context.Background(), schemaLexemeEnd("1")); e != nil {
+	if e := s.CloseNode(context.Background(), schemaLexemeEnd("1")); e != nil {
 		t.Fatal(e)
 	}
 	if e := s.CompleteSourceDTDIDs(context.Background(), "source"); e != nil {

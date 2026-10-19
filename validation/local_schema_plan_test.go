@@ -163,7 +163,7 @@ func localAdmit(t *testing.T, e *Engine, target Target, tree *localTree, account
 		h.Parent = parent
 		h.Name = QName{Local: n.name}
 		h.Location = Location{Target: target, DocumentID: "doc", Path: fmt.Sprintf("/%s[%d]", n.name, id)}
-		if err := s.Open(ctx, h); err != nil {
+		if err := s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
 		var names []string
@@ -201,7 +201,7 @@ func localAdmit(t *testing.T, e *Engine, target Target, tree *localTree, account
 				end.Scalar.Value.Value = *n.value
 			}
 		}
-		if err := s.Close(ctx, end); err != nil {
+		if err := s.CloseNode(ctx, end); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -514,7 +514,7 @@ func TestLocalFailureSurvivesDiagnosticTruncationAndReleasesAccount(t *testing.T
 	}
 	root := schemaPendingHeader()
 	root.Location.DocumentID = "doc"
-	if e = s.Open(ctx, root); e != nil {
+	if e = s.OpenNode(ctx, root); e != nil {
 		t.Fatal(e)
 	}
 	child := schemaPendingHeader()
@@ -523,15 +523,15 @@ func TestLocalFailureSurvivesDiagnosticTruncationAndReleasesAccount(t *testing.T
 	child.Name.Local = "relation"
 	child.Location.DocumentID = "doc"
 	child.Location.Path = "/root/relation"
-	if e = s.Open(ctx, child); e != nil {
+	if e = s.OpenNode(ctx, child); e != nil {
 		t.Fatal(e)
 	}
 	end := schemaLexemeEnd("wrong")
 	end.ID = 2
-	if e = s.Close(ctx, end); e != nil {
+	if e = s.CloseNode(ctx, end); e != nil {
 		t.Fatal(e)
 	}
-	if e = s.Close(ctx, schemaLexemeEnd("")); e != nil {
+	if e = s.CloseNode(ctx, schemaLexemeEnd("")); e != nil {
 		t.Fatal(e)
 	}
 	report, e := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -560,22 +560,22 @@ func TestLocalClosedScalarFailureSurvivesLaterInterruption(t *testing.T) {
 	}
 	h := schemaPendingHeader()
 	h.Location.DocumentID = "doc"
-	if e = s.Open(ctx, h); e != nil {
+	if e = s.OpenNode(ctx, h); e != nil {
 		t.Fatal(e)
 	}
 	h.ID = 2
 	h.Parent = 1
 	h.Name.Local = "relation"
 	h.Location.Path = "/root/relation"
-	if e = s.Open(ctx, h); e != nil {
+	if e = s.OpenNode(ctx, h); e != nil {
 		t.Fatal(e)
 	}
 	end := schemaLexemeEnd("bad")
 	end.ID = 2
-	if e = s.Close(ctx, end); e != nil {
+	if e = s.CloseNode(ctx, end); e != nil {
 		t.Fatal(e)
 	}
-	if e = s.Close(ctx, schemaLexemeEnd("")); e != nil {
+	if e = s.CloseNode(ctx, schemaLexemeEnd("")); e != nil {
 		t.Fatal(e)
 	}
 	if d, ok := s.lookupDecision(decisionID{rule.key, 2}); !ok || d.Outcome != OutcomeFail {

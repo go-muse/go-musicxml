@@ -361,7 +361,7 @@ returns this bound identity. Each linked occurrence receives its own ID.
 Public wrappers require their corresponding target (source for InspectXML/strict
 decode, model for Assess) before reading. A mismatch is a configuration error,
 never an override. Reports repeat the resolved target as metadata and must agree.
-`Open`, `Attribute` and `Close` take only their own payload, eliminating an
+`OpenNode`, `Attribute` and `CloseNode` take only their own payload, eliminating an
 all-payload event union. They enforce balanced parent/child identity and unique
 local node IDs in a document. Each consumes its arguments synchronously; the
 producer may reuse buffers only after return.
@@ -369,7 +369,7 @@ The session must copy anything it retains. `Finish` is called exactly once,
 even after cancellation/abort, releases retained buffers and resolver resources,
 and returns the best available report without erasing prior findings. After
 `Finish`, every input method is an error. Cleanup must work with a canceled
-context. Every non-nil error from `Open`, `Attribute` or `Close` is terminal:
+context. Every non-nil error from `OpenNode`, `Attribute` or `CloseNode` is terminal:
 stop feeding that session and call `Finish` once. Ordinary rule violations remain
 findings and do not return input-method errors. The failed session records its
 first terminal cause; `Finish` returns the partial report and preserves that
@@ -378,9 +378,9 @@ transport/cleanup causes may be joined without duplicating the same cause.
 A terminal validation/session failure is not the recoverable model-mapping
 failure described below; further source observation requires a healthy session.
 
-`Open` establishes parent-child occurrence and order. `Attribute` includes known
+`OpenNode` establishes parent-child occurrence and order. `Attribute` includes known
 present attributes and model fields with absent/unknown presence when relevant.
-`Close` supplies accumulated scalar text/value and completeness proofs. A source
+`CloseNode` supplies accumulated scalar text/value and completeness proofs. A source
 adapter can buffer bounded scalar chunks until close; it need not build a second
 whole-document tree. Required child absence follows only from a known-complete
 child set. If model field representation prevents enumeration, emit incomplete

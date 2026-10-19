@@ -75,7 +75,7 @@ func entityDeclarationAssess(t *testing.T, e *Engine, value string, facts *Sourc
 	t.Helper()
 	ctx := context.Background()
 	s := entityDeclarationSession(t, e)
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	if facts != nil {
@@ -83,7 +83,7 @@ func entityDeclarationAssess(t *testing.T, e *Engine, value string, facts *Sourc
 			t.Fatal(err)
 		}
 	}
-	if err := s.Close(ctx, schemaLexemeEnd(value)); err != nil {
+	if err := s.CloseNode(ctx, schemaLexemeEnd(value)); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -173,7 +173,7 @@ func TestSourceEntityDeclarationsAdmissionPhase(t *testing.T) {
 			s := entityDeclarationSession(t, chosen)
 			f := entitySnapshot(true, entityRow("asset", true, 1))
 			if phase != "before-root" {
-				if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+				if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -195,11 +195,11 @@ func TestSourceEntityDeclarationsAdmissionPhase(t *testing.T) {
 				h := schemaPendingHeader()
 				h.ID = 2
 				h.Parent = 1
-				if err := s.Open(ctx, h); err != nil {
+				if err := s.OpenNode(ctx, h); err != nil {
 					t.Fatal(err)
 				}
 			case "closed":
-				if err := s.Close(ctx, schemaLexemeEnd("asset")); err != nil {
+				if err := s.CloseNode(ctx, schemaLexemeEnd("asset")); err != nil {
 					t.Fatal(err)
 				}
 			case "finished":
@@ -219,7 +219,7 @@ func TestSourceEntityDeclarationNamesUseSourceLimits(t *testing.T) {
 	e := entityDeclarationEngine(t, entityDeclarationSchema(t, entityBuiltin("string")), XSDCheckScalar)
 	for _, name := range []string{strings.Repeat("x", 2048), "\U00010000"} {
 		s := entityDeclarationSession(t, e)
-		if err := s.Open(context.Background(), schemaPendingHeader()); err != nil {
+		if err := s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 			t.Fatal(err)
 		}
 		f := entitySnapshot(true, entityRow(name, true, 1))
@@ -235,7 +235,7 @@ func TestSourceEntityDeclarationsAdmissionBudgetsAndCancellation(t *testing.T) {
 	e := entityDeclarationEngine(t, entityDeclarationSchema(t, entityBuiltin("ENTITY")), XSDCheckScalar)
 	facts := entitySnapshot(true, entityRow(strings.Repeat("a", 2048), true, 1), entityRow("second", false, 2))
 	baseline := entityDeclarationSession(t, e)
-	if err := baseline.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := baseline.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	beforeBytes, _ := baseline.account.Usage(BudgetBufferedBytes)
@@ -249,7 +249,7 @@ func TestSourceEntityDeclarationsAdmissionBudgetsAndCancellation(t *testing.T) {
 	for _, kind := range []BudgetKind{BudgetBufferedBytes, BudgetRuleSteps} {
 		for _, short := range []int64{0, 1} {
 			s := entityDeclarationSession(t, e)
-			if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+			if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
 			delta := afterBytes - beforeBytes
@@ -277,7 +277,7 @@ func TestSourceEntityDeclarationsAdmissionBudgetsAndCancellation(t *testing.T) {
 		}
 	}
 	s := entityDeclarationSession(t, e)
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	cancelled, cancel := context.WithCancel(ctx)

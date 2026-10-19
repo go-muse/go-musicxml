@@ -88,14 +88,14 @@ func modelSchemaClose(t *testing.T, s *Session, end NodeEnd, problems ...ModelPr
 	if err := s.ModelRepresentation(context.Background(), ModelRepresentationFact{Owner: end.ID, Complete: Evidence[bool]{State: EvidenceKnown, Value: true}, Problems: problems}); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(context.Background(), end); err != nil {
+	if err := s.CloseNode(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
 }
 func TestModelSchemaBindsPendingCurrentRoot(t *testing.T) {
 	s := modelSchemaSession(t, miniatureSourceSchema(t), Budgets{})
 	ctx := context.Background()
-	if err := s.Open(ctx, modelSchemaHeader(1, 0, "root", "Root")); err != nil {
+	if err := s.OpenNode(ctx, modelSchemaHeader(1, 0, "root", "Root")); err != nil {
 		t.Fatal(err)
 	}
 	value, _ := NewInteger(big.NewInt(0))
@@ -129,7 +129,7 @@ func TestModelSchemaEffectiveValuesRemainDistinctFromInput(t *testing.T) {
 	s := modelSchemaSession(t, schema, Budgets{})
 	ctx := context.Background()
 	h := modelSchemaHeader(1, 0, "root", "Root")
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	for _, pair := range []struct{ name, text string }{{"text", " a\t b "}, {"number", "bad"}} {
@@ -189,14 +189,14 @@ func TestModelSchemaContentHoleKeepsIndependentAttributeFailure(t *testing.T) {
 	s := modelSchemaSession(t, schema, Budgets{})
 	ctx := context.Background()
 	h := modelSchemaHeader(1, 0, "root", "Root")
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Attribute(ctx, AttributeFact{Owner: 1, Name: QName{Local: "number"}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Declaration: Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "pending"}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceUnsupported, Reason: "no-source"}, Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "bad"}}}, Location: h.Location}); err != nil {
 		t.Fatal(err)
 	}
 	ch := modelSchemaHeader(2, 1, "child", "Root.Content[1]")
-	if err := s.Open(ctx, ch); err != nil {
+	if err := s.OpenNode(ctx, ch); err != nil {
 		t.Fatal(err)
 	}
 	number, _ := NewInteger(big.NewInt(1))
@@ -261,7 +261,7 @@ func TestModelSchemaRepresentationHoleKeepsIndependentReference(t *testing.T) {
 			s := modelSchemaSession(t, schema, Budgets{})
 			ctx := context.Background()
 			h := modelSchemaHeader(1, 0, "root", "Root")
-			if err := s.Open(ctx, h); err != nil {
+			if err := s.OpenNode(ctx, h); err != nil {
 				t.Fatal(err)
 			}
 			for _, pair := range []struct{ name, text string }{{"id", "target"}, {"ref", "target"}, {"number", "4"}} {

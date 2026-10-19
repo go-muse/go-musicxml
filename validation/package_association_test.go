@@ -23,10 +23,10 @@ func packageAssociationFixture(t *testing.T, indirection ...Evidence[bool]) (*Pa
 	}
 	h := schemaPendingHeader()
 	h.Location.DocumentID = "target"
-	if err = child.Open(context.Background(), h); err != nil {
+	if err = child.OpenNode(context.Background(), h); err != nil {
 		t.Fatal(err)
 	}
-	if err = child.Close(context.Background(), schemaLexemeEnd("1")); err != nil {
+	if err = child.CloseNode(context.Background(), schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
 	_, targetSnapshot, err := child.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})

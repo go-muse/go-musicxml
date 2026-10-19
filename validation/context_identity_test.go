@@ -337,7 +337,7 @@ func ciRuntime(t *testing.T, specs []struct {
 func ciStreamNode(t *testing.T, s *Session, id, parent NodeID, occurrence, key string) {
 	t.Helper()
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(id, parent, occurrence, "slot")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(id, parent, occurrence, "slot")); err != nil {
 		t.Fatal(err)
 	}
 	if key != "" {
@@ -346,7 +346,7 @@ func ciStreamNode(t *testing.T, s *Session, id, parent NodeID, occurrence, key s
 			t.Fatal(err)
 		}
 	}
-	if err := s.Close(ctx, factEnd(id)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(id)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -361,7 +361,7 @@ func TestIdentityPublicForwardReferenceAndDuplicateCausality(t *testing.T) {
 				role           RuleRole
 			}{{"a-reference", "test.ref", reference, RolePredicate}, {"z-declaration", "test.decl", declaration, RolePredicate}}, Budgets{})
 			ctx := context.Background()
-			if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+			if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 				t.Fatal(err)
 			}
 			ciStreamNode(t, s, 2, 1, "test.ref", "K")
@@ -369,7 +369,7 @@ func TestIdentityPublicForwardReferenceAndDuplicateCausality(t *testing.T) {
 			if duplicate {
 				ciStreamNode(t, s, 4, 1, "test.decl", "K")
 			}
-			if err := s.Close(ctx, factEnd(1)); err != nil {
+			if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 				t.Fatal(err)
 			}
 			report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -409,11 +409,11 @@ func TestIdentityPublicEmptyCompleteIndexStillHasProvider(t *testing.T) {
 		role           RuleRole
 	}{{"a-reference", "test.ref", reference, RolePredicate}, {"z-declaration", "test.decl", declaration, RolePredicate}}, Budgets{})
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 	ciStreamNode(t, s, 2, 1, "test.ref", "missing")
-	if err := s.Close(ctx, factEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -433,19 +433,19 @@ func TestContextPublicProviderUnavailabilityCannotBeHidden(t *testing.T) {
 		role           RuleRole
 	}{{"a-consumer", "test.root", consumer, RolePredicate}, {"z-provider", "test.provider", provider, RoleContextProvider}}, Budgets{})
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 	ciStreamNode(t, s, 2, 1, "test.provider", "")
 	h := factHeader(3, 1, "test.provider", "slot")
 	h.Declaration = Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "binding-missing"}
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, factEnd(3)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(3)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, factEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -553,12 +553,12 @@ func TestIdentityPublicDeferredProviderPrecedesReferenceResolution(t *testing.T)
 		role           RuleRole
 	}{{"a-reference", "test.ref", reference, RolePredicate}, {"z-declaration", "test.decl", declaration, RolePredicate}, {"zz-ready", "test.root", ready, RolePredicate}}, Budgets{}, map[string][]Dependency{"z-declaration": {{Kind: DependencyRule, Rule: ciRule("zz-ready").Key, Relation: RelationDocument}}})
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 	ciStreamNode(t, s, 2, 1, "test.ref", "forward")
 	ciStreamNode(t, s, 3, 1, "test.decl", "forward")
-	if err := s.Close(ctx, factEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -674,11 +674,11 @@ func TestIdentityPublicMissingReferenceHasOneCauseForDependent(t *testing.T) {
 		role           RuleRole
 	}{{"reference", "test.ref", reference, RolePredicate}, {"declaration", "test.decl", declaration, RolePredicate}, {"dependent", "test.ref", dependent, RolePredicate}}, Budgets{}, map[string][]Dependency{"dependent": {{Kind: DependencyRule, Rule: ciRule("reference").Key, Relation: RelationSameNode}}})
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 	ciStreamNode(t, s, 2, 1, "test.ref", "missing")
-	if err := s.Close(ctx, factEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -707,7 +707,7 @@ func TestIdentityPublicEarlyDuplicateSurvivesCancellation(t *testing.T) {
 		role           RuleRole
 	}{{"declaration", "test.decl", declaration, RolePredicate}}, Budgets{})
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 	ciStreamNode(t, s, 2, 1, "test.decl", "duplicate")
@@ -734,11 +734,11 @@ func TestContextPublicExplicitProviderDependency(t *testing.T) {
 		role           RuleRole
 	}{{"consumer", "test.child", consumer, RolePredicate}, {"provider", "test.root", provider, RoleContextProvider}}, Budgets{}, map[string][]Dependency{"consumer": {{Kind: DependencyRule, Rule: ciRule("provider").Key, Relation: RelationDocument}}})
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 	ciStreamNode(t, s, 2, 1, "test.child", "")
-	if err := s.Close(ctx, factEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})

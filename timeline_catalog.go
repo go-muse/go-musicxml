@@ -94,12 +94,12 @@ func buildTimelineAssessmentDefinitions() (*assessmentDefinitions, error) {
 	for _, spec := range []struct {
 		id, subject, title, explanation string
 		line                            int
-		plan                            func(validation.TimelineConsumerSpec) (validation.Plan, error)
+		plan                            func(validation.ConsumerSpec) (validation.Plan, error)
 	}{
 		{"chord-duration-bound", "note", "Principal-note chord duration bound", "Each duration-bearing chord tone must be no longer than its established principal non-chord note in exact common units. This does not impose pairwise decreasing chord-tone durations.", 6497, validation.NewChordDurationPlan},
 		{"numeral-requires-key", "numeral", "Explicit key for a numeral", "A numeral requires a valid local numeral-key or an applicable explicitly encoded key at its enclosing harmony's unshifted score origin and staff. No initial C-major key is invented.", 3889, validation.NewNumeralKeyPlan},
 	} {
-		plan, err := spec.plan(validation.TimelineConsumerSpec{Schema: schema, Provider: provider})
+		plan, err := spec.plan(validation.ConsumerSpec{Schema: schema, Provider: provider})
 		if err != nil {
 			return nil, err
 		}

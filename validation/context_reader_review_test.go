@@ -163,7 +163,7 @@ func contextReviewSameTypeFixture(t *testing.T, limits ...Budgets) (*Session, *c
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Open(context.Background(), schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	for i := 0; i < 4; i++ {
@@ -171,7 +171,7 @@ func contextReviewSameTypeFixture(t *testing.T, limits ...Budgets) (*Session, *c
 		h.ID = NodeID(i + 2)
 		h.Parent = 1
 		h.Name.Local = "a"
-		if err = s.Open(context.Background(), h); err != nil {
+		if err = s.OpenNode(context.Background(), h); err != nil {
 			t.Fatal(err)
 		}
 		if i == 0 || i == 3 {
@@ -183,11 +183,11 @@ func contextReviewSameTypeFixture(t *testing.T, limits ...Budgets) (*Session, *c
 		end := schemaLexemeEnd("")
 		end.ID = h.ID
 		end.AttributesComplete.Value = i != 2
-		if err = s.Close(context.Background(), end); err != nil {
+		if err = s.CloseNode(context.Background(), end); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
+	if err = s.CloseNode(context.Background(), schemaLexemeEnd("")); err != nil {
 		t.Fatal(err)
 	}
 	return s, b

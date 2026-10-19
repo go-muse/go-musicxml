@@ -1,0 +1,198 @@
+func MusicXML40() Snapshot
+type AdvisoryReview struct, field Decision string `json:"decision"`
+type AdvisoryReview struct, field NormativeProvenance []string `json:"normative_provenance"`
+type AdvisoryReview struct, field PrimaryCheckIDs []string `json:"primary_check_ids"`
+type AdvisoryReview struct, field Rationale string `json:"rationale"`
+type AdvisoryReview struct, field RelatedResearchIDs []string `json:"related_research_ids"`
+type AdvisoryReview struct, field RelatedXSDResearchIDs []string `json:"related_xsd_research_ids"`
+type AdvisoryReview struct, field ResearchID string `json:"research_id"`
+type AdvisoryReview struct, field ReuseCheckIDs []string `json:"reuse_check_ids"`
+type AdvisoryReview struct, field ReuseScope string `json:"reuse_scope"`
+type AdvisoryReview struct, field order ResearchID Decision RelatedResearchIDs RelatedXSDResearchIDs Rationale NormativeProvenance ReuseCheckIDs PrimaryCheckIDs ReuseScope
+type AdvisoryReview struct, not comparable
+type Capability struct, field CheckIDs []string `json:"check_ids"`
+type Capability struct, field Closure string `json:"closure"`
+type Capability struct, field ID string `json:"id"`
+type Capability struct, field Kind string `json:"kind"`
+type Capability struct, field Label string `json:"label"`
+type Capability struct, field MissingOutcome string `json:"missing_outcome"`
+type Capability struct, field ProviderRequirementIDs []string `json:"provider_requirement_ids"`
+type Capability struct, field ProviderStatus string `json:"provider_status"`
+type Capability struct, field Targets []string `json:"targets"`
+type Capability struct, field order ID Label Kind ProviderStatus ProviderRequirementIDs CheckIDs Targets Closure MissingOutcome
+type Capability struct, not comparable
+type Check struct, field Capabilities []string `json:"capabilities"`
+type Check struct, field CapabilityIDs []string `json:"capability_ids"`
+type Check struct, field Closure string `json:"closure,omitempty"`
+type Check struct, field Dependencies []string `json:"dependencies"`
+type Check struct, field DependencyModes map[string]DependencyMode `json:"dependency_modes,omitempty"`
+type Check struct, field ExpectedOutcomes *ExpectedOutcomes `json:"expected_outcomes,omitempty"`
+type Check struct, field ID string `json:"id"`
+type Check struct, field ImplementationBinding string `json:"implementation_binding"`
+type Check struct, field Inputs []string `json:"inputs"`
+type Check struct, field ModelEvidence *ModelEvidence `json:"model_evidence,omitempty"`
+type Check struct, field ModelLimit string `json:"model_limit,omitempty"`
+type Check struct, field NormativeProvenance []string `json:"normative_provenance"`
+type Check struct, field ReadinessGate string `json:"readiness_gate,omitempty"`
+type Check struct, field ResearchClauses map[string]string `json:"research_clauses,omitempty"`
+type Check struct, field ResearchIDs []string `json:"research_ids,omitempty"`
+type Check struct, field Revision int `json:"revision"`
+type Check struct, field Role string `json:"role"`
+type Check struct, field RuntimeSupport string `json:"runtime_support"`
+type Check struct, field Selector string `json:"selector"`
+type Check struct, field SemanticStatus string `json:"semantic_status"`
+type Check struct, field Stage string `json:"stage"`
+type Check struct, field Status string `json:"status"`
+type Check struct, field Targets []string `json:"targets"`
+type Check struct, field TestContracts []string `json:"test_contracts"`
+type Check struct, field order ExpectedOutcomes ResearchClauses ID ResearchIDs Revision Role Inputs Selector Targets Capabilities Dependencies DependencyModes NormativeProvenance TestContracts Stage Status Closure ReadinessGate CapabilityIDs SemanticStatus ImplementationBinding ModelLimit ModelEvidence RuntimeSupport
+type Check struct, not comparable
+type ContextDisposition struct, field Closure string `json:"closure"`
+type ContextDisposition struct, field Dependencies []string `json:"dependencies"`
+type ContextDisposition struct, field Disposition string `json:"disposition"`
+type ContextDisposition struct, field Produces *string `json:"produces"`
+type ContextDisposition struct, field Rationale string `json:"rationale"`
+type ContextDisposition struct, field ResearchID string `json:"research_id"`
+type ContextDisposition struct, field Role string `json:"role"`
+type ContextDisposition struct, field Translation string `json:"translation"`
+type ContextDisposition struct, field order ResearchID Role Disposition Rationale Produces Dependencies Closure Translation
+type ContextDisposition struct, not comparable
+type DependencyMode struct, comparable
+type DependencyMode struct, field Model string `json:"model"`
+type DependencyMode struct, field NotAGlobalGate string `json:"not_a_global_gate"`
+type DependencyMode struct, field Source string `json:"source"`
+type DependencyMode struct, field order Source Model NotAGlobalGate
+type ExpectedOutcomes struct, field Description string
+type ExpectedOutcomes struct, field Outcomes map[string]string
+type ExpectedOutcomes struct, field order Description Outcomes
+type ExpectedOutcomes struct, not comparable
+type ExpectedOutcomes, method (*ExpectedOutcomes) UnmarshalJSON(data []byte) error
+type ExpectedOutcomes, method (ExpectedOutcomes) MarshalJSON() ([]byte, error)
+type File struct, comparable
+type File struct, field Bytes int64 `json:"bytes"`
+type File struct, field GitBlobSHA1 string `json:"git_blob_sha1,omitempty"`
+type File struct, field Path string `json:"path"`
+type File struct, field SHA256 string `json:"sha256"`
+type File struct, field order Path Bytes SHA256 GitBlobSHA1
+type Instance struct, field Composition string `json:"composition"`
+type Instance struct, field DiagnosticPolicy string `json:"diagnostic_policy"`
+type Instance struct, field ID string `json:"id"`
+type Instance struct, field PlanDependencies PlanDependencies `json:"plan_dependencies"`
+type Instance struct, field RegistryPointer string `json:"registry_pointer"`
+type Instance struct, field RegistryURL string `json:"registry_url"`
+type Instance struct, field ResearchID string `json:"research_id"`
+type Instance struct, field ReuseInstances []string `json:"reuse_instances"`
+type Instance struct, field Revision int `json:"revision"`
+type Instance struct, field Role string `json:"role"`
+type Instance struct, field RuntimeSupport string `json:"runtime_support"`
+type Instance struct, field Stage string `json:"stage"`
+type Instance struct, field Status string `json:"status"`
+type Instance struct, field TargetPolicy string `json:"target_policy"`
+type Instance struct, field TemplateID string `json:"template_id"`
+type Instance struct, field order ID Revision ResearchID TemplateID Role RegistryPointer RegistryURL Composition Status Stage ReuseInstances DiagnosticPolicy PlanDependencies TargetPolicy RuntimeSupport
+type Instance struct, not comparable
+type ModelEvidence struct, comparable
+type ModelEvidence struct, field NamespaceClauses string `json:"namespace_clauses"`
+type ModelEvidence struct, field ReadinessGate string `json:"readiness_gate"`
+type ModelEvidence struct, field SourceLexicalClauses string `json:"source_lexical_clauses"`
+type ModelEvidence struct, field StructureClauses string `json:"structure_clauses"`
+type ModelEvidence struct, field ValueSpaceClauses string `json:"value_space_clauses"`
+type ModelEvidence struct, field order SourceLexicalClauses ValueSpaceClauses StructureClauses NamespaceClauses ReadinessGate
+type Overlap struct, field AdditionalCondition string `json:"additional_condition"`
+type Overlap struct, field AdditionalConditionCheckIDs []string `json:"additional_condition_check_ids"`
+type Overlap struct, field AdditionalConditionSource string `json:"additional_condition_source"`
+type Overlap struct, field Disposition string `json:"disposition"`
+type Overlap struct, field ID string `json:"id"`
+type Overlap struct, field Justification string `json:"justification"`
+type Overlap struct, field Kind string `json:"kind"`
+type Overlap struct, field ResearchID string `json:"research_id"`
+type Overlap struct, field SharedCondition string `json:"shared_condition"`
+type Overlap struct, field XSDResearchIDs []string `json:"xsd_research_ids"`
+type Overlap struct, field order ID ResearchID Kind SharedCondition AdditionalCondition XSDResearchIDs Disposition Justification AdditionalConditionCheckIDs AdditionalConditionSource
+type Overlap struct, not comparable
+type PlanDependencies struct, field LanguageSemantics []string `json:"language_semantics"`
+type PlanDependencies struct, field SchemaComponent []string `json:"schema_component"`
+type PlanDependencies struct, field order SchemaComponent LanguageSemantics
+type PlanDependencies struct, not comparable
+type Question struct, field Closure string `json:"closure"`
+type Question struct, field ContextualResearchIDs []string `json:"contextual_research_ids"`
+type Question struct, field Description string `json:"description"`
+type Question struct, field Disposition string `json:"disposition"`
+type Question struct, field HardErrorBasis bool `json:"hard_error_basis"`
+type Question struct, field ID string `json:"id"`
+type Question struct, field ProposedInterpretation string `json:"proposed_interpretation"`
+type Question struct, field RegistryPointer string `json:"registry_pointer"`
+type Question struct, field RegistryURL string `json:"registry_url"`
+type Question struct, field Requirements []string `json:"requirements"`
+type Question struct, field order ID RegistryPointer RegistryURL Description Disposition ProposedInterpretation HardErrorBasis Requirements ContextualResearchIDs Closure
+type Question struct, not comparable
+type Record struct, field CheckIDs []string `json:"check_ids"`
+type Record struct, field Disposition string `json:"disposition"`
+type Record struct, field Origin string `json:"origin"`
+type Record struct, field RegistryPointer string `json:"registry_pointer"`
+type Record struct, field RegistryURL string `json:"registry_url"`
+type Record struct, field ResearchID string `json:"research_id"`
+type Record struct, field Role string `json:"role"`
+type Record struct, field order ResearchID Origin Role Disposition CheckIDs RegistryPointer RegistryURL
+type Record struct, not comparable
+type Requirement struct, field Acceptance []string `json:"acceptance"`
+type Requirement struct, field Applicability string `json:"applicability"`
+type Requirement struct, field Dependencies []string `json:"dependencies"`
+type Requirement struct, field ID string `json:"id"`
+type Requirement struct, field Inputs []string `json:"inputs"`
+type Requirement struct, field NormativeProvenance []string `json:"normative_provenance"`
+type Requirement struct, field ResearchIDs []string `json:"research_ids,omitempty"`
+type Requirement struct, field Role string `json:"role"`
+type Requirement struct, field SourceBullets []string `json:"source_bullets"`
+type Requirement struct, field SourceInventory string `json:"source_inventory"`
+type Requirement struct, field Stage string `json:"stage"`
+type Requirement struct, field Status string `json:"status"`
+type Requirement struct, field Targets []string `json:"targets"`
+type Requirement struct, field TestContracts []string `json:"test_contracts"`
+type Requirement struct, field Title string `json:"title"`
+type Requirement struct, field order ID Title Role Inputs Applicability Targets Dependencies NormativeProvenance TestContracts Stage Status Acceptance SourceBullets SourceInventory ResearchIDs
+type Requirement struct, not comparable
+type Snapshot struct, field AdvisoryReviews []AdvisoryReview `json:"advisory_reviews"`
+type Snapshot struct, field Capabilities []Capability `json:"capabilities"`
+type Snapshot struct, field Checks []Check `json:"checks"`
+type Snapshot struct, field Contexts []ContextDisposition `json:"contexts"`
+type Snapshot struct, field DependencySemantics map[string]string `json:"dependency_semantics"`
+type Snapshot struct, field ExternalFiles []File `json:"external_files"`
+type Snapshot struct, field Instances []Instance `json:"instances"`
+type Snapshot struct, field Overlaps []Overlap `json:"overlaps"`
+type Snapshot struct, field Questions []Question `json:"questions"`
+type Snapshot struct, field Records []Record `json:"records"`
+type Snapshot struct, field RegistryCommit string `json:"registry_commit"`
+type Snapshot struct, field RegistryRepository string `json:"registry_repository"`
+type Snapshot struct, field Requirements []Requirement `json:"requirements"`
+type Snapshot struct, field SHA256 string `json:"sha256,omitempty"`
+type Snapshot struct, field SourceFiles []File `json:"source_files"`
+type Snapshot struct, field SourceSHA256 string `json:"source_sha256"`
+type Snapshot struct, field Stages []Stage `json:"stages"`
+type Snapshot struct, field TargetPolicies map[string]TargetPolicy `json:"target_policies"`
+type Snapshot struct, field Tests []TestContract `json:"tests"`
+type Snapshot struct, field UpstreamMusicXMLCommit string `json:"upstream_musicxml_commit"`
+type Snapshot struct, field Version string `json:"version"`
+type Snapshot struct, field order Overlaps AdvisoryReviews Stages Questions Version SHA256 SourceSHA256 RegistryRepository RegistryCommit UpstreamMusicXMLCommit ExternalFiles SourceFiles Records Instances Checks Capabilities Requirements Tests Contexts TargetPolicies DependencySemantics
+type Snapshot struct, not comparable
+type Stage struct, field Acceptance []string `json:"acceptance"`
+type Stage struct, field DependencyInterpretation string `json:"dependency_interpretation,omitempty"`
+type Stage struct, field DependsOn []string `json:"depends_on"`
+type Stage struct, field ID string `json:"id"`
+type Stage struct, field ScopeNote string `json:"scope_note,omitempty"`
+type Stage struct, field Title string `json:"title"`
+type Stage struct, field order ID Title DependsOn Acceptance DependencyInterpretation ScopeNote
+type Stage struct, not comparable
+type TargetPolicy struct, comparable
+type TargetPolicy struct, field Model string `json:"model"`
+type TargetPolicy struct, field Source string `json:"source"`
+type TargetPolicy struct, field order Source Model
+type TestContract struct, field AxisStatus map[string]string `json:"axis_status"`
+type TestContract struct, field CaseInstantiationGate string `json:"case_instantiation_gate,omitempty"`
+type TestContract struct, field CheckIDs []string `json:"check_ids,omitempty"`
+type TestContract struct, field ID string `json:"id"`
+type TestContract struct, field RequirementIDs []string `json:"requirement_ids,omitempty"`
+type TestContract struct, field Status string `json:"status"`
+type TestContract struct, field Targets []string `json:"targets"`
+type TestContract struct, field order ID CheckIDs RequirementIDs Targets Status AxisStatus CaseInstantiationGate
+type TestContract struct, not comparable

@@ -109,7 +109,7 @@ func timelineContractPlans(t *testing.T, s *validation.CompiledSchema, numeral b
 	if err != nil {
 		t.Fatal(err)
 	}
-	spec := validation.TimelineConsumerSpec{Schema: s, Provider: validation.RuleKey{ID: "z-timeline", Revision: 1}}
+	spec := validation.ConsumerSpec{Schema: s, Provider: validation.RuleKey{ID: "z-timeline", Revision: 1}}
 	var c validation.Plan
 	if numeral {
 		c, err = validation.NewNumeralKeyPlan(spec)
@@ -148,8 +148,8 @@ func TestTimelinePlanSealedConfiguration(t *testing.T) {
 			}
 		})
 	}
-	for _, makePlan := range []func(validation.TimelineConsumerSpec) (validation.Plan, error){validation.NewChordDurationPlan, validation.NewNumeralKeyPlan} {
-		for _, spec := range []validation.TimelineConsumerSpec{{}, {Schema: s}, {Schema: s, Provider: validation.RuleKey{ID: "z-timeline"}}, {Provider: validation.RuleKey{ID: "z-timeline", Revision: 1}}} {
+	for _, makePlan := range []func(validation.ConsumerSpec) (validation.Plan, error){validation.NewChordDurationPlan, validation.NewNumeralKeyPlan} {
+		for _, spec := range []validation.ConsumerSpec{{}, {Schema: s}, {Schema: s, Provider: validation.RuleKey{ID: "z-timeline"}}, {Provider: validation.RuleKey{ID: "z-timeline", Revision: 1}}} {
 			if _, err := makePlan(spec); !errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("accepted consumer %+v: %v", spec, err)
 			}
@@ -374,7 +374,7 @@ func TestTimelineCatalogSelectionSchemaAndImplicitCycles(t *testing.T) {
 			return r, p, b
 		}},
 		{"consumer schema mismatch", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
-			b[0].Plan, _ = validation.NewChordDurationPlan(validation.TimelineConsumerSpec{Schema: other, Provider: r[1].Key})
+			b[0].Plan, _ = validation.NewChordDurationPlan(validation.ConsumerSpec{Schema: other, Provider: r[1].Key})
 			return r, p, b
 		}},
 		{"selected XSD schema mismatch", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
@@ -415,7 +415,7 @@ func TestTimelinePlansSnapshotSchemaHandlesAndProviderRevision(t *testing.T) {
 	}
 	replacement := r[1].Key
 	replacement.Revision++
-	b[0].Plan, err = validation.NewChordDurationPlan(validation.TimelineConsumerSpec{Schema: s, Provider: replacement})
+	b[0].Plan, err = validation.NewChordDurationPlan(validation.ConsumerSpec{Schema: s, Provider: replacement})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -111,7 +111,7 @@ func sourceResourceAdmit(t *testing.T, s *Session, key RuleKey, kind SourceOrigi
 	if s.root == nil {
 		h := schemaPendingHeader()
 		h.Location = sourceOriginPhysical().Physical.Value
-		if err := s.Open(ctx, h); err != nil {
+		if err := s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
 		if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
@@ -157,7 +157,7 @@ func TestSourceResourceHintEffectivePairsDespiteAbsentPhysicalRaw(t *testing.T) 
 			if err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, raw); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.Close(context.Background(), schemaLexemeEnd("1")); err != nil {
+			if err := s.CloseNode(context.Background(), schemaLexemeEnd("1")); err != nil {
 				t.Fatal(err)
 			}
 			r := &contextReader{ctx: context.Background(), s: s, sourceInfoset: true}
@@ -226,7 +226,7 @@ func TestSourceAttributeLexicalGatesAndBudgets(t *testing.T) {
 			case "physical-absent":
 				raw = stateAbsent[string]()
 			case "closed":
-				if err := s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+				if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 					t.Fatal(err)
 				}
 			case "canceled":
@@ -512,7 +512,7 @@ func TestSourceHintNoNamespaceValueSurvivesPhysicalAbsence(t *testing.T) {
 	if err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, stateAbsent[string]()); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(context.Background(), schemaLexemeEnd("1")); err != nil {
+	if err := s.CloseNode(context.Background(), schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
 	r := &contextReader{ctx: context.Background(), s: s, sourceInfoset: true}

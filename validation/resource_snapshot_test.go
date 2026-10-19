@@ -16,10 +16,10 @@ func snapshotTestSession(t *testing.T, text string, budgets ...Budgets) *Session
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Open(context.Background(), schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Close(context.Background(), schemaLexemeEnd(text)); err != nil {
+	if err = s.CloseNode(context.Background(), schemaLexemeEnd(text)); err != nil {
 		t.Fatal(err)
 	}
 	return s
@@ -141,7 +141,7 @@ func TestResourceSnapshotRetainsActualTypeElementIDs(t *testing.T) {
 	}
 	h := schemaPendingHeader()
 	h.Bindings = []Binding{{Prefix: "xs", URI: "http://www.w3.org/2001/XMLSchema"}}
-	if err = s.Open(context.Background(), h); err != nil {
+	if err = s.OpenNode(context.Background(), h); err != nil {
 		t.Fatal(err)
 	}
 	child := h
@@ -149,7 +149,7 @@ func TestResourceSnapshotRetainsActualTypeElementIDs(t *testing.T) {
 	child.Parent = 1
 	child.Name = QName{Local: "value"}
 	child.Location.Path = "/root/value"
-	if err = s.Open(context.Background(), child); err != nil {
+	if err = s.OpenNode(context.Background(), child); err != nil {
 		t.Fatal(err)
 	}
 	a := AttributeFact{Owner: 2, Name: QName{Space: "http://www.w3.org/2001/XMLSchema-instance", Local: "type"}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Declaration: Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "unbound"}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceKnown, Value: "xs:ID"}, Value: Evidence[Atomic]{State: EvidenceUnknown, Reason: "unbound"}}, Location: child.Location}
@@ -158,10 +158,10 @@ func TestResourceSnapshotRetainsActualTypeElementIDs(t *testing.T) {
 	}
 	end := schemaLexemeEnd("element-id")
 	end.ID = 2
-	if err = s.Close(context.Background(), end); err != nil {
+	if err = s.CloseNode(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
+	if err = s.CloseNode(context.Background(), schemaLexemeEnd("")); err != nil {
 		t.Fatal(err)
 	}
 	report, snapshot, err := s.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -193,7 +193,7 @@ func snapshotElementIDs(t *testing.T, values []string, complete bool) (*Session,
 		t.Fatal(err)
 	}
 	h := schemaPendingHeader()
-	if err = s.Open(context.Background(), h); err != nil {
+	if err = s.OpenNode(context.Background(), h); err != nil {
 		t.Fatal(err)
 	}
 	for i, value := range values {
@@ -202,7 +202,7 @@ func snapshotElementIDs(t *testing.T, values []string, complete bool) (*Session,
 		itemh.Parent = 1
 		itemh.Name = QName{Local: "item"}
 		itemh.Location.Path = "/root/item"
-		if err = s.Open(context.Background(), itemh); err != nil {
+		if err = s.OpenNode(context.Background(), itemh); err != nil {
 			t.Fatal(err)
 		}
 		vh := h
@@ -210,21 +210,21 @@ func snapshotElementIDs(t *testing.T, values []string, complete bool) (*Session,
 		vh.Parent = itemh.ID
 		vh.Name = QName{Local: "value"}
 		vh.Location.Path = "/root/item/value"
-		if err = s.Open(context.Background(), vh); err != nil {
+		if err = s.OpenNode(context.Background(), vh); err != nil {
 			t.Fatal(err)
 		}
 		end := schemaLexemeEnd(value)
 		end.ID = vh.ID
-		if err = s.Close(context.Background(), end); err != nil {
+		if err = s.CloseNode(context.Background(), end); err != nil {
 			t.Fatal(err)
 		}
 		end = schemaLexemeEnd("")
 		end.ID = itemh.ID
-		if err = s.Close(context.Background(), end); err != nil {
+		if err = s.CloseNode(context.Background(), end); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
+	if err = s.CloseNode(context.Background(), schemaLexemeEnd("")); err != nil {
 		t.Fatal(err)
 	}
 	r, snap, err := s.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: complete, Syntax: SyntaxWellFormed})
@@ -301,8 +301,8 @@ func TestResourceSnapshotRetainsRejectedRootNameWithoutSchemaIdentity(t *testing
 	}
 	h := schemaPendingHeader()
 	h.Name = QName{Local: "sounds"}
-	err = s.Open(context.Background(), h)
-	var unsupported *UnsupportedRootError
+	err = s.OpenNode(context.Background(), h)
+	var unsupported *ExcludedRootError
 	if !errors.As(err, &unsupported) {
 		t.Fatalf("Open error=%v", err)
 	}

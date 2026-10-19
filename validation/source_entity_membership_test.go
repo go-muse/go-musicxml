@@ -146,7 +146,7 @@ func TestSourceEntityDeclarationsAdmissionAndOwnership(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := entityDeclarationSession(t, e)
-			if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+			if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
 			f := entitySnapshot(true, entityRow("asset", true, 1))
@@ -162,7 +162,7 @@ func TestSourceEntityDeclarationsAdmissionAndOwnership(t *testing.T) {
 		})
 	}
 	s := entityDeclarationSession(t, e)
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	f := entitySnapshot(true, entityRow("asset", false, 1))
@@ -173,7 +173,7 @@ func TestSourceEntityDeclarationsAdmissionAndOwnership(t *testing.T) {
 	f.Declarations[0].Unparsed = true
 	f.Declarations[0].Origin.Value.Position.ByteOffset = 999
 	f.Declarations[0].Origin.Value.Path = "mutated"
-	if err := s.Close(ctx, schemaLexemeEnd("asset")); err != nil {
+	if err := s.CloseNode(ctx, schemaLexemeEnd("asset")); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -190,13 +190,13 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	schema := entityDeclarationSchema(t, entityBuiltin("ENTITY"))
 	e := entityDeclarationEngine(t, schema, XSDCheckScalar)
 	s := entityDeclarationSession(t, e)
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, schemaLexemeEnd("missing")); err != nil {
+	if err := s.CloseNode(ctx, schemaLexemeEnd("missing")); err != nil {
 		t.Fatal(err)
 	}
 	cause := errors.New("malformed trailing bytes")
@@ -208,7 +208,7 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	ref := SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: child}}}
 	e = entityDeclarationEngine(t, entityDeclarationSchema(t, ref), XSDCheckScalar)
 	s = entityDeclarationSession(t, e)
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
@@ -222,12 +222,12 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	h.Parent = 1
 	h.Name = QName{Local: "child"}
 	h.Location.Path = "/root/child"
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	end := schemaLexemeEnd("missing")
 	end.ID = 2
-	if err := s.Close(ctx, end); err != nil {
+	if err := s.CloseNode(ctx, end); err != nil {
 		t.Fatal(err)
 	}
 	report, err = s.Finish(ctx, Completion{Syntax: SyntaxMalformed, Cause: cause})
@@ -306,13 +306,13 @@ func TestSourceEntityDeclarationsDiagnosticCapKeepsFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	if err = s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Close(ctx, schemaLexemeEnd("missing")); err != nil {
+	if err = s.CloseNode(ctx, schemaLexemeEnd("missing")); err != nil {
 		t.Fatal(err)
 	}
 	r, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})

@@ -58,7 +58,7 @@ func TestSourceOriginOwnedIngressAndReport(t *testing.T) {
 	}
 	h := schemaPendingHeader()
 	h.Location = sourceOriginPhysical().Physical.Value
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	in := sourceOriginPhysical()
@@ -66,7 +66,7 @@ func TestSourceOriginOwnedIngressAndReport(t *testing.T) {
 		t.Fatal(err)
 	}
 	in.Physical.Value.Position.ByteOffset = 999
-	if err := s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+	if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
@@ -94,10 +94,10 @@ func TestSourceOriginOwnedIngressAndReport(t *testing.T) {
 func TestSourceOriginMissingSealCannotPass(t *testing.T) {
 	_, s, _ := sourceOriginFixture(t, Budgets{})
 	ctx := context.Background()
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+	if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
 	r, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -123,13 +123,13 @@ func TestSourceOriginSnapshotExplicitlyExportsOwnedOrigins(t *testing.T) {
 	ctx := context.Background()
 	h := schemaPendingHeader()
 	h.Location = sourceOriginPhysical().Physical.Value
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+	if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
@@ -155,7 +155,7 @@ func TestSourceOriginDefaultAndEntityAttributeOwnership(t *testing.T) {
 			_, s, key := sourceOriginFixture(t, Budgets{})
 			defer s.cleanup()
 			ctx := context.Background()
-			if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+			if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
 			name := QName{Space: "urn:attribute", Local: "value"}
@@ -216,7 +216,7 @@ func TestSourceOriginRejectsUnownedAndContradictoryIngress(t *testing.T) {
 			ctx := context.Background()
 			h := schemaPendingHeader()
 			h.Location = sourceOriginPhysical().Physical.Value
-			if err := s.Open(ctx, h); err != nil {
+			if err := s.OpenNode(ctx, h); err != nil {
 				t.Fatal(err)
 			}
 			in := sourceOriginPhysical()
@@ -239,7 +239,7 @@ func TestSourceOriginProviderAndPhaseGates(t *testing.T) {
 			ctx := context.Background()
 			h := schemaPendingHeader()
 			h.Location = sourceOriginPhysical().Physical.Value
-			if err := s.Open(ctx, h); err != nil {
+			if err := s.OpenNode(ctx, h); err != nil {
 				t.Fatal(err)
 			}
 			in := sourceOriginPhysical()
@@ -247,7 +247,7 @@ func TestSourceOriginProviderAndPhaseGates(t *testing.T) {
 			case "wrong-provider":
 				key.Revision++
 			case "closed":
-				if err := s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+				if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 					t.Fatal(err)
 				}
 			case "duplicate":
@@ -279,7 +279,7 @@ func TestSourceOriginSealCoverageAndAvailability(t *testing.T) {
 			ctx := context.Background()
 			h := schemaPendingHeader()
 			h.Location = sourceOriginPhysical().Physical.Value
-			if err := s.Open(ctx, h); err != nil {
+			if err := s.OpenNode(ctx, h); err != nil {
 				t.Fatal(err)
 			}
 			if mode != "missing-origin" {
@@ -301,7 +301,7 @@ func TestSourceOriginSealCoverageAndAvailability(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if err := s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+			if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 				t.Fatal(err)
 			}
 			complete := stateKnown(true)
@@ -487,7 +487,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 	_, probe, key := sourceOriginFixture(t, Budgets{})
 	h := schemaPendingHeader()
 	h.Location = sourceOriginPhysical().Physical.Value
-	if err := probe.Open(context.Background(), h); err != nil {
+	if err := probe.OpenNode(context.Background(), h); err != nil {
 		t.Fatal(err)
 	}
 	counter := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
@@ -498,7 +498,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 	probe.cleanup()
 	for at := 1; at <= calls; at++ {
 		_, s, key := sourceOriginFixture(t, Budgets{})
-		if err := s.Open(context.Background(), h); err != nil {
+		if err := s.OpenNode(context.Background(), h); err != nil {
 			t.Fatal(err)
 		}
 		before := s.retained
@@ -511,7 +511,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 	_, s, key := sourceOriginFixture(t, Budgets{MaxContextFacts: 1})
 	defer s.cleanup()
 	ctx := context.Background()
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
@@ -561,7 +561,7 @@ func TestSourceOriginUnavailableComponentsRemainIncomplete(t *testing.T) {
 			if mode == "ancestry" {
 				h.Location.Position = nil
 			}
-			if err := s.Open(ctx, h); err != nil {
+			if err := s.OpenNode(ctx, h); err != nil {
 				t.Fatal(err)
 			}
 			in := sourceOriginPhysical()
@@ -584,7 +584,7 @@ func TestSourceOriginUnavailableComponentsRemainIncomplete(t *testing.T) {
 			if err := s.SourceOrigin(ctx, key, in); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+			if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 				t.Fatal(err)
 			}
 			if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
@@ -606,7 +606,7 @@ func TestSourceOriginPhysicalDeclaredAttributeAndEntityValue(t *testing.T) {
 		ctx := context.Background()
 		h := schemaPendingHeader()
 		h.Location = sourceOriginPhysical().Physical.Value
-		if err := s.Open(ctx, h); err != nil {
+		if err := s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
 		name := QName{Local: "x"}
@@ -685,7 +685,7 @@ func TestSourceOriginEventAndScalarBoundaries(t *testing.T) {
 		ctx := context.Background()
 		h := schemaPendingHeader()
 		h.Location = sourceOriginPhysical().Physical.Value
-		if err := s.Open(ctx, h); err != nil {
+		if err := s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
 		before := s.retained
@@ -728,7 +728,7 @@ func TestSourceOriginSyntheticPositionAndClosedOwnerAreRejected(t *testing.T) {
 			ctx := context.Background()
 			h := schemaPendingHeader()
 			h.Location = sourceOriginPhysical().Physical.Value
-			if err := s.Open(ctx, h); err != nil {
+			if err := s.OpenNode(ctx, h); err != nil {
 				t.Fatal(err)
 			}
 			in := sourceOriginPhysical()
@@ -743,12 +743,12 @@ func TestSourceOriginSyntheticPositionAndClosedOwnerAreRejected(t *testing.T) {
 				child := h
 				child.ID = 2
 				child.Parent = 1
-				if err := s.Open(ctx, child); err != nil {
+				if err := s.OpenNode(ctx, child); err != nil {
 					t.Fatal(err)
 				}
 				end := schemaLexemeEnd("1")
 				end.ID = 2
-				if err := s.Close(ctx, end); err != nil {
+				if err := s.CloseNode(ctx, end); err != nil {
 					t.Fatal(err)
 				}
 				in.Subject.Node = 2
@@ -765,7 +765,7 @@ func TestSourceOriginTerminalPrefixSurvivesFinish(t *testing.T) {
 	ctx := context.Background()
 	h := schemaPendingHeader()
 	h.Location = sourceOriginPhysical().Physical.Value
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	in := sourceOriginPhysical()

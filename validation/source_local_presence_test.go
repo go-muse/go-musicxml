@@ -112,7 +112,7 @@ func TestSourceLocalPresenceExplicitCompositionExecutes(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err = s.Open(context.Background(), schemaPendingHeader()); err != nil {
+		if err = s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 			t.Fatal(err)
 		}
 		if err = s.SourceEntityDeclarations(context.Background(), entitySnapshot(true)); err != nil {
@@ -129,7 +129,7 @@ func TestSourceLocalPresenceExplicitCompositionExecutes(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
+		if err = s.CloseNode(context.Background(), schemaLexemeEnd("")); err != nil {
 			t.Fatal(err)
 		}
 		got, ok := s.lookupDecision(decisionID{rule: r[len(r)-1].Key, node: 1})

@@ -17980,7 +17980,7 @@
       "anchors": [
         {
           "file": "validation/session_test.go",
-          "text": "\tfor _, count := range []int{0, 1, 2} {\n\t\tt.Run(string(rune('0'+count)), func(t *testing.T) {\n\t\t\t_, s := sessionFixture(t, Budgets{})\n\t\t\tctx := context.Background()\n\t\t\tif err := s.Open(ctx, factHeader(1, 0, \"test.root\", \"root\")); err != nil {\n\t\t\t\tt.Fatal(err)\n\t\t\t}\n\t\t\tfor i := 0; i < count; i++ {\n\t\t\t\tid := NodeID(i + 2)\n\t\t\t\tif err := s.Open(ctx, factHeader(id, 1, \"test.child\", \"child\")); err != nil {\n\t\t\t\t\tt.Fatal(err)"
+          "text": "\tfor _, count := range []int{0, 1, 2} {\n\t\tt.Run(string(rune('0'+count)), func(t *testing.T) {\n\t\t\t_, s := sessionFixture(t, Budgets{})\n\t\t\tctx := context.Background()\n\t\t\tif err := s.OpenNode(ctx, factHeader(1, 0, \"test.root\", \"root\")); err != nil {\n\t\t\t\tt.Fatal(err)\n\t\t\t}\n\t\t\tfor i := 0; i < count; i++ {\n\t\t\t\tid := NodeID(i + 2)\n\t\t\t\tif err := s.OpenNode(ctx, factHeader(id, 1, \"test.child\", \"child\")); err != nil {\n\t\t\t\t\tt.Fatal(err)"
         },
         {
           "file": "validation/session_test.go",

@@ -13,7 +13,7 @@ func dtdIDSnapshotFixture(t *testing.T) *Session {
 	if e := s.SourceDTDIDAttribute(context.Background(), f); e != nil {
 		t.Fatal(e)
 	}
-	if e := s.Close(context.Background(), schemaLexemeEnd("1")); e != nil {
+	if e := s.CloseNode(context.Background(), schemaLexemeEnd("1")); e != nil {
 		t.Fatal(e)
 	}
 	if e := s.CompleteSourceDTDIDs(context.Background(), "source"); e != nil {

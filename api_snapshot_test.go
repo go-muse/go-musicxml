@@ -40,6 +40,7 @@ func TestPublicAPISnapshot(t *testing.T) {
 	}{
 		{"github.com/go-muse/go-musicxml", "musicxml.txt"},
 		{"github.com/go-muse/go-musicxml/validation", "validation.txt"},
+		{"github.com/go-muse/go-musicxml/validation/inventory", "inventory.txt"},
 	} {
 		t.Run(test.golden, func(t *testing.T) {
 			pkg, err := imp.Import(test.path)

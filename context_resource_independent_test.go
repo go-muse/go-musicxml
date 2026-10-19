@@ -266,11 +266,11 @@ func TestIndependentContextWrongAssemblyConstructors(t *testing.T) {
 		"time-only":     func() error { _, e := validation.NewTimeOnlyOrderPlan(opus); return e },
 		"figure-number": func() error { _, e := validation.NewFigureNumberNumericPlan(opus); return e },
 		"bend-consumer": func() error {
-			_, e := validation.NewBendReleaseSignPlan(validation.ContextConsumerSpec{Schema: opus, Provider: validation.RuleKey{ID: "p", Revision: 1}})
+			_, e := validation.NewBendReleaseSignPlan(validation.ConsumerSpec{Schema: opus, Provider: validation.RuleKey{ID: "p", Revision: 1}})
 			return e
 		},
 		"repeat-consumer": func() error {
-			_, e := validation.NewGraphicalRepeatContentPlan(validation.ContextConsumerSpec{Schema: opus, Provider: validation.RuleKey{ID: "p", Revision: 1}})
+			_, e := validation.NewGraphicalRepeatContentPlan(validation.ConsumerSpec{Schema: opus, Provider: validation.RuleKey{ID: "p", Revision: 1}})
 			return e
 		},
 	} {

@@ -15,11 +15,11 @@ import (
 // The sink is synchronous and copies every retained fact. Session owns actual
 // occurrence/depth/event charges; this walker owns traversal work and scratch.
 type modelFactSink interface {
-	Open(context.Context, validation.NodeHeader) error
+	OpenNode(context.Context, validation.NodeHeader) error
 	Attribute(context.Context, validation.AttributeFact) error
 	CompleteAttributes(context.Context, validation.NodeID, validation.Evidence[bool]) error
 	ModelRepresentation(context.Context, validation.ModelRepresentationFact) error
-	Close(context.Context, validation.NodeEnd) error
+	CloseNode(context.Context, validation.NodeEnd) error
 }
 
 type modelWalkOptions struct {
@@ -267,7 +267,7 @@ func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kin
 		parentID = parent.id
 	}
 	header := validation.NodeHeader{ID: frame.id, Parent: parentID, Name: modelQName(name), Location: w.location(frame.path), Type: validation.Evidence[validation.ComponentID]{State: validation.EvidenceUnsupported, Reason: "model-schema-witness-required"}, Declaration: validation.Evidence[validation.DeclarationID]{State: validation.EvidenceUnsupported, Reason: "model-schema-witness-required"}}
-	if err := w.sink.Open(w.ctx, header); err != nil {
+	if err := w.sink.OpenNode(w.ctx, header); err != nil {
 		var resource *validation.ResourceError
 		if errors.As(err, &resource) && resource.Kind == validation.BudgetDepth {
 			w.status.DepthExceeded = true
@@ -528,7 +528,7 @@ func (w *modelWalker) close(frame *modelWalkFrame) error {
 	if err = w.sink.ModelRepresentation(w.ctx, validation.ModelRepresentationFact{Owner: frame.id, Complete: modelComplete(), Problems: frame.problems}); err != nil {
 		return err
 	}
-	if err = w.sink.Close(w.ctx, validation.NodeEnd{ID: frame.id, Scalar: scalar.scalar, ChildrenComplete: children, AttributesComplete: modelComplete(), Order: order}); err != nil {
+	if err = w.sink.CloseNode(w.ctx, validation.NodeEnd{ID: frame.id, Scalar: scalar.scalar, ChildrenComplete: children, AttributesComplete: modelComplete(), Order: order}); err != nil {
 		return err
 	}
 	if frame.pointer.address != 0 {

@@ -344,15 +344,19 @@ func validateContextProfile(c *CompiledCatalog, closure map[RuleKey]bool, schema
 	return nil
 }
 
-// ContextConsumerSpec binds a typed contextual predicate to one exact provider.
-type ContextConsumerSpec struct {
+// ConsumerSpec binds a consumer plan to one exact provider rule revision and
+// its matching schema. A contextual consumer reads that provider's context
+// results. A timeline consumer additionally requires the exact provider rule
+// with DependencyRule and RelationDocument in its RuleDefinition; a valid local
+// numeral-key is an independent alternative to querying the timeline service.
+type ConsumerSpec struct {
 	Schema   *CompiledSchema
 	Provider RuleKey
 }
 
 // NewBendReleaseSignPlan checks the source-supported sign relation only when
 // the selected performance service establishes the corresponding bend gesture.
-func NewBendReleaseSignPlan(spec ContextConsumerSpec) (Plan, error) {
+func NewBendReleaseSignPlan(spec ConsumerSpec) (Plan, error) {
 	if !catalogKey(spec.Provider) {
 		return Plan{}, contract("bend consumer", "exact provider revision required")
 	}
@@ -366,7 +370,7 @@ func NewBendReleaseSignPlan(spec ContextConsumerSpec) (Plan, error) {
 // NewGraphicalRepeatContentPlan consumes proved graphical repeat content
 // correspondence. It does not equate XML strings, infer missing musical events,
 // or declare unresolved event-equivalence policies to be violations.
-func NewGraphicalRepeatContentPlan(spec ContextConsumerSpec) (Plan, error) {
+func NewGraphicalRepeatContentPlan(spec ConsumerSpec) (Plan, error) {
 	if !catalogKey(spec.Provider) {
 		return Plan{}, contract("repeat content consumer", "exact provider revision required")
 	}

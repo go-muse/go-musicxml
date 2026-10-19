@@ -20,10 +20,10 @@ const sourceXMLNSNamespace = "http://www.w3.org/2000/xmlns/"
 // sourceFactSink is synchronous: each method copies everything it retains.
 // The production implementation is a validation.Session.
 type sourceFactSink interface {
-	Open(context.Context, validation.NodeHeader) error
+	OpenNode(context.Context, validation.NodeHeader) error
 	Attribute(context.Context, validation.AttributeFact) error
 	CompleteAttributes(context.Context, validation.NodeID, validation.Evidence[bool]) error
-	Close(context.Context, validation.NodeEnd) error
+	CloseNode(context.Context, validation.NodeEnd) error
 }
 
 type sourceNamespaceUndo struct {
@@ -138,7 +138,7 @@ func (o *sourceFactObserver) observeSource(token xml.Token, meta sourceXMLTokenM
 		if err := o.retain(frame, int64(frame.text.Len())); err != nil {
 			return err
 		}
-		err := o.sink.Close(o.ctx, validation.NodeEnd{ID: frame.id, Scalar: sourceLexeme(frame.text.String()), ChildrenComplete: complete, AttributesComplete: attrs, Order: validation.Evidence[validation.OrderKind]{State: validation.EvidenceKnown, Value: validation.OrderSource}})
+		err := o.sink.CloseNode(o.ctx, validation.NodeEnd{ID: frame.id, Scalar: sourceLexeme(frame.text.String()), ChildrenComplete: complete, AttributesComplete: attrs, Order: validation.Evidence[validation.OrderKind]{State: validation.EvidenceKnown, Value: validation.OrderSource}})
 		if err != nil {
 			return err
 		}
@@ -287,7 +287,7 @@ func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMet
 	if err := o.rememberLocation(location); err != nil {
 		return err
 	}
-	if err := o.sink.Open(o.ctx, validation.NodeHeader{ID: frame.id, Parent: parent, Name: name, Type: validation.Evidence[validation.ComponentID]{State: state, Reason: reason}, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Location: location, Bindings: bindings}); err != nil {
+	if err := o.sink.OpenNode(o.ctx, validation.NodeHeader{ID: frame.id, Parent: parent, Name: name, Type: validation.Evidence[validation.ComponentID]{State: state, Reason: reason}, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Location: location, Bindings: bindings}); err != nil {
 		return err
 	}
 	if parent == 0 && o.sourceDeclarations {
@@ -489,7 +489,7 @@ func (s *observingXMLSource) Token() (xml.Token, error) {
 	}
 	if s.observer != nil {
 		if err = s.observer.observeSource(token, s.lexical.Metadata(), s.lexical); err != nil {
-			var unsupported *validation.UnsupportedRootError
+			var unsupported *validation.ExcludedRootError
 			if errors.As(err, &unsupported) {
 				err = errors.Join(err, &UnsupportedRootError{Name: xml.Name{Space: unsupported.Name.Space, Local: unsupported.Name.Local}})
 			}

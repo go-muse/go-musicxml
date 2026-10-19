@@ -13,7 +13,7 @@ func TestCommonExaminationSealsShareOnlyCanonicalEvidence(t *testing.T) {
 	ctx := context.Background()
 	representationOpen(t, s)
 	for id := NodeID(2); id <= 4; id++ {
-		if err := s.Open(ctx, representationHeader(id, 1, "test.child", "child")); err != nil {
+		if err := s.OpenNode(ctx, representationHeader(id, 1, "test.child", "child")); err != nil {
 			t.Fatal(err)
 		}
 		before, _ := s.account.Usage(BudgetBufferedBytes)
@@ -42,14 +42,14 @@ func TestCommonExaminationSealsShareOnlyCanonicalEvidence(t *testing.T) {
 		if id > 2 && (s.nodes[id].attributeSeal != s.nodes[2].attributeSeal || s.nodes[id].modelRepresentation != s.nodes[2].modelRepresentation) {
 			t.Fatal("canonical seals still allocate per node")
 		}
-		if err := s.Close(ctx, representationEnd(id)); err != nil {
+		if err := s.CloseNode(ctx, representationEnd(id)); err != nil {
 			t.Fatal(err)
 		}
 	}
 	if err := s.ModelRepresentation(ctx, representationFact(1)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, representationEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, representationEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	r := representationFinish(t, s)
@@ -139,7 +139,7 @@ func TestCommonExaminationSealsDoNotShareExceptionalEvidence(t *testing.T) {
 			ctx := context.Background()
 			representationOpen(t, s)
 			for id := NodeID(2); id <= 3; id++ {
-				if err := s.Open(ctx, representationHeader(id, 1, "test.child", "child")); err != nil {
+				if err := s.OpenNode(ctx, representationHeader(id, 1, "test.child", "child")); err != nil {
 					t.Fatal(err)
 				}
 				if err := s.CompleteAttributes(ctx, id, complete); err != nil {
@@ -153,7 +153,7 @@ func TestCommonExaminationSealsDoNotShareExceptionalEvidence(t *testing.T) {
 				}
 				end := representationEnd(id)
 				end.AttributesComplete = complete
-				if err := s.Close(ctx, end); err != nil {
+				if err := s.CloseNode(ctx, end); err != nil {
 					t.Fatal(err)
 				}
 			}

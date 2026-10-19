@@ -16,7 +16,7 @@ func TestQAZeroSessionFinishFailsClosedWithoutPanic(t *testing.T) {
 			}()
 			var s Session
 			if priorInput {
-				if err := s.Open(context.Background(), NodeHeader{}); err == nil {
+				if err := s.OpenNode(context.Background(), NodeHeader{}); err == nil {
 					t.Fatal("zero session accepted input")
 				}
 			}

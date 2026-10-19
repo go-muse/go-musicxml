@@ -33,7 +33,7 @@ func TestReportSessionUnrelatedDecisionsCannotHideViolation(t *testing.T) {
 			qaOpenRoot(t, s)
 			for i := 0; i < 1200; i++ {
 				id := NodeID(i + 2)
-				if err := s.Open(context.Background(), factHeader(id, 1, "test.unrelated", "unrelated")); err != nil {
+				if err := s.OpenNode(context.Background(), factHeader(id, 1, "test.unrelated", "unrelated")); err != nil {
 					t.Fatal(err)
 				}
 				qaClose(t, s, factEnd(id))

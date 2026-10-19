@@ -29,10 +29,10 @@ func TestDictionaryPackageSnapshotsDoNotAliasActualCapabilities(t *testing.T) {
 		}
 		h := schemaPendingHeader()
 		h.Location.DocumentID = document
-		if err = s.Open(ctx, h); err != nil {
+		if err = s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
-		if err = s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+		if err = s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 			t.Fatal(err)
 		}
 		_ = set.Close()

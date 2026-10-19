@@ -45,7 +45,7 @@ func contextRequiredFixture(t *testing.T, actual string, attrs map[QName]string,
 		t.Fatal(err)
 	}
 	t.Cleanup(s.cleanup)
-	if err = s.Open(context.Background(), schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	for name, value := range attrs {
@@ -56,7 +56,7 @@ func contextRequiredFixture(t *testing.T, actual string, attrs map[QName]string,
 	}
 	end := schemaLexemeEnd("")
 	end.AttributesComplete.Value = complete
-	if err = s.Close(context.Background(), end); err != nil {
+	if err = s.CloseNode(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
 	return s, bindings
@@ -209,10 +209,10 @@ func TestContextRequiredAttributeEquivalentSchemaInterning(t *testing.T) {
 				t.Fatal(err)
 			}
 			defer s.cleanup()
-			if err = s.Open(context.Background(), schemaPendingHeader()); err != nil {
+			if err = s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
-			if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
+			if err = s.CloseNode(context.Background(), schemaLexemeEnd("")); err != nil {
 				t.Fatal(err)
 			}
 			r := &contextReader{ctx: context.Background(), s: s, b: contextPlan.context.Bindings}

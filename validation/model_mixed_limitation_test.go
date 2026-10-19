@@ -31,7 +31,7 @@ func TestModelBlockedCompositeCanRetainIndependentLimitations(t *testing.T) {
 		session := modelSchemaSession(t, schema, Budgets{})
 		ctx := context.Background()
 		header := modelSchemaHeader(1, 0, "root", "Root")
-		if err := session.Open(ctx, header); err != nil {
+		if err := session.OpenNode(ctx, header); err != nil {
 			t.Fatal(err)
 		}
 		attribute := func(name string, value Evidence[Atomic]) {

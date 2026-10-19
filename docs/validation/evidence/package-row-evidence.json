@@ -6749,56 +6749,56 @@
       "function": "TestAssessmentRunAccountedBytesStillChargeParsing",
       "line": 102,
       "end_line_bound": 123,
-      "file_sha256": "014055f3cecf8ec485c71c1252f0230b4e220cd066bdad801148757d2cf529d8"
+      "file_sha256": "201da6dad2c204d2f4fa848fb130b2c0f6172c7e5eb7232296b4af2ad61d0ceb"
     },
     "assessment_run_test.go::TestAssessmentRunConfigurationBeforeInput": {
       "file": "assessment_run_test.go",
       "function": "TestAssessmentRunConfigurationBeforeInput",
       "line": 328,
       "end_line_bound": 363,
-      "file_sha256": "014055f3cecf8ec485c71c1252f0230b4e220cd066bdad801148757d2cf529d8"
+      "file_sha256": "201da6dad2c204d2f4fa848fb130b2c0f6172c7e5eb7232296b4af2ad61d0ceb"
     },
     "assessment_run_test.go::TestAssessmentRunInterruptionsAndFinalizationBudgets": {
       "file": "assessment_run_test.go",
       "function": "TestAssessmentRunInterruptionsAndFinalizationBudgets",
       "line": 471,
       "end_line_bound": 566,
-      "file_sha256": "014055f3cecf8ec485c71c1252f0230b4e220cd066bdad801148757d2cf529d8"
+      "file_sha256": "201da6dad2c204d2f4fa848fb130b2c0f6172c7e5eb7232296b4af2ad61d0ceb"
     },
     "assessment_run_test.go::TestAssessmentRunMixedChildrenShareNodesAndWork": {
       "file": "assessment_run_test.go",
       "function": "TestAssessmentRunMixedChildrenShareNodesAndWork",
       "line": 124,
       "end_line_bound": 205,
-      "file_sha256": "014055f3cecf8ec485c71c1252f0230b4e220cd066bdad801148757d2cf529d8"
+      "file_sha256": "201da6dad2c204d2f4fa848fb130b2c0f6172c7e5eb7232296b4af2ad61d0ceb"
     },
     "assessment_run_test.go::TestAssessmentRunModelPreflightLifecycleAndNoEncoding": {
       "file": "assessment_run_test.go",
       "function": "TestAssessmentRunModelPreflightLifecycleAndNoEncoding",
       "line": 418,
       "end_line_bound": 470,
-      "file_sha256": "014055f3cecf8ec485c71c1252f0230b4e220cd066bdad801148757d2cf529d8"
+      "file_sha256": "201da6dad2c204d2f4fa848fb130b2c0f6172c7e5eb7232296b4af2ad61d0ceb"
     },
     "assessment_run_test.go::TestAssessmentRunOriginalSourcePositionsAndConversionIdentity": {
       "file": "assessment_run_test.go",
       "function": "TestAssessmentRunOriginalSourcePositionsAndConversionIdentity",
       "line": 254,
       "end_line_bound": 327,
-      "file_sha256": "014055f3cecf8ec485c71c1252f0230b4e220cd066bdad801148757d2cf529d8"
+      "file_sha256": "201da6dad2c204d2f4fa848fb130b2c0f6172c7e5eb7232296b4af2ad61d0ceb"
     },
     "assessment_run_test.go::TestAssessmentRunQualifiedFindingsCausesRelatedAndContext": {
       "file": "assessment_run_test.go",
       "function": "TestAssessmentRunQualifiedFindingsCausesRelatedAndContext",
       "line": 206,
       "end_line_bound": 253,
-      "file_sha256": "014055f3cecf8ec485c71c1252f0230b4e220cd066bdad801148757d2cf529d8"
+      "file_sha256": "201da6dad2c204d2f4fa848fb130b2c0f6172c7e5eb7232296b4af2ad61d0ceb"
     },
     "assessment_run_test.go::TestAssessmentRunSharedAggregateSourceBytes": {
       "file": "assessment_run_test.go",
       "function": "TestAssessmentRunSharedAggregateSourceBytes",
       "line": 72,
       "end_line_bound": 101,
-      "file_sha256": "014055f3cecf8ec485c71c1252f0230b4e220cd066bdad801148757d2cf529d8"
+      "file_sha256": "201da6dad2c204d2f4fa848fb130b2c0f6172c7e5eb7232296b4af2ad61d0ceb"
     },
     "auxiliary_container_context_test.go::TestAuxiliaryContainerMetadataMissingRequiredPath": {
       "file": "auxiliary_container_context_test.go",
@@ -8009,21 +8009,21 @@
       "function": "TestPackageAssociationKnownNegativeSurvivesCancellation",
       "line": 75,
       "end_line_bound": 86,
-      "file_sha256": "501003e3b5c2015259c968a44e4a0d296fb2d38e0c1b9b5c8e9ab01e10e823ec"
+      "file_sha256": "51fb38246ab8db34b45e004312a4ed1227e4c9f4723f305a529b91135294ec33"
     },
     "validation/package_association_test.go::TestPackageAssociationPartialMissIsUnknown": {
       "file": "validation/package_association_test.go",
       "function": "TestPackageAssociationPartialMissIsUnknown",
       "line": 87,
       "end_line_bound": 100,
-      "file_sha256": "501003e3b5c2015259c968a44e4a0d296fb2d38e0c1b9b5c8e9ab01e10e823ec"
+      "file_sha256": "51fb38246ab8db34b45e004312a4ed1227e4c9f4723f305a529b91135294ec33"
     },
     "validation/package_association_test.go::TestPackageAssociationUsesMembershipWithoutCrossFileIDEquality": {
       "file": "validation/package_association_test.go",
       "function": "TestPackageAssociationUsesMembershipWithoutCrossFileIDEquality",
       "line": 57,
       "end_line_bound": 74,
-      "file_sha256": "501003e3b5c2015259c968a44e4a0d296fb2d38e0c1b9b5c8e9ab01e10e823ec"
+      "file_sha256": "51fb38246ab8db34b45e004312a4ed1227e4c9f4723f305a529b91135294ec33"
     },
     "validation/package_catalog_test.go::TestPackageCatalogDigestIncludesIntrinsicInterpretation": {
       "file": "validation/package_catalog_test.go",
@@ -8114,14 +8114,14 @@
       "function": "TestPackageEstablishedAdviceFailureSurvivesCancellation",
       "line": 125,
       "end_line_bound": 199,
-      "file_sha256": "2e15b87d5af8420edc0fd1b55859ff4087845dd1304851bc91ea594f91d66515"
+      "file_sha256": "ea0fadc461b64509000ea07e99892c06f557cc48859ebe928e64b4cf30becba0"
     },
     "validation/package_interruption_test.go::TestPackageEstablishedRoleFailureSurvivesCancellation": {
       "file": "validation/package_interruption_test.go",
       "function": "TestPackageEstablishedRoleFailureSurvivesCancellation",
       "line": 42,
       "end_line_bound": 124,
-      "file_sha256": "2e15b87d5af8420edc0fd1b55859ff4087845dd1304851bc91ea594f91d66515"
+      "file_sha256": "ea0fadc461b64509000ea07e99892c06f557cc48859ebe928e64b4cf30becba0"
     },
     "validation/package_roles_test.go::TestPackageCanceledMemberSealCannotCertifyInventory": {
       "file": "validation/package_roles_test.go",
@@ -8289,49 +8289,49 @@
       "function": "TestResourceSnapshotAdmissionFailurePreservesBestReport",
       "line": 74,
       "end_line_bound": 93,
-      "file_sha256": "106f0e5100859f16e87914b283eeb70f641779d7dc746267f3028db49f95d28a"
+      "file_sha256": "498bccae7a09a7d70b27684e1f856a07c443a0d133fe68621a6e59aaf7cf5ba1"
     },
     "validation/resource_snapshot_test.go::TestResourceSnapshotEveryCancellationBoundaryCleansLease": {
       "file": "validation/resource_snapshot_test.go",
       "function": "TestResourceSnapshotEveryCancellationBoundaryCleansLease",
       "line": 107,
       "end_line_bound": 131,
-      "file_sha256": "106f0e5100859f16e87914b283eeb70f641779d7dc746267f3028db49f95d28a"
+      "file_sha256": "498bccae7a09a7d70b27684e1f856a07c443a0d133fe68621a6e59aaf7cf5ba1"
     },
     "validation/resource_snapshot_test.go::TestResourceSnapshotFinalizesBeforeCopyAndOwnsReport": {
       "file": "validation/resource_snapshot_test.go",
       "function": "TestResourceSnapshotFinalizesBeforeCopyAndOwnsReport",
       "line": 27,
       "end_line_bound": 73,
-      "file_sha256": "106f0e5100859f16e87914b283eeb70f641779d7dc746267f3028db49f95d28a"
+      "file_sha256": "498bccae7a09a7d70b27684e1f856a07c443a0d133fe68621a6e59aaf7cf5ba1"
     },
     "validation/resource_snapshot_test.go::TestResourceSnapshotLiveCopyAdmissionAndWork": {
       "file": "validation/resource_snapshot_test.go",
       "function": "TestResourceSnapshotLiveCopyAdmissionAndWork",
       "line": 267,
       "end_line_bound": 296,
-      "file_sha256": "106f0e5100859f16e87914b283eeb70f641779d7dc746267f3028db49f95d28a"
+      "file_sha256": "498bccae7a09a7d70b27684e1f856a07c443a0d133fe68621a6e59aaf7cf5ba1"
     },
     "validation/resource_snapshot_test.go::TestResourceSnapshotRetainsActualTypeElementIDs": {
       "file": "validation/resource_snapshot_test.go",
       "function": "TestResourceSnapshotRetainsActualTypeElementIDs",
       "line": 132,
       "end_line_bound": 233,
-      "file_sha256": "106f0e5100859f16e87914b283eeb70f641779d7dc746267f3028db49f95d28a"
+      "file_sha256": "498bccae7a09a7d70b27684e1f856a07c443a0d133fe68621a6e59aaf7cf5ba1"
     },
     "validation/resource_snapshot_test.go::TestResourceSnapshotRetainsRejectedRootNameWithoutSchemaIdentity": {
       "file": "validation/resource_snapshot_test.go",
       "function": "TestResourceSnapshotRetainsRejectedRootNameWithoutSchemaIdentity",
       "line": 297,
       "end_line_bound": 324,
-      "file_sha256": "106f0e5100859f16e87914b283eeb70f641779d7dc746267f3028db49f95d28a"
+      "file_sha256": "498bccae7a09a7d70b27684e1f856a07c443a0d133fe68621a6e59aaf7cf5ba1"
     },
     "validation/resource_snapshot_test.go::TestResourceSnapshotThreeAmbiguousElementOwners": {
       "file": "validation/resource_snapshot_test.go",
       "function": "TestResourceSnapshotThreeAmbiguousElementOwners",
       "line": 234,
       "end_line_bound": 266,
-      "file_sha256": "106f0e5100859f16e87914b283eeb70f641779d7dc746267f3028db49f95d28a"
+      "file_sha256": "498bccae7a09a7d70b27684e1f856a07c443a0d133fe68621a6e59aaf7cf5ba1"
     },
     "validation_schema_hint_datatype_test.go::TestSchemaHintDatatypeNamespacesAndOrdinaryErrors": {
       "file": "validation_schema_hint_datatype_test.go",

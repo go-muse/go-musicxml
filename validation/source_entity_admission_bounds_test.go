@@ -11,7 +11,7 @@ func TestSourceEntityDeclarationNameScanPollsCancellation(t *testing.T) {
 	e := entityDeclarationEngine(t, entityDeclarationSchema(t, entityBuiltin("string")), XSDCheckScalar)
 	s := entityDeclarationSession(t, e)
 	ctx := context.Background()
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	probe := &rationalCancelContext{Context: ctx, at: 8}
@@ -50,7 +50,7 @@ func TestSourceEntityDeclarationMalformedMetadataIsRejected(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := entityDeclarationSession(t, e)
-			if err := s.Open(context.Background(), schemaPendingHeader()); err != nil {
+			if err := s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
 			facts := entitySnapshot(true, entityRow("asset", true, 1))

@@ -127,7 +127,7 @@ func TestSourceAssessmentReaderOwnershipAndUnsupportedRoot(t *testing.T) {
 			t.Error("closed caller-owned reader")
 		}
 		if input != `<score-partwise/>` {
-			var unsupported *validation.UnsupportedRootError
+			var unsupported *validation.ExcludedRootError
 			if !errors.As(err, &unsupported) || !errors.Is(err, ErrUnsupportedRoot) || errors.Is(err, ErrInvalidDocument) || report.Syntax == validation.SyntaxMalformed {
 				t.Errorf("unsupported classification: %+v %v", report, err)
 			}
