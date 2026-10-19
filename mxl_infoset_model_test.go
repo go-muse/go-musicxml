@@ -3,6 +3,7 @@ package musicxml
 import (
 	"bytes"
 	"context"
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
@@ -69,5 +70,56 @@ func TestDecodeMXLAssessedInfosetChargesInputOnce(t *testing.T) {
 	result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(archive), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxInputBytes: low}}}})
 	if err != nil || result.Package == nil {
 		t.Fatalf("MaxInputBytes=%d: source accepted but loading failed: conversion=%s error=%v", low, result.Conversion.State, err)
+	}
+}
+
+// cancelAfterContext reports cancellation after a number of Err calls once
+// it is armed.
+type cancelAfterContext struct {
+	context.Context
+	cancel context.CancelFunc
+	armed  bool
+	calls  int
+	limit  int
+}
+
+func (c *cancelAfterContext) Err() error {
+	if c.armed {
+		c.calls++
+		if c.calls >= c.limit {
+			c.cancel()
+		}
+	}
+	return c.Context.Err()
+}
+
+// A cancellation at any point of the start of the conversion in strict MXL
+// loading, which reads and decodes the container from the DTD infoset, is
+// reported as cancellation, never as an invalid archive.
+func TestDecodeMXLAssessedCancellationIsNeverAnInvalidArchive(t *testing.T) {
+	archive := rawMXL(t, mandatoryScore("1", ""))
+	var ctx *cancelAfterContext
+	decodeMXLStageHook = func(stage string, _ *validation.Account) {
+		if stage == "conversion" {
+			ctx.armed = true
+		}
+	}
+	t.Cleanup(func() { decodeMXLStageHook = nil })
+	canceled := 0
+	for limit := 1; limit <= 300; limit++ {
+		parent, cancel := context.WithCancel(context.Background())
+		ctx = &cancelAfterContext{Context: parent, cancel: cancel, limit: limit}
+		_, err := DecodeMXLAssessed(ctx, bytes.NewReader(archive), DecodeMXLAssessmentOptions{Lenient: true})
+		cancel()
+		if err == nil {
+			break
+		}
+		canceled++
+		if !errors.Is(err, context.Canceled) || errors.Is(err, ErrInvalidMXL) {
+			t.Fatalf("cancellation after %d conversion checks: %v", limit, err)
+		}
+	}
+	if canceled != 300 {
+		t.Fatalf("only %d cancellation points reached", canceled)
 	}
 }

@@ -77,10 +77,14 @@ func buildSemanticAssessmentDefinitions(target validation.Target) (*assessmentDe
 		plans[p.ID] = p.Plan
 	}
 	resourceKeys := map[validation.RuleKey]bool{
-		{ID: "MX40-RESOURCE-local-links/musicxml", Revision: 1}:  false,
-		{ID: "MX40-RESOURCE-local-links/opus", Revision: 1}:      false,
-		{ID: "MX40-RESOURCE-schema-hints/musicxml", Revision: 1}: false,
-		{ID: "MX40-RESOURCE-schema-hints/opus", Revision: 1}:     false,
+		{ID: "MX40-RESOURCE-local-links/musicxml", Revision: 1}: false,
+		{ID: "MX40-RESOURCE-local-links/opus", Revision: 1}:     false,
+	}
+	// A current model holds no xsi attributes, so schema hints are a source
+	// fact: only the source composition provides them.
+	if target == validation.TargetSource {
+		resourceKeys[validation.RuleKey{ID: "MX40-RESOURCE-schema-hints/musicxml", Revision: 1}] = false
+		resourceKeys[validation.RuleKey{ID: "MX40-RESOURCE-schema-hints/opus", Revision: 1}] = false
 	}
 	for _, r := range links.rules {
 		seen, owned := resourceKeys[r.Key]
@@ -116,9 +120,6 @@ func buildSemanticAssessmentDefinitions(target validation.Target) (*assessmentDe
 	}
 	if target == validation.TargetSource {
 		if err := appendSourceOriginDefinitions(d); err != nil {
-			return nil, err
-		}
-		if err := appendSourceRepresentabilityDefinitions(d); err != nil {
 			return nil, err
 		}
 		if err := specializeSourceComposition(d); err != nil {

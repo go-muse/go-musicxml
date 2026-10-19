@@ -16,7 +16,7 @@ func assessedScore(staves, extra string) string {
 	return `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Music</part-name></score-part></part-list><part id="P1"><measure number="1"><attributes><staves>` + staves + `</staves>` + extra + `</attributes></measure></part></score-partwise>`
 }
 func strictSourceOptions() DecodeAssessmentOptions {
-	return DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}}
+	return DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}}
 }
 
 type onceEOFReader struct {
@@ -61,7 +61,7 @@ func TestDecodeAssessedSourceAndConversionDomains(t *testing.T) {
 			}
 			reader := &onceEOFReader{input: input}
 			result, err := DecodeAssessed(context.Background(), reader, strictSourceOptions())
-			if result.Source.Conformance != tt.source || !result.Source.InputComplete || !result.Source.AssessmentComplete || result.Conversion.State != tt.conversion {
+			if result.SourceLine.Conformance != tt.source || !result.SourceLine.InputComplete || !result.SourceLine.AssessmentComplete || result.Conversion.State != tt.conversion {
 				t.Errorf("result=%+v err=%v", result, err)
 			}
 			if reader.offset != len(input) || reader.afterEOF != 0 {
@@ -71,11 +71,11 @@ func TestDecodeAssessedSourceAndConversionDomains(t *testing.T) {
 				t.Errorf("invalid classification=%v", err)
 			}
 			if tt.conversion == validation.ConversionConverted {
-				if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
+				if err != nil || result.Document == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() {
 					t.Errorf("conversion result=%+v err=%v", result, err)
 				}
 			} else {
-				if err == nil || result.Document != nil || result.Model.Requested {
+				if err == nil || result.Document != nil || result.ModelLine.Requested {
 					t.Errorf("partial model escaped=%+v error=%v", result, err)
 				}
 			}
@@ -107,15 +107,15 @@ func TestDecodeAssessedDrainsAfterOverflowAndPreservesTailCauses(t *testing.T) {
 				t.Fatalf("conversion lost: %+v %v", result, err)
 			}
 			if errors.Is(err, ErrInvalidDocument) != tt.invalid {
-				t.Errorf("independent invalidity mismatch: %+v %v", result.Source, err)
+				t.Errorf("independent invalidity mismatch: %+v %v", result.SourceLine, err)
 			}
 			if tt.tail != "" {
 				var syntax *xml.SyntaxError
-				if !errors.As(err, &syntax) || result.Source.Syntax != validation.SyntaxMalformed || result.Source.InputComplete || !errors.Is(err, ErrIncompleteAssessment) {
-					t.Errorf("tail lost: %+v %v", result.Source, err)
+				if !errors.As(err, &syntax) || result.SourceLine.Syntax != validation.SyntaxMalformed || result.SourceLine.InputComplete || !errors.Is(err, ErrIncompleteAssessment) {
+					t.Errorf("tail lost: %+v %v", result.SourceLine, err)
 				}
-			} else if !result.Source.InputComplete {
-				t.Errorf("healthy parser not drained: %+v %v", result.Source, err)
+			} else if !result.SourceLine.InputComplete {
+				t.Errorf("healthy parser not drained: %+v %v", result.SourceLine, err)
 			}
 		})
 	}
@@ -144,7 +144,7 @@ func TestDecodeAssessedObservesFilteredSource(t *testing.T) {
 		t.Fatalf("ordinary foreign extension: %T %v", permissive, err)
 	}
 	strict, err := DecodeAssessed(context.Background(), strings.NewReader(input), strictSourceOptions())
-	if !errors.Is(err, ErrInvalidDocument) || strict.Document != nil || strict.Source.Conformance != validation.ConformanceViolated {
+	if !errors.Is(err, ErrInvalidDocument) || strict.Document != nil || strict.SourceLine.Conformance != validation.ConformanceViolated {
 		t.Fatalf("filtered source disappeared: %+v %v", strict, err)
 	}
 }
@@ -191,7 +191,7 @@ func TestDecodeAssessedDrainsAttributeAndChoiceConversionFailures(t *testing.T) 
 			// The source line reports the value the model cannot hold; the
 			// conversion still fails on it, and the source stays conformant.
 			result, err := DecodeAssessed(context.Background(), &onceEOFReader{input: input}, strictSourceOptions())
-			if !errors.Is(err, strconv.ErrRange) || result.Document != nil || result.Conversion.State != validation.ConversionUnrepresentable || result.Source.Satisfied() || result.Source.Conformance != validation.ConformanceConformant || !hasRepresentabilityFailure(result.Source) {
+			if !errors.Is(err, strconv.ErrRange) || result.Document != nil || result.Conversion.State != validation.ConversionUnrepresentable || result.SourceLine.Satisfied() || result.SourceLine.Conformance != validation.ConformanceConformant || !hasRepresentabilityFailure(result.SourceLine) {
 				t.Fatalf("source/conversion=%+v error=%v", result, err)
 			}
 		})
@@ -236,7 +236,7 @@ func TestDecodeAssessedRetainsOverflowDuringInterruptedDrain(t *testing.T) {
 		cancel()
 		// The only invalidity is the staves value's source-line failure, when the
 		// interrupted source proved it before stopping.
-		if !errors.Is(err, strconv.ErrRange) || !errors.Is(err, want) || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) != hasRepresentabilityFailure(result.Source) || result.Document != nil || result.Source.InputComplete || result.Source.Syntax != validation.SyntaxIncomplete {
+		if !errors.Is(err, strconv.ErrRange) || !errors.Is(err, want) || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) != hasRepresentabilityFailure(result.SourceLine) || result.Document != nil || result.SourceLine.InputComplete || result.SourceLine.Syntax != validation.SyntaxIncomplete {
 			t.Errorf("interrupted drain: %+v error=%v", result, err)
 		}
 	}
@@ -452,9 +452,9 @@ func TestDecodeAssessedUsesTighterDepthLimit(t *testing.T) {
 		{"decode-is-tighter", 2, 3, true}, {"assessment-is-tighter", 3, 2, false},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: tt.decode}, Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: validation.Budgets{MaxDepth: tt.assessment}}})
+			result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: tt.decode}, Assessment: &AssessmentOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxDepth: tt.assessment}}})
 			var resource *validation.ResourceError
-			if !errors.As(err, &resource) || resource.Kind != validation.BudgetDepth || resource.Limit != 2 || errors.Is(err, ErrXMLTooDeep) != tt.legacy || errors.Is(err, ErrInvalidDocument) || result.Source.Terminal == nil || result.Source.Terminal.Category != validation.CategoryResource || result.Document != nil {
+			if !errors.As(err, &resource) || resource.Kind != validation.BudgetDepth || resource.Limit != 2 || errors.Is(err, ErrXMLTooDeep) != tt.legacy || errors.Is(err, ErrInvalidDocument) || result.SourceLine.Terminal == nil || result.SourceLine.Terminal.Category != validation.CategoryResource || result.Document != nil {
 				t.Errorf("tighter depth result=%+v resource=%+v error=%v", result, resource, err)
 			}
 		})
@@ -464,7 +464,7 @@ func TestDecodeAssessedUsesTighterDepthLimit(t *testing.T) {
 		t.Errorf("ordinary decode changed legacy depth error: %T %v", ordinary, err)
 	}
 	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: 2}})
-	if !errors.Is(err, ErrXMLTooDeep) || !errors.Is(err, validation.ErrResourceLimit) || !result.Source.Requested || result.Document != nil {
+	if !errors.Is(err, ErrXMLTooDeep) || !errors.Is(err, validation.ErrResourceLimit) || !result.SourceLine.Requested || result.Document != nil {
 		t.Errorf("default assessment did not enforce mandatory depth accounting: %+v %v", result, err)
 	}
 }
@@ -475,7 +475,7 @@ func TestDecodeAssessedConversionDetailCannotStarveSourceFailure(t *testing.T) {
 	result, err := DecodeAssessed(context.Background(), strings.NewReader(assessedScore("18446744073709551616", `<instruments rubbish="bad">1</instruments>`)), options)
 	// The unrepresentable staves value and the undeclared attribute are both
 	// source failures; the one stored finding belongs to the source.
-	if !errors.Is(err, strconv.ErrRange) || !errors.Is(err, ErrInvalidDocument) || result.Conversion.State != validation.ConversionUnrepresentable || len(result.Conversion.Findings) != 0 || len(result.Source.Findings) != 1 || result.Source.Counts.Fail == 0 {
+	if !errors.Is(err, strconv.ErrRange) || !errors.Is(err, ErrInvalidDocument) || result.Conversion.State != validation.ConversionUnrepresentable || len(result.Conversion.Findings) != 0 || len(result.SourceLine.Findings) != 1 || result.SourceLine.Counts.Fail == 0 {
 		t.Fatalf("conversion detail stole source quota: %+v %v", result, err)
 	}
 }

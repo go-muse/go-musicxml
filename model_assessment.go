@@ -9,6 +9,10 @@ import (
 
 const modelDocumentID = "model"
 
+// AssessModel is scenario 3, checking a structure built or edited in Go:
+// validation line 3 only, the same ProfileModelSemantics assessment that
+// DecodeAssessed runs after conversion.
+//
 // AssessModel assesses the current generated Go document directly, without
 // encoding it, invoking XML marshal methods, or parsing XML. It does not
 // reconstruct original source order, spelling, presence, namespaces, discarded

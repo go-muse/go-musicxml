@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -30,6 +31,9 @@ const (
 	maxMXLResourcesSize int64 = 512 << 20
 )
 
+// DecodeMXL is scenario 1 for MXL archives: loading without MusicXML
+// validation.
+//
 // DecodeMXL reads a compressed MusicXML document.
 //
 // Archives without the optional legacy-compatible mimetype entry are accepted.
@@ -185,8 +189,8 @@ type mxlRootFiles struct {
 }
 
 type mxlRootFile struct {
-	FullPath  string `xml:"full-path,attr"`
-	MediaType string `xml:"media-type,attr,omitempty"`
+	FullPath  string  `xml:"full-path,attr"`
+	MediaType *string `xml:"media-type,attr,omitempty"`
 }
 
 func decodeMXL(
@@ -306,12 +310,12 @@ func validateMXLRootFile(value mxlRootFile) error {
 		)
 	}
 
-	mediaType := collapseValidationWhitespace(value.MediaType)
+	mediaType := collapseValidationWhitespace(mediaTypeText(value.MediaType))
 	if mediaType != "" && mediaType != musicXMLMIMEType {
 		return fmt.Errorf(
 			"%w: %q",
 			ErrMXLUnsupportedMediaType,
-			value.MediaType,
+			mediaTypeText(value.MediaType),
 		)
 	}
 
@@ -321,13 +325,53 @@ func validateMXLRootFile(value mxlRootFile) error {
 func decodeMXLContainer(
 	data []byte,
 ) (mxlContainer, error) {
-	source, err := newXMLDecoder(bytes.NewReader(data))
-	if err != nil {
-		return mxlContainer{}, fmt.Errorf(
-			"%w: initialize XML decoder: %w",
-			ErrMXLInvalidContainer,
-			err,
-		)
+	return decodeMXLContainerContext(context.Background(), data, mxlLimits{})
+}
+
+// decodeMXLContainerContext decodes META-INF/container.xml. Strict loading
+// sets limits.infoset and then decodes it from the DTD infoset that
+// validation line 2 assessed, so DTD attribute defaults reach RootFiles, as
+// they reach the root document.
+func decodeMXLContainerContext(
+	ctx context.Context,
+	data []byte,
+	limits mxlLimits,
+) (container mxlContainer, err error) {
+	var source *xml.Decoder
+	if limits.infoset != nil {
+		// The infoset reader observes ctx and the shared account. Their
+		// refusals are cancellation and resource limits, not a corrupt
+		// container, so they keep their own error class.
+		defer func() {
+			var resource *validation.ResourceError
+			switch {
+			case err == nil:
+			case ctx.Err() != nil:
+				err = mxlContextErr(ctx)
+			case errors.As(err, &resource):
+				err = resource
+			}
+		}()
+		maxDepth, depthErr := DecodeOptions{MaxXMLDepth: limits.xmlDepth}.xmlDepth()
+		if depthErr != nil {
+			return mxlContainer{}, depthErr
+		}
+		// The archive bytes are already charged as input, as for line 2.
+		lexical, lexErr := newSourceXMLTokenReader(bytes.NewReader(data), sourceXMLConfig{Context: ctx, Account: limits.infoset, MaxDepth: maxDepth, ByteOwner: sourceBytesAccounted, InternalDTD: true, DTD: newSourceDTDResolver(limits.dtd)})
+		if lexErr != nil {
+			return mxlContainer{}, fmt.Errorf("%w: initialize XML decoder: %w", ErrMXLInvalidContainer, lexErr)
+		}
+		defer func() { err = errors.Join(err, lexical.Close()) }()
+		source = xml.NewTokenDecoder(lexical)
+	} else {
+		source, err = newXMLDecoder(bytes.NewReader(data))
+		if err != nil {
+			return mxlContainer{}, fmt.Errorf(
+				"%w: initialize XML decoder: %w",
+				ErrMXLInvalidContainer,
+				err,
+			)
+		}
 	}
 
 	decoder := xml.NewTokenDecoder(&namespaceXMLTokenReader{
@@ -370,7 +414,7 @@ func decodeMXLContainer(
 		rootFile := &result.RootFiles.Files[index]
 		// Both attributes are xs:token values, not literal ZIP entry names.
 		rootFile.FullPath = collapseValidationWhitespace(rootFile.FullPath)
-		rootFile.MediaType = collapseValidationWhitespace(rootFile.MediaType)
+		rootFile.MediaType = collapsedMediaType(rootFile.MediaType)
 	}
 
 	return result, nil
@@ -478,7 +522,7 @@ func encodeMXLContainer(
 	return encodeMXLContainerRootFiles([]mxlRootFile{
 		{
 			FullPath:  rootFilePath,
-			MediaType: musicXMLMIMEType,
+			MediaType: Ptr(musicXMLMIMEType),
 		},
 	})
 }

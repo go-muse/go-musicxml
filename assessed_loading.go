@@ -9,18 +9,20 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// assessedLoadingOptions elects fixed validation stages, never a caller-selected
-// weaker profile. Explicit dictionary inputs remain authoritative: an unavailable
-// or invalid override is not repaired with bundled data.
+// assessedLoadingOptions elects the fixed validation lines, never a
+// caller-selected weaker profile. The dictionaries serve line 3, so the
+// normalized options name ProfileModelSemantics. Explicit dictionary inputs
+// remain authoritative: an unavailable or invalid override is not repaired
+// with bundled data.
 func assessedLoadingOptions(options *dictionaryAssessmentOptions) (dictionaryAssessmentOptions, error) {
 	var out dictionaryAssessmentOptions
 	if options != nil {
 		out = *options
 	}
-	if out.Assessment.Profile != "" && out.Assessment.Profile != ProfileSourceSemantics {
-		return out, &validation.ConfigurationError{Field: "assessed loading profile", Reason: "requires source-semantics; use InspectXML for individually selected profiles"}
+	if out.Assessment.Profile != "" && out.Assessment.Profile != ProfileSourceLine {
+		return out, &validation.ConfigurationError{Field: "assessed loading profile", Reason: "requires source-line; use InspectXML for individually selected profiles"}
 	}
-	out.Assessment.Profile = ProfileSourceSemantics
+	out.Assessment.Profile = ProfileModelSemantics
 	required := requiredDictionarySelections()
 	// A typed-nil Source is an explicit override, not a request for defaults.
 	if out.Dictionaries.Source == nil && len(out.Dictionaries.Selections) == 0 {
@@ -55,8 +57,9 @@ func requireDictionaryRelations(dictionaries DictionaryOptions, required []valid
 	return nil
 }
 
-// decodeValidated owns one account and one imported set across both stages.
-// Inspect/Assess entry points continue to use their explicit profile contracts.
+// decodeValidated owns one account across both lines and one imported
+// dictionary set, which only line 3 reads. Inspect/Assess entry points
+// continue to use their explicit profile contracts.
 func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions, options *dictionaryAssessmentOptions, lenient bool) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	if err = assessmentContext(ctx, "canceled-before-source"); err != nil {
@@ -72,31 +75,40 @@ func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions
 	if err != nil {
 		return result, err
 	}
-	modelEngine, err := modelAssessmentEngineForProfile(ProfileModelSemantics)
-	if err != nil {
-		return result, err
-	}
-	cfg, loadErr := dictionaryAssessmentConfig(ctx, normalized, validation.TargetSource)
-	if cfg.Dictionaries == nil {
+	sourceConfig, modelConfig, loadErr := assessedLoadingLines(ctx, normalized)
+	if modelConfig.Dictionaries == nil {
 		return result, loadErr
 	}
-	cfg.DTD = normalized.Assessment.DTD
 	defer func() {
-		err = errors.Join(err, cfg.Dictionaries.Close())
+		err = errors.Join(err, modelConfig.Dictionaries.Close())
 		if err != nil {
 			result.Document, result.Accepted = nil, false
 		}
 	}()
-	run, startErr := newSourceAssessmentRunWithConfig(ctx, reader, decode, &sourceAssessmentConfig{assessmentRunConfig: cfg, ByteOwner: sourceBytesPrimary}, true)
+	run, startErr := newSourceAssessmentRunWithConfig(ctx, reader, decode, &sourceAssessmentConfig{assessmentRunConfig: sourceConfig, ByteOwner: sourceBytesPrimary}, true)
 	if startErr != nil {
 		if run != nil {
-			result.Source = run.startupReport
+			result.SourceLine = run.startupReport
 		}
 		return result, errors.Join(loadErr, startErr)
 	}
-	modelConfig := cfg
-	modelConfig.Profile, modelConfig.Engine, modelConfig.DocumentID = ProfileModelSemantics, modelEngine, modelDocumentID
 	return decodeAssessedRun(ctx, run, modelConfig, loadErr, lenient)
+}
+
+// assessedLoadingLines configures both validation lines of strict loading on
+// one account: line 2, ProfileSourceLine, reads the source without
+// dictionaries; line 3, ProfileModelSemantics, owns the imported dictionary
+// set. A nil model.Dictionaries means the import failed and err says why.
+func assessedLoadingLines(ctx context.Context, normalized dictionaryAssessmentOptions) (source, model assessmentRunConfig, err error) {
+	sourceEngine, err := sourceAssessmentEngineForProfile(ProfileSourceLine)
+	if err != nil {
+		return source, model, err
+	}
+	model, err = dictionaryAssessmentConfig(ctx, normalized, validation.TargetModel)
+	source = model
+	source.Profile, source.Engine, source.DocumentID, source.Dictionaries = ProfileSourceLine, sourceEngine, sourceDocumentID, nil
+	source.DTD = normalized.Assessment.DTD
+	return source, model, err
 }
 
 func modelAcceptanceError(report validation.Report, status modelWalkStatus) error {

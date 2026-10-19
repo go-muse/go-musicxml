@@ -21,12 +21,12 @@ func TestDictionaryAssessmentExplicitProfilesAndConversion(t *testing.T) {
 	if err != nil || !model.Requested || model.Profile.ID != ProfileModelDictionaries || model.Target != validation.TargetModel {
 		t.Fatalf("report=%+v err=%v", model, err)
 	}
-	decoded, err := decodeAssessedWithDictionaries(ctx, strings.NewReader(source), decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}}})
-	if err != nil || decoded.Document == nil || !decoded.Source.Requested || decoded.Source.Profile.ID != ProfileSourceSemantics || !decoded.Source.Satisfied() || !decoded.Model.Satisfied() || decoded.Model.Profile.ID != ProfileModelSemantics {
+	decoded, err := decodeAssessedWithDictionaries(ctx, strings.NewReader(source), decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceLine}}})
+	if err != nil || decoded.Document == nil || !decoded.SourceLine.Requested || decoded.SourceLine.Profile.ID != ProfileSourceLine || !decoded.SourceLine.Satisfied() || !decoded.ModelLine.Satisfied() || decoded.ModelLine.Profile.ID != ProfileModelSemantics {
 		t.Fatalf("decoded=%+v err=%v", decoded, err)
 	}
 	defaults, err := decodeAssessedWithDictionaries(ctx, strings.NewReader(source), decodeDictionaryTestOptions{})
-	if err != nil || defaults.Document == nil || !defaults.Source.Satisfied() || defaults.Source.Profile.ID != ProfileSourceSemantics || !defaults.Model.Satisfied() || defaults.Model.Profile.ID != ProfileModelSemantics {
+	if err != nil || defaults.Document == nil || !defaults.SourceLine.Satisfied() || defaults.SourceLine.Profile.ID != ProfileSourceLine || !defaults.ModelLine.Satisfied() || defaults.ModelLine.Profile.ID != ProfileModelSemantics {
 		t.Fatalf("default mandatory decoded=%+v err=%v", defaults, err)
 	}
 }

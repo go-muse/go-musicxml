@@ -496,7 +496,7 @@ func TestDTDPkgIndependentCurrentModelRemainsSourceHonest(t *testing.T) {
 				var b validation.AssessmentBundle
 				var err error
 				if mxl {
-					b, err = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus", MediaType: "application/vnd.recordare.musicxml+xml"}}}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDCurrentMXLProfile}}})
+					b, err = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus", MediaType: Ptr("application/vnd.recordare.musicxml+xml")}}}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDCurrentMXLProfile}}})
 				} else {
 					b, err = assessModelWithResourcesAndDictionaries(context.Background(), doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDGraphProfile}}})
 				}

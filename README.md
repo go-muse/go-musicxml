@@ -93,8 +93,9 @@ construction and compressed `.mxl` round trips in
 | Read or write compressed MusicXML | `DecodeMXL`, typed `DecodeMXL...` helpers, `As...` accessors, and `EncodeMXL` |
 | Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
 | Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
-| Load only after source and current-model semantic acceptance (scenario 2) | `DecodeAssessed`, `DecodeMXLAssessed`; `Lenient` returns the document with its reports |
-| Check a current model with the semantic profile (scenario 3) | `AssessModel` with empty options; `AssessMXLPackage` with empty options for the current state of a whole MXL package |
+| Load only a valid structure (scenario 2: validation lines 2 and 3) | `DecodeAssessed`, `DecodeMXLAssessed`; `Lenient` returns the document with its reports |
+| Check a current model with the semantic profile (scenario 3: line 3) | `AssessModel` with empty options; `AssessMXLPackage` with empty options for the current state of a whole MXL package |
+| Find the validation line of a rule | `RuleLine`, `AllowedLineOverlap`, `ValidationLine` |
 | Assess current model with an explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
 | Inspect original source | `InspectXML` (empty profile: `ProfileSourceSemantics`), `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
 | Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
@@ -122,14 +123,16 @@ its successful result makes no claim about the original input.
 Encoding rejects invalid UTF-8 and XML 1.0 characters before writing, so text
 is never silently replaced with U+FFFD.
 
-Three scenarios cover loading and checking; see [Scenarios](API.md#scenarios).
-`DecodeAssessed` and `DecodeMXLAssessed` always require the existing
-`ProfileSourceSemantics` (`ProfileMXLSourceSemantics` for MXL) followed by
-direct `ProfileModelSemantics` assessment. `AssessModel` with empty options is
-that model assessment on its own.
+Three scenarios cover loading and checking, over three validation lines; see
+[Scenarios](API.md#scenarios) and [Validation lines](API.md#validation-lines).
+`DecodeAssessed` and `DecodeMXLAssessed` run line 2, `ProfileSourceLine`
+(`ProfileMXLSourceLine` for MXL), while they read: the requirements the loaded
+structure cannot show. After conversion they run line 3, direct
+`ProfileModelSemantics` (`ProfileMXLModelSemantics`) assessment. `AssessModel`
+with empty options is that line-3 assessment on its own.
 Nil or empty assessment options select this fixed pipeline, with bundled canonical
-SMuFL and IPA representation evidence. `DecodeResult` exposes `Source`,
-`Conversion` and `Model` separately; by default any failure or incomplete
+SMuFL and IPA representation evidence for line 3. `DecodeResult` exposes
+`SourceLine`, `Conversion` and `ModelLine` separately; by default any failure or incomplete
 required assessment withholds `Document`, while `Lenient` returns it with
 `Accepted` false. A DOCTYPE external subset is read from the bundled official
 MusicXML 4.0 DTDs, which also resolve the identifiers of MusicXML 1.0 through 3.1

@@ -113,7 +113,7 @@ func TestMXLRejectsUnrepresentableMetadataBeforeNormalization(t *testing.T) {
 					root := MXLRootFile{FullPath: "score.musicxml"}
 					wantErr := ErrMXLInvalidPath
 					if mediaType {
-						root.MediaType = "application/" + value
+						root.MediaType = Ptr("application/" + value)
 						wantErr = ErrMXLInvalidContainer
 					} else {
 						root.FullPath = "score" + value + ".musicxml"
@@ -139,7 +139,7 @@ func TestMXLRepresentableAlternateMediaTypeRoundTrip(t *testing.T) {
 	mediaType := "application/\ufffd\ufdd0\U0001fffe\U0010ffff"
 	value := &MXLPackage{
 		Document:  &ScorePartwise{},
-		RootFiles: []MXLRootFile{{FullPath: "score.musicxml"}, {FullPath: "alternate.bin", MediaType: mediaType}},
+		RootFiles: []MXLRootFile{{FullPath: "score.musicxml"}, {FullPath: "alternate.bin", MediaType: Ptr(mediaType)}},
 		Resources: []MXLResource{{Path: "alternate.bin", Data: []byte("alternate")}},
 	}
 	var encoded bytes.Buffer

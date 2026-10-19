@@ -51,8 +51,8 @@ func TestBoundedLocalStrictAccordionIntegration(t *testing.T) {
 	if err != nil || !preview.Satisfied() {
 		t.Fatalf("XSD preview: %+v %v", preview, err)
 	}
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})
-	if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.Source.InputComplete || !result.Source.AssessmentComplete {
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+	if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.InputComplete || !result.SourceLine.AssessmentComplete {
 		t.Fatalf("strict local outcome: %+v %v", result, err)
 	}
 	report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLocal})
@@ -79,7 +79,7 @@ func TestBoundedLocalSourceCapabilityAndPartialFailure(t *testing.T) {
 	if err != nil || !report.InputComplete || report.Satisfied() || report.AssessmentComplete || report.Syntax != validation.SyntaxWellFormed || report.Counts.Unsupported == 0 {
 		t.Fatalf("DTD closure silently changed: %+v %v", report, err)
 	}
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
 	if !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted {
 		t.Fatalf("DTD strict closure: %+v %v", result, err)
 	}

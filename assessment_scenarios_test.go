@@ -121,15 +121,15 @@ func TestScenarioThreeMatchesStrictLoadingModel(t *testing.T) {
 		require.NotNil(t, result.Document, name)
 		report, err := AssessModel(ctx, result.Document, AssessmentOptions{})
 		require.NoError(t, err, name)
-		assert.True(t, reflect.DeepEqual(result.Model, report), "%s: AssessModel equals the model stage of DecodeAssessed", name)
+		assert.True(t, reflect.DeepEqual(result.ModelLine, report), "%s: AssessModel equals the model stage of DecodeAssessed", name)
 
 		mxl, err := DecodeMXLAssessed(ctx, bytes.NewReader(scenarioMXL(t, source)), DecodeMXLAssessmentOptions{Lenient: true})
 		require.NoError(t, err, name)
 		require.NotNil(t, mxl.Package, name)
 		bundle, err := AssessMXLPackage(ctx, mxl.Package, MXLAssessmentOptions{})
 		require.NoError(t, err, name)
-		assert.Equal(t, summarizeBundle(bundle), summarizeBundle(mxl.Model), "%s: AssessMXLPackage equals the model stage of DecodeMXLAssessed", name)
-		assert.Equal(t, name == "valid", mxl.Model.Satisfied(), "%s: an unedited valid package satisfies its current-state assessment", name)
+		assert.Equal(t, summarizeBundle(bundle), summarizeBundle(mxl.ModelLine), "%s: AssessMXLPackage equals the model stage of DecodeMXLAssessed", name)
+		assert.Equal(t, name == "valid", mxl.ModelLine.Satisfied(), "%s: an unedited valid package satisfies its current-state assessment", name)
 	}
 }
 
@@ -180,9 +180,9 @@ func TestLenientAssessedLoading(t *testing.T) {
 			assert.NoError(t, lenientErr, tc.name)
 			assert.NotNil(t, lenient.Document, tc.name)
 			assert.False(t, lenient.Accepted, tc.name)
-			assert.True(t, lenient.Source.Requested, tc.name)
-			assert.True(t, lenient.Model.Requested, "%s: the model is assessed after source findings", tc.name)
-			assert.False(t, lenient.Source.Satisfied() && lenient.Model.Satisfied(), tc.name)
+			assert.True(t, lenient.SourceLine.Requested, tc.name)
+			assert.True(t, lenient.ModelLine.Requested, "%s: the model is assessed after source findings", tc.name)
+			assert.False(t, lenient.SourceLine.Satisfied() && lenient.ModelLine.Satisfied(), tc.name)
 		}
 	}
 	var syntax *xml.SyntaxError
@@ -205,26 +205,30 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	require.NotNil(t, result.Package)
 	assert.True(t, result.Accepted)
 	assert.Equal(t, validation.ConversionConverted, result.Conversion.State)
-	assert.True(t, result.Source.Satisfied())
-	assert.True(t, result.Model.Satisfied())
-	assert.Equal(t, ProfileMXLSourceSemantics, result.Source.PackageReport().Profile.ID)
-	assert.Equal(t, ProfileMXLModelSemantics, result.Model.PackageReport().Profile.ID)
+	assert.True(t, result.SourceLine.Satisfied())
+	assert.True(t, result.ModelLine.Satisfied())
+	assert.Equal(t, ProfileMXLSourceLine, result.SourceLine.PackageReport().Profile.ID)
+	assert.Equal(t, ProfileMXLModelSemantics, result.ModelLine.PackageReport().Profile.ID)
 
-	explicit, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceSemantics}}})
+	explicit, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceLine}}})
 	require.NoError(t, err)
 	assert.True(t, explicit.Accepted)
+	// The full source semantics is a diagnostic profile of InspectMXL, not
+	// line 2.
+	_, err = DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceSemantics}}})
+	assert.ErrorIs(t, err, validation.ErrInvalidConfiguration)
 
 	violated := scenarioMXL(t, scenarioSourceViolated)
 	strict, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrInvalidDocument)
 	assert.Nil(t, strict.Package)
 	assert.False(t, strict.Accepted)
-	assert.False(t, strict.Model.PackageReport().Requested, "strict mode assesses the package only after an accepted archive")
+	assert.False(t, strict.ModelLine.PackageReport().Requested, "strict mode assesses the package only after an accepted archive")
 	lenient, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Lenient: true})
 	require.NoError(t, err)
 	require.NotNil(t, lenient.Package)
 	assert.False(t, lenient.Accepted)
-	assert.True(t, lenient.Model.PackageReport().Requested)
+	assert.True(t, lenient.ModelLine.PackageReport().Requested)
 
 	modelViolated := scenarioMXL(t, scenarioModelViolated)
 	strict, err = DecodeMXLAssessed(ctx, bytes.NewReader(modelViolated), DecodeMXLAssessmentOptions{})
@@ -264,7 +268,7 @@ func TestDecodeMXLAssessed(t *testing.T) {
 		return low
 	}
 	inspectMinimum := minimum(func(b validation.Budgets) error {
-		_, err := InspectMXL(ctx, bytes.NewReader(valid), MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: b}})
+		_, err := InspectMXL(ctx, bytes.NewReader(valid), MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceLine, Budgets: b}})
 		return err
 	})
 	loadMinimum := minimum(func(b validation.Budgets) error {
@@ -284,17 +288,19 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, corrupt.Package)
 
-	// Resources and their resolver reach the source stage as in InspectMXL.
+	// Resources and their resolver reach the source line as in InspectMXL
+	// with ProfileMXLSourceLine.
 	var calls atomic.Int32
 	resolver := validation.ResourceResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {
 		calls.Add(1)
 		return validation.ResourceResult{}, errors.New("unavailable")
 	})
 	resources := MXLAssessmentOptions{Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{CanonicalID: "urn:test:score"}}
-	inspected, inspectErr := InspectMXL(ctx, bytes.NewReader(valid), resources)
 	loaded, loadErr := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: resources, Lenient: true})
+	resources.Graph = AssessmentOptions{Profile: ProfileMXLSourceLine}
+	inspected, inspectErr := InspectMXL(ctx, bytes.NewReader(valid), resources)
 	assert.Equal(t, inspectErr, loadErr)
-	assert.Equal(t, summarizeBundle(inspected), summarizeBundle(loaded.Source))
+	assert.Equal(t, summarizeBundle(inspected), summarizeBundle(loaded.SourceLine))
 }
 
 func TestValidationIssueSemantics(t *testing.T) {
@@ -305,7 +311,7 @@ func TestValidationIssueSemantics(t *testing.T) {
 	require.ErrorAs(t, err, &invalid)
 	require.NotEmpty(t, invalid.Issues)
 	failed := map[string]validation.Finding{}
-	for _, f := range result.Source.Findings {
+	for _, f := range result.SourceLine.Findings {
 		if f.Outcome == validation.OutcomeFail {
 			failed[string(f.Rule.ID)] = f
 		}
@@ -380,9 +386,9 @@ func TestAssessmentFuncAdapters(t *testing.T) {
 	assert.Equal(t, validation.Evidence[string]{State: validation.EvidenceUnknown, Reason: "why"}, validation.Unknown[string]("why"))
 
 	var formatted strings.Builder
-	require.NoError(t, result.Source.Format(&formatted))
-	assert.Equal(t, formatted.String(), result.Source.String())
-	assert.Contains(t, result.Source.String(), string(ProfileSourceSemantics))
+	require.NoError(t, result.SourceLine.Format(&formatted))
+	assert.Equal(t, formatted.String(), result.SourceLine.String())
+	assert.Contains(t, result.SourceLine.String(), string(ProfileSourceLine))
 }
 
 // rawMXL packs raw score XML into an MXL archive without decoding it.
@@ -461,9 +467,9 @@ func TestAssessedLoadingOperationalFailures(t *testing.T) {
 		`<part id="P1"><measure number="1"><attributes><divisions>1</divisions><staves>99999999999999999999</staves></attributes><note><rest/><duration>1</duration></note></measure></part></score-partwise>`)
 	for _, lenient := range []bool{false, true} {
 		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(unrepresentable), DecodeMXLAssessmentOptions{Lenient: lenient})
-		assert.False(t, result.Source.Satisfied(), "the source line reports the unrepresentable value")
-		assert.NotEmpty(t, result.Source.Failures().Findings)
-		assert.True(t, result.Source.Failures().Violated)
+		assert.False(t, result.SourceLine.Satisfied(), "the source line reports the unrepresentable value")
+		assert.NotEmpty(t, result.SourceLine.Failures().Findings)
+		assert.True(t, result.SourceLine.Failures().Violated)
 		if lenient {
 			var conversion *ConversionError
 			assert.ErrorAs(t, err, &conversion)
@@ -556,8 +562,8 @@ func TestDecodeMXLAssessedRetainsSourceBundle(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, result.Accepted)
 	contexts := 0
-	for i := 0; i < result.Source.ResourceCount(); i++ {
-		_, report, _ := result.Source.ResourceReport(i)
+	for i := 0; i < result.SourceLine.ResourceCount(); i++ {
+		_, report, _ := result.SourceLine.ResourceReport(i)
 		contexts += len(report.Context)
 	}
 	require.Positive(t, contexts, "the source bundle keeps resource-report contexts")
@@ -595,15 +601,22 @@ func TestDecodeMXLAssessedClassifiesTruncatedViolations(t *testing.T) {
 	assert.NotErrorIs(t, err, ErrIncompleteAssessment)
 	assert.Contains(t, err.Error(), "diagnostic details were truncated")
 
-	// A violation next to independent incompleteness reports both, also when
-	// the violation's diagnostics are truncated.
+	// A line-2 violation rejects before line 3, also when its diagnostics are
+	// truncated. In the lenient mode line 3 also runs and reports the
+	// independent incompleteness of a line-3 rule next to the violation.
 	both := rawMXL(t, mandatoryScore("0", `<note time-only="1,1"><rest/><duration>1</duration></note>`))
 	for _, budgets := range []validation.Budgets{{}, {MaxDiagnosticBytes: 1}} {
 		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(both), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: budgets}}})
 		assert.ErrorIs(t, err, ErrInvalidDocument, "%+v", budgets)
-		assert.ErrorIs(t, err, ErrIncompleteAssessment, "%+v", budgets)
+		assert.NotErrorIs(t, err, ErrIncompleteAssessment, "%+v", budgets)
 		// A strict rejection comes before conversion.
 		assert.Equal(t, validation.ConversionIncomplete, result.Conversion.State, "%+v", budgets)
+		lenient, err := DecodeMXLAssessed(ctx, bytes.NewReader(both), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: budgets}}, Lenient: true})
+		require.NoError(t, err)
+		assert.False(t, lenient.Accepted)
+		assert.True(t, lenient.SourceLine.Failures().Violated, "%+v", budgets)
+		model := lenient.ModelLine.Failures()
+		assert.True(t, model.Violated && model.Incomplete, "%+v: %+v", budgets, model)
 	}
 }
 
@@ -645,7 +658,7 @@ func TestDecodeMXLAssessedOpenErrors(t *testing.T) {
 	result, err := DecodeMXLAssessed(ctx, &failingAfterReader{source: bytes.NewReader(valid), after: 64}, DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrInvalidMXL)
 	assert.ErrorContains(t, err, "disk failure")
-	assert.Equal(t, validation.AssessmentBundle{}, result.Source)
+	assert.Equal(t, validation.AssessmentBundle{}, result.SourceLine)
 	_, err = DecodeMXL(&failingAfterReader{source: bytes.NewReader(valid), after: 64})
 	assert.ErrorIs(t, err, ErrInvalidMXL, "DecodeMXL classifies the same failure alike")
 
@@ -691,7 +704,7 @@ func TestDecodeMXLAssessedOpenErrors(t *testing.T) {
 		result, err = DecodeMXLAssessed(ctx, bytes.NewReader(preamble.Bytes()), DecodeMXLAssessmentOptions{Lenient: lenient})
 		assert.ErrorIs(t, err, ErrIncompleteAssessment, "lenient=%v", lenient)
 		assert.NotErrorIs(t, err, ErrInvalidMXL, "lenient=%v", lenient)
-		assert.Equal(t, inspected.PackageReport().Terminal, result.Source.PackageReport().Terminal, "lenient=%v: the source stage reports the archive as InspectMXL does", lenient)
+		assert.Equal(t, inspected.PackageReport().Terminal, result.SourceLine.PackageReport().Terminal, "lenient=%v: the source stage reports the archive as InspectMXL does", lenient)
 		assert.Nil(t, result.Package, "lenient=%v", lenient)
 	}
 }

@@ -217,7 +217,7 @@ func mustEncodeFuzzOpusPackage(f *testing.F) []byte {
 		RootFiles: []MXLRootFile{
 			{
 				FullPath:  "collections/main.musicxml",
-				MediaType: musicXMLMIMEType,
+				MediaType: Ptr(musicXMLMIMEType),
 			},
 		},
 		Resources: []MXLResource{

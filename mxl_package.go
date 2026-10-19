@@ -27,9 +27,34 @@ type MXLPackage struct {
 //
 // The first entry must identify the package's MusicXML document. Later entries
 // may identify alternate renditions such as PDF or audio files.
+//
+// MediaType is nil when the media-type attribute is absent, which means the
+// MusicXML media type. A non-nil value is the attribute as written, after
+// whitespace normalization, and is encoded even when it is empty, so a
+// decoded package keeps an empty attribute distinct from an absent one. As
+// for other optional fields, == compares the pointers; compare values with
+// reflect.DeepEqual.
 type MXLRootFile struct {
 	FullPath  string
-	MediaType string
+	MediaType *string
+}
+
+// mediaTypeText returns a rootfile media type, or "" when it is absent.
+func mediaTypeText(mediaType *string) string {
+	if mediaType == nil {
+		return ""
+	}
+	return *mediaType
+}
+
+// collapsedMediaType normalizes a present media type and keeps an absent one
+// absent.
+func collapsedMediaType(mediaType *string) *string {
+	if mediaType == nil {
+		return nil
+	}
+	value := collapseValidationWhitespace(*mediaType)
+	return &value
 }
 
 // MXLResource is a non-primary file stored in an MXL package.
@@ -38,6 +63,9 @@ type MXLResource struct {
 	Data []byte
 }
 
+// DecodeMXLPackage is scenario 1 for a whole MXL package: loading without
+// MusicXML validation.
+//
 // DecodeMXLPackage reads a compressed MusicXML document together with all
 // related files stored in its ZIP archive.
 func DecodeMXLPackage(reader io.Reader) (*MXLPackage, error) {
@@ -239,7 +267,7 @@ func openMXL(
 		return nil, err
 	}
 
-	container, err := decodeMXLContainer(containerData)
+	container, err := decodeMXLContainerContext(ctx, containerData, limits)
 	if err != nil {
 		return nil, err
 	}
@@ -458,7 +486,7 @@ func prepareMXLPackage(
 		rootFiles = []mxlRootFile{
 			{
 				FullPath:  mxlRootFilePath,
-				MediaType: musicXMLMIMEType,
+				MediaType: Ptr(musicXMLMIMEType),
 			},
 		}
 	} else {
@@ -468,7 +496,7 @@ func prepareMXLPackage(
 			if !validXMLText(rootFile.FullPath) {
 				return nil, fmt.Errorf("%w: %q", ErrMXLInvalidPath, rootFile.FullPath)
 			}
-			if !validXMLText(rootFile.MediaType) {
+			if !validXMLText(mediaTypeText(rootFile.MediaType)) {
 				return nil, fmt.Errorf(
 					"%w: rootfile %q media type cannot be represented as XML 1.0 text",
 					ErrMXLInvalidContainer,
@@ -477,7 +505,7 @@ func prepareMXLPackage(
 			}
 			rootFiles[index] = mxlRootFile{
 				FullPath:  collapseValidationWhitespace(rootFile.FullPath),
-				MediaType: collapseValidationWhitespace(rootFile.MediaType),
+				MediaType: collapsedMediaType(rootFile.MediaType),
 			}
 		}
 	}

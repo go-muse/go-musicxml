@@ -267,6 +267,7 @@ const LeftCenterRightLeft LeftCenterRight = "left"
 const LeftCenterRightRight LeftCenterRight = "right"
 const LeftRightLeft LeftRight = "left"
 const LeftRightRight LeftRight = "right"
+const LineDecoder ValidationLine = 1
 const LineEndArrow LineEnd = "arrow"
 const LineEndBoth LineEnd = "both"
 const LineEndDown LineEnd = "down"
@@ -275,8 +276,10 @@ const LineEndUp LineEnd = "up"
 const LineLengthLong LineLength = "long"
 const LineLengthMedium LineLength = "medium"
 const LineLengthShort LineLength = "short"
+const LineModel ValidationLine = 3
 const LineShapeCurved LineShape = "curved"
 const LineShapeStraight LineShape = "straight"
+const LineSource ValidationLine = 2
 const LineTypeDashed LineType = "dashed"
 const LineTypeDotted LineType = "dotted"
 const LineTypeSolid LineType = "solid"
@@ -438,6 +441,7 @@ const ProfileMXLModelSemantics validation.ProfileID = "musicxml-4.0/mxl-model-se
 const ProfileMXLSource validation.ProfileID = "musicxml-4.0/mxl-source"
 const ProfileMXLSourceDictionaries validation.ProfileID = "musicxml-4.0/mxl-source-dictionaries"
 const ProfileMXLSourceInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/mxl-source-internal-dtd-dictionaries"
+const ProfileMXLSourceLine validation.ProfileID = "musicxml-4.0/mxl-source-line"
 const ProfileMXLSourceSemantics validation.ProfileID = "musicxml-4.0/mxl-source-semantics"
 const ProfileModelContext validation.ProfileID = "musicxml-4.0/model-context"
 const ProfileModelDictionaries validation.ProfileID = "musicxml-4.0/model-links-dictionaries"
@@ -459,6 +463,7 @@ const ProfileSourceInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/
 const ProfileSourceInternalDTDLinks validation.ProfileID = "musicxml-4.0/source-internal-dtd-links"
 const ProfileSourceInternalDTDLocal validation.ProfileID = "musicxml-4.0/source-internal-dtd-local"
 const ProfileSourceInternalDTDSoundsDictionaries validation.ProfileID = "musicxml-4.0/source-internal-dtd-sounds-dictionaries"
+const ProfileSourceLine validation.ProfileID = "musicxml-4.0/source-line"
 const ProfileSourceLinks validation.ProfileID = "musicxml-4.0/source-links"
 const ProfileSourceLocal validation.ProfileID = "musicxml-4.0/source-local"
 const ProfileSourceSemantics validation.ProfileID = "musicxml-4.0/source-semantics"
@@ -670,6 +675,7 @@ const XMLSpaceDefault untyped string = "default"
 const XMLSpacePreserve untyped string = "preserve"
 const YesNoNo YesNo = "no"
 const YesNoYes YesNo = "yes"
+func AllowedLineOverlap() map[validation.RuleID]string
 func AsOpusDocument(document Document) (*OpusDocument, bool)
 func AsScorePartwise(document Document) (*ScorePartwise, bool)
 func AsScoreTimewise(document Document) (*ScoreTimewise, bool)
@@ -717,6 +723,7 @@ func NewScorePartwiseMeasure(number string) ScorePartwisePartMeasure
 func NewScoreTimewise(parts ...PartDefinition) *ScoreTimewise
 func NewScoreTimewiseMeasure(number string, partIDs ...string) ScoreTimewiseMeasure
 func Ptr[T any](value T) *T
+func RuleLine(rule validation.RuleKey) (ValidationLine, bool)
 func Validate(document Document) error
 type AboveBelow string
 type AboveBelow, method (AboveBelow) IsKnown() bool
@@ -1218,10 +1225,10 @@ type DecodeMXLAssessmentOptions struct, field order Assessment Lenient
 type DecodeMXLAssessmentOptions struct, not comparable
 type DecodeMXLResult struct, field Accepted bool
 type DecodeMXLResult struct, field Conversion validation.ConversionResult
-type DecodeMXLResult struct, field Model validation.AssessmentBundle
+type DecodeMXLResult struct, field ModelLine validation.AssessmentBundle
 type DecodeMXLResult struct, field Package *MXLPackage
-type DecodeMXLResult struct, field Source validation.AssessmentBundle
-type DecodeMXLResult struct, field order Package Source Model Conversion Accepted
+type DecodeMXLResult struct, field SourceLine validation.AssessmentBundle
+type DecodeMXLResult struct, field order Package SourceLine ModelLine Conversion Accepted
 type DecodeMXLResult struct, not comparable
 type DecodeOptions struct, comparable
 type DecodeOptions struct, field DTD *DTDOptions
@@ -1230,9 +1237,9 @@ type DecodeOptions struct, field order MaxXMLDepth DTD
 type DecodeResult struct, field Accepted bool
 type DecodeResult struct, field Conversion validation.ConversionResult
 type DecodeResult struct, field Document Document
-type DecodeResult struct, field Model validation.Report
-type DecodeResult struct, field Source validation.Report
-type DecodeResult struct, field order Document Source Model Conversion Accepted
+type DecodeResult struct, field ModelLine validation.Report
+type DecodeResult struct, field SourceLine validation.Report
+type DecodeResult struct, field order Document SourceLine ModelLine Conversion Accepted
 type DecodeResult struct, not comparable
 type Defaults struct, field Appearance *Appearance `xml:"appearance,omitempty"`
 type Defaults struct, field ConcertScore *Empty `xml:"concert-score,omitempty"`
@@ -2541,7 +2548,7 @@ type MXLResource struct, field order Path Data
 type MXLResource struct, not comparable
 type MXLRootFile struct, comparable
 type MXLRootFile struct, field FullPath string
-type MXLRootFile struct, field MediaType string
+type MXLRootFile struct, field MediaType *string
 type MXLRootFile struct, field order FullPath MediaType
 type MarginType string
 type MarginType, method (MarginType) IsKnown() bool
@@ -4222,6 +4229,8 @@ type ValidationIssue struct, field Path string
 type ValidationIssue struct, field Rule string
 type ValidationIssue struct, field order Path Constraint Message Rule
 type ValidationIssue, method (ValidationIssue) String() string
+type ValidationLine uint8
+type ValidationLine, method (ValidationLine) String() string
 type Valign string
 type Valign, method (Valign) IsKnown() bool
 type Valign, method (Valign) Values() []Valign

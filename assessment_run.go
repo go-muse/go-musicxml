@@ -82,6 +82,8 @@ func (c assessmentRunConfig) validate(target validation.Target) error {
 
 func sourceAssessmentEngineForProfile(profile validation.ProfileID) (*validation.Engine, error) {
 	switch profile {
+	case ProfileSourceLine:
+		return sourceLineEngine()
 	case ProfileSourceSemantics:
 		return sourceSemanticEngine()
 	case ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries:

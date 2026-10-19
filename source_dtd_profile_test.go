@@ -88,9 +88,9 @@ func TestSourceInternalDTDDefaultExpandedNameCollision(t *testing.T) {
 func TestSourceInternalDTDDecodeUsesSameEffectiveStream(t *testing.T) {
 	input := `<!DOCTYPE score-partwise [<!ENTITY title "Expanded title"><!ATTLIST score-partwise version CDATA "4.0">]>` + strings.Replace(strings.Replace(assessedScore("1", ""), ` version="4.0"`, "", 1), "<part-list>", "<movement-title>&title;</movement-title><part-list>", 1)
 	reader := &assessmentCountingReader{source: strings.NewReader(input)}
-	result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})
-	if err != nil || !result.Source.Satisfied() || !result.Model.Satisfied() || result.Conversion.State != validation.ConversionConverted {
-		t.Fatalf("error=%v syntax=%s conversion=%s", err, result.Source.Syntax, result.Conversion.State)
+	result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+	if err != nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() || result.Conversion.State != validation.ConversionConverted {
+		t.Fatalf("error=%v syntax=%s conversion=%s", err, result.SourceLine.Syntax, result.Conversion.State)
 	}
 	score, ok := result.Document.(*ScorePartwise)
 	if !ok || score.Version == nil || *score.Version != "4.0" || score.MovementTitle == nil || *score.MovementTitle != "Expanded title" {

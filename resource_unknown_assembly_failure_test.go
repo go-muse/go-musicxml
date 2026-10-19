@@ -24,7 +24,7 @@ func TestResourceUnknownAssemblyPreservesSyntaxFailure(t *testing.T) {
 					if decodeErr != nil {
 						t.Fatal(decodeErr)
 					}
-					bundle, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "bad.xml", MediaType: media}}, Resources: []MXLResource{{Path: "bad.xml", Data: []byte("\x00")}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+					bundle, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "bad.xml", MediaType: Ptr(media)}}, Resources: []MXLResource{{Path: "bad.xml", Data: []byte("\x00")}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
 				} else {
 					container := `<container><rootfiles><rootfile full-path="main.opus"/><rootfile full-path="bad.xml" media-type="` + media + `"/></rootfiles></container>`
 					wire := assessmentZIPBytes([]assessmentZIPFixture{{name: mxlContainerPath, body: container}, {name: "main.opus", body: `<opus/>`}, {name: "bad.xml", body: "\x00"}}, nil, "")

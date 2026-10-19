@@ -20,8 +20,8 @@ that recorded revision.
 **Later breaking migration:** the matrix, test names and receipts below retain
 that revision's optional assessed-decoder contract. They do not describe the
 current defaults of `DecodeAssessed`, or of the since-removed
-`DecodeAssessedWithDictionaries`. It now requires `ProfileSourceSemantics` then
-direct `ProfileModelSemantics`, with
+`DecodeAssessedWithDictionaries`. It now runs validation line 2,
+`ProfileSourceLine`, then line 3, direct `ProfileModelSemantics`, with
 required bundled evidence by default and no document on either stage's failure.
 See the [current assessed-loading contract](assessed-loading-pipeline.md).
 Inspection, standalone model assessment and package APIs retain their explicit

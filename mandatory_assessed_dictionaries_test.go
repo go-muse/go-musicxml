@@ -37,28 +37,30 @@ func TestMandatoryAssessedDictionariesDefaultAndExplicitShareEvidence(t *testing
 			if err != nil || result.Document == nil {
 				t.Fatalf("dictionary-backed load: document=%T error=%v", result.Document, err)
 			}
-			mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
-			mandatorySatisfiedReport(t, result.Model, ProfileModelSemantics, validation.TargetModel)
-			controlOptions := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: DictionaryOptions{
+			mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine, validation.TargetSource)
+			mandatorySatisfiedReport(t, result.ModelLine, ProfileModelSemantics, validation.TargetModel)
+			controlOptions := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileModelSemantics}, Dictionaries: DictionaryOptions{
 				Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
 			}}
-			sourceControl, err := inspectXMLWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), controlOptions)
-			if err != nil || !reflect.DeepEqual(sourceControl, result.Source) {
+			sourceControl, err := InspectXML(context.Background(), strings.NewReader(mandatoryDictionaryScore()), AssessmentOptions{Profile: ProfileSourceLine})
+			if err != nil || !reflect.DeepEqual(sourceControl, result.SourceLine) {
 				t.Fatalf("complete source report differs from standalone assessment: error=%v", err)
 			}
 			controlOptions.Assessment.Profile = ProfileModelSemantics
 			modelControl, err := assessModelWithDictionaries(context.Background(), result.Document, controlOptions)
-			if err != nil || !reflect.DeepEqual(modelControl, result.Model) {
+			if err != nil || !reflect.DeepEqual(modelControl, result.ModelLine) {
 				t.Fatalf("complete model report differs from standalone assessment: error=%v", err)
 			}
 			// The import set has already been closed. Each returned report must
 			// retain independently usable verified evidence from that same set.
-			for _, report := range []validation.Report{result.Source, result.Model} {
-				for _, property := range []validation.ContextProperty{validation.ContextDictionaryCanonical, validation.ContextDictionaryIPARepresentation} {
-					evidence := dictionaryResults(report, property)
-					if len(evidence) != 1 || evidence[0].Result.State != validation.EvidenceKnown || !evidence[0].Result.Value || !evidence[0].ComponentVerified {
-						t.Fatalf("returned %s report lost %s evidence: %+v", report.Target, property, evidence)
-					}
+			// Only line 3 reads dictionaries.
+			for _, property := range []validation.ContextProperty{validation.ContextDictionaryCanonical, validation.ContextDictionaryIPARepresentation} {
+				evidence := dictionaryResults(result.ModelLine, property)
+				if len(evidence) != 1 || evidence[0].Result.State != validation.EvidenceKnown || !evidence[0].Result.Value || !evidence[0].ComponentVerified {
+					t.Fatalf("returned model report lost %s evidence: %+v", property, evidence)
+				}
+				if evidence := dictionaryResults(result.SourceLine, property); len(evidence) != 0 {
+					t.Fatalf("source line read dictionary %s: %+v", property, evidence)
 				}
 			}
 			if explicit {
@@ -115,11 +117,13 @@ func TestMandatoryAssessedDictionariesNeverRepairExplicitUnavailableOverride(t *
 			}
 			options := dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: source}}
 			result, err := decodeAssessedWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), decodeDictionaryTestOptions{Assessment: &options})
-			if result.Document != nil || err == nil || result.Source.Satisfied() || result.Model.Requested {
-				t.Fatalf("explicit override silently repaired: document=%T source-satisfied=%v model-requested=%v error=%v", result.Document, result.Source.Satisfied(), result.Model.Requested, err)
+			// Line 2 reads no dictionaries, so it accepts the source; line 3
+			// reports the unavailable evidence and rejects the document.
+			if result.Document != nil || err == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Requested || result.ModelLine.Satisfied() {
+				t.Fatalf("explicit override silently repaired: document=%T source-satisfied=%v model-requested=%v model-satisfied=%v error=%v", result.Document, result.SourceLine.Satisfied(), result.ModelLine.Requested, result.ModelLine.Satisfied(), err)
 			}
-			if !result.Source.Requested || !result.Source.InputComplete || !errors.Is(err, ErrIncompleteAssessment) {
-				t.Fatalf("missing independent incomplete source report: requested=%v complete=%v error=%v", result.Source.Requested, result.Source.InputComplete, err)
+			if !result.ModelLine.InputComplete || !errors.Is(err, ErrIncompleteAssessment) {
+				t.Fatalf("missing independent incomplete model report: complete=%v error=%v", result.ModelLine.InputComplete, err)
 			}
 			if kind == "provider-error" && !errors.Is(err, providerFailure) {
 				t.Fatalf("provider error lost: %v", err)
@@ -128,7 +132,7 @@ func TestMandatoryAssessedDictionariesNeverRepairExplicitUnavailableOverride(t *
 				t.Errorf("explicit imports=%d, want one per selected component", calls)
 			}
 			for _, property := range []validation.ContextProperty{validation.ContextDictionaryCanonical, validation.ContextDictionaryIPARepresentation} {
-				evidence := dictionaryResults(result.Source, property)
+				evidence := dictionaryResults(result.ModelLine, property)
 				if kind == "corrupt" && property == validation.ContextDictionaryIPARepresentation {
 					// The caller supplied this separate component intact.
 					if len(evidence) != 1 || !evidence[0].ComponentVerified || evidence[0].Result.State != validation.EvidenceKnown {
@@ -195,8 +199,8 @@ func TestMandatoryAssessedDictionariesRejectCorruptIPAAtStartup(t *testing.T) {
 			if !errors.Is(err, validation.ErrInvalidConfiguration) || !errors.As(err, &configuration) || configuration.Field != "dictionary IPA representation" || configuration.Reason != "source SHA-256 mismatch" {
 				t.Fatalf("corrupt IPA override did not preserve its startup failure: %v", err)
 			}
-			if result.Document != nil || result.Source.Requested || result.Model.Requested || result.Conversion.State != validation.ConversionIncomplete || reader.reads != 0 || calls != 2 || len(bodies) != 2 {
-				t.Fatalf("corrupt IPA override fell back or touched source: document=%T source-requested=%v model-requested=%v reads=%d provider-calls=%d bodies=%d", result.Document, result.Source.Requested, result.Model.Requested, reader.reads, calls, len(bodies))
+			if result.Document != nil || result.SourceLine.Requested || result.ModelLine.Requested || result.Conversion.State != validation.ConversionIncomplete || reader.reads != 0 || calls != 2 || len(bodies) != 2 {
+				t.Fatalf("corrupt IPA override fell back or touched source: document=%T source-requested=%v model-requested=%v reads=%d provider-calls=%d bodies=%d", result.Document, result.SourceLine.Requested, result.ModelLine.Requested, reader.reads, calls, len(bodies))
 			}
 			for _, body := range bodies {
 				if body.closed != 1 {
@@ -224,17 +228,17 @@ func TestMandatoryAssessedLoadingSharesNodeBudgetAcrossStages(t *testing.T) {
 		for _, limit := range []int64{standaloneLimit, combined - 1, combined} {
 			t.Run(fmt.Sprintf("%s/nodes=%d", mandatoryLoaderName(explicit), limit), func(t *testing.T) {
 				result, err := mandatoryDecode(explicit, context.Background(), strings.NewReader(source), &AssessmentOptions{Budgets: validation.Budgets{MaxNodes: limit}})
-				mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
+				mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine, validation.TargetSource)
 				if limit == combined {
 					if err != nil || result.Document == nil {
 						t.Fatalf("exact combined node budget failed: document=%T error=%v", result.Document, err)
 					}
-					mandatorySatisfiedReport(t, result.Model, ProfileModelSemantics, validation.TargetModel)
+					mandatorySatisfiedReport(t, result.ModelLine, ProfileModelSemantics, validation.TargetModel)
 					return
 				}
 				var resource *validation.ResourceError
-				if !errors.Is(err, validation.ErrResourceLimit) || !errors.As(err, &resource) || resource.Kind != validation.BudgetNodes || resource.Limit != limit || result.Document != nil || !result.Model.Requested || result.Model.Satisfied() || result.Model.InputComplete {
-					t.Fatalf("model stage did not exhaust shared node budget: source=%v model-requested=%v model-complete=%v document=%T error=%v", result.Source.Satisfied(), result.Model.Requested, result.Model.InputComplete, result.Document, err)
+				if !errors.Is(err, validation.ErrResourceLimit) || !errors.As(err, &resource) || resource.Kind != validation.BudgetNodes || resource.Limit != limit || result.Document != nil || !result.ModelLine.Requested || result.ModelLine.Satisfied() || result.ModelLine.InputComplete {
+					t.Fatalf("model stage did not exhaust shared node budget: source=%v model-requested=%v model-complete=%v document=%T error=%v", result.SourceLine.Satisfied(), result.ModelLine.Requested, result.ModelLine.InputComplete, result.Document, err)
 				}
 			})
 		}
@@ -249,40 +253,34 @@ func TestMandatoryAssessedLoadingModelCancellationPreservesSourceAndReleasesOwne
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			observed := &mandatoryModelCancelContext{Context: ctx, cancel: cancel, sourceNodes: sourceNodes, enabled: cancelModel}
-			options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: DictionaryOptions{
+			options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileModelSemantics}, Dictionaries: DictionaryOptions{
 				Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
 			}}
-			cfg, err := dictionaryAssessmentConfig(observed, options, validation.TargetSource)
-			if err != nil || cfg.Dictionaries == nil {
+			cfg, modelCfg, err := assessedLoadingLines(observed, options)
+			if err != nil || modelCfg.Dictionaries == nil {
 				t.Fatalf("import configuration failed: %v", err)
 			}
-			defer cfg.Dictionaries.Close()
+			defer modelCfg.Dictionaries.Close()
 			observed.account = cfg.Account
 			run, err := newSourceAssessmentRunWithConfig(observed, strings.NewReader(source), DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: cfg, ByteOwner: sourceBytesPrimary}, true)
 			if err != nil {
 				t.Fatal(err)
 			}
-			modelCfg := cfg
-			modelCfg.Profile, modelCfg.DocumentID = ProfileModelSemantics, modelDocumentID
-			modelCfg.Engine, err = modelAssessmentEngineForProfile(ProfileModelSemantics)
-			if err != nil {
-				t.Fatal(err)
-			}
 			result, err := decodeAssessedRun(observed, run, modelCfg, nil, false)
-			err = errors.Join(err, cfg.Dictionaries.Close())
-			mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
-			if result.Conversion.State != validation.ConversionConverted || !result.Model.Requested {
-				t.Fatalf("source/model stage boundary lost: conversion=%s model-requested=%v error=%v", result.Conversion.State, result.Model.Requested, err)
+			err = errors.Join(err, modelCfg.Dictionaries.Close())
+			mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine, validation.TargetSource)
+			if result.Conversion.State != validation.ConversionConverted || !result.ModelLine.Requested {
+				t.Fatalf("source/model stage boundary lost: conversion=%s model-requested=%v error=%v", result.Conversion.State, result.ModelLine.Requested, err)
 			}
 			if cancelModel {
-				if !errors.Is(err, context.Canceled) || result.Document != nil || result.Model.Satisfied() || result.Model.InputComplete {
-					t.Fatalf("model cancellation accepted: document=%T model-complete=%v error=%v", result.Document, result.Model.InputComplete, err)
+				if !errors.Is(err, context.Canceled) || result.Document != nil || result.ModelLine.Satisfied() || result.ModelLine.InputComplete {
+					t.Fatalf("model cancellation accepted: document=%T model-complete=%v error=%v", result.Document, result.ModelLine.InputComplete, err)
 				}
 			} else {
 				if err != nil || result.Document == nil {
 					t.Fatalf("control load failed: document=%T error=%v", result.Document, err)
 				}
-				mandatorySatisfiedReport(t, result.Model, ProfileModelSemantics, validation.TargetModel)
+				mandatorySatisfiedReport(t, result.ModelLine, ProfileModelSemantics, validation.TargetModel)
 				used, err := cfg.Account.Usage(validation.BudgetNodes)
 				if err != nil || used != sourceNodes+modelNodes {
 					t.Fatalf("stages did not share their root account: nodes=%d want=%d error=%v", used, sourceNodes+modelNodes, err)
@@ -301,7 +299,7 @@ func TestMandatoryAssessedLoadingModelCancellationPreservesSourceAndReleasesOwne
 func mandatoryStandaloneNodeCounts(t *testing.T, source string, budgets validation.Budgets) (int64, int64) {
 	t.Helper()
 	ctx := context.Background()
-	run, err := newSourceAssessmentRun(ctx, strings.NewReader(source), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: budgets}, false)
+	run, err := newSourceAssessmentRun(ctx, strings.NewReader(source), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceLine, Budgets: budgets}, false)
 	if err != nil {
 		t.Fatal(err)
 	}

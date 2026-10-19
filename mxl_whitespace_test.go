@@ -29,8 +29,8 @@ func TestMXLRootFileWhitespaceNormalization(t *testing.T) {
 	value, err := DecodeMXLPackage(bytes.NewReader(input))
 	require.NoError(t, err)
 	assert.Equal(t, []MXLRootFile{
-		{FullPath: "scores/main score.musicxml", MediaType: musicXMLMIMEType},
-		{FullPath: "alternate/score.pdf", MediaType: "application/pdf"},
+		{FullPath: "scores/main score.musicxml", MediaType: Ptr(musicXMLMIMEType)},
+		{FullPath: "alternate/score.pdf", MediaType: Ptr("application/pdf")},
 	}, value.RootFiles)
 	assert.Equal(t, []MXLResource{
 		{Path: "images/ cover  .png ", Data: []byte("PNG")},
@@ -87,8 +87,8 @@ func TestEncodeMXLRootFileWhitespaceNormalization(t *testing.T) {
 	t.Parallel()
 
 	rootFiles := []MXLRootFile{
-		{FullPath: " \tscore.musicxml \r\n", MediaType: " " + musicXMLMIMEType + " "},
-		{FullPath: " alternate/score.pdf ", MediaType: " application/pdf "},
+		{FullPath: " \tscore.musicxml \r\n", MediaType: Ptr(" " + musicXMLMIMEType + " ")},
+		{FullPath: " alternate/score.pdf ", MediaType: Ptr(" application/pdf ")},
 	}
 	value := &MXLPackage{
 		Document:  &ScorePartwise{},
@@ -101,8 +101,8 @@ func TestEncodeMXLRootFileWhitespaceNormalization(t *testing.T) {
 	roundTripped, err := DecodeMXLPackage(bytes.NewReader(encoded.Bytes()))
 	require.NoError(t, err)
 	assert.Equal(t, []MXLRootFile{
-		{FullPath: "score.musicxml", MediaType: musicXMLMIMEType},
-		{FullPath: "alternate/score.pdf", MediaType: "application/pdf"},
+		{FullPath: "score.musicxml", MediaType: Ptr(musicXMLMIMEType)},
+		{FullPath: "alternate/score.pdf", MediaType: Ptr("application/pdf")},
 	}, roundTripped.RootFiles)
 	assert.Equal(t, value.Resources, roundTripped.Resources)
 

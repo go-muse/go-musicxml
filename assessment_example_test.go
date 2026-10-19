@@ -17,7 +17,7 @@ func ExampleInspectXML() {
 
 func ExampleDecodeAssessed() {
 	result, err := musicxml.DecodeAssessed(context.Background(), strings.NewReader(`<opus/>`), musicxml.DecodeAssessmentOptions{})
-	fmt.Println(result.Document != nil, result.Source.Satisfied(), result.Model.Satisfied(), result.Conversion.State, err)
+	fmt.Println(result.Document != nil, result.SourceLine.Satisfied(), result.ModelLine.Satisfied(), result.Conversion.State, err)
 	// Output: true true true converted <nil>
 }
 
@@ -29,7 +29,7 @@ func ExampleDecodeAssessed_lenient() {
 	strict, err := musicxml.DecodeAssessed(context.Background(), strings.NewReader(source), musicxml.DecodeAssessmentOptions{})
 	fmt.Println(strict.Document != nil, strict.Accepted, err != nil)
 	lenient, err := musicxml.DecodeAssessed(context.Background(), strings.NewReader(source), musicxml.DecodeAssessmentOptions{Lenient: true})
-	fmt.Println(lenient.Document != nil, lenient.Accepted, err, lenient.Source.Conformance, lenient.Model.Conformance)
+	fmt.Println(lenient.Document != nil, lenient.Accepted, err, lenient.SourceLine.Conformance, lenient.ModelLine.Conformance)
 	// Output:
 	// false false true
 	// true false <nil> violated violated
@@ -53,6 +53,6 @@ func ExampleDecodeMXLAssessed() {
 		panic(err)
 	}
 	result, err := musicxml.DecodeMXLAssessed(context.Background(), bytes.NewReader(archive.Bytes()), musicxml.DecodeMXLAssessmentOptions{})
-	fmt.Println(result.Package != nil, result.Accepted, result.Source.Satisfied(), result.Model.Satisfied(), err)
+	fmt.Println(result.Package != nil, result.Accepted, result.SourceLine.Satisfied(), result.ModelLine.Satisfied(), err)
 	// Output: true true true true <nil>
 }

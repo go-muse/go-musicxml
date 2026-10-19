@@ -74,12 +74,18 @@ func (g *resourceGraphRun) ownArchive(a *mxlAssessmentArchive) error {
 	return nil
 }
 
+// InspectMXL is a diagnostic tool outside the three scenarios; with
+// ProfileMXLSourceLine it gives the line-2 bundle of DecodeMXLAssessed, and
+// then validates a selected resolver and dependencies but dispatches no
+// resolver request.
+//
 // InspectMXL assesses original ZIP headers, its original container source and
 // selected archive-local resources using one bounded account. The reader stays
 // open. External I/O occurs only through explicitly selected resolver requests.
 // An empty options.Graph.Profile selects ProfileMXLSourceSemantics with the
 // bundled required dictionaries, or options.Graph.Dictionaries. Otherwise it
-// must be ProfileMXLSource, or a dictionary MXL source profile when
+// must be ProfileMXLSource or ProfileMXLSourceLine, which read no
+// dictionaries, or a dictionary MXL source profile when
 // options.Graph.Dictionaries is set.
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
 	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLSourceSemantics); ok {
@@ -92,7 +98,13 @@ func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOpti
 	if _, err := options.MXL.limits(); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	g, err := startResourceGraph(ctx, options.linked(), ProfileMXLSource)
+	var g *resourceGraphRun
+	var err error
+	if options.Graph.Profile == ProfileMXLSourceLine {
+		g, err = startSourceLineResourceGraph(ctx, options.linked(), nil)
+	} else {
+		g, err = startResourceGraph(ctx, options.linked(), ProfileMXLSource)
+	}
 	if err != nil {
 		return validation.AssessmentBundle{}, err
 	}
@@ -523,6 +535,11 @@ func (g *resourceGraphRun) loadRootfile(p *graphPackage, r *validation.PackageRo
 		return err
 	}
 	if media.State == validation.EvidenceKnown && media.Value == validation.ResourceBinary {
+		return nil
+	}
+	// Validation line 2 assesses only what conversion consumes: a converted
+	// MXLPackage keeps a later rootfile as bytes, which line 3 assesses.
+	if r.Ordinal != 1 && g.profiles.source == ProfileSourceLine {
 		return nil
 	}
 	if r.Ordinal != 1 && media.State != validation.EvidenceKnown {

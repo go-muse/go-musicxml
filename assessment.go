@@ -16,8 +16,8 @@ import (
 // An empty Profile selects the full semantic profile of each entry point, with
 // the bundled required dictionaries unless Dictionaries is set; a non-empty
 // Profile must be known and fit the entry point. Zero budget fields select
-// defaults. DecodeAssessed fixes its required stages and accepts only an empty
-// Profile or ProfileSourceSemantics.
+// defaults. DecodeAssessed fixes its validation lines and accepts only an
+// empty Profile or ProfileSourceLine.
 // Source and model profiles describe their bounded target-specific scope and
 // cannot be interchanged. Standalone source/model entry points reject the
 // separate package/resource-graph profiles. Source
@@ -41,11 +41,12 @@ type AssessmentOptions struct {
 	Dictionaries *DictionaryOptions
 }
 
-// DecodeAssessmentOptions configures mandatory assessed loading. Nil Assessment
-// and an empty Profile select the required source and model semantic stages.
-// A nonempty Profile must be ProfileSourceSemantics; it cannot narrow validation.
-// Budgets are shared by dictionary import and both stages. Decode remains the
-// separate conversion-only API.
+// DecodeAssessmentOptions configures strict loading (scenario 2). Nil
+// Assessment and an empty Profile select validation line 2, ProfileSourceLine,
+// and line 3, ProfileModelSemantics. A nonempty Profile must be
+// ProfileSourceLine; it cannot narrow validation. Budgets are shared by
+// dictionary import and both lines. Decode remains the separate
+// conversion-only API (scenario 1).
 type DecodeAssessmentOptions struct {
 	Decode     DecodeOptions
 	Assessment *AssessmentOptions
@@ -58,9 +59,10 @@ type DecodeAssessmentOptions struct {
 	Lenient bool
 }
 
-// DecodeResult preserves original-source and current-model reports separately.
-// Document is nonnil only after conversion, source EOF, and both required
-// assessments succeed. Model may be unrequested after an earlier failure or
+// DecodeResult preserves the reports of validation line 2 (SourceLine, the
+// original source) and line 3 (ModelLine, the converted model) separately.
+// Document is nonnil only after conversion, source EOF, and both lines
+// succeed. ModelLine may be unrequested after an earlier failure or
 // model-session startup failure; it does not distinguish those cases. Converted
 // means successful mapping under the existing Go model contract, not exact
 // numeric or lexical round-trip equality.
@@ -68,8 +70,8 @@ type DecodeAssessmentOptions struct {
 // error remain authoritative if the diagnostic quota omits that detail.
 type DecodeResult struct {
 	Document   Document
-	Source     validation.Report
-	Model      validation.Report
+	SourceLine validation.Report
+	ModelLine  validation.Report
 	Conversion validation.ConversionResult
 	// Accepted reports that conversion succeeded and both the source and the
 	// model assessment were accepted. In the default strict mode Document is
@@ -115,10 +117,13 @@ func (e *ConversionError) Unwrap() error {
 // Context is checked during parsing and evaluation; it cannot interrupt a Read
 // blocked inside an arbitrary reader, which must provide its own cancellation.
 //
-// An empty Profile selects ProfileSourceSemantics with the bundled required
-// dictionaries, or options.Dictionaries: the source assessment of
-// DecodeAssessed. Otherwise Profile must be a source-target profile, and a
-// non-nil options.Dictionaries requires a dictionary or semantic one.
+// InspectXML is a diagnostic tool outside the three scenarios. An empty
+// Profile selects ProfileSourceSemantics with the bundled required
+// dictionaries, or options.Dictionaries: every source rule, including the
+// line-3 rules that strict loading checks on the model. ProfileSourceLine
+// gives the line-2 report of DecodeAssessed. Otherwise Profile must be a
+// source-target profile, and a non-nil options.Dictionaries requires a
+// dictionary or semantic one.
 func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions) (report validation.Report, err error) {
 	if assessment, dictionaries, ok := options.scenario(ProfileSourceSemantics); ok {
 		return inspectXMLWithDictionaries(ctx, reader, dictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
@@ -135,16 +140,24 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 	return report, errors.Join(err, finishErr)
 }
 
-// DecodeAssessed reads and maps one MusicXML document, always assessing its
-// original source and then its current Go model with the built-in semantic
-// profiles. Source observation precedes namespace filtering and skipped fields;
-// model assessment walks the converted graph directly, without encoding/replay.
+// DecodeAssessed is scenario 2, strict loading of one MusicXML document: it
+// returns a valid MusicXML 4.0 structure or an error. Validation line 1 is the
+// XML decoder. Line 2, ProfileSourceLine, runs while the document is read and
+// checks what the converted structure cannot show: XSD on the original bytes
+// and their DTD infoset, source provenance, schema hints and the numeric
+// values the Go model cannot hold. Line 3, ProfileModelSemantics, checks the
+// converted structure exactly as AssessModel does (scenario 3). Source
+// observation precedes namespace filtering and skipped fields; model
+// assessment walks the converted graph directly, without encoding/replay.
 // After recoverable conversion failure, the healthy parser is drained so later
-// source violations remain visible. Model assessment runs only after source and
-// conversion acceptance. Both stages share one finite budget account and the
-// bundled pinned canonical SMuFL and IPA representation data.
+// source violations remain visible. Line 3 runs only after line 2 and
+// conversion accept the document. Both lines share one finite budget account;
+// the bundled pinned canonical SMuFL and IPA representation data serve line 3.
+// A dictionary import that fails but still returns a set keeps line 3
+// running, so that its report shows the unavailable evidence; the failure
+// still rejects the document.
 //
-// Nil/empty assessment options enable the required stages. A narrower profile is
+// Nil/empty assessment options enable both validation lines. A narrower profile is
 // a configuration error. options.Assessment.Dictionaries replaces the bundled
 // required dictionary data and must select canonical SMuFL and IPA
 // representation relations. By default, violated, incomplete or unavailable
@@ -164,8 +177,9 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // Distribute their notice/license files; see THIRD_PARTY_NOTICES.md.
 //
 // ValidationError contains stored normative/model failure details, possibly
-// empty when diagnostic quotas omit them. Source and Model preserve authoritative
-// counts and completion separately; Conversion describes mapping, not acceptance.
+// empty when diagnostic quotas omit them. SourceLine and ModelLine preserve
+// authoritative counts and completion separately; Conversion describes
+// mapping, not acceptance.
 func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessmentOptions) (DecodeResult, error) {
 	var assessment *dictionaryAssessmentOptions
 	if options.Assessment != nil {
@@ -217,7 +231,7 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 	// source acceptance. Releasing it earlier would admit overlapping retained
 	// data against a budget that no longer represented the live operation.
 	report, reportLease, finishErr := run.finishRetained(sourceErr)
-	result.Source = report
+	result.SourceLine = report
 	if conversionErr != nil && result.Conversion.State != validation.ConversionIncomplete {
 		result.Conversion.Findings = run.conversionFinding(result.Conversion.State, conversionLocation, conversionNode)
 	}
@@ -225,14 +239,18 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 	// operational failure, which no mode tolerates. The lenient mode still
 	// assesses the model after source findings, so that both reports exist.
 	acceptanceErr := sourceAcceptanceError(report)
-	operationErr := errors.Join(priorErr, conversionErr, sourceErr, finishErr)
+	// priorErr is a dictionary import failure that still returned a set. Line
+	// 3 runs anyway, so that its report shows the unavailable dictionary
+	// evidence; the failure still rejects the document.
+	streamErr := errors.Join(conversionErr, sourceErr, finishErr)
+	operationErr := errors.Join(priorErr, streamErr)
 	modelAssessed := false
-	if operationErr == nil && (acceptanceErr == nil || lenient) {
+	if streamErr == nil && (acceptanceErr == nil || lenient) {
 		var modelErr error
 		var modelStatus modelWalkStatus
-		result.Model, modelStatus, modelErr = assessModelWithConfig(ctx, document, modelConfig, modelWalkOptions{})
-		operationErr = modelErr
-		acceptanceErr = errors.Join(acceptanceErr, modelAcceptanceError(result.Model, modelStatus))
+		result.ModelLine, modelStatus, modelErr = assessModelWithConfig(ctx, document, modelConfig, modelWalkOptions{})
+		operationErr = errors.Join(priorErr, modelErr)
+		acceptanceErr = errors.Join(acceptanceErr, modelAcceptanceError(result.ModelLine, modelStatus))
 		modelAssessed = true
 	}
 	accepted := operationErr == nil && acceptanceErr == nil && modelAssessed

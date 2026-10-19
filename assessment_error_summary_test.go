@@ -16,11 +16,11 @@ func TestDecodeAssessedExplainsTruncatedSourceIssues(t *testing.T) {
 	options.Assessment.Budgets.MaxDiagnosticBytes = 1
 	result, err := DecodeAssessed(context.Background(), strings.NewReader(`<score-partwise/>`), options)
 	var invalid *ValidationError
-	if !errors.As(err, &invalid) || !errors.Is(err, ErrInvalidDocument) || result.Source.Counts.Fail == 0 || !result.Source.DiagnosticsTruncated {
+	if !errors.As(err, &invalid) || !errors.Is(err, ErrInvalidDocument) || result.SourceLine.Counts.Fail == 0 || !result.SourceLine.DiagnosticsTruncated {
 		t.Fatalf("fixture did not prove a truncated violation: %+v %v", result, err)
 	}
-	if len(invalid.Issues) != 0 || len(result.Source.Findings) != 0 {
-		t.Errorf("diagnostic byte quota bypassed: %+v / %+v", invalid.Issues, result.Source.Findings)
+	if len(invalid.Issues) != 0 || len(result.SourceLine.Findings) != 0 {
+		t.Errorf("diagnostic byte quota bypassed: %+v / %+v", invalid.Issues, result.SourceLine.Findings)
 	}
 	if !strings.Contains(err.Error(), "diagnostic details were truncated") || !strings.Contains(err.Error(), "failed rule evaluations") {
 		t.Errorf("truncated source failure lost explanation: %v", err)
@@ -60,7 +60,7 @@ func TestDecodeAssessedTruncatedSummaryPreservesJoinedCauses(t *testing.T) {
 	if !errors.As(err, &invalid) || !errors.As(err, &syntax) || !errors.As(err, &conversion) || !errors.Is(err, strconv.ErrRange) || !errors.Is(err, validation.ErrIncompleteAssessment) {
 		t.Fatalf("truncation summary lost joined causes: %v", err)
 	}
-	if !strings.Contains(err.Error(), "diagnostic details were truncated") || !result.Source.DiagnosticsTruncated || result.Source.Counts.Fail == 0 || len(invalid.Issues) != 0 || result.Document != nil {
+	if !strings.Contains(err.Error(), "diagnostic details were truncated") || !result.SourceLine.DiagnosticsTruncated || result.SourceLine.Counts.Fail == 0 || len(invalid.Issues) != 0 || result.Document != nil {
 		t.Errorf("truncation altered independent result: %+v %v", result, err)
 	}
 }

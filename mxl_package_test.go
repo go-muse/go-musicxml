@@ -61,11 +61,11 @@ func TestMXLPackageRoundTrip(t *testing.T) {
 		RootFiles: []MXLRootFile{
 			{
 				FullPath:  "scores/main.musicxml",
-				MediaType: musicXMLMIMEType,
+				MediaType: Ptr(musicXMLMIMEType),
 			},
 			{
 				FullPath:  "alternate/score.pdf",
-				MediaType: "application/pdf",
+				MediaType: Ptr("application/pdf"),
 			},
 		},
 		Resources: []MXLResource{
@@ -140,7 +140,7 @@ func TestEncodeMXLPackageUsesDefaultRootFile(t *testing.T) {
 		[]MXLRootFile{
 			{
 				FullPath:  mxlRootFilePath,
-				MediaType: musicXMLMIMEType,
+				MediaType: Ptr(musicXMLMIMEType),
 			},
 		},
 		actual.RootFiles,
@@ -195,7 +195,7 @@ func TestEncodeMXLPackageErrors(t *testing.T) {
 				RootFiles: []MXLRootFile{
 					{
 						FullPath:  "score.musicxml",
-						MediaType: "application/pdf",
+						MediaType: Ptr("application/pdf"),
 					},
 				},
 			},
@@ -222,7 +222,7 @@ func TestEncodeMXLPackageErrors(t *testing.T) {
 					{FullPath: "score.musicxml"},
 					{
 						FullPath:  "alternate.pdf",
-						MediaType: "application/pdf",
+						MediaType: Ptr("application/pdf"),
 					},
 				},
 			},

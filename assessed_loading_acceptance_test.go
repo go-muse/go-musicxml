@@ -40,8 +40,8 @@ func TestAssessedLoadingAllDocumentRoots(t *testing.T) {
 		for _, explicit := range []bool{false, true} {
 			t.Run(tc.name+"/"+mandatoryLoaderName(explicit), func(t *testing.T) {
 				result, err := mandatoryDecode(explicit, context.Background(), strings.NewReader(tc.source), nil)
-				if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
-					t.Fatalf("document=%T source=%v model=%v err=%v", result.Document, result.Source.Satisfied(), result.Model.Satisfied(), err)
+				if err != nil || result.Document == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() {
+					t.Fatalf("document=%T source=%v model=%v err=%v", result.Document, result.SourceLine.Satisfied(), result.ModelLine.Satisfied(), err)
 				}
 				switch tc.name {
 				case "partwise":

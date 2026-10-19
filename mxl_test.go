@@ -78,7 +78,7 @@ func TestEncodeMXL(t *testing.T) {
 				t,
 				mxlRootFile{
 					FullPath:  mxlRootFilePath,
-					MediaType: musicXMLMIMEType,
+					MediaType: Ptr(musicXMLMIMEType),
 				},
 				container.RootFiles.Files[0],
 			)

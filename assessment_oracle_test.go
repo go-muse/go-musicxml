@@ -95,8 +95,8 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 				} else {
 					result, decodeErr = decodeOfficialWithDeclaredCapacityControl(t, input, fixture.name)
 				}
-				if decodeErr != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
-					t.Fatalf("strict loading with the bundled external DTD: document=%T source=%t model=%t error=%v", result.Document, result.Source.Satisfied(), result.Model.Satisfied(), decodeErr)
+				if decodeErr != nil || result.Document == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() {
+					t.Fatalf("strict loading with the bundled external DTD: document=%T source=%t model=%t error=%v", result.Document, result.SourceLine.Satisfied(), result.ModelLine.Satisfied(), decodeErr)
 				}
 			} else if !report.Satisfied() {
 				t.Fatalf("DOCTYPE-free official opus fixture: %+v", report)

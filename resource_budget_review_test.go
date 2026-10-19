@@ -181,12 +181,15 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 		// now admits both and moves the adjacent default boundary to 576/577.
 		// The current-state schema-hint wording adds 84 live bytes. The source
 		// representability rule's retained definitions and per-node results
-		// move the boundary to 571/572.
+		// moved the boundary to 571/572; since that rule belongs to the
+		// strict-loading source line only, this internal-DTD graph profile no
+		// longer carries it, and the boundary is 576/577 again.
 		{568, 76155, false, 0, 0},
 		{569, 76289, false, 0, 0},
 		{571, 76557, false, 0, 0},
-		{572, 76691, true, 42277605, 24848717},
-		{577, 77361, true, 42642960, 25065297},
+		{572, 76691, false, 0, 0},
+		{576, 77227, false, 0, 0},
+		{577, 77361, true, 42123792, 25064575},
 	} {
 		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
 			source := reviewBudgetScore(tc.measures)
@@ -217,9 +220,10 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	// declaration-canonical role reuse lowers only the live side again.
 	// The external-DTD closure wording adds 202 live and 104 requested bytes:
 	// the graph and intrinsic source profile texts are charged as retained
-	// strings. The current-state schema-hint wording adds 84 live bytes, and
-	// the source representability rule adds its definitions and node results.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54809900, 34742018)
+	// strings. The current-state schema-hint wording adds 84 live bytes. The
+	// source representability rule added its definitions and node results
+	// until it moved to the strict-loading source line.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54551340, 34741296)
 	t.Logf("source bytes=%d err=%v", len(source), err)
 }
 
@@ -234,8 +238,8 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 		measures, bytes int
 		used, requested int64
 	}{
-		{569, 76289, 42058392, 24718769},
-		{577, 77361, 42642960, 25065297},
+		{569, 76289, 41546392, 24718047},
+		{577, 77361, 42123792, 25064575},
 	} {
 		for _, short := range []int64{0, 1} {
 			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {
