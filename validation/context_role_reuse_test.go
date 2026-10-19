@@ -18,8 +18,8 @@ func contextRoleRepeatedFixture(t *testing.T, count int) (*Session, *contextBind
 	t.Helper()
 	owner := strings.Repeat("long-owner-", 80)
 	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{
-		Types:    map[SchemaName]*SchemaType{{Local: owner}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: uint64(count), Max: uint64(count)}, Element: &SchemaElement{Name: SchemaName{Local: "item"}, Type: localBuiltin("string")}}}}},
-		Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: localType(owner)}},
+		Types:    map[QName]*SchemaType{{Local: owner}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: uint64(count), Max: uint64(count)}, Element: &SchemaElement{Name: QName{Local: "item"}, Type: localBuiltin("string")}}}}},
+		Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: localType(owner)}},
 	})
 	if err != nil {
 		t.Fatal(err)

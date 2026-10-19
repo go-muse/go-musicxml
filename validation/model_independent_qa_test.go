@@ -58,9 +58,9 @@ func independentModelAttribute(id NodeID, name, text string) AttributeFact {
 }
 
 func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
-	integer := SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
-		{Name: SchemaName{Local: "broken"}, Type: integer}, {Name: SchemaName{Local: "other"}, Type: integer}, {Name: SchemaName{Local: "good"}, Type: integer}, {Name: SchemaName{Local: "defaulted"}, Type: integer, Constraint: &SchemaValueConstraint{Kind: "default", Value: "7"}},
+	integer := SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
+		{Name: QName{Local: "broken"}, Type: integer}, {Name: QName{Local: "other"}, Type: integer}, {Name: QName{Local: "good"}, Type: integer}, {Name: QName{Local: "defaulted"}, Type: integer, Constraint: &SchemaValueConstraint{Kind: "default", Value: "7"}},
 	}}}}}})
 	if err != nil {
 		t.Fatal(err)
@@ -127,8 +127,8 @@ func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
 }
 
 func TestIndependentModelKnownAttributeFailureWithPatternLimitKeepsCause(t *testing.T) {
-	pattern := &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}, Patterns: []string{"[0-9]+"}, HasMaxInclusive: true, MaxInclusive: "3"}
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "n"}, Type: SchemaTypeRef{InlineSimple: pattern}}}}}}}})
+	pattern := &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}, Patterns: []string{"[0-9]+"}, HasMaxInclusive: true, MaxInclusive: "3"}
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "n"}, Type: SchemaTypeRef{InlineSimple: pattern}}}}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}

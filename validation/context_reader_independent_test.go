@@ -8,15 +8,15 @@ import (
 
 func independentContextFallbackFixture(t *testing.T) (*Session, *contextBindings) {
 	t.Helper()
-	xs := SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+	xs := SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
 	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{
-		Types: map[SchemaName]*SchemaType{
-			{Local: "A"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "id"}, Type: xs}}}},
-			{Local: "B"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "id"}, Type: xs}}}},
+		Types: map[QName]*SchemaType{
+			{Local: "A"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "id"}, Type: xs}}}},
+			{Local: "B"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "id"}, Type: xs}}}},
 		},
-		Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleSequence, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{
-			{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: "a"}, Type: SchemaTypeRef{Name: SchemaName{Local: "A"}}}},
-			{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: "b"}, Type: SchemaTypeRef{Name: SchemaName{Local: "B"}}}},
+		Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleSequence, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{
+			{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: "a"}, Type: SchemaTypeRef{Name: QName{Local: "A"}}}},
+			{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: "b"}, Type: SchemaTypeRef{Name: QName{Local: "B"}}}},
 		}}}}}},
 	})
 	if err != nil {

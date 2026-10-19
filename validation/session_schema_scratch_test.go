@@ -14,10 +14,10 @@ import (
 // the normal bounded Account. No caller corpus fixture is needed.
 func schemaScratchFixture(t *testing.T, children int, scalar string, budgets Budgets) *Session {
 	t.Helper()
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{
-		{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{
+		{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{
 			Form:     SchemaComplexDirect,
-			Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: uint64(children), Max: uint64(children)}, Element: &SchemaElement{Name: SchemaName{Local: "child"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: scalar}}}},
+			Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: uint64(children), Max: uint64(children)}, Element: &SchemaElement{Name: QName{Local: "child"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: scalar}}}},
 		}}},
 	}})
 	if err != nil {

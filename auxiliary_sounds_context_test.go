@@ -144,7 +144,7 @@ func TestAuxiliarySoundsBrokenGrammarRetainsKnownSound(t *testing.T) {
 }
 
 func TestAuxiliarySoundsAssemblyAndSourceOnly(t *testing.T) {
-	sounds, err := validation.CompileSchema(validation.AssemblySounds, soundsValidationSchema)
+	sounds, err := compileValidationSchema(validation.AssemblySounds, soundsValidationSchema)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,9 +154,9 @@ func TestAuxiliarySoundsAssemblyAndSourceOnly(t *testing.T) {
 	}
 	for _, entry := range []struct {
 		assembly validation.Assembly
-		data     validation.SchemaData
+		data     validationSchemaSet
 	}{{validation.AssemblyMusicXML, scoreValidationSchema}, {validation.AssemblyOpus, opusValidationSchema}, {validation.AssemblyContainer, containerValidationSchema}} {
-		schema, err := validation.CompileSchema(entry.assembly, entry.data)
+		schema, err := compileValidationSchema(entry.assembly, entry.data)
 		if err != nil {
 			t.Fatal(err)
 		}

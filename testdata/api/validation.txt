@@ -1580,90 +1580,72 @@ type Scalar struct, field Lexeme Evidence[string]
 type Scalar struct, field Value Evidence[Atomic]
 type Scalar struct, field order Lexeme Value
 type Scalar struct, not comparable
-type SchemaAny = xsd.AnySchema
 type SchemaAny struct, comparable
 type SchemaAny struct, field Namespace string
 type SchemaAny struct, field ProcessContents string
 type SchemaAny struct, field order Namespace ProcessContents
-type SchemaAnyAttribute = xsd.AnyAttributeSchema
 type SchemaAnyAttribute struct, comparable
 type SchemaAnyAttribute struct, field Namespace string
 type SchemaAnyAttribute struct, field ProcessContents string
 type SchemaAnyAttribute struct, field order Namespace ProcessContents
-type SchemaAttribute = xsd.AttributeSchema
 type SchemaAttribute struct, comparable
-type SchemaAttribute struct, field Constraint *xsd.ValueConstraint
-type SchemaAttribute struct, field Name xsd.QName
-type SchemaAttribute struct, field Type xsd.TypeRef
-type SchemaAttribute struct, field Use xsd.AttributeUse
+type SchemaAttribute struct, field Constraint *SchemaValueConstraint
+type SchemaAttribute struct, field Name QName
+type SchemaAttribute struct, field Type SchemaTypeRef
+type SchemaAttribute struct, field Use SchemaAttributeUse
 type SchemaAttribute struct, field order Name Type Use Constraint
-type SchemaAttributeUse = xsd.AttributeUse
 type SchemaAttributeUse string
-type SchemaComplex = xsd.ComplexSchema
 type SchemaComplex struct, field Abstract bool
-type SchemaComplex struct, field AnyAttribute *xsd.AnyAttributeSchema
-type SchemaComplex struct, field Attributes []xsd.AttributeSchema
-type SchemaComplex struct, field Base *xsd.TypeRef
-type SchemaComplex struct, field Block xsd.Derivation
-type SchemaComplex struct, field Final xsd.Derivation
-type SchemaComplex struct, field Form xsd.ComplexForm
+type SchemaComplex struct, field AnyAttribute *SchemaAnyAttribute
+type SchemaComplex struct, field Attributes []SchemaAttribute
+type SchemaComplex struct, field Base *SchemaTypeRef
+type SchemaComplex struct, field Block SchemaDerivation
+type SchemaComplex struct, field Final SchemaDerivation
+type SchemaComplex struct, field Form SchemaComplexForm
 type SchemaComplex struct, field Mixed bool
-type SchemaComplex struct, field Particle *xsd.ParticleSchema
-type SchemaComplex struct, field SimpleContent *xsd.SimpleSchema
+type SchemaComplex struct, field Particle *SchemaParticle
+type SchemaComplex struct, field SimpleContent *SchemaSimple
 type SchemaComplex struct, field order Block Final Abstract SimpleContent Form Base Particle Attributes AnyAttribute Mixed
 type SchemaComplex struct, not comparable
-type SchemaComplexForm = xsd.ComplexForm
 type SchemaComplexForm string
-type SchemaData = xsd.SchemaData
-type SchemaData struct, field Elements map[xsd.QName]*xsd.ElementSchema
-type SchemaData struct, field Types map[xsd.QName]*xsd.TypeSchema
+type SchemaData struct, field Elements map[QName]*SchemaElement
+type SchemaData struct, field Types map[QName]*SchemaType
 type SchemaData struct, field order Types Elements
 type SchemaData struct, not comparable
-type SchemaDerivation = xsd.Derivation
 type SchemaDerivation uint8
-type SchemaElement = xsd.ElementSchema
 type SchemaElement struct, comparable
 type SchemaElement struct, field Abstract bool
-type SchemaElement struct, field Block xsd.Derivation
+type SchemaElement struct, field Block SchemaDerivation
 type SchemaElement struct, field Default *string
-type SchemaElement struct, field Final xsd.Derivation
+type SchemaElement struct, field Final SchemaDerivation
 type SchemaElement struct, field Fixed *string
-type SchemaElement struct, field Name xsd.QName
+type SchemaElement struct, field Name QName
 type SchemaElement struct, field Nillable bool
-type SchemaElement struct, field Reference xsd.QName
-type SchemaElement struct, field Type xsd.TypeRef
+type SchemaElement struct, field Reference QName
+type SchemaElement struct, field Type SchemaTypeRef
 type SchemaElement struct, field order Block Final Name Reference Type Default Fixed Nillable Abstract
 type SchemaHintPair struct, comparable
 type SchemaHintPair struct, field Location Evidence[string]
 type SchemaHintPair struct, field Namespace Evidence[string]
 type SchemaHintPair struct, field Origin Location
 type SchemaHintPair struct, field order Namespace Location Origin
-type SchemaName = xsd.QName
-type SchemaName struct, comparable
-type SchemaName struct, field Local string
-type SchemaName struct, field Space string
-type SchemaName struct, field order Space Local
-type SchemaOccurrence = xsd.Occurrence
 type SchemaOccurrence struct, comparable
 type SchemaOccurrence struct, field Max uint64
 type SchemaOccurrence struct, field Min uint64
 type SchemaOccurrence struct, field Unbounded bool
 type SchemaOccurrence struct, field order Min Max Unbounded
-type SchemaParticle = xsd.ParticleSchema
-type SchemaParticle struct, field Any *xsd.AnySchema
-type SchemaParticle struct, field Children []*xsd.ParticleSchema
-type SchemaParticle struct, field Element *xsd.ElementSchema
-type SchemaParticle struct, field Kind xsd.ParticleKind
-type SchemaParticle struct, field Occurrence xsd.Occurrence
+type SchemaParticle struct, field Any *SchemaAny
+type SchemaParticle struct, field Children []*SchemaParticle
+type SchemaParticle struct, field Element *SchemaElement
+type SchemaParticle struct, field Kind SchemaParticleKind
+type SchemaParticle struct, field Occurrence SchemaOccurrence
 type SchemaParticle struct, field order Kind Occurrence Element Children Any
 type SchemaParticle struct, not comparable
-type SchemaParticleKind = xsd.ParticleKind
 type SchemaParticleKind string
-type SchemaSimple = xsd.SimpleSchema
-type SchemaSimple struct, field Base *xsd.SimpleMember
+type SchemaSimple struct, field Base *SchemaSimpleMember
 type SchemaSimple struct, field Enumerations []string
-type SchemaSimple struct, field Final xsd.Derivation
-type SchemaSimple struct, field Form xsd.SimpleForm
+type SchemaSimple struct, field Final SchemaDerivation
+type SchemaSimple struct, field Form SchemaSimpleForm
 type SchemaSimple struct, field FractionDigits uint64
 type SchemaSimple struct, field HasFractionDigits bool
 type SchemaSimple struct, field HasLength bool
@@ -1674,12 +1656,12 @@ type SchemaSimple struct, field HasMinExclusive bool
 type SchemaSimple struct, field HasMinInclusive bool
 type SchemaSimple struct, field HasMinLength bool
 type SchemaSimple struct, field HasTotalDigits bool
-type SchemaSimple struct, field Item *xsd.SimpleMember
+type SchemaSimple struct, field Item *SchemaSimpleMember
 type SchemaSimple struct, field Length uint64
 type SchemaSimple struct, field MaxExclusive string
 type SchemaSimple struct, field MaxInclusive string
 type SchemaSimple struct, field MaxLength uint64
-type SchemaSimple struct, field Members []*xsd.SimpleMember
+type SchemaSimple struct, field Members []*SchemaSimpleMember
 type SchemaSimple struct, field MinExclusive string
 type SchemaSimple struct, field MinInclusive string
 type SchemaSimple struct, field MinLength uint64
@@ -1688,23 +1670,19 @@ type SchemaSimple struct, field TotalDigits uint64
 type SchemaSimple struct, field WhiteSpace string
 type SchemaSimple struct, field order Final Form Base Enumerations Members Item Patterns MinInclusive MaxInclusive MinExclusive MaxExclusive Length MinLength MaxLength TotalDigits FractionDigits WhiteSpace HasMinInclusive HasMaxInclusive HasMinExclusive HasMaxExclusive HasLength HasMinLength HasMaxLength HasTotalDigits HasFractionDigits
 type SchemaSimple struct, not comparable
-type SchemaSimpleForm = xsd.SimpleForm
 type SchemaSimpleForm string
-type SchemaSimpleMember = xsd.SimpleMember
 type SchemaSimpleMember struct, comparable
-type SchemaSimpleMember struct, field Inline *xsd.SimpleSchema
-type SchemaSimpleMember struct, field Name xsd.QName
+type SchemaSimpleMember struct, field Inline *SchemaSimple
+type SchemaSimpleMember struct, field Name QName
 type SchemaSimpleMember struct, field order Name Inline
-type SchemaType = xsd.TypeSchema
 type SchemaType struct, comparable
-type SchemaType struct, field Complex *xsd.ComplexSchema
-type SchemaType struct, field Simple *xsd.SimpleSchema
+type SchemaType struct, field Complex *SchemaComplex
+type SchemaType struct, field Simple *SchemaSimple
 type SchemaType struct, field order Simple Complex
-type SchemaTypeRef = xsd.TypeRef
 type SchemaTypeRef struct, comparable
-type SchemaTypeRef struct, field InlineComplex *xsd.ComplexSchema
-type SchemaTypeRef struct, field InlineSimple *xsd.SimpleSchema
-type SchemaTypeRef struct, field Name xsd.QName
+type SchemaTypeRef struct, field InlineComplex *SchemaComplex
+type SchemaTypeRef struct, field InlineSimple *SchemaSimple
+type SchemaTypeRef struct, field Name QName
 type SchemaTypeRef struct, field order Name InlineSimple InlineComplex
 type SchemaUse struct, comparable
 type SchemaUse struct, field Attribute bool
@@ -1715,7 +1693,6 @@ type SchemaUse struct, field Name QName
 type SchemaUse struct, field OwnerType ComponentID
 type SchemaUse struct, field OwnerTypeKnown bool
 type SchemaUse struct, field order Declaration Name Attribute OwnerType OwnerTypeKnown DeclaredType DeclaredTypeKnown
-type SchemaValueConstraint = xsd.ValueConstraint
 type SchemaValueConstraint struct, comparable
 type SchemaValueConstraint struct, field Kind string
 type SchemaValueConstraint struct, field Value string

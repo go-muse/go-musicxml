@@ -9,11 +9,11 @@ import (
 
 func sourcePresenceCatalogFixture(t *testing.T, trigger, explicit bool) ([]RuleDefinition, []Profile, []PlanBinding, *CompiledSchema) {
 	t.Helper()
-	data := SchemaData{Types: map[SchemaName]*SchemaType{{Local: "root-type"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
-		{Name: SchemaName{Local: "dacapo"}, Type: localBuiltin("token")},
-		{Name: SchemaName{Local: "type"}, Type: localBuiltin("token")},
-		{Name: SchemaName{Local: "x2"}, Type: localBuiltin("decimal")},
-	}}}}, Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: localType("root-type")}}}
+	data := SchemaData{Types: map[QName]*SchemaType{{Local: "root-type"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
+		{Name: QName{Local: "dacapo"}, Type: localBuiltin("token")},
+		{Name: QName{Local: "type"}, Type: localBuiltin("token")},
+		{Name: QName{Local: "x2"}, Type: localBuiltin("decimal")},
+	}}}}, Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: localType("root-type")}}}
 	schema, err := CompileSchema(AssemblyMusicXML, data)
 	if err != nil {
 		t.Fatal(err)

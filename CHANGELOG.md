@@ -48,6 +48,10 @@ or changed identifier to its replacement.
   `validation/inventory`: `validation.MusicXML40Inventory` becomes
   `inventory.MusicXML40`, `validation.Inventory` becomes `inventory.Snapshot`,
   and each `validation.InventoryX` type becomes `inventory.X`.
+- The `validation.Schema*` metadata types are declared in package `validation`
+  instead of aliasing internal types, with documented fields; their fields and
+  constants are unchanged. `validation.SchemaName` is removed: expanded names
+  are `validation.QName`. Compiled schema digests are unchanged.
 
 ### Added
 

@@ -41,7 +41,7 @@ func qaSchemaEngine(t *testing.T, schema *CompiledSchema, checks ...XSDCheck) *E
 func qaDuplicateIDReport(t *testing.T, requires bool) Report {
 	t.Helper()
 	ctx := context.Background()
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 2, Max: 2}, Element: &SchemaElement{Name: SchemaName{Local: "child"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "id"}, Type: SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "ID"}}, Use: SchemaAttributeRequired}}}}}}}}}}})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 2, Max: 2}, Element: &SchemaElement{Name: QName{Local: "child"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "id"}, Type: SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "ID"}}, Use: SchemaAttributeRequired}}}}}}}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +118,7 @@ func TestIndependentCatalogOwnsSchemaHandle(t *testing.T) {
 	schema := miniatureSourceSchema(t)
 	engine := qaSchemaEngine(t, schema, XSDCheckScalar)
 	before, _ := engine.catalog.Profile("source-schema-test")
-	replacement, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}}}})
+	replacement, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,7 +145,7 @@ func TestIndependentCatalogOwnsSchemaHandle(t *testing.T) {
 
 func TestIndependentAbsentAttributeIsNotInventedBySchemaBridge(t *testing.T) {
 	ctx := context.Background()
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect}}}}})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -177,9 +177,9 @@ func TestIndependentUnknownOrderDoesNotProveSequenceViolation(t *testing.T) {
 	ctx := context.Background()
 	particle := &SchemaParticle{Kind: SchemaParticleSequence, Occurrence: SchemaOccurrence{Min: 1, Max: 1}}
 	for _, name := range []string{"a", "b"} {
-		particle.Children = append(particle.Children, &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: name}, Type: SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}}})
+		particle.Children = append(particle.Children, &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: name}, Type: SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}}})
 	}
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: particle}}}}})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: particle}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}

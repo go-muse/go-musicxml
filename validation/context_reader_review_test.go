@@ -138,15 +138,15 @@ func TestContextReviewRoleDispatchExactAndInterrupted(t *testing.T) {
 // expose different Run.Attributes tables. A type-only first-node cache is unsound.
 func contextReviewSameTypeFixture(t *testing.T, limits ...Budgets) (*Session, *contextBindings) {
 	t.Helper()
-	xs := SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
-	child := &SchemaElement{Name: SchemaName{Local: "a"}, Type: SchemaTypeRef{Name: SchemaName{Local: "derived"}}}
-	root := &SchemaElement{Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 4, Max: 4}, Element: child}}}}
+	xs := SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+	child := &SchemaElement{Name: QName{Local: "a"}, Type: SchemaTypeRef{Name: QName{Local: "derived"}}}
+	root := &SchemaElement{Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 4, Max: 4}, Element: child}}}}
 	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{
-		Types: map[SchemaName]*SchemaType{
-			{Local: "A"}:       {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "required"}, Type: xs, Use: SchemaAttributeRequired}, {Name: SchemaName{Local: "optional"}, Type: xs}}}},
-			{Local: "derived"}: {Complex: &SchemaComplex{Form: SchemaComplexExtension, Base: &SchemaTypeRef{Name: SchemaName{Local: "A"}}}},
+		Types: map[QName]*SchemaType{
+			{Local: "A"}:       {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "required"}, Type: xs, Use: SchemaAttributeRequired}, {Name: QName{Local: "optional"}, Type: xs}}}},
+			{Local: "derived"}: {Complex: &SchemaComplex{Form: SchemaComplexExtension, Base: &SchemaTypeRef{Name: QName{Local: "A"}}}},
 		},
-		Elements: map[SchemaName]*SchemaElement{{Local: "root"}: root},
+		Elements: map[QName]*SchemaElement{{Local: "root"}: root},
 	})
 	if err != nil {
 		t.Fatal(err)

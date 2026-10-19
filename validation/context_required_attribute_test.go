@@ -12,21 +12,21 @@ import (
 // AttributeResult; inherited slots deliberately retain conservative evidence.
 func contextRequiredFixture(t *testing.T, actual string, attrs map[QName]string, complete bool, checks ...XSDCheck) (*Session, *contextBindings) {
 	t.Helper()
-	integer := SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}
-	base := SchemaTypeRef{Name: SchemaName{Local: "A"}}
-	required := SchemaAttribute{Name: SchemaName{Local: "type"}, Type: integer, Use: SchemaAttributeRequired}
+	integer := SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}
+	base := SchemaTypeRef{Name: QName{Local: "A"}}
+	required := SchemaAttribute{Name: QName{Local: "type"}, Type: integer, Use: SchemaAttributeRequired}
 	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{
-		Types: map[SchemaName]*SchemaType{
+		Types: map[QName]*SchemaType{
 			{Local: "A"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{required,
-				{Name: SchemaName{Local: "number"}, Type: integer, Constraint: &SchemaValueConstraint{Kind: "default", Value: "1"}},
-				{Name: SchemaName{Local: "other"}, Type: integer},
+				{Name: QName{Local: "number"}, Type: integer, Constraint: &SchemaValueConstraint{Kind: "default", Value: "1"}},
+				{Name: QName{Local: "other"}, Type: integer},
 			}}},
 			{Local: "B"}:          {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{required}}},
 			{Local: "inherited"}:  {Complex: &SchemaComplex{Form: SchemaComplexExtension, Base: &base}},
 			{Local: "optional"}:   {Complex: &SchemaComplex{Form: SchemaComplexRestriction, Base: &base, Attributes: []SchemaAttribute{{Name: required.Name, Type: integer, Use: SchemaAttributeOptional}}}},
 			{Local: "prohibited"}: {Complex: &SchemaComplex{Form: SchemaComplexRestriction, Base: &base, Attributes: []SchemaAttribute{{Name: required.Name, Type: integer, Use: SchemaAttributeProhibited}}}},
 		},
-		Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{Name: SchemaName{Local: actual}}}},
+		Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{Name: QName{Local: actual}}}},
 	})
 	if err != nil {
 		t.Fatal(err)

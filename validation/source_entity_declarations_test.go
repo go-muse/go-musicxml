@@ -10,14 +10,14 @@ import (
 
 func entityDeclarationSchema(t *testing.T, ref SchemaTypeRef) *CompiledSchema {
 	t.Helper()
-	s, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: ref}}})
+	s, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: ref}}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	return s
 }
 func entityBuiltin(name string) SchemaTypeRef {
-	return SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: name}}
+	return SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: name}}
 }
 func entityMember(name string) *SchemaSimpleMember {
 	return &SchemaSimpleMember{Name: entityBuiltin(name).Name}

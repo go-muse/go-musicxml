@@ -256,9 +256,9 @@ func consumerSchema(t *testing.T) (*CompiledSchema, *timelineConsumerPlan) {
 	sequence := func(children ...*SchemaParticle) *SchemaParticle {
 		return &SchemaParticle{Kind: SchemaParticleSequence, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: children}
 	}
-	types := map[SchemaName]*SchemaType{}
+	types := map[QName]*SchemaType{}
 	complex := func(name string, particle *SchemaParticle) {
-		types[SchemaName{Local: name}] = &SchemaType{Complex: &SchemaComplex{Form: SchemaComplexDirect, Particle: particle}}
+		types[QName{Local: name}] = &SchemaType{Complex: &SchemaComplex{Form: SchemaComplexDirect, Particle: particle}}
 	}
 	complex("root", localChoice(localElement("harmony", "harmony")))
 	complex("harmony", localChoice(localElement("numeral", "numeral")))
@@ -268,8 +268,8 @@ func consumerSchema(t *testing.T) (*CompiledSchema, *timelineConsumerPlan) {
 	fifths := localElement("numeral-fifths", "integer")
 	fifths.Element.Type = localBuiltin("integer")
 	complex("numeral-key", sequence(fifths, localElement("numeral-mode", "mode")))
-	types[SchemaName{Local: "mode"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("token").Name}, Enumerations: []string{"major", "minor"}}}
-	schema, e := CompileSchema(AssemblyMusicXML, SchemaData{Types: types, Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: localType("root")}}})
+	types[QName{Local: "mode"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("token").Name}, Enumerations: []string{"major", "minor"}}}
+	schema, e := CompileSchema(AssemblyMusicXML, SchemaData{Types: types, Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: localType("root")}}})
 	if e != nil {
 		t.Fatal(e)
 	}

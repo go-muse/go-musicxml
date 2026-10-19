@@ -16,15 +16,15 @@ func TestModelBlockedCompositeCanRetainIndependentLimitations(t *testing.T) {
 	run := func(mixed bool) Report {
 		t.Helper()
 		attributes := []SchemaAttribute{
-			{Name: SchemaName{Local: "broken"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "decimal"}}},
-			{Name: SchemaName{Local: "limited"}, Type: SchemaTypeRef{InlineSimple: &SchemaSimple{
+			{Name: QName{Local: "broken"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "decimal"}}},
+			{Name: QName{Local: "limited"}, Type: SchemaTypeRef{InlineSimple: &SchemaSimple{
 				Form:     SchemaSimpleRestriction,
-				Base:     &SchemaSimpleMember{Name: SchemaName{Space: xsd.XSDNamespace, Local: "integer"}},
+				Base:     &SchemaSimpleMember{Name: QName{Space: xsd.XSDNamespace, Local: "integer"}},
 				Patterns: []string{"[0-9]+"},
 			}}},
 		}
-		root := &SchemaElement{Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: attributes}}}
-		schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: root}})
+		root := &SchemaElement{Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: attributes}}}
+		schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: root}})
 		if err != nil {
 			t.Fatal(err)
 		}

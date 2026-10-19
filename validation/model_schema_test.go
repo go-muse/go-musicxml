@@ -117,11 +117,11 @@ func TestModelSchemaBindsPendingCurrentRoot(t *testing.T) {
 }
 
 func TestModelSchemaEffectiveValuesRemainDistinctFromInput(t *testing.T) {
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
-		{Name: SchemaName{Local: "text"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "token"}}},
-		{Name: SchemaName{Local: "number"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "integer"}}},
-		{Name: SchemaName{Local: "default"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "integer"}}, Constraint: &SchemaValueConstraint{Kind: "default", Value: "1"}},
-		{Name: SchemaName{Local: "absent"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "string"}}},
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
+		{Name: QName{Local: "text"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "token"}}},
+		{Name: QName{Local: "number"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "integer"}}},
+		{Name: QName{Local: "default"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "integer"}}, Constraint: &SchemaValueConstraint{Kind: "default", Value: "1"}},
+		{Name: QName{Local: "absent"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "string"}}},
 	}}}}}})
 	if err != nil {
 		t.Fatal(err)
@@ -182,7 +182,7 @@ func TestModelSchemaEffectiveValuesRemainDistinctFromInput(t *testing.T) {
 }
 
 func TestModelSchemaContentHoleKeepsIndependentAttributeFailure(t *testing.T) {
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "number"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "integer"}}}}, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: "child"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "integer"}}}}}}}}})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "number"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "integer"}}}}, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: "child"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "integer"}}}}}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,8 +252,8 @@ func TestModelSchemaBridgeExtremeFloatValues(t *testing.T) {
 func TestModelSchemaRepresentationHoleKeepsIndependentReference(t *testing.T) {
 	for _, broken := range []string{"number", "id"} {
 		t.Run(broken, func(t *testing.T) {
-			schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
-				{Name: SchemaName{Local: "id"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "ID"}}}, {Name: SchemaName{Local: "ref"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "IDREF"}}}, {Name: SchemaName{Local: "number"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "decimal"}}},
+			schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
+				{Name: QName{Local: "id"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "ID"}}}, {Name: QName{Local: "ref"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "IDREF"}}}, {Name: QName{Local: "number"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "decimal"}}},
 			}}}}}})
 			if err != nil {
 				t.Fatal(err)

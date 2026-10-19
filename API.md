@@ -11,10 +11,10 @@ security or data-integrity defect requires otherwise.
 
 `MusicXMLVersion` is the supported schema version.
 
-`TestPublicAPISnapshot` records every exported identifier of the root and
-`validation` packages, including signatures, struct fields with their XML
-tags, methods, and the fields of the `internal/xsd` types that
-`validation.Schema*` aliases re-export. The golden files live in
+`TestPublicAPISnapshot` records every exported identifier of the root,
+`validation` and `validation/inventory` packages, including signatures, struct
+fields with their XML tags, methods, and the fields of any internal type that
+an exported alias re-exports. The golden files live in
 `testdata/api/`. An intentional API change updates them in the same change
 with `go test -run TestPublicAPISnapshot -update-api .`, so the diff shows
 each addition, removal, or changed declaration for review.

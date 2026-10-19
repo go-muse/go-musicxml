@@ -43,7 +43,7 @@ func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error)
 	var profiles []validation.Profile
 	for _, input := range []struct {
 		assembly validation.Assembly
-		data     validation.SchemaData
+		data     validationSchemaSet
 		file     string
 		id       validation.ProfileID
 		root     string
@@ -56,7 +56,7 @@ func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error)
 			SupportedRoots:   []validation.QName{{Local: input.root}},
 			NormativeClosure: "Source-only execution of the pinned MusicXML 4.0 " + string(input.assembly) + " XSD assembly. Counts are composite operation instances, not research coverage. Mandatory XML syntax, unread external-DTD and reached unsupported-capability limits remain active. No Document model, package, linked-target, dictionary or playback conformance is asserted.",
 		}
-		schema, err := validation.CompileSchema(input.assembly, input.data)
+		schema, err := compileValidationSchema(input.assembly, input.data)
 		if err != nil {
 			return nil, err
 		}

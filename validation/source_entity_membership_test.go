@@ -69,13 +69,13 @@ func TestSourceEntityDeclarationsSchemaLiteralIsolation(t *testing.T) {
 func TestSourceEntityDeclarationsFixedAndAppliedDefaults(t *testing.T) {
 	for _, defaulted := range []bool{false, true} {
 		value := "asset"
-		element := &SchemaElement{Name: SchemaName{Local: "root"}, Type: entityBuiltin("ENTITY")}
+		element := &SchemaElement{Name: QName{Local: "root"}, Type: entityBuiltin("ENTITY")}
 		if defaulted {
 			element.Default = &value
 		} else {
 			element.Fixed = &value
 		}
-		schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: element}})
+		schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: element}})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -204,7 +204,7 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	if !errors.Is(err, cause) || report.Counts.Fail != 1 || report.Conformance != ConformanceViolated || report.AssessmentComplete {
 		t.Fatalf("root-close proof lost: %+v / %v", report, err)
 	}
-	child := &SchemaElement{Name: SchemaName{Local: "child"}, Type: entityBuiltin("ENTITY")}
+	child := &SchemaElement{Name: QName{Local: "child"}, Type: entityBuiltin("ENTITY")}
 	ref := SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: child}}}
 	e = entityDeclarationEngine(t, entityDeclarationSchema(t, ref), XSDCheckScalar)
 	s = entityDeclarationSession(t, e)
@@ -240,7 +240,7 @@ func TestSourceEntityDeclarationsAppliedAttributeConstraints(t *testing.T) {
 	for _, kind := range []string{"default", "fixed"} {
 		for _, unparsed := range []bool{false, true} {
 			t.Run(kind+map[bool]string{true: "/unparsed", false: "/parsed"}[unparsed], func(t *testing.T) {
-				ref := SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "asset"}, Type: entityBuiltin("ENTITY"), Constraint: &SchemaValueConstraint{Kind: kind, Value: "image"}}}}}
+				ref := SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "asset"}, Type: entityBuiltin("ENTITY"), Constraint: &SchemaValueConstraint{Kind: kind, Value: "image"}}}}}
 				e := entityDeclarationEngine(t, entityDeclarationSchema(t, ref), XSDCheckAttributes)
 				facts := entitySnapshot(true, entityRow("image", unparsed, 1))
 				r := entityDeclarationAssess(t, e, "", &facts)
@@ -263,7 +263,7 @@ func TestSourceEntityDeclarationsEnumerationAndFixedOperands(t *testing.T) {
 		t.Fatalf("unused list literal: %+v", r)
 	}
 	expected := "unused"
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: entityBuiltin("ENTITIES"), Fixed: &expected}}})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: entityBuiltin("ENTITIES"), Fixed: &expected}}})
 	if err != nil {
 		t.Fatal(err)
 	}

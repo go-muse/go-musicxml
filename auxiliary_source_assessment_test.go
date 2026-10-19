@@ -131,13 +131,13 @@ func TestAuxiliaryGeneratedSchemaMetadata(t *testing.T) {
 	for _, tc := range []struct {
 		assembly validation.Assembly
 		root     string
-		data     validation.SchemaData
+		data     validationSchemaSet
 	}{{validation.AssemblyContainer, "container", containerValidationSchema}, {validation.AssemblySounds, "sounds", soundsValidationSchema}} {
 		root := tc.data.Elements[validationQName{Local: tc.root}]
 		if root == nil || root.Nillable || root.Abstract || root.Block != validationDerivationExtension|validationDerivationSubstitution || root.Final != validationDerivationExtension|validationDerivationRestriction {
 			t.Fatalf("%s root declaration lost nil/abstract/block/final contract: %+v", tc.root, root)
 		}
-		schema, err := validation.CompileSchema(tc.assembly, tc.data)
+		schema, err := compileValidationSchema(tc.assembly, tc.data)
 		if err != nil {
 			t.Fatal(err)
 		}

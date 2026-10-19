@@ -13,7 +13,7 @@ import (
 // anonymous partwise/timewise owners and repeated full-note branches.
 func timelineContractSchema(t *testing.T) *validation.CompiledSchema {
 	t.Helper()
-	s, err := validation.CompileSchema(validation.AssemblyMusicXML, scoreValidationSchema)
+	s, err := compileValidationSchema(validation.AssemblyMusicXML, scoreValidationSchema)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,11 +273,7 @@ func timelineContractDigest(c *validation.CompiledCatalog) string {
 
 func timelineContractVariantSchema(t *testing.T, change func(*validation.SchemaData)) *validation.CompiledSchema {
 	t.Helper()
-	data := scoreValidationSchema
-	data.Types = make(map[validation.SchemaName]*validation.SchemaType, len(scoreValidationSchema.Types))
-	for k, v := range scoreValidationSchema.Types {
-		data.Types[k] = v
-	}
+	data := publicValidationSchema(t, scoreValidationSchema)
 	change(&data)
 	s, err := validation.CompileSchema(validation.AssemblyMusicXML, data)
 	if err != nil {
@@ -287,7 +283,7 @@ func timelineContractVariantSchema(t *testing.T, change func(*validation.SchemaD
 }
 func timelineContractChangedSchema(t *testing.T) *validation.CompiledSchema {
 	return timelineContractVariantSchema(t, func(data *validation.SchemaData) {
-		key := validation.SchemaName{Local: "mode"}
+		key := validation.QName{Local: "mode"}
 		typ := *data.Types[key]
 		simple := *typ.Simple
 		simple.Enumerations = []string{"contract-variant"}
@@ -311,7 +307,7 @@ func timelineContractRewriteParticle(p *validation.SchemaParticle, name, typ str
 	if p.Element != nil {
 		e := *p.Element
 		if e.Name.Local == name && typ != "" {
-			e.Type = validation.SchemaTypeRef{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: typ}}
+			e.Type = validation.SchemaTypeRef{Name: validation.QName{Space: "http://www.w3.org/2001/XMLSchema", Local: typ}}
 		}
 		q.Element = &e
 	}
@@ -329,7 +325,7 @@ func TestTimelinePlanRejectsMalformedPinnedRoleShapes(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := timelineContractVariantSchema(t, func(data *validation.SchemaData) {
-				key := validation.SchemaName{Local: tc.owner}
+				key := validation.QName{Local: tc.owner}
 				typ := *data.Types[key]
 				complex := *typ.Complex
 				complex.Particle = timelineContractRewriteParticle(complex.Particle, tc.child, tc.typ, tc.duplicate)
@@ -447,34 +443,34 @@ func TestTimelinePlanRejectsWrongNamedScalarFamilies(t *testing.T) {
 	}{
 		{"duration alias becomes string", "positive-divisions", func(t *validation.SchemaType) {
 			s := *t.Simple
-			s.Base = &validation.SchemaSimpleMember{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+			s.Base = &validation.SchemaSimpleMember{Name: validation.QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
 			t.Simple = &s
 		}},
 		{"integer key becomes decimal", "fifths", func(t *validation.SchemaType) {
 			s := *t.Simple
-			s.Base = &validation.SchemaSimpleMember{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "decimal"}}
+			s.Base = &validation.SchemaSimpleMember{Name: validation.QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "decimal"}}
 			t.Simple = &s
 		}},
 		{"arbitrary precision staff becomes string", "staff-number", func(t *validation.SchemaType) {
 			s := *t.Simple
-			s.Base = &validation.SchemaSimpleMember{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+			s.Base = &validation.SchemaSimpleMember{Name: validation.QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
 			t.Simple = &s
 		}},
 		{"pedal union loses numeric branch", "yes-no-number", func(t *validation.SchemaType) {
 			s := *t.Simple
-			s.Members = []*validation.SchemaSimpleMember{{Name: validation.SchemaName{Local: "yes-no"}}}
+			s.Members = []*validation.SchemaSimpleMember{{Name: validation.QName{Local: "yes-no"}}}
 			t.Simple = &s
 		}},
 		{"complex scalar octave becomes string", "key-octave", func(t *validation.SchemaType) {
 			c := *t.Complex
-			c.Base = &validation.SchemaTypeRef{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+			c.Base = &validation.SchemaTypeRef{Name: validation.QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
 			t.Complex = &c
 		}},
 		{"structured key becomes mixed", "key", func(t *validation.SchemaType) { c := *t.Complex; c.Mixed = true; t.Complex = &c }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			schema := timelineContractVariantSchema(t, func(d *validation.SchemaData) {
-				key := validation.SchemaName{Local: tc.typ}
+				key := validation.QName{Local: tc.typ}
 				typ := *d.Types[key]
 				tc.change(&typ)
 				d.Types[key] = &typ
@@ -490,7 +486,7 @@ func TestTimelinePlanRequiresRetainedCompositeDiscriminators(t *testing.T) {
 	for _, tc := range []struct{ owner, name string }{{"other-play", "type"}, {"line-detail", "line"}, {"staff-size", "scaling"}, {"staff-details", "show-frets"}, {"staff-details", "print-object"}, {"staff-details", "print-spacing"}, {"line-detail", "width"}, {"line-detail", "color"}, {"line-detail", "line-type"}, {"line-detail", "print-object"}} {
 		t.Run(tc.owner+"/"+tc.name, func(t *testing.T) {
 			schema := timelineContractVariantSchema(t, func(data *validation.SchemaData) {
-				key := validation.SchemaName{Local: tc.owner}
+				key := validation.QName{Local: tc.owner}
 				typ := *data.Types[key]
 				c := *typ.Complex
 				c.Attributes = nil

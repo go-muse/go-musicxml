@@ -17,7 +17,7 @@ func auxiliaryOriginTestEngine(t *testing.T, assembly validation.Assembly, proje
 	if assembly == validation.AssemblySounds {
 		data = soundsValidationSchema
 	}
-	schema, err := validation.CompileSchema(assembly, data)
+	schema, err := compileValidationSchema(assembly, data)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,14 +132,14 @@ func TestSourceContainerMetadataConstructorContract(t *testing.T) {
 	}
 	for _, input := range []struct {
 		assembly validation.Assembly
-		data     validation.SchemaData
+		data     validationSchemaSet
 	}{
 		{validation.AssemblyMusicXML, scoreValidationSchema},
 		{validation.AssemblyOpus, opusValidationSchema},
 		{validation.AssemblySounds, soundsValidationSchema},
 		{validation.AssemblyContainer, containerValidationSchema},
 	} {
-		schema, err := validation.CompileSchema(input.assembly, input.data)
+		schema, err := compileValidationSchema(input.assembly, input.data)
 		if err != nil {
 			t.Fatal(err)
 		}

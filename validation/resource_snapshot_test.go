@@ -130,7 +130,7 @@ func TestResourceSnapshotEveryCancellationBoundaryCleansLease(t *testing.T) {
 }
 
 func TestResourceSnapshotRetainsActualTypeElementIDs(t *testing.T) {
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: "sequence", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{{Kind: "element", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: "value"}, Type: SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}}}}}}}}}})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: "sequence", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{{Kind: "element", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: "value"}, Type: SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}}}}}}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,10 +180,10 @@ func TestResourceSnapshotRetainsActualTypeElementIDs(t *testing.T) {
 
 func snapshotElementIDs(t *testing.T, values []string, complete bool) (*Session, Report, *ResourceSnapshot, error) {
 	t.Helper()
-	id := &SchemaElement{Name: SchemaName{Local: "value"}, Type: SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "ID"}}}
-	item := &SchemaElement{Name: SchemaName{Local: "item"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: "sequence", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{{Kind: "element", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: id}}}}}}
-	root := &SchemaElement{Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: "sequence", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{{Kind: "element", Occurrence: SchemaOccurrence{Min: 0, Max: 10}, Element: item}}}}}}
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: root}})
+	id := &SchemaElement{Name: QName{Local: "value"}, Type: SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "ID"}}}
+	item := &SchemaElement{Name: QName{Local: "item"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: "sequence", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{{Kind: "element", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: id}}}}}}
+	root := &SchemaElement{Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: "sequence", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{{Kind: "element", Occurrence: SchemaOccurrence{Min: 0, Max: 10}, Element: item}}}}}}
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: root}})
 	if err != nil {
 		t.Fatal(err)
 	}

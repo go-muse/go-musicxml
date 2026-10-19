@@ -53,23 +53,23 @@ func TestTimelineFinalReviewConditionalMIDIDevice(t *testing.T) {
 // a substitute MusicXML schema conformance oracle.
 func finalReviewInstrumentFixture(t *testing.T, target Target, sounds ...*localTree) (*Session, *timelineState, *timelineBindings, []*factNode, musicalPosition, NodeRef) {
 	t.Helper()
-	types := map[SchemaName]*SchemaType{}
-	add := func(name string, c *SchemaComplex) { types[SchemaName{Local: name}] = &SchemaType{Complex: c} }
+	types := map[QName]*SchemaType{}
+	add := func(name string, c *SchemaComplex) { types[QName{Local: name}] = &SchemaType{Complex: c} }
 	for _, name := range []string{"string", "integer", "decimal"} {
-		types[SchemaName{Local: name}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin(name).Name}}}
+		types[QName{Local: name}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin(name).Name}}}
 	}
-	types[SchemaName{Local: "condition"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("string").Name}, Enumerations: []string{"2"}}}
+	types[QName{Local: "condition"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("string").Name}, Enumerations: []string{"2"}}}
 	id := func(typ string) SchemaAttribute {
-		return SchemaAttribute{Name: SchemaName{Local: "id"}, Type: localBuiltin(typ), Use: SchemaAttributeRequired}
+		return SchemaAttribute{Name: QName{Local: "id"}, Type: localBuiltin(typ), Use: SchemaAttributeRequired}
 	}
 	add("empty", &SchemaComplex{Form: SchemaComplexDirect})
 	add("score-instrument", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{id("ID")}})
 	add("score-part", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{id("ID")}, Particle: localChoice(localElement("score-instrument", "score-instrument"))})
 	add("instrument-change", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{id("IDREF")}, Particle: localChoice(localElement("instrument-sound", "string"), localElement("solo", "empty"))})
 	add("midi-instrument", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{id("IDREF")}, Particle: localChoice(localElement("midi-program", "integer"), localElement("pan", "decimal"))})
-	add("sound", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "time-only"}, Type: localType("condition")}}, Particle: localChoice(localElement("instrument-change", "instrument-change"), localElement("midi-instrument", "midi-instrument"))})
+	add("sound", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "time-only"}, Type: localType("condition")}}, Particle: localChoice(localElement("instrument-change", "instrument-change"), localElement("midi-instrument", "midi-instrument"))})
 	add("root", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("score-part", "score-part"), localElement("sound", "sound"))})
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Types: types, Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: localType("root")}}})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Types: types, Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: localType("root")}}})
 	if err != nil {
 		t.Fatal(err)
 	}

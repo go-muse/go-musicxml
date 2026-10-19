@@ -10,29 +10,29 @@ import (
 
 const localXS = "http://www.w3.org/2001/XMLSchema"
 
-func localType(name string) SchemaTypeRef { return SchemaTypeRef{Name: SchemaName{Local: name}} }
+func localType(name string) SchemaTypeRef { return SchemaTypeRef{Name: QName{Local: name}} }
 func localBuiltin(name string) SchemaTypeRef {
-	return SchemaTypeRef{Name: SchemaName{Space: localXS, Local: name}}
+	return SchemaTypeRef{Name: QName{Space: localXS, Local: name}}
 }
 func localElement(name, typ string) *SchemaParticle {
-	return &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: name}, Type: localType(typ)}}
+	return &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: name}, Type: localType(typ)}}
 }
 func localChoice(children ...*SchemaParticle) *SchemaParticle {
 	return &SchemaParticle{Kind: SchemaParticleChoice, Occurrence: SchemaOccurrence{Min: 0, Unbounded: true}, Children: children}
 }
 func localSchema(t *testing.T) *CompiledSchema {
 	t.Helper()
-	types := map[SchemaName]*SchemaType{}
-	add := func(name string, c *SchemaComplex) { types[SchemaName{Local: name}] = &SchemaType{Complex: c} }
+	types := map[QName]*SchemaType{}
+	add := func(name string, c *SchemaComplex) { types[QName{Local: name}] = &SchemaType{Complex: c} }
 	attr := func(name, builtin string, use SchemaAttributeUse) SchemaAttribute {
-		return SchemaAttribute{Name: SchemaName{Local: name}, Type: localBuiltin(builtin), Use: use}
+		return SchemaAttribute{Name: QName{Local: name}, Type: localBuiltin(builtin), Use: use}
 	}
 	add("empty", &SchemaComplex{Form: SchemaComplexDirect})
-	types[SchemaName{Local: "string"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("string").Name}}}
-	types[SchemaName{Local: "decimal"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("decimal").Name}}}
-	types[SchemaName{Local: "integer"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("integer").Name}}}
-	types[SchemaName{Local: "yes-no"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("token").Name}, Enumerations: []string{"yes", "no"}}}
-	types[SchemaName{Local: "pedal"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleUnion, Members: []*SchemaSimpleMember{{Name: SchemaName{Local: "yes-no"}}, {Name: localBuiltin("decimal").Name}}}}
+	types[QName{Local: "string"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("string").Name}}}
+	types[QName{Local: "decimal"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("decimal").Name}}}
+	types[QName{Local: "integer"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("integer").Name}}}
+	types[QName{Local: "yes-no"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("token").Name}, Enumerations: []string{"yes", "no"}}}
+	types[QName{Local: "pedal"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleUnion, Members: []*SchemaSimpleMember{{Name: QName{Local: "yes-no"}}, {Name: localBuiltin("decimal").Name}}}}
 	number := attr("number", "integer", SchemaAttributeOptional)
 	number.Constraint = &SchemaValueConstraint{Kind: "default", Value: "1"}
 	add("beam", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{number}})
@@ -41,21 +41,21 @@ func localSchema(t *testing.T) *CompiledSchema {
 	for _, name := range []string{"slur", "tied"} {
 		add(name, &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{attr("type", "token", SchemaAttributeRequired), attr("x2", "decimal", SchemaAttributeOptional), attr("y2", "decimal", SchemaAttributeOptional), attr("offset2", "decimal", SchemaAttributeOptional)}})
 	}
-	cancel := SchemaAttribute{Name: SchemaName{Local: "cancel"}, Type: localType("yes-no"), Use: SchemaAttributeOptional, Constraint: &SchemaValueConstraint{Kind: "default", Value: "no"}}
+	cancel := SchemaAttribute{Name: QName{Local: "cancel"}, Type: localType("yes-no"), Use: SchemaAttributeOptional, Constraint: &SchemaValueConstraint{Kind: "default", Value: "no"}}
 	add("octave", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{cancel}})
 	add("key", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("cancel", "integer"), localElement("octave", "octave"))})
 	add("transpose", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("diatonic", "integer"), localElement("chromatic", "decimal"), localElement("octave-change", "integer"))})
 	add("defaults", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("concert", "empty"))})
-	add("sound", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "dacapo"}, Type: localType("yes-no")}, {Name: SchemaName{Local: "forward-repeat"}, Type: localType("yes-no")}, {Name: SchemaName{Local: "pedal"}, Type: localType("pedal")}}})
+	add("sound", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "dacapo"}, Type: localType("yes-no")}, {Name: QName{Local: "forward-repeat"}, Type: localType("yes-no")}, {Name: QName{Local: "pedal"}, Type: localType("pedal")}}})
 	add("target", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{attr("id", "ID", SchemaAttributeRequired)}})
 	add("reference", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{attr("id", "IDREF", SchemaAttributeOptional)}, Particle: localChoice(localElement("channel", "integer"), localElement("bank", "integer"), localElement("program", "integer"))})
-	add("assess", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{attr("player", "IDREF", SchemaAttributeOptional), {Name: SchemaName{Local: "type"}, Type: localType("yes-no"), Use: SchemaAttributeRequired}}})
+	add("assess", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{attr("player", "IDREF", SchemaAttributeOptional), {Name: QName{Local: "type"}, Type: localType("yes-no"), Use: SchemaAttributeRequired}}})
 	add("score-part", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{attr("id", "ID", SchemaAttributeRequired)}, Particle: localChoice(localElement("score-instrument", "target"), localElement("player", "target"), localElement("assignment", "reference"), localElement("instrument-link", "reference"))})
 	add("part-list", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("score-part", "score-part"))})
 	add("part", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{attr("id", "IDREF", SchemaAttributeRequired)}, Particle: localChoice(localElement("note", "note"), localElement("assignment", "reference"), localElement("play", "reference"))})
 	add("measure", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("part", "part"))})
 	add("root", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("part-list", "part-list"), localElement("part", "part"), localElement("measure", "measure"), localElement("other", "target"), localElement("registration", "registration"), localElement("note", "note"), localElement("slur", "slur"), localElement("tied", "tied"), localElement("key", "key"), localElement("defaults", "defaults"), localElement("for-part", "empty"), localElement("transpose", "transpose"), localElement("part-transpose", "transpose"), localElement("relation", "string"), localElement("sound", "sound"))})
-	schema, e := CompileSchema(AssemblyMusicXML, SchemaData{Types: types, Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: localType("root")}}})
+	schema, e := CompileSchema(AssemblyMusicXML, SchemaData{Types: types, Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: localType("root")}}})
 	if e != nil {
 		t.Fatal(e)
 	}

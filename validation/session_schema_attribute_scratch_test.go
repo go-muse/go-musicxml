@@ -14,10 +14,10 @@ func schemaAttributeScratchFixture(t *testing.T, invalid ...bool) (*Session, *fa
 	if len(invalid) != 0 && invalid[0] {
 		firstType = "integer"
 	}
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{
-		{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
-			{Name: SchemaName{Local: "a"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: firstType}}},
-			{Name: SchemaName{Local: "b"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "string"}}},
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{
+		{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
+			{Name: QName{Local: "a"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: firstType}}},
+			{Name: QName{Local: "b"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "string"}}},
 		}}}},
 	}})
 	if err != nil {

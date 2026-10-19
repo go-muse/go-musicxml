@@ -94,7 +94,7 @@ func dictionaryRule(schema *validation.CompiledSchema, op validation.DictionaryO
 	return rule, plan, nil
 }
 func appendDictionarySoundsDefinitions(d *assessmentDefinitions) error {
-	schema, err := validation.CompileSchema(validation.AssemblySounds, soundsValidationSchema)
+	schema, err := compileValidationSchema(validation.AssemblySounds, soundsValidationSchema)
 	if err != nil {
 		return err
 	}

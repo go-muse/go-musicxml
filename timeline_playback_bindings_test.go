@@ -11,7 +11,7 @@ func TestTimelinePlaybackRequiresExactNavigationAndNoteRoles(t *testing.T) {
 	for _, tc := range []struct{ owner, name string }{{"barline", "location"}, {"barline", "divisions"}, {"barline", "segno"}, {"barline", "coda"}, {"sound", "segno"}, {"sound", "coda"}, {"sound", "dacapo"}, {"sound", "dalsegno"}, {"sound", "tocoda"}, {"sound", "forward-repeat"}, {"sound", "fine"}, {"sound", "time-only"}, {"note", "time-only"}, {"note", "dynamics"}, {"note", "end-dynamics"}, {"note", "pizzicato"}} {
 		t.Run(tc.owner+"/"+tc.name, func(t *testing.T) {
 			schema := timelineContractVariantSchema(t, func(data *validation.SchemaData) {
-				key := validation.SchemaName{Local: tc.owner}
+				key := validation.QName{Local: tc.owner}
 				typ := *data.Types[key]
 				c := *typ.Complex
 				c.Attributes = nil

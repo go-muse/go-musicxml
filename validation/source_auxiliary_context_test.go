@@ -52,8 +52,8 @@ func TestSourceContainerMetadataSeparatesPhysicalRaw(t *testing.T) {
 
 func auxiliaryHintSchema(t *testing.T, assembly Assembly) *CompiledSchema {
 	t.Helper()
-	schema, err := CompileSchema(assembly, SchemaData{Elements: map[SchemaName]*SchemaElement{
-		{Local: string(assembly)}: {Name: SchemaName{Local: string(assembly)}, Type: SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}},
+	schema, err := CompileSchema(assembly, SchemaData{Elements: map[QName]*SchemaElement{
+		{Local: string(assembly)}: {Name: QName{Local: string(assembly)}, Type: SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}},
 	}})
 	if err != nil {
 		t.Fatal(err)

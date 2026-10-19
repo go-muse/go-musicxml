@@ -6,18 +6,18 @@ import (
 )
 
 func schemaUseFixture() SchemaData {
-	stringType := SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+	stringType := SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
 	anonymousSimple := &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: stringType.Name}}
-	named := &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "id"}, Type: stringType}}, Particle: &SchemaParticle{Kind: SchemaParticleSequence, Children: []*SchemaParticle{
-		{Kind: SchemaParticleElement, Element: &SchemaElement{Name: SchemaName{Local: "same"}, Type: stringType}},
-		{Kind: SchemaParticleElement, Element: &SchemaElement{Name: SchemaName{Local: "same"}, Type: SchemaTypeRef{InlineSimple: anonymousSimple}}},
-		{Kind: SchemaParticleElement, Element: &SchemaElement{Reference: SchemaName{Local: "global"}}},
+	named := &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "id"}, Type: stringType}}, Particle: &SchemaParticle{Kind: SchemaParticleSequence, Children: []*SchemaParticle{
+		{Kind: SchemaParticleElement, Element: &SchemaElement{Name: QName{Local: "same"}, Type: stringType}},
+		{Kind: SchemaParticleElement, Element: &SchemaElement{Name: QName{Local: "same"}, Type: SchemaTypeRef{InlineSimple: anonymousSimple}}},
+		{Kind: SchemaParticleElement, Element: &SchemaElement{Reference: QName{Local: "global"}}},
 	}}}
-	anonymous := &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "anonymous-owner"}, Type: stringType}}, Particle: &SchemaParticle{Kind: SchemaParticleElement, Element: &SchemaElement{Name: SchemaName{Local: "child"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect}}}}}
-	return SchemaData{Types: map[SchemaName]*SchemaType{{Local: "T"}: {Complex: named}}, Elements: map[SchemaName]*SchemaElement{
-		{Local: "root"}:   {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{Name: SchemaName{Local: "T"}}},
-		{Local: "anon"}:   {Name: SchemaName{Local: "anon"}, Type: SchemaTypeRef{InlineComplex: anonymous}},
-		{Local: "global"}: {Name: SchemaName{Local: "global"}, Type: stringType},
+	anonymous := &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "anonymous-owner"}, Type: stringType}}, Particle: &SchemaParticle{Kind: SchemaParticleElement, Element: &SchemaElement{Name: QName{Local: "child"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect}}}}}
+	return SchemaData{Types: map[QName]*SchemaType{{Local: "T"}: {Complex: named}}, Elements: map[QName]*SchemaElement{
+		{Local: "root"}:   {Name: QName{Local: "root"}, Type: SchemaTypeRef{Name: QName{Local: "T"}}},
+		{Local: "anon"}:   {Name: QName{Local: "anon"}, Type: SchemaTypeRef{InlineComplex: anonymous}},
+		{Local: "global"}: {Name: QName{Local: "global"}, Type: stringType},
 	}}
 }
 

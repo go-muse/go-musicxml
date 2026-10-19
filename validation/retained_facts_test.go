@@ -692,11 +692,11 @@ func TestRetainedFactPendingSourceSharingIsExact(t *testing.T) {
 
 func retainedTestSchema(t *testing.T, s *Session, count int) ([]xsd.CacheIdentity, []xsd.CacheIdentity) {
 	t.Helper()
-	data := SchemaData{Types: map[SchemaName]*SchemaType{}, Elements: map[SchemaName]*SchemaElement{}}
+	data := SchemaData{Types: map[QName]*SchemaType{}, Elements: map[QName]*SchemaElement{}}
 	for i := 0; i < count; i++ {
-		name := SchemaName{Local: fmt.Sprintf("type-%03d", i)}
+		name := QName{Local: fmt.Sprintf("type-%03d", i)}
 		data.Types[name] = &SchemaType{Simple: &SchemaSimple{}}
-		use := SchemaName{Local: fmt.Sprintf("use-%03d", i)}
+		use := QName{Local: fmt.Sprintf("use-%03d", i)}
 		data.Elements[use] = &SchemaElement{Name: use, Type: SchemaTypeRef{Name: name}}
 	}
 	schema, err := CompileSchema(AssemblyMusicXML, data)

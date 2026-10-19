@@ -9,6 +9,9 @@ package musicxml
 
 import (
 	"errors"
+	"reflect"
+	"sync"
+
 	"github.com/go-muse/go-musicxml/internal/xsd"
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -196,6 +199,45 @@ type validationQName = xsd.QName
 var validationReplaceWhitespace = xsd.ReplaceWhitespace
 
 type validationSchemaSet = xsd.SchemaData
+
+// publicSchemas caches the generated schemas converted to the validation
+// package's types, so that engines built one after another share one
+// conversion. CompileSchema copies the cached value and never mutates it.
+var publicSchemas sync.Map // map pointer of Types -> validation.SchemaData
+
+// compileValidationSchema compiles a schema held in the kernel's types through
+// the validation package, whose metadata types mirror them. The conversion
+// keeps sharing and interior pointers, so the digest is that of the input.
+// Only the generated schemas, recognized by their maps, are cached.
+func compileValidationSchema(assembly validation.Assembly, data validationSchemaSet) (*validation.CompiledSchema, error) {
+	generated := false
+	for _, schema := range []*validationSchemaSet{&scoreValidationSchema, &opusValidationSchema, &containerValidationSchema, &soundsValidationSchema} {
+		if sameSchemaMaps(data, *schema) {
+			generated = true
+		}
+	}
+	key := reflect.ValueOf(data.Types).Pointer()
+	if generated {
+		if public, cached := publicSchemas.Load(key); cached {
+			return validation.CompileSchema(assembly, public.(validation.SchemaData))
+		}
+	}
+	var public validation.SchemaData
+	if err := xsd.ConvertGraph(&public, data); err != nil {
+		return nil, err
+	}
+	if generated {
+		publicSchemas.Store(key, public)
+	}
+	return validation.CompileSchema(assembly, public)
+}
+
+// sameSchemaMaps reports whether a and b hold the same maps, not merely equal
+// contents.
+func sameSchemaMaps(a, b validationSchemaSet) bool {
+	return reflect.ValueOf(a.Types).Pointer() == reflect.ValueOf(b.Types).Pointer() &&
+		reflect.ValueOf(a.Elements).Pointer() == reflect.ValueOf(b.Elements).Pointer() && a.Types != nil
+}
 
 var validationSequence = xsd.Sequence
 

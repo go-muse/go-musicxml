@@ -338,7 +338,7 @@ func TestSourceDeclarationExportCancellationSweep(t *testing.T) {
 func sourceDeclarationLifecycleEngine(t *testing.T) *validation.Engine {
 	t.Helper()
 	assembly := validation.AssemblyMusicXML
-	schema, err := validation.CompileSchema(assembly, validation.SchemaData{Elements: map[validation.SchemaName]*validation.SchemaElement{{Local: "r"}: {Name: validation.SchemaName{Local: "r"}, Type: validation.SchemaTypeRef{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "ENTITY"}}}}})
+	schema, err := validation.CompileSchema(assembly, validation.SchemaData{Elements: map[validation.QName]*validation.SchemaElement{{Local: "r"}: {Name: validation.QName{Local: "r"}, Type: validation.SchemaTypeRef{Name: validation.QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "ENTITY"}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}
