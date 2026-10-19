@@ -18,14 +18,14 @@ func retainedBundleFixture(t *testing.T, a *Account) *PackageSession {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: a})
+	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err = s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
-	id, err := s.AddResource(context.Background(), interruptionPin("part"), part, true)
+	id, err := s.addResource(context.Background(), interruptionPin("part"), part, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +39,7 @@ func TestFinishWithRetainedBundleChargesMeasuredStorage(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := retainedBundleFixture(t, a)
-	b, lease, err := s.FinishWithRetainedBundle(context.Background(), PackageCompletion{InputComplete: true})
+	b, lease, err := s.finishWithRetainedBundle(context.Background(), PackageCompletion{InputComplete: true})
 	if err != nil || lease == nil || b.ResourceCount() != 1 {
 		t.Fatalf("lease=%v resources=%d err=%v", lease, b.ResourceCount(), err)
 	}
@@ -83,7 +83,7 @@ func TestFinishWithRetainedBundleRefusalHasNoLease(t *testing.T) {
 		if err = a.Charge(BudgetRuleSteps, 1<<40-used-remaining); err != nil {
 			t.Fatal(err)
 		}
-		b, lease, err := s.FinishWithRetainedBundle(context.Background(), PackageCompletion{InputComplete: true})
+		b, lease, err := s.finishWithRetainedBundle(context.Background(), PackageCompletion{InputComplete: true})
 		return b, lease, err, a
 	}
 	low, high := int64(0), int64(1<<20)
@@ -125,7 +125,7 @@ func beginRetainedFinishOnly(t *testing.T, remaining int64) (int, error) {
 	if err = a.Charge(BudgetRuleSteps, 1<<40-used-(remaining-1)); err != nil {
 		t.Fatal(err)
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if err != nil || b.PackageReport().Terminal != nil {
 		t.Fatalf("plain finish needs the last step: terminal=%v err=%v", b.PackageReport().Terminal, err)
 	}

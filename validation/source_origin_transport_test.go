@@ -64,10 +64,10 @@ func originTransportSession(t *testing.T, e *Engine, key RuleKey, opts RunOption
 	if root.Physical.State == EvidenceKnown {
 		h.Location = stateClone(root.Physical.Value)
 	}
-	if err = s.Open(ctx, h); err != nil {
+	if err = s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.SourceOrigin(ctx, key, root); err != nil {
+	if err = s.sourceOrigin(ctx, key, root); err != nil {
 		t.Fatal(err)
 	}
 	if v.Attribute != nil {
@@ -78,20 +78,20 @@ func originTransportSession(t *testing.T, e *Engine, key RuleKey, opts RunOption
 		if err = s.Attribute(ctx, sourceOriginAttribute(*v.Attribute, loc)); err != nil {
 			t.Fatal(err)
 		}
-		if err = s.SourceOrigin(ctx, key, v); err != nil {
+		if err = s.sourceOrigin(ctx, key, v); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err = s.Close(ctx, schemaLexemeEnd(text)); err != nil {
+	if err = s.CloseNode(ctx, schemaLexemeEnd(text)); err != nil {
 		t.Fatal(err)
 	}
 	switch seal {
 	case "complete":
-		err = s.CompleteSourceOrigins(ctx, key, stateKnown(true))
+		err = s.completeSourceOrigins(ctx, key, stateKnown(true))
 	case "incomplete":
-		err = s.CompleteSourceOrigins(ctx, key, Evidence[bool]{State: EvidenceKnown, Value: false, Reason: "source-prefix-only"})
+		err = s.completeSourceOrigins(ctx, key, Evidence[bool]{State: EvidenceKnown, Value: false, Reason: "source-prefix-only"})
 	case "unknown":
-		err = s.CompleteSourceOrigins(ctx, key, stateUnknown[bool]("source-seal-unavailable"))
+		err = s.completeSourceOrigins(ctx, key, stateUnknown[bool]("source-seal-unavailable"))
 	}
 	if err != nil {
 		t.Fatal(err)
@@ -202,11 +202,11 @@ func originTransportPackage(t *testing.T, snapshot *ResourceSnapshot, account *A
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: profiles[0].Profile.ID, Account: account})
+	p, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: profiles[0].Profile.ID, Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = p.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err = p.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
 	return p
@@ -242,11 +242,11 @@ func TestSourceOriginSnapshotTransportIndependentAdoptions(t *testing.T) {
 			}
 			p := originTransportPackage(t, snapshot, s.account, nil)
 			defer p.cleanup()
-			rid, err := p.AddResource(ctx, originTransportPin(), snapshot, true)
+			rid, err := p.addResource(ctx, originTransportPin(), snapshot, true)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if _, err = p.AddResource(ctx, originTransportPin(), snapshot, true); err != nil {
+			if _, err = p.addResource(ctx, originTransportPin(), snapshot, true); err != nil {
 				t.Fatalf("same-owner duplicate transfer: %v", err)
 			}
 			if err = snapshot.Close(); !errors.Is(err, ErrInvalidSession) {
@@ -254,7 +254,7 @@ func TestSourceOriginSnapshotTransportIndependentAdoptions(t *testing.T) {
 			}
 			inner := packageTestIdentity()
 			inner.ID, inner.Parent, inner.Pin.CanonicalID = "inner", "outer", "inner-archive"
-			if err = p.OpenPackage(ctx, inner); err != nil {
+			if err = p.openPackage(ctx, inner); err != nil {
 				t.Fatal(err)
 			}
 			var views []*ResourceAdoption
@@ -264,11 +264,11 @@ func TestSourceOriginSnapshotTransportIndependentAdoptions(t *testing.T) {
 				{Package: "outer", DocumentID: "source-alias-two", BaseURI: "https://example.test/b/", ArchiveEntry: "b.xml"},
 				{Package: "inner", DocumentID: "source-nested", BaseURI: "https://example.test/a/", ArchiveEntry: "a.xml"},
 			} {
-				aid, err := p.AdoptResource(ctx, rid, opts)
+				aid, err := p.adoptResource(ctx, rid, opts)
 				if err != nil {
 					t.Fatal(err)
 				}
-				view, err := p.Adoption(ctx, aid)
+				view, err := p.adoption(ctx, aid)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -299,11 +299,11 @@ func TestSourceOriginSnapshotTransportIndependentAdoptions(t *testing.T) {
 			}
 			sealFixtureExpansions(t, p)
 			for _, id := range []PackageID{"outer", "inner"} {
-				if err = p.SealEnumeration(ctx, completePackage(id)); err != nil {
+				if err = p.sealEnumeration(ctx, completePackage(id)); err != nil {
 					t.Fatal(err)
 				}
 			}
-			bundle, err := p.Finish(ctx, PackageCompletion{InputComplete: true})
+			bundle, err := p.finish(ctx, PackageCompletion{InputComplete: true})
 			if err != nil || bundle.ResourceCount() != 1 || bundle.AdoptionCount() != 4 || bundle.Satisfied() {
 				t.Fatalf("bundle lost canonical failure: resources=%d adoptions=%d err=%v", bundle.ResourceCount(), bundle.AdoptionCount(), err)
 			}
@@ -561,22 +561,22 @@ func TestSourceOriginSnapshotTransportGetterBudgetsAndCancellation(t *testing.T)
 	originTransportGetterBoundary(t, s.account, snapshot.contexts[1], "", func(ctx context.Context) error { _, _, err := snapshot.ContextAt(ctx, 1); return err })
 	originTransportGetterBoundary(t, s.account, snapshot.report, "", func(ctx context.Context) error { _, err := snapshot.Report(ctx); return err })
 	p := originTransportPackage(t, snapshot, s.account, nil)
-	rid, err := p.AddResource(context.Background(), originTransportPin(), snapshot, true)
+	rid, err := p.addResource(context.Background(), originTransportPin(), snapshot, true)
 	if err != nil {
 		t.Fatal(err)
 	}
 	doc := "adopted-source-with-a-much-longer-identity-than-canonical"
-	aid, err := p.AdoptResource(context.Background(), rid, ResourceAdoptionOptions{Package: "outer", DocumentID: doc})
+	aid, err := p.adoptResource(context.Background(), rid, ResourceAdoptionOptions{Package: "outer", DocumentID: doc})
 	if err != nil {
 		t.Fatal(err)
 	}
-	view, err := p.Adoption(context.Background(), aid)
+	view, err := p.adoption(context.Background(), aid)
 	if err != nil {
 		t.Fatal(err)
 	}
 	originTransportGetterBoundary(t, s.account, snapshot.contexts[1], doc, func(ctx context.Context) error { _, _, err := view.ContextAt(ctx, 1); return err })
 	originTransportGetterBoundary(t, s.account, snapshot.report, doc, func(ctx context.Context) error { _, err := view.Report(ctx); return err })
-	_, _ = p.Finish(context.Background(), PackageCompletion{})
+	_, _ = p.finish(context.Background(), PackageCompletion{})
 	originTransportClean(t, s.account)
 }
 
@@ -634,11 +634,11 @@ func TestSourceOriginSnapshotTransportRejectedTransferKeepsOwner(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if _, err = p.AddResource(ctx, pin, owned, true); err != nil {
+				if _, err = p.addResource(ctx, pin, owned, true); err != nil {
 					t.Fatal(err)
 				}
 			}
-			if _, err = p.AddResource(ctx, pin, snapshot, true); err == nil {
+			if _, err = p.addResource(ctx, pin, snapshot, true); err == nil {
 				t.Fatal("mismatched transfer accepted")
 			}
 			if hold != 0 {
@@ -648,7 +648,7 @@ func TestSourceOriginSnapshotTransportRejectedTransferKeepsOwner(t *testing.T) {
 			if err != nil || !reflect.DeepEqual(got, r) {
 				t.Fatalf("rejected transfer took caller ownership: %v", err)
 			}
-			_, _ = p.Finish(context.Background(), PackageCompletion{})
+			_, _ = p.finish(context.Background(), PackageCompletion{})
 			if err = snapshot.Close(); err != nil {
 				t.Fatal(err)
 			}

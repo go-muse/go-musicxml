@@ -38,13 +38,13 @@ func buildSourceXSDProfileEngine(internalDTD bool) (*validation.Engine, error) {
 	var plans []validation.PlanBinding
 	for _, input := range []struct {
 		assembly validation.Assembly
-		data     validation.SchemaData
+		data     validationSchemaSet
 		file     string
 	}{
 		{validation.AssemblyMusicXML, scoreValidationSchema, "musicxml.xsd"},
 		{validation.AssemblyOpus, opusValidationSchema, "opus.xsd"},
 	} {
-		schema, err := validation.CompileSchema(input.assembly, input.data)
+		schema, err := compileValidationSchema(input.assembly, input.data)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +91,7 @@ func buildSourceXSDProfileEngine(internalDTD bool) (*validation.Engine, error) {
 			profile.Support = append(profile.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 		}
 		if internalDTD {
-			plan, err := validation.NewSourceOriginPlan(input.assembly)
+			plan, err := validationNewSourceOriginPlan(input.assembly)
 			if err != nil {
 				return nil, err
 			}

@@ -146,7 +146,7 @@ func TestLocalPublicSessionFailureSurvivesPostProofStorageStop(t *testing.T) {
 		open := func(id, parent NodeID, name string) {
 			h := factHeader(id, parent, name, name)
 			h.Declaration.Value = localDecl(name)
-			if e := s.Open(ctx, h); e != nil {
+			if e := s.OpenNode(ctx, h); e != nil {
 				t.Fatal(e)
 			}
 		}
@@ -155,7 +155,7 @@ func TestLocalPublicSessionFailureSurvivesPostProofStorageStop(t *testing.T) {
 			if nonzero {
 				end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: localInteger(t, 1)}
 			}
-			if e := s.Close(ctx, end); e != nil {
+			if e := s.CloseNode(ctx, end); e != nil {
 				t.Fatal(e)
 			}
 		}

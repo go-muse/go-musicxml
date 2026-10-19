@@ -39,9 +39,9 @@ type PackageFileMetadataObservation struct {
 	Href                  string
 }
 
-// ObserveImageMetadata consumes only an explicitly selected image template and
+// observeImageMetadata consumes only an explicitly selected image template and
 // exact echoed request. An unavailable optional reply cannot block conformance.
-func (s *PackageSession) ObserveImageMetadata(ctx context.Context, source ResourceAdoptionID, template uint64, q ImageMetadataRequest, result ResourceResult) error {
+func (s *PackageSession) observeImageMetadata(ctx context.Context, source ResourceAdoptionID, template uint64, q ImageMetadataRequest, result ResourceResult) error {
 	if err := s.event(ctx, "ObserveImageMetadata"); err != nil {
 		return err
 	}
@@ -157,8 +157,8 @@ func (s *PackageSession) ObserveImageMetadata(ctx context.Context, source Resour
 	return s.evaluateNewAdvice(ctx, s.output.images[len(s.output.images)-1:], nil)
 }
 
-// ObserveFileMetadata retains optional filename/MIME advice for an exact scope.
-func (s *PackageSession) ObserveFileMetadata(ctx context.Context, v PackageFileMetadataObservation) error {
+// observeFileMetadata retains optional filename/MIME advice for an exact scope.
+func (s *PackageSession) observeFileMetadata(ctx context.Context, v PackageFileMetadataObservation) error {
 	if err := s.event(ctx, "ObserveFileMetadata"); err != nil {
 		return err
 	}

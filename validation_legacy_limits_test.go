@@ -37,7 +37,7 @@ func TestLegacyValidationBudgetPolicy(t *testing.T) {
 	}
 	if strconv.IntSize == 32 {
 		hostMax := int64(^uint(0) >> 1)
-		if _, err := validation.AllocationSize(hostMax + 1); !errors.Is(err, validation.ErrResourceLimit) {
+		if _, err := validationAllocationSize(hostMax + 1); !errors.Is(err, validation.ErrResourceLimit) {
 			t.Fatalf("host allocation overflow was not rejected: %v", err)
 		}
 	}

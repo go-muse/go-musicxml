@@ -242,35 +242,35 @@ func TestIndependentContextWrongAssemblyConstructors(t *testing.T) {
 	}
 	opus := d.schemas[validation.AssemblyOpus]
 	for name, fn := range map[string]func() error{
-		"local": func() error { _, e := validation.NewLocalContextPlan(opus); return e },
+		"local": func() error { _, e := validationNewLocalContextPlan(opus); return e },
 		"span": func() error {
-			_, e := validation.NewSpanContextPlan(validation.ContextPlanSpec{Schema: opus})
+			_, e := validationNewSpanContextPlan(validation.ContextPlanSpec{Schema: opus})
 			return e
 		},
 		"repeat": func() error {
-			_, e := validation.NewRepeatContextPlan(validation.ContextPlanSpec{Schema: opus, TimelineProvider: validation.RuleKey{ID: "timeline", Revision: 1}})
+			_, e := validationNewRepeatContextPlan(validation.ContextPlanSpec{Schema: opus, TimelineProvider: validation.RuleKey{ID: "timeline", Revision: 1}})
 			return e
 		},
 		"navigation": func() error {
-			_, e := validation.NewNavigationContextPlan(validation.ContextPlanSpec{Schema: opus, TimelineProvider: validation.RuleKey{ID: "timeline", Revision: 1}})
+			_, e := validationNewNavigationContextPlan(validation.ContextPlanSpec{Schema: opus, TimelineProvider: validation.RuleKey{ID: "timeline", Revision: 1}})
 			return e
 		},
 		"layout": func() error {
-			_, e := validation.NewLayoutContextPlan(validation.ContextPlanSpec{Schema: opus})
+			_, e := validationNewLayoutContextPlan(validation.ContextPlanSpec{Schema: opus})
 			return e
 		},
 		"performance": func() error {
-			_, e := validation.NewPerformanceContextPlan(validation.ContextPlanSpec{Schema: opus})
+			_, e := validationNewPerformanceContextPlan(validation.ContextPlanSpec{Schema: opus})
 			return e
 		},
-		"time-only":     func() error { _, e := validation.NewTimeOnlyOrderPlan(opus); return e },
-		"figure-number": func() error { _, e := validation.NewFigureNumberNumericPlan(opus); return e },
+		"time-only":     func() error { _, e := validationNewTimeOnlyOrderPlan(opus); return e },
+		"figure-number": func() error { _, e := validationNewFigureNumberNumericPlan(opus); return e },
 		"bend-consumer": func() error {
-			_, e := validation.NewBendReleaseSignPlan(validation.ContextConsumerSpec{Schema: opus, Provider: validation.RuleKey{ID: "p", Revision: 1}})
+			_, e := validationNewBendReleaseSignPlan(validation.ConsumerSpec{Schema: opus, Provider: validation.RuleKey{ID: "p", Revision: 1}})
 			return e
 		},
 		"repeat-consumer": func() error {
-			_, e := validation.NewGraphicalRepeatContentPlan(validation.ContextConsumerSpec{Schema: opus, Provider: validation.RuleKey{ID: "p", Revision: 1}})
+			_, e := validationNewGraphicalRepeatContentPlan(validation.ConsumerSpec{Schema: opus, Provider: validation.RuleKey{ID: "p", Revision: 1}})
 			return e
 		},
 	} {

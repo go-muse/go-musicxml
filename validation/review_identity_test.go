@@ -10,7 +10,7 @@ import (
 func reviewIdentityNode(t *testing.T, s *Session, id NodeID, occurrence string, value Atomic) {
 	t.Helper()
 	ctx := context.Background()
-	if err := s.Open(ctx, factHeader(id, 1, occurrence, "slot")); err != nil {
+	if err := s.OpenNode(ctx, factHeader(id, 1, occurrence, "slot")); err != nil {
 		t.Fatal(err)
 	}
 	a := ciStringNode(id, "unused").attributes[0]
@@ -18,7 +18,7 @@ func reviewIdentityNode(t *testing.T, s *Session, id NodeID, occurrence string, 
 	if err := s.Attribute(ctx, a); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, factEnd(id)); err != nil {
+	if err := s.CloseNode(ctx, factEnd(id)); err != nil {
 		t.Fatalf("valid typed family must remain a per-rule outcome: %v", err)
 	}
 }

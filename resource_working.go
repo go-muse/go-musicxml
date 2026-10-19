@@ -67,7 +67,7 @@ func resourceWorkingLease(ctx context.Context, a *validation.Account, value any)
 	if err := walk(reflect.ValueOf(value), 0); err != nil {
 		return nil, err
 	}
-	if _, err := validation.AllocationSize(bytes); err != nil {
+	if _, err := validationAllocationSize(bytes); err != nil {
 		return nil, err
 	}
 	if err := a.Charge(validation.BudgetBufferedBytes, bytes); err != nil {

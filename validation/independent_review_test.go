@@ -12,7 +12,7 @@ func rrStream(t *testing.T, s *Session, count int) {
 	qaOpenRoot(t, s)
 	for i := 0; i < count; i++ {
 		id := NodeID(i + 2)
-		if err := s.Open(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
+		if err := s.OpenNode(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
 			t.Fatal(err)
 		}
 		qaClose(t, s, factEnd(id))
@@ -161,7 +161,7 @@ func TestIndependentReviewDocumentOutcomeOracle(t *testing.T) {
 							case OutcomeBlocked:
 								end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "oracle-invalid", Cause: &DecisionRef{Rule: RuleKey{ID: "upstream", Revision: 1}, Subject: NodeRef{DocumentID: "doc", Node: NodeID(i + 19)}}}
 							}
-							if err := s.Open(context.Background(), h); err != nil {
+							if err := s.OpenNode(context.Background(), h); err != nil {
 								t.Fatal(err)
 							}
 							qaClose(t, s, end)
@@ -252,15 +252,15 @@ func TestIndependentReviewCompactSuccessCacheBudget(t *testing.T) {
 	qaOpenRoot(t, s)
 	for i := 0; i < 1000; i++ {
 		id := NodeID(i + 2)
-		if err = s.Open(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
+		if err = s.OpenNode(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
 			break
 		}
-		if err = s.Close(context.Background(), factEnd(id)); err != nil {
+		if err = s.CloseNode(context.Background(), factEnd(id)); err != nil {
 			break
 		}
 	}
 	if err == nil {
-		err = s.Close(context.Background(), factEnd(1))
+		err = s.CloseNode(context.Background(), factEnd(1))
 	}
 	retained, _ := a.Usage(BudgetBufferedBytes)
 	t.Logf("40 rules x 1001 nodes: retained=%d error=%v", retained, err)
@@ -351,7 +351,7 @@ func TestIndependentReviewIdentityDuplicateOutranksUnavailableFamily(t *testing.
 			}
 			for i, value := range values {
 				id := NodeID(i + 2)
-				if err := s.Open(context.Background(), factHeader(id, 1, "test.decl", "child")); err != nil {
+				if err := s.OpenNode(context.Background(), factHeader(id, 1, "test.decl", "child")); err != nil {
 					t.Fatal(err)
 				}
 				attribute := ciStringNode(id, "unused").attributes[0]

@@ -20,10 +20,10 @@ const sourceXMLNSNamespace = "http://www.w3.org/2000/xmlns/"
 // sourceFactSink is synchronous: each method copies everything it retains.
 // The production implementation is a validation.Session.
 type sourceFactSink interface {
-	Open(context.Context, validation.NodeHeader) error
+	OpenNode(context.Context, validation.NodeHeader) error
 	Attribute(context.Context, validation.AttributeFact) error
 	CompleteAttributes(context.Context, validation.NodeID, validation.Evidence[bool]) error
-	Close(context.Context, validation.NodeEnd) error
+	CloseNode(context.Context, validation.NodeEnd) error
 }
 
 type sourceNamespaceUndo struct {
@@ -78,6 +78,9 @@ func newSourceFactObserverWithIdentity(ctx context.Context, sink sourceFactSink,
 	if err := account.Charge(validation.BudgetBufferedBytes, fixed); err != nil {
 		return nil, err
 	}
+	if session, ok := sink.(*validation.Session); ok {
+		sink = sessionSourceSink{session}
+	}
 	return &sourceFactObserver{ctx: ctx, sink: sink, account: account, documentID: documentID, entry: entry, bindings: map[string]string{"xml": "http://www.w3.org/XML/1998/namespace"}, retained: fixed}, nil
 }
 
@@ -105,7 +108,7 @@ func (o *sourceFactObserver) observeSource(token xml.Token, meta sourceXMLTokenM
 		if size > int64(frame.text.Cap()) {
 			capacity := max(size, 2*int64(frame.text.Cap()), 32)
 			capacity = min(capacity, o.account.Limits().MaxScalarBytes)
-			count, err := validation.AllocationSize(capacity)
+			count, err := validationAllocationSize(capacity)
 			if err != nil {
 				return err
 			}
@@ -138,7 +141,7 @@ func (o *sourceFactObserver) observeSource(token xml.Token, meta sourceXMLTokenM
 		if err := o.retain(frame, int64(frame.text.Len())); err != nil {
 			return err
 		}
-		err := o.sink.Close(o.ctx, validation.NodeEnd{ID: frame.id, Scalar: sourceLexeme(frame.text.String()), ChildrenComplete: complete, AttributesComplete: attrs, Order: validation.Evidence[validation.OrderKind]{State: validation.EvidenceKnown, Value: validation.OrderSource}})
+		err := o.sink.CloseNode(o.ctx, validation.NodeEnd{ID: frame.id, Scalar: sourceLexeme(frame.text.String()), ChildrenComplete: complete, AttributesComplete: attrs, Order: validation.Evidence[validation.OrderKind]{State: validation.EvidenceKnown, Value: validation.OrderSource}})
 		if err != nil {
 			return err
 		}
@@ -287,7 +290,7 @@ func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMet
 	if err := o.rememberLocation(location); err != nil {
 		return err
 	}
-	if err := o.sink.Open(o.ctx, validation.NodeHeader{ID: frame.id, Parent: parent, Name: name, Type: validation.Evidence[validation.ComponentID]{State: state, Reason: reason}, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Location: location, Bindings: bindings}); err != nil {
+	if err := o.sink.OpenNode(o.ctx, validation.NodeHeader{ID: frame.id, Parent: parent, Name: name, Type: validation.Evidence[validation.ComponentID]{State: state, Reason: reason}, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Location: location, Bindings: bindings}); err != nil {
 		return err
 	}
 	if parent == 0 && o.sourceDeclarations {
@@ -489,7 +492,7 @@ func (s *observingXMLSource) Token() (xml.Token, error) {
 	}
 	if s.observer != nil {
 		if err = s.observer.observeSource(token, s.lexical.Metadata(), s.lexical); err != nil {
-			var unsupported *validation.UnsupportedRootError
+			var unsupported *validation.ExcludedRootError
 			if errors.As(err, &unsupported) {
 				err = errors.Join(err, &UnsupportedRootError{Name: xml.Name{Space: unsupported.Name.Space, Local: unsupported.Name.Local}})
 			}
@@ -515,3 +518,38 @@ func (s *observingXMLSource) Skip() error {
 	}
 	return nil
 }
+
+// sessionSourceSink gives a validation.Session the optional source methods
+// that the observer discovers by type assertion. Package validation registers
+// them as hooks rather than exporting them.
+type sessionSourceSink struct{ *validation.Session }
+
+func (s sessionSourceSink) SourceAttributeLexical(ctx context.Context, provider validation.RuleKey, subject validation.NodeRef, attribute validation.QName, raw validation.Evidence[string]) error {
+	return validationSessionSourceAttributeLexical(s.Session, ctx, provider, subject, attribute, raw)
+}
+
+func (s sessionSourceSink) SourceDTDIDsSelected() bool {
+	return validationSessionSourceDTDIDsSelected(s.Session)
+}
+
+func (s sessionSourceSink) SourceDTDIDDomain(ctx context.Context, f validation.SourceDTDIDDomain) error {
+	return validationSessionSourceDTDIDDomain(s.Session, ctx, f)
+}
+
+func (s sessionSourceSink) SourceDTDIDAttribute(ctx context.Context, f validation.SourceDTDIDAttribute) error {
+	return validationSessionSourceDTDIDAttribute(s.Session, ctx, f)
+}
+
+func (s sessionSourceSink) CompleteSourceDTDIDs(ctx context.Context, documentID string) error {
+	return validationSessionCompleteSourceDTDIDs(s.Session, ctx, documentID)
+}
+
+func (s sessionSourceSink) SourceEntityDeclarations(ctx context.Context, facts validation.SourceEntityDeclarations) error {
+	return validationSessionSourceEntityDeclarations(s.Session, ctx, facts)
+}
+
+var (
+	_ sourceAttributeLexicalSink  = sessionSourceSink{}
+	_ sourceDTDIDSink             = sessionSourceSink{}
+	_ sourceEntityDeclarationSink = sessionSourceSink{}
+)

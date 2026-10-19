@@ -89,7 +89,7 @@ type Base struct {
 		Code  string `+"`xml:\"code,attr\"`"+`
 	} `+"`xml:\"urn:score inline,omitempty\"`"+`
 	TitleAttr       *string `+"`xml:\"title,attr,omitempty\"`"+`
-	SharedAttribute int64   `+"`xml:\"urn:score shared-attribute,attr\"`"+`
+	SharedAttribute Integer `+"`xml:\"urn:score shared-attribute,attr\"`"+`
 }
 
 // Derived represents the "derived" XSD complex type.
@@ -236,6 +236,11 @@ func (value BaseContent) selected() (string, any) {
 	}
 	return name, selected
 }
+
+// Integer is an xs:integer value in a field whose type is the
+// built-in type itself. Decoding accepts every XSD lexical form that fits
+// int64, such as "+1"; validation, not decoding, checks the range.
+type Integer int64
 `, string(actual))
 }
 

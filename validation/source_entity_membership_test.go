@@ -69,13 +69,13 @@ func TestSourceEntityDeclarationsSchemaLiteralIsolation(t *testing.T) {
 func TestSourceEntityDeclarationsFixedAndAppliedDefaults(t *testing.T) {
 	for _, defaulted := range []bool{false, true} {
 		value := "asset"
-		element := &SchemaElement{Name: SchemaName{Local: "root"}, Type: entityBuiltin("ENTITY")}
+		element := &SchemaElement{Name: QName{Local: "root"}, Type: entityBuiltin("ENTITY")}
 		if defaulted {
 			element.Default = &value
 		} else {
 			element.Fixed = &value
 		}
-		schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: element}})
+		schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: element}})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -146,12 +146,12 @@ func TestSourceEntityDeclarationsAdmissionAndOwnership(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := entityDeclarationSession(t, e)
-			if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+			if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
 			f := entitySnapshot(true, entityRow("asset", true, 1))
 			tc.mutate(&f)
-			err := s.SourceEntityDeclarations(ctx, f)
+			err := s.sourceEntityDeclarations(ctx, f)
 			if err == nil {
 				t.Fatal("invalid declaration facts admitted")
 			}
@@ -162,18 +162,18 @@ func TestSourceEntityDeclarationsAdmissionAndOwnership(t *testing.T) {
 		})
 	}
 	s := entityDeclarationSession(t, e)
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	f := entitySnapshot(true, entityRow("asset", false, 1))
 	f.Declarations[0].Origin = Evidence[Location]{State: EvidenceKnown, Value: Location{Target: TargetSource, DocumentID: "source", Path: "/!DOCTYPE/!ENTITY[1]", Position: &SourcePosition{ByteOffset: 17, CoordinateSpace: "original-bytes"}}}
-	if err := s.SourceEntityDeclarations(ctx, f); err != nil {
+	if err := s.sourceEntityDeclarations(ctx, f); err != nil {
 		t.Fatal(err)
 	}
 	f.Declarations[0].Unparsed = true
 	f.Declarations[0].Origin.Value.Position.ByteOffset = 999
 	f.Declarations[0].Origin.Value.Path = "mutated"
-	if err := s.Close(ctx, schemaLexemeEnd("asset")); err != nil {
+	if err := s.CloseNode(ctx, schemaLexemeEnd("asset")); err != nil {
 		t.Fatal(err)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -190,13 +190,13 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	schema := entityDeclarationSchema(t, entityBuiltin("ENTITY"))
 	e := entityDeclarationEngine(t, schema, XSDCheckScalar)
 	s := entityDeclarationSession(t, e)
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
+	if err := s.sourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, schemaLexemeEnd("missing")); err != nil {
+	if err := s.CloseNode(ctx, schemaLexemeEnd("missing")); err != nil {
 		t.Fatal(err)
 	}
 	cause := errors.New("malformed trailing bytes")
@@ -204,14 +204,14 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	if !errors.Is(err, cause) || report.Counts.Fail != 1 || report.Conformance != ConformanceViolated || report.AssessmentComplete {
 		t.Fatalf("root-close proof lost: %+v / %v", report, err)
 	}
-	child := &SchemaElement{Name: SchemaName{Local: "child"}, Type: entityBuiltin("ENTITY")}
+	child := &SchemaElement{Name: QName{Local: "child"}, Type: entityBuiltin("ENTITY")}
 	ref := SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: child}}}
 	e = entityDeclarationEngine(t, entityDeclarationSchema(t, ref), XSDCheckScalar)
 	s = entityDeclarationSession(t, e)
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
+	if err := s.sourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompleteAttributes(ctx, 1, Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
@@ -222,12 +222,12 @@ func TestSourceEntityDeclarationsRootCloseAndPrefixFinalization(t *testing.T) {
 	h.Parent = 1
 	h.Name = QName{Local: "child"}
 	h.Location.Path = "/root/child"
-	if err := s.Open(ctx, h); err != nil {
+	if err := s.OpenNode(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	end := schemaLexemeEnd("missing")
 	end.ID = 2
-	if err := s.Close(ctx, end); err != nil {
+	if err := s.CloseNode(ctx, end); err != nil {
 		t.Fatal(err)
 	}
 	report, err = s.Finish(ctx, Completion{Syntax: SyntaxMalformed, Cause: cause})
@@ -240,7 +240,7 @@ func TestSourceEntityDeclarationsAppliedAttributeConstraints(t *testing.T) {
 	for _, kind := range []string{"default", "fixed"} {
 		for _, unparsed := range []bool{false, true} {
 			t.Run(kind+map[bool]string{true: "/unparsed", false: "/parsed"}[unparsed], func(t *testing.T) {
-				ref := SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "asset"}, Type: entityBuiltin("ENTITY"), Constraint: &SchemaValueConstraint{Kind: kind, Value: "image"}}}}}
+				ref := SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "asset"}, Type: entityBuiltin("ENTITY"), Constraint: &SchemaValueConstraint{Kind: kind, Value: "image"}}}}}
 				e := entityDeclarationEngine(t, entityDeclarationSchema(t, ref), XSDCheckAttributes)
 				facts := entitySnapshot(true, entityRow("image", unparsed, 1))
 				r := entityDeclarationAssess(t, e, "", &facts)
@@ -263,7 +263,7 @@ func TestSourceEntityDeclarationsEnumerationAndFixedOperands(t *testing.T) {
 		t.Fatalf("unused list literal: %+v", r)
 	}
 	expected := "unused"
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: entityBuiltin("ENTITIES"), Fixed: &expected}}})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: entityBuiltin("ENTITIES"), Fixed: &expected}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -306,13 +306,13 @@ func TestSourceEntityDeclarationsDiagnosticCapKeepsFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.SourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
+	if err = s.sourceEntityDeclarations(ctx, entitySnapshot(true)); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Close(ctx, schemaLexemeEnd("missing")); err != nil {
+	if err = s.CloseNode(ctx, schemaLexemeEnd("missing")); err != nil {
 		t.Fatal(err)
 	}
 	r, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})

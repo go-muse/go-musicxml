@@ -14,7 +14,7 @@ func beginPackageFixture(t *testing.T, checks ...PackageCheck) *PackageSession {
 	if e != nil {
 		t.Fatal(e)
 	}
-	s, e := c.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
+	s, e := c.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -32,15 +32,15 @@ func packageTestEntry(id PackageFactID, name string) PackageEntryObservation {
 func TestPackageCompleteVacuityDiffersFromUnknown(t *testing.T) {
 	for _, complete := range []bool{true, false} {
 		s := beginPackageFixture(t, PackageCheckMimetypeStored)
-		if e := s.OpenPackage(context.Background(), packageTestIdentity()); e != nil {
+		if e := s.openPackage(context.Background(), packageTestIdentity()); e != nil {
 			t.Fatal(e)
 		}
 		if complete {
-			if e := s.SealEnumeration(context.Background(), completePackage("outer")); e != nil {
+			if e := s.sealEnumeration(context.Background(), completePackage("outer")); e != nil {
 				t.Fatal(e)
 			}
 		}
-		b, e := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+		b, e := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -54,16 +54,16 @@ func TestPackageCompleteVacuityDiffersFromUnknown(t *testing.T) {
 }
 func TestPackageKnownFailureSurvivesIncompleteEnumeration(t *testing.T) {
 	s := beginPackageFixture(t, PackageCheckMimetypeStored)
-	_ = s.OpenPackage(context.Background(), packageTestIdentity())
+	_ = s.openPackage(context.Background(), packageTestIdentity())
 	entry := packageTestEntry(1, "mimetype")
 	entry.Local.Method.Value = 8
 	entry.Central.Present = Evidence[bool]{State: EvidenceUnknown, Reason: "later-directory-failure"}
 	entry.Central.Method = Evidence[uint16]{State: EvidenceUnknown, Reason: "unavailable"}
 	entry.HeaderAssociation = Evidence[bool]{State: EvidenceUnknown, Reason: "unavailable"}
-	if e := s.ObserveEntry(context.Background(), entry); e != nil {
+	if e := s.observeEntry(context.Background(), entry); e != nil {
 		t.Fatal(e)
 	}
-	b, e := s.Finish(context.Background(), PackageCompletion{InputComplete: false})
+	b, e := s.finish(context.Background(), PackageCompletion{InputComplete: false})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -75,20 +75,20 @@ func TestPackageKnownFailureSurvivesIncompleteEnumeration(t *testing.T) {
 func TestPackageContainerScopeNotSatisfiedBySiblingPackage(t *testing.T) {
 	s := beginPackageFixture(t, PackageCheckContainerPath)
 	outer := packageTestIdentity()
-	_ = s.OpenPackage(context.Background(), outer)
+	_ = s.openPackage(context.Background(), outer)
 	inner := outer
 	inner.ID = "inner"
 	inner.Parent = "outer"
 	inner.Pin.CanonicalID = "inner-archive"
-	_ = s.OpenPackage(context.Background(), inner)
+	_ = s.openPackage(context.Background(), inner)
 	e := packageTestEntry(1, "META-INF/container.xml")
 	e.Package = "inner"
-	if err := s.ObserveEntry(context.Background(), e); err != nil {
+	if err := s.observeEntry(context.Background(), e); err != nil {
 		t.Fatal(err)
 	}
-	_ = s.SealEnumeration(context.Background(), completePackage("outer"))
-	_ = s.SealEnumeration(context.Background(), completePackage("inner"))
-	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	_ = s.sealEnumeration(context.Background(), completePackage("outer"))
+	_ = s.sealEnumeration(context.Background(), completePackage("inner"))
+	b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,16 +99,16 @@ func TestPackageContainerScopeNotSatisfiedBySiblingPackage(t *testing.T) {
 }
 func TestPackageCanceledFinishPreservesPriorFailureAndCleans(t *testing.T) {
 	s := beginPackageFixture(t, PackageCheckMimetypeStored)
-	_ = s.OpenPackage(context.Background(), packageTestIdentity())
+	_ = s.openPackage(context.Background(), packageTestIdentity())
 	entry := packageTestEntry(1, "mimetype")
 	entry.Local.Method.Value = 8
 	entry.Central.Method.Value = 8
-	if e := s.ObserveEntry(context.Background(), entry); e != nil {
+	if e := s.observeEntry(context.Background(), entry); e != nil {
 		t.Fatal(e)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	b, err := s.Finish(ctx, PackageCompletion{InputComplete: false})
+	b, err := s.finish(ctx, PackageCompletion{InputComplete: false})
 	if !errors.Is(err, context.Canceled) || b.Satisfied() {
 		t.Fatalf("cancel=%v bundle=%+v", err, b.PackageReport())
 	}
@@ -129,16 +129,16 @@ func TestPackageFailureSummaryUnpinnedAndWriteOnce(t *testing.T) {
 	}
 	defer snap.Close()
 	pin := ResourcePin{CanonicalID: "failed-input", Representation: ResourceSourceXML}
-	if err = s.RecordResourceFailure(context.Background(), pin, report, context.Canceled); !errors.Is(err, context.Canceled) {
+	if err = s.recordResourceFailure(context.Background(), pin, report, context.Canceled); !errors.Is(err, context.Canceled) {
 		t.Fatalf("unpinned failure=%v", err)
 	}
 	later := report
 	later.Counts = Counts{}
 	later.Conformance = ConformanceConformant
-	if err = s.RecordResourceFailure(context.Background(), pin, later, context.Canceled); !errors.Is(err, ErrInvalidSession) {
+	if err = s.recordResourceFailure(context.Background(), pin, later, context.Canceled); !errors.Is(err, ErrInvalidSession) {
 		t.Fatalf("repeat summary=%v", err)
 	}
-	b, _ := s.Finish(context.Background(), PackageCompletion{})
+	b, _ := s.finish(context.Background(), PackageCompletion{})
 	failure, ok := b.Failure()
 	if !ok || failure.Counts.Fail != 1 || failure.PinComplete.State == EvidenceKnown || failure.Pin.Digest != "" {
 		t.Fatalf("failure=%+v", failure)
@@ -147,18 +147,18 @@ func TestPackageFailureSummaryUnpinnedAndWriteOnce(t *testing.T) {
 
 func TestPackageUnassociatedHeadersCannotProveNoExtra(t *testing.T) {
 	s := beginPackageFixture(t, PackageCheckMimetypeNoExtra)
-	if err := s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err := s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
 	entry := packageTestEntry(1, "mimetype")
 	entry.HeaderAssociation = Evidence[bool]{State: EvidenceKnown, Value: false}
-	err := s.ObserveEntry(context.Background(), entry)
+	err := s.observeEntry(context.Background(), entry)
 	if err != nil {
-		_, _ = s.Finish(context.Background(), PackageCompletion{})
+		_, _ = s.finish(context.Background(), PackageCompletion{})
 		return
 	}
-	_ = s.SealEnumeration(context.Background(), completePackage("outer"))
-	b, _ := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	_ = s.sealEnumeration(context.Background(), completePackage("outer"))
+	b, _ := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if b.Satisfied() || b.PackageReport().Counts.Pass != 0 {
 		t.Fatalf("unassociated headers proved no-extra: %+v", b.PackageReport())
 	}
@@ -171,21 +171,21 @@ func TestPackageDocumentDependencyUsesOwningBoundary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := c.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
+	s, err := c.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err = s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.ObserveEntry(context.Background(), packageTestEntry(1, "META-INF/container.xml")); err != nil {
+	if err = s.observeEntry(context.Background(), packageTestEntry(1, "META-INF/container.xml")); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.ObserveEntry(context.Background(), packageTestEntry(2, "mimetype")); err != nil {
+	if err = s.observeEntry(context.Background(), packageTestEntry(2, "mimetype")); err != nil {
 		t.Fatal(err)
 	}
-	_ = s.SealEnumeration(context.Background(), completePackage("outer"))
-	b, _ := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	_ = s.sealEnumeration(context.Background(), completePackage("outer"))
+	b, _ := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if !b.Satisfied() {
 		t.Fatalf("passed boundary prerequisite not found by entry: %+v", b.PackageReport())
 	}
@@ -196,18 +196,18 @@ func TestPackageUnpinnedRawPrefixPreservesFailureWithoutCertification(t *testing
 	p := packageTestIdentity()
 	p.PinUnavailable = true
 	p.Pin.Digest = ""
-	if err := s.OpenPackage(context.Background(), p); err != nil {
+	if err := s.openPackage(context.Background(), p); err != nil {
 		t.Fatal(err)
 	}
 	e := packageTestEntry(1, "mimetype")
 	e.Local.Method.Value = 8
-	if err := s.ObserveEntry(context.Background(), e); err != nil {
+	if err := s.observeEntry(context.Background(), e); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+	if err := s.sealEnumeration(context.Background(), completePackage("outer")); err != nil {
 		t.Fatal(err)
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -222,14 +222,14 @@ func TestPackageCurrentRootfileHasNoInventedXMLSource(t *testing.T) {
 	p.Pin.Representation = ResourceCurrentMXL
 	p.Pin.Digest = ""
 	p.Pin.SnapshotID = "current-run"
-	if err := s.OpenPackage(context.Background(), p); err != nil {
+	if err := s.openPackage(context.Background(), p); err != nil {
 		t.Fatal(err)
 	}
 	r := PackageRootfileObservation{ID: 1, Package: "outer", Location: Location{Target: TargetPackage, DocumentID: "package", Path: "/rootfiles[1]"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown, Value: "score.xml"}, MediaType: Evidence[string]{State: EvidenceAbsent}, Entry: Evidence[PackageFactID]{State: EvidenceUnknown, Reason: "unresolved"}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceUnknown, Reason: "unresolved"}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}}
-	if err := s.ObserveRootfile(context.Background(), r); err != nil {
+	if err := s.observeRootfile(context.Background(), r); err != nil {
 		t.Fatal(err)
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 }
 
 func TestPackageCurrentContainerExcludesOriginalEntryClaim(t *testing.T) {
@@ -242,13 +242,13 @@ func TestPackageCurrentContainerExcludesOriginalEntryClaim(t *testing.T) {
 			p.Pin.Digest = ""
 			p.Pin.SnapshotID = "run"
 		}
-		if err := s.OpenPackage(context.Background(), p); err != nil {
+		if err := s.openPackage(context.Background(), p); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+		if err := s.sealEnumeration(context.Background(), completePackage("outer")); err != nil {
 			t.Fatal(err)
 		}
-		b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+		b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -281,11 +281,11 @@ func TestPackageFailureReportOwnedWhenAffordableAndSummaryOnRefusal(t *testing.T
 			}
 		}
 		stop := errors.New("intrinsic-operation-stop")
-		if err = s.RecordResourceFailure(context.Background(), ResourcePin{CanonicalID: "unread-source", Representation: ResourceSourceXML}, report, stop); !errors.Is(err, stop) {
+		if err = s.recordResourceFailure(context.Background(), ResourcePin{CanonicalID: "unread-source", Representation: ResourceSourceXML}, report, stop); !errors.Is(err, stop) {
 			t.Fatal(err)
 		}
 		report.Findings[0].Reason = "mutated-input"
-		bundle, err := s.Finish(context.Background(), PackageCompletion{})
+		bundle, err := s.finish(context.Background(), PackageCompletion{})
 		if !errors.Is(err, stop) {
 			t.Fatal(err)
 		}

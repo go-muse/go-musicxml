@@ -111,7 +111,7 @@ func readAssessmentResourceBody(ctx context.Context, a *validation.Account, body
 				if old := int64(cap(owned.bytes)); old <= math.MaxInt64/2 && old*2 > capacity {
 					capacity = old * 2
 				}
-				size, sizeErr := validation.AllocationSize(capacity)
+				size, sizeErr := validationAllocationSize(capacity)
 				if sizeErr != nil {
 					return nil, sizeErr
 				}

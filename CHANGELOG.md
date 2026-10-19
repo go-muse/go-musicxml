@@ -7,6 +7,66 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Breaking changes (v0.2)
+
+The project has no compatibility promise before v1, and this release removes
+duplicates and tightens types. API.md, "Migrating to v0.2", maps every removed
+or changed identifier to its replacement.
+
+- `(*validation.DictionarySet)(nil).Close()` returns nil instead of an
+  `ErrInvalidConfiguration` error, so `defer set.Close()` is safe after a failed
+  constructor. A zero (uninitialized) set is still rejected.
+- Every reader and writer entry point (`Decode*`, `DecodeMXL*`,
+  `DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`,
+  `InspectXMLWithResources`, `InspectMXL`, `Encode*`, `EncodeMXL*`) rejects a
+  typed-nil stream, such as a nil `*os.File` from a failed `os.Open`, with
+  `ErrNilReader` or `ErrNilWriter` instead of panicking or returning a read
+  error. `validation.Report.Format` and `FormatLocalized` reject a typed-nil
+  writer with `ErrInvalidConfiguration`. A typed-nil `ResourceResult.Body`
+  from a resource resolver counts as no body.
+- `validation.Integer`, `validation.Decimal` and `validation.Rational` are no
+  longer comparable, so neither are the 23 structs that contain them, such as
+  `validation.Atomic`, `validation.Scalar` and `validation.ContextPosition`.
+  `==` used to compare internal pointers, so numerically equal values were
+  generally unequal; it now fails to compile. Use `Equal` or `Cmp`.
+- Generated fields whose schema type is the built-in `xs:positiveInteger`,
+  `xs:nonNegativeInteger` or `xs:integer` (35 fields, such as
+  `Attributes.Staves`, `Fret.Value` and `Transpose.Diatonic`) have the new
+  named types `PositiveInteger`, `NonNegativeInteger` and `Integer` instead of
+  `uint64`/`int64`. The named types decode their own lexical forms, so 25
+  structs, such as `Note`, `Attributes` and `Forward`, no longer have
+  `MarshalXML`/`UnmarshalXML` methods that existed only to decode `+1`.
+  Convert with `PositiveInteger(n)` and `uint64(v)`, or `Integer(n)` and
+  `int64(v)`.
+- `PlayContent.Ipa` and `Play.AddIpa` are renamed `IPA` and `AddIPA`.
+- `validation.Session.Open` and `Close` are renamed `OpenNode` and `CloseNode`,
+  so that the node events are not mistaken for resource management;
+  `SessionError.Operation` reports the new names.
+- `validation.ContextConsumerSpec` and `validation.TimelineConsumerSpec`, which
+  had the same fields, are merged into `validation.ConsumerSpec`.
+- `validation.UnsupportedRootError` is renamed `validation.ExcludedRootError`,
+  so that it no longer shares a name with `musicxml.UnsupportedRootError`; its
+  message says "is excluded by profile".
+- The planning inventory moves from package `validation` to the new package
+  `validation/inventory`: `validation.MusicXML40Inventory` becomes
+  `inventory.MusicXML40`, `validation.Inventory` becomes `inventory.Snapshot`,
+  and each `validation.InventoryX` type becomes `inventory.X`.
+- The `validation.Schema*` metadata types are declared in package `validation`
+  instead of aliasing internal types, with documented fields; their fields and
+  constants are unchanged. `validation.SchemaName` is removed: expanded names
+  are `validation.QName`. Compiled schema digests are unchanged.
+- The adapter entry points of package `validation` are no longer exported. The
+  root package reaches them through typed hooks that `validation` registers in
+  the module-internal package `internal/validationlink`. Removed: 26
+  MusicXML-specific plan constructors (such as `NewTimelinePlan`,
+  `NewChordDurationPlan`, `NewPerformanceContextPlan` and
+  `NewXSDPlanWithSourceDeclarations`), the `Source*` methods of `Engine` and
+  `Session`, `CompiledPackageCatalog.Begin`, every method of `PackageSession`
+  (now an opaque type) and `AllocationSize`. Their data types stay exported.
+  API.md, "Adapter entry points", lists them. The generic constructors,
+  `NewXSDPlan`, `NewModelRepresentationPlan` and the fact-session events are
+  unchanged.
+
 ### Added
 
 - Organize loading and checking around three scenarios (see API.md,

@@ -23,10 +23,10 @@ func TestRetainedFactCanonicalClosureStorage(t *testing.T) {
 	defer s.cleanup()
 	representationOpen(t, s)
 	for id := NodeID(2); id <= 3; id++ {
-		if err := s.Open(context.Background(), representationHeader(id, 1, "test.child", "child")); err != nil {
+		if err := s.OpenNode(context.Background(), representationHeader(id, 1, "test.child", "child")); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.Close(context.Background(), representationEnd(id)); err != nil {
+		if err := s.CloseNode(context.Background(), representationEnd(id)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -338,9 +338,9 @@ func TestRetainedFactRejectedRootAdmission(t *testing.T) {
 		if err := s.account.Charge(BudgetBufferedBytes, hold); err != nil {
 			t.Fatal(err)
 		}
-		err := s.Open(context.Background(), h)
+		err := s.OpenNode(context.Background(), h)
 		if short == 0 {
-			var rejected *UnsupportedRootError
+			var rejected *ExcludedRootError
 			if !errors.As(err, &rejected) || s.rejectedRootName != h.Name {
 				t.Fatalf("exact rejected-root admission=%v", err)
 			}
@@ -631,7 +631,7 @@ func TestRetainedFactInvalidHeaderPrecedesNewStorageAdmission(t *testing.T) {
 	}
 	h := representationHeader(1, 0, "root", "root")
 	h.Name.Local = ""
-	err := s.Open(context.Background(), h)
+	err := s.OpenNode(context.Background(), h)
 	var session *SessionError
 	if !errors.As(err, &session) || errors.Is(err, ErrResourceLimit) || s.facts != nil || len(s.nodes) != 0 {
 		t.Fatalf("invalid header gained storage or changed precedence: %v", err)
@@ -692,11 +692,11 @@ func TestRetainedFactPendingSourceSharingIsExact(t *testing.T) {
 
 func retainedTestSchema(t *testing.T, s *Session, count int) ([]xsd.CacheIdentity, []xsd.CacheIdentity) {
 	t.Helper()
-	data := SchemaData{Types: map[SchemaName]*SchemaType{}, Elements: map[SchemaName]*SchemaElement{}}
+	data := SchemaData{Types: map[QName]*SchemaType{}, Elements: map[QName]*SchemaElement{}}
 	for i := 0; i < count; i++ {
-		name := SchemaName{Local: fmt.Sprintf("type-%03d", i)}
+		name := QName{Local: fmt.Sprintf("type-%03d", i)}
 		data.Types[name] = &SchemaType{Simple: &SchemaSimple{}}
-		use := SchemaName{Local: fmt.Sprintf("use-%03d", i)}
+		use := QName{Local: fmt.Sprintf("use-%03d", i)}
 		data.Elements[use] = &SchemaElement{Name: use, Type: SchemaTypeRef{Name: name}}
 	}
 	schema, err := CompileSchema(AssemblyMusicXML, data)

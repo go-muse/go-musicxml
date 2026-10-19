@@ -59,7 +59,7 @@ func representationProblem(axis ModelAxis) ModelProblem {
 }
 func representationOpen(t *testing.T, s *Session) {
 	t.Helper()
-	if err := s.Open(context.Background(), representationHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(context.Background(), representationHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -106,7 +106,7 @@ func TestModelRepresentationRequiredEvidenceAndCompatibility(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if err := s.Close(context.Background(), end); err != nil {
+			if err := s.CloseNode(context.Background(), end); err != nil {
 				t.Fatal(err)
 			}
 			r := representationFinish(t, s)
@@ -141,7 +141,7 @@ func TestModelRepresentationOwnsProblemsAndPublishesRealCause(t *testing.T) {
 	f.Problems[0].Actual = "changed"
 	end := representationEnd(1)
 	end.Scalar.Value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "model-nonfinite"}
-	if err := s.Close(context.Background(), end); err != nil {
+	if err := s.CloseNode(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
 	scalar := *s.nodes[1].end.Scalar.Value
@@ -183,7 +183,7 @@ func TestModelRepresentationLifecycleAndContracts(t *testing.T) {
 			return s.ModelRepresentation(context.Background(), representationFact(1))
 		},
 		"after-close": func(s *Session) error {
-			if err := s.Close(context.Background(), representationEnd(1)); err != nil {
+			if err := s.CloseNode(context.Background(), representationEnd(1)); err != nil {
 				return err
 			}
 			return s.ModelRepresentation(context.Background(), representationFact(1))
@@ -239,7 +239,7 @@ func TestModelRepresentationLifecycleAndContracts(t *testing.T) {
 			}
 			end := representationEnd(1)
 			end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "known"}}
-			return s.Close(context.Background(), end)
+			return s.CloseNode(context.Background(), end)
 		},
 		"children-contradiction": func(s *Session) error {
 			f := representationFact(1)
@@ -247,13 +247,13 @@ func TestModelRepresentationLifecycleAndContracts(t *testing.T) {
 			if err := s.ModelRepresentation(context.Background(), f); err != nil {
 				return err
 			}
-			return s.Close(context.Background(), representationEnd(1))
+			return s.CloseNode(context.Background(), representationEnd(1))
 		},
 		"child-after-seal": func(s *Session) error {
 			if err := s.ModelRepresentation(context.Background(), representationFact(1)); err != nil {
 				return err
 			}
-			return s.Open(context.Background(), representationHeader(2, 1, "test.child", "child"))
+			return s.OpenNode(context.Background(), representationHeader(2, 1, "test.child", "child"))
 		},
 	}
 	for name, test := range tests {
@@ -272,7 +272,7 @@ func TestModelRepresentationLifecycleAndContracts(t *testing.T) {
 	}
 	t.Run("source-target", func(t *testing.T) {
 		_, s := sessionFixture(t, Budgets{})
-		if err := s.Open(context.Background(), factHeader(1, 0, "test.root", "root")); err != nil {
+		if err := s.OpenNode(context.Background(), factHeader(1, 0, "test.root", "root")); err != nil {
 			t.Fatal(err)
 		}
 		if err := s.ModelRepresentation(context.Background(), representationFact(1)); err == nil {
@@ -293,7 +293,7 @@ func TestModelRepresentationTruncationPreservesBlockersAndCauses(t *testing.T) {
 	}
 	end := representationEnd(1)
 	end.Scalar.Value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "model-nonfinite"}
-	if err := s.Close(context.Background(), end); err != nil {
+	if err := s.CloseNode(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
 	if s.nodes[1].end.Scalar.Value.Cause == nil {
@@ -350,7 +350,7 @@ func TestModelRepresentationAttributeAndChildrenAreScoped(t *testing.T) {
 			if err := s.ModelRepresentation(context.Background(), f); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.Close(context.Background(), end); err != nil {
+			if err := s.CloseNode(context.Background(), end); err != nil {
 				t.Fatal(err)
 			}
 			n := s.nodes[1]
@@ -379,14 +379,14 @@ func TestModelRepresentationAttributeAndChildrenAreScoped(t *testing.T) {
 func TestModelRepresentationCompleteSuccessAndAssemblyScope(t *testing.T) {
 	s := representationFixture(t, Budgets{}, true)
 	representationOpen(t, s)
-	if err := s.Open(context.Background(), representationHeader(2, 1, "test.child", "child")); err != nil {
+	if err := s.OpenNode(context.Background(), representationHeader(2, 1, "test.child", "child")); err != nil {
 		t.Fatal(err)
 	}
 	for _, id := range []NodeID{2, 1} {
 		if err := s.ModelRepresentation(context.Background(), representationFact(id)); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.Close(context.Background(), representationEnd(id)); err != nil {
+		if err := s.CloseNode(context.Background(), representationEnd(id)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -399,13 +399,13 @@ func TestModelRepresentationCompleteSuccessAndAssemblyScope(t *testing.T) {
 		representationOpen(t, s)
 		h := representationHeader(2, 1, "test.child", "child")
 		h.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "schema-unbound"}
-		if err := s.Open(context.Background(), h); err != nil {
+		if err := s.OpenNode(context.Background(), h); err != nil {
 			t.Fatal(err)
 		}
 		if err := s.ModelRepresentation(context.Background(), representationFact(2)); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.Close(context.Background(), representationEnd(2)); err != nil {
+		if err := s.CloseNode(context.Background(), representationEnd(2)); err != nil {
 			t.Fatal(err)
 		}
 		d, ok := s.lookupDecision(decisionID{rule: RuleKey{ID: "test.model-representation", Revision: 1}, node: 2})
@@ -502,7 +502,7 @@ func TestModelRepresentationVerdictSurvivesCacheFailure(t *testing.T) {
 	if err := s.account.Charge(BudgetBufferedBytes, external); err != nil {
 		t.Fatal(err)
 	}
-	closeErr := s.Close(context.Background(), end)
+	closeErr := s.CloseNode(context.Background(), end)
 	var refused *ResourceError
 	if !errors.As(closeErr, &refused) || !s.nodes[1].closed {
 		t.Fatalf("expected decision-cache resource failure after end retention: %v", closeErr)

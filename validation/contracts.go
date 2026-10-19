@@ -52,6 +52,19 @@ func validRef(v DecisionRef) bool {
 // Every ingress payload is comparable; comparing it with its zero value also
 // checks immutable numeric wrappers without boxing values for reflection.
 func validateEvidence[T comparable](v Evidence[T], field string) error {
+	var zero T
+	return validateEvidenceValue(v, field, v.Value == zero)
+}
+
+// validateAtomicEvidence is validateEvidence for Atomic, which is not
+// comparable with ==.
+func validateAtomicEvidence(v Evidence[Atomic], field string) error {
+	return validateEvidenceValue(v, field, v.Value.isZero())
+}
+
+// validateEvidenceValue checks the evidence envelope; zeroValue reports whether
+// v.Value is the zero value of T.
+func validateEvidenceValue[T any](v Evidence[T], field string, zeroValue bool) error {
 	switch v.State {
 	case EvidenceKnown:
 		if v.Cause != nil {
@@ -72,11 +85,8 @@ func validateEvidence[T comparable](v Evidence[T], field string) error {
 	default:
 		return contract(field, "unknown evidence state")
 	}
-	if v.State != EvidenceKnown {
-		var zero T
-		if v.Value != zero {
-			return contract(field, "non-known evidence carries a value")
-		}
+	if v.State != EvidenceKnown && !zeroValue {
+		return contract(field, "non-known evidence carries a value")
 	}
 	if !validText(string(v.Reason), maxIdentityBytes) {
 		return contract(field, "invalid reason")
@@ -117,7 +127,7 @@ func validateScalar(v Scalar) error {
 	if err := validateEvidence(v.Lexeme, "scalar lexeme"); err != nil {
 		return err
 	}
-	if err := validateEvidence(v.Value, "scalar value"); err != nil {
+	if err := validateAtomicEvidence(v.Value, "scalar value"); err != nil {
 		return err
 	}
 	if v.Lexeme.State == EvidenceKnown && !utf8.ValidString(v.Lexeme.Value) {

@@ -262,11 +262,11 @@ func TestFinalQAEmptyFragmentCannotInventRoot(t *testing.T) {
 				t.Fatal("partial retained snapshot missing", r.Err)
 			}
 			pin := g.primaryPin(validation.ResourceSourceXML, hex.EncodeToString(r.Digest[:]))
-			if e = g.session.OpenPackage(ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); e != nil {
+			if e = validationPackageSessionOpenPackage(g.session, ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); e != nil {
 				t.Fatal(e)
 			}
 			header := r.Snapshot.Header()
-			rid, e := g.session.AddResource(ctx, pin, r.Snapshot, true)
+			rid, e := validationPackageSessionAddResource(g.session, ctx, pin, r.Snapshot, true)
 			if header.Assembly.State != validation.EvidenceKnown {
 				if !errors.Is(e, validation.ErrInvalidConfiguration) || rid != "" {
 					t.Fatalf("unknown assembly admitted: id=%q error=%v", rid, e)
@@ -290,11 +290,11 @@ func TestFinalQAEmptyFragmentCannotInventRoot(t *testing.T) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			aid, e := g.session.AdoptResource(ctx, rid, validation.ResourceAdoptionOptions{DocumentID: id, Root: true, Package: "root"})
+			aid, e := validationPackageSessionAdoptResource(g.session, ctx, rid, validation.ResourceAdoptionOptions{DocumentID: id, Root: true, Package: "root"})
 			if e != nil {
 				t.Fatal(e)
 			}
-			a, e := g.session.Adoption(ctx, aid)
+			a, e := validationPackageSessionAdoption(g.session, ctx, aid)
 			if e != nil {
 				t.Fatal(e)
 			}

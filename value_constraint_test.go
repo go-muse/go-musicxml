@@ -51,7 +51,7 @@ func TestTypedAttributeDefaults(t *testing.T) {
 	assert.Equal(t, BeamLevel(1), beam.EffectiveNumber())
 
 	octaveShift := &OctaveShift{}
-	assert.Equal(t, uint64(8), octaveShift.EffectiveSize())
+	assert.Equal(t, PositiveInteger(8), octaveShift.EffectiveSize())
 }
 
 func TestFixedAttributeHelpers(t *testing.T) {

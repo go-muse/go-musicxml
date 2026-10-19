@@ -124,7 +124,7 @@ func (d *DictionarySet) retain(n int64) error {
 	if err != nil {
 		return err
 	}
-	if _, err = AllocationSize(n); err != nil {
+	if _, err = allocationSize(n); err != nil {
 		return err
 	}
 	if err = d.account.Charge(BudgetBufferedBytes, n); err != nil {
@@ -644,11 +644,13 @@ func (l *dictionaryLease) release() {
 	}
 }
 
-// Close is concurrent-safe and idempotent on an initialized set. It rejects
-// an uninitialized set and defers retained-storage release while sessions borrow.
+// Close is concurrent-safe and idempotent on an initialized set. A nil set has
+// nothing to release, so closing it returns nil, which makes a deferred Close
+// safe after a failed constructor. Close rejects an uninitialized set and defers
+// retained-storage release while sessions borrow.
 func (d *DictionarySet) Close() error {
 	if d == nil {
-		return dictionaryConfiguration("nil set")
+		return nil
 	}
 	d.mu.Lock()
 	if !d.initialized {

@@ -184,7 +184,7 @@ func (s *sourceDTDStore) reserve(n int64) error {
 	if err := s.check(); err != nil {
 		return err
 	}
-	if _, err := validation.AllocationSize(n); err != nil {
+	if _, err := validationAllocationSize(n); err != nil {
 		return err
 	}
 	if err := s.account.Charge(validation.BudgetBufferedBytes, n); err != nil {
@@ -282,7 +282,7 @@ func (s *sourceDTDStore) growPointers(old []*sourceDTDDeclaration) ([]*sourceDTD
 		return nil, &validation.ResourceError{Kind: validation.BudgetBufferedBytes, Requested: capacity}
 	}
 	n := capacity * size
-	count, err := validation.AllocationSize(n)
+	count, err := validationAllocationSize(n)
 	if err != nil {
 		return nil, err
 	}
@@ -418,7 +418,7 @@ func (b *sourceDTDText) append(value []byte) error {
 		if limit := b.store.account.Limits().MaxScalarBytes; capacity > limit {
 			capacity = limit
 		}
-		count, err := validation.AllocationSize(capacity)
+		count, err := validationAllocationSize(capacity)
 		if err != nil {
 			return err
 		}

@@ -12,7 +12,7 @@ func TestCompleteAttributesSealsItsOwnEventPhase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompleteAttributes(ctx, 1, Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
@@ -31,7 +31,7 @@ func TestCompleteAttributesKeepsUnknownAsUnknown(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompleteAttributes(ctx, 1, Evidence[bool]{State: EvidenceUnsupported, Reason: "attribute-enumeration-unavailable"}); err != nil {
@@ -55,7 +55,7 @@ func TestCompleteAttributesLifecycleAndContradiction(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+			if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
 			complete := Evidence[bool]{State: EvidenceKnown, Value: true}
@@ -73,7 +73,7 @@ func TestCompleteAttributesLifecycleAndContradiction(t *testing.T) {
 				}
 				end := schemaLexemeEnd("1")
 				end.AttributesComplete = Evidence[bool]{State: EvidenceUnsupported, Reason: "contradiction"}
-				err = s.Close(ctx, end)
+				err = s.CloseNode(ctx, end)
 			case "canceled":
 				cctx, cancel := context.WithCancel(ctx)
 				cancel()

@@ -62,7 +62,7 @@ func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions
 	if err = assessmentContext(ctx, "canceled-before-source"); err != nil {
 		return result, err
 	}
-	if dictionaryNil(reader) {
+	if nilValue(reader) {
 		return result, ErrNilReader
 	}
 	if _, err = decode.xmlDepth(); err != nil {

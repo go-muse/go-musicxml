@@ -17578,7 +17578,7 @@
       "anchors": [
         {
           "file": "validation/model_schema_test.go",
-          "text": "\tschema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: \"root\"}: {Name: SchemaName{Local: \"root\"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{\n\t\t{Name: SchemaName{Local: \"text\"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: \"token\"}}},\n\t\t{Name: SchemaName{Local: \"number\"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: \"integer\"}}},\n\t\t{Name: SchemaName{Local: \"default\"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: \"integer\"}}, Constraint: &SchemaValueConstraint{Kind: \"default\", Value: \"1\"}},\n\t\t{Name: SchemaName{Local: \"absent\"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: \"string\"}}},\n\t}}}}}})\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\ts := modelSchemaSession(t, schema, Budgets{})\n\tctx := context.Background()"
+          "text": "\tschema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: \"root\"}: {Name: QName{Local: \"root\"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{\n\t\t{Name: QName{Local: \"text\"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: \"token\"}}},\n\t\t{Name: QName{Local: \"number\"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: \"integer\"}}},\n\t\t{Name: QName{Local: \"default\"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: \"integer\"}}, Constraint: &SchemaValueConstraint{Kind: \"default\", Value: \"1\"}},\n\t\t{Name: QName{Local: \"absent\"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: \"string\"}}},\n\t}}}}}})\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\ts := modelSchemaSession(t, schema, Budgets{})\n\tctx := context.Background()"
         },
         {
           "file": "validation/model_schema_test.go",
@@ -17980,7 +17980,7 @@
       "anchors": [
         {
           "file": "validation/session_test.go",
-          "text": "\tfor _, count := range []int{0, 1, 2} {\n\t\tt.Run(string(rune('0'+count)), func(t *testing.T) {\n\t\t\t_, s := sessionFixture(t, Budgets{})\n\t\t\tctx := context.Background()\n\t\t\tif err := s.Open(ctx, factHeader(1, 0, \"test.root\", \"root\")); err != nil {\n\t\t\t\tt.Fatal(err)\n\t\t\t}\n\t\t\tfor i := 0; i < count; i++ {\n\t\t\t\tid := NodeID(i + 2)\n\t\t\t\tif err := s.Open(ctx, factHeader(id, 1, \"test.child\", \"child\")); err != nil {\n\t\t\t\t\tt.Fatal(err)"
+          "text": "\tfor _, count := range []int{0, 1, 2} {\n\t\tt.Run(string(rune('0'+count)), func(t *testing.T) {\n\t\t\t_, s := sessionFixture(t, Budgets{})\n\t\t\tctx := context.Background()\n\t\t\tif err := s.OpenNode(ctx, factHeader(1, 0, \"test.root\", \"root\")); err != nil {\n\t\t\t\tt.Fatal(err)\n\t\t\t}\n\t\t\tfor i := 0; i < count; i++ {\n\t\t\t\tid := NodeID(i + 2)\n\t\t\t\tif err := s.OpenNode(ctx, factHeader(id, 1, \"test.child\", \"child\")); err != nil {\n\t\t\t\t\tt.Fatal(err)"
         },
         {
           "file": "validation/session_test.go",
@@ -18611,7 +18611,7 @@
       "anchors": [
         {
           "file": "validation/package_association_test.go",
-          "text": "\ts, q := packageAssociationFixture(t)\n\tr := packageAssociationReply(q, Evidence[bool]{State: EvidenceUnknown, Reason: \"partial-table\"})\n\tr.Authority = EvidenceAuthority{}\n\tif err := s.ObserveAssociation(context.Background(), q, r); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tsealFixtureExpansions(t, s)\n\t_ = s.SealEnumeration(context.Background(), completePackage(\"outer\"))\n\tb, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})\n\tif err != nil || b.Satisfied() || b.PackageReport().Counts.Unknown != 1 {\n\t\tt.Fatalf(\"partial relation=%v %+v\", err, b.PackageReport())"
+          "text": "\ts, q := packageAssociationFixture(t)\n\tr := packageAssociationReply(q, Evidence[bool]{State: EvidenceUnknown, Reason: \"partial-table\"})\n\tr.Authority = EvidenceAuthority{}\n\tif err := s.observeAssociation(context.Background(), q, r); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tsealFixtureExpansions(t, s)\n\t_ = s.sealEnumeration(context.Background(), completePackage(\"outer\"))\n\tb, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})\n\tif err != nil || b.Satisfied() || b.PackageReport().Counts.Unknown != 1 {\n\t\tt.Fatalf(\"partial relation=%v %+v\", err, b.PackageReport())"
         },
         {
           "file": "validation/package_association_test.go",

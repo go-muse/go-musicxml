@@ -31,20 +31,20 @@ func packageAdviceFixtureCheck(t *testing.T, check PackageCheck, budgets ...Budg
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := c.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: intrinsic.account})
+	s, err := c.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: intrinsic.account})
 	if err != nil {
 		t.Fatal(err)
 	}
 	identity := packageTestIdentity()
-	if err = s.OpenPackage(context.Background(), identity); err != nil {
+	if err = s.openPackage(context.Background(), identity); err != nil {
 		t.Fatal(err)
 	}
 	pin := ResourcePin{CanonicalID: "score", Representation: ResourceSourceXML, Digest: strings.Repeat("c", 64)}
-	id, err := s.AddResource(context.Background(), pin, snap, true)
+	id, err := s.addResource(context.Background(), pin, snap, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	adoption, err := s.AdoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true})
+	adoption, err := s.adoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,14 +59,14 @@ func TestPackageImageAdviceRatioAndOptionalUnknown(t *testing.T) {
 			m := ImageMetadataResult{Request: q, Resource: ResourcePin{CanonicalID: "image", Digest: strings.Repeat("d", 64), Representation: ResourceBinary}, Width: Evidence[Decimal]{State: EvidenceKnown, Value: localDecimal(t, "400")}, Height: Evidence[Decimal]{State: EvidenceKnown, Value: localDecimal(t, "200")}, Unit: ImageUnitPixel, PixelAspectRatio: Evidence[Decimal]{State: EvidenceKnown, Value: localDecimal(t, "1")}, Authority: EvidenceAuthority{ID: "image-reader", Revision: "1", Provenance: []SourceRef{{IDs: []string{"image"}, URL: "https://example.test/image", Locator: "dimensions"}}}}
 			r = ResourceResult{RequestID: q.ID, State: EvidenceKnown, Image: &m}
 		}
-		if err := s.ObserveImageMetadata(context.Background(), a, 0, q, r); err != nil {
+		if err := s.observeImageMetadata(context.Background(), a, 0, q, r); err != nil {
 			t.Fatal(err)
 		}
 		sealFixtureExpansions(t, s)
-		if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+		if err := s.sealEnumeration(context.Background(), completePackage("outer")); err != nil {
 			t.Fatal(err)
 		}
-		b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+		b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -93,14 +93,14 @@ func TestPackageUnknownRoleCannotProveExclusion(t *testing.T) {
 	s, _, pin := packageAdviceFixtureCheck(t, PackageCheckScoreBeforeParts)
 	q := ResourceRoleRequest{ID: "roles", Package: "outer", Resources: []ResourcePin{pin}, ScopeComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
 	r := ResourceRoleResult{Request: q, ScopeComplete: q.ScopeComplete, Resources: []ResourceRoleFact{{Resource: pin, Role: ResourceRoleScore, Membership: Evidence[bool]{State: EvidenceUnknown, Reason: "partial-membership"}}, {Resource: pin, Role: ResourceRoleIndividualPart, Membership: Evidence[bool]{State: EvidenceKnown, Value: true}}}, Authority: EvidenceAuthority{ID: "role-table", ExactRelationComplete: true, Provenance: []SourceRef{{IDs: []string{"scope"}, URL: "https://example.test/roles", Locator: "all"}}}}
-	if err := s.ObserveRoles(context.Background(), r); err != nil {
+	if err := s.observeRoles(context.Background(), r); err != nil {
 		t.Fatal(err)
 	}
 	sealFixtureExpansions(t, s)
-	if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+	if err := s.sealEnumeration(context.Background(), completePackage("outer")); err != nil {
 		t.Fatal(err)
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,24 +113,24 @@ func TestPackageUnresolvedEdgeChargesLinkedAdmission(t *testing.T) {
 	snap := s.adoptions[a].resource.snapshot
 	snap.contexts[0].Resource.Image = nil
 	snap.contexts[0].Resource.Link = &ResourceLinkContext{Kind: ResourceScoreLink, Href: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "unavailable"}}}}
-	err := s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: a, Target: Evidence[ResourceAdoptionID]{State: EvidenceUnknown, Reason: "unavailable"}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}})
+	err := s.observeEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: a, Target: Evidence[ResourceAdoptionID]{State: EvidenceUnknown, Reason: "unavailable"}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if used, _ := s.account.Usage(BudgetLinkedDocuments); used != 1 {
 		t.Fatalf("unresolved edge admission=%d", used)
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 }
 func TestPackageFileAdviceOwnedAndNonblocking(t *testing.T) {
 	s, _, pin := packageAdviceFixtureCheck(t, PackageCheckFileMetadataAdvice)
 	v := PackageFileMetadataObservation{ID: 1, Package: "outer", Pin: pin, Name: Evidence[string]{State: EvidenceKnown, Value: "piece.bad"}, MediaType: Evidence[string]{State: EvidenceKnown, Value: "application/vnd.recordare.musicxml+xml"}}
-	if err := s.ObserveFileMetadata(context.Background(), v); err != nil {
+	if err := s.observeFileMetadata(context.Background(), v); err != nil {
 		t.Fatal(err)
 	}
 	sealFixtureExpansions(t, s)
-	_ = s.SealEnumeration(context.Background(), completePackage("outer"))
-	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	_ = s.sealEnumeration(context.Background(), completePackage("outer"))
+	b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if err != nil || !b.Satisfied() {
 		t.Fatalf("advice blocked: %v %+v", err, b.PackageReport())
 	}
@@ -149,11 +149,11 @@ func TestPackageImagePartialMetadataChecksEveryScalar(t *testing.T) {
 	s, a, pin := packageAdviceFixtureCheck(t, PackageCheckImageScaling, Budgets{MaxScalarBytes: 512})
 	q := ImageMetadataRequest{Package: "outer", ID: "image", Source: pin, Subject: NodeRef{"source", 2}, Href: "image.png", MediaType: "image/png"}
 	metadata := ImageMetadataResult{Request: q, Resource: ResourcePin{CanonicalID: "image", Digest: strings.Repeat("d", 64), Representation: ResourceBinary}, Width: Evidence[Decimal]{State: EvidenceKnown, Value: localDecimal(t, strings.Repeat("9", 1000))}, Height: Evidence[Decimal]{State: EvidenceUnknown, Reason: "partial-size"}, Unit: ImageUnitPoint, PixelAspectRatio: Evidence[Decimal]{State: EvidenceAbsent}, Authority: EvidenceAuthority{ID: "image-reader", Provenance: []SourceRef{{IDs: []string{"size"}, URL: "https://example.test/image", Locator: "dimensions"}}}}
-	err := s.ObserveImageMetadata(context.Background(), a, 0, q, ResourceResult{RequestID: q.ID, State: EvidenceKnown, Image: &metadata})
+	err := s.observeImageMetadata(context.Background(), a, 0, q, ResourceResult{RequestID: q.ID, State: EvidenceKnown, Image: &metadata})
 	if !errors.Is(err, ErrResourceLimit) {
 		t.Fatalf("known scalar bypassed budget because peer unavailable: %v", err)
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 	if used, _ := s.account.Usage(BudgetBufferedBytes); used != 0 {
 		t.Fatalf("leaked %d", used)
 	}

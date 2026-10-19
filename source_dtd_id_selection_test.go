@@ -23,7 +23,7 @@ func sourceDTDIDOneAssemblyEngine(t *testing.T) *validation.Engine {
 			predicate = rule.Predicate
 		}
 	}
-	plan, err := validation.NewLocalLinkContextPlan(d.schemas[validation.AssemblyOpus])
+	plan, err := validationNewLocalLinkContextPlan(d.schemas[validation.AssemblyOpus])
 	if err != nil || predicate == "" {
 		t.Fatalf("Opus local plan: %v", err)
 	}
@@ -45,7 +45,7 @@ func sourceDTDIDOneAssemblyEngine(t *testing.T) *validation.Engine {
 
 func TestSourceDTDIDObserverUsesActiveAssemblySelection(t *testing.T) {
 	engine := sourceDTDIDOneAssemblyEngine(t)
-	if !engine.SourceDTDIDsSelected(ProfileSourceInternalDTDLinks) {
+	if !validationEngineSourceDTDIDsSelected(engine, ProfileSourceInternalDTDLinks) {
 		t.Fatal("pre-root capture must preserve declarations for the selected assembly")
 	}
 	t.Run("unselected-opus", func(t *testing.T) {

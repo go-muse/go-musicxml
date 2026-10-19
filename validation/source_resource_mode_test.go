@@ -79,7 +79,7 @@ func sourceResourceFixture(t *testing.T, limits Budgets) (*Engine, *Session, Rul
 			schema = plan.schema
 		}
 	}
-	p, err := NewSourceSchemaHintContextPlan(schema)
+	p, err := newSourceSchemaHintContextPlan(schema)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,10 +111,10 @@ func sourceResourceAdmit(t *testing.T, s *Session, key RuleKey, kind SourceOrigi
 	if s.root == nil {
 		h := schemaPendingHeader()
 		h.Location = sourceOriginPhysical().Physical.Value
-		if err := s.Open(ctx, h); err != nil {
+		if err := s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
+		if err := s.sourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -138,7 +138,7 @@ func sourceResourceAdmit(t *testing.T, s *Session, key RuleKey, kind SourceOrigi
 			o.Ancestry = []SourceOriginStep{{Entity: "entity", Declaration: o.Declaration, Use: o.Use}}
 		}
 	}
-	if err := s.SourceOrigin(ctx, key, o); err != nil {
+	if err := s.sourceOrigin(ctx, key, o); err != nil {
 		t.Fatal(err)
 	}
 	return o
@@ -154,10 +154,10 @@ func TestSourceResourceHintEffectivePairsDespiteAbsentPhysicalRaw(t *testing.T) 
 			if kind == SourceOriginPhysical {
 				raw = stateKnown(" urn:a  a.xsd trailing ")
 			}
-			if err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, raw); err != nil {
+			if err := s.observeSourceAttributeLexical(context.Background(), key, o.Subject, name, raw); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.Close(context.Background(), schemaLexemeEnd("1")); err != nil {
+			if err := s.CloseNode(context.Background(), schemaLexemeEnd("1")); err != nil {
 				t.Fatal(err)
 			}
 			r := &contextReader{ctx: context.Background(), s: s, sourceInfoset: true}
@@ -177,7 +177,7 @@ func TestSourceResourceHintEffectivePairsDespiteAbsentPhysicalRaw(t *testing.T) 
 
 func TestSourceAttributeLexicalOwnershipAndMissingEvidence(t *testing.T) {
 	e, s, key := sourceResourceFixture(t, Budgets{})
-	if got, ok := e.SourceAttributeLexicalProvider("source-schema-test", AssemblyMusicXML); !ok || got != key {
+	if got, ok := e.sourceAttributeLexicalProvider("source-schema-test", AssemblyMusicXML); !ok || got != key {
 		t.Fatalf("mode election=%+v/%v", got, ok)
 	}
 	name := QName{Local: "id"}
@@ -188,7 +188,7 @@ func TestSourceAttributeLexicalOwnershipAndMissingEvidence(t *testing.T) {
 	}
 	cause := &DecisionRef{Rule: RuleKey{"lexical-gap", 1}, Subject: o.Subject}
 	in := Evidence[string]{State: EvidenceInvalid, Reason: "reference-spelling-invalid", Cause: cause}
-	if err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, in); err != nil {
+	if err := s.observeSourceAttributeLexical(context.Background(), key, o.Subject, name, in); err != nil {
 		t.Fatal(err)
 	}
 	cause.Rule.ID = "mutated"
@@ -196,7 +196,7 @@ func TestSourceAttributeLexicalOwnershipAndMissingEvidence(t *testing.T) {
 	if err != nil || raw.Cause == nil || raw.Cause.Rule.ID != "lexical-gap" {
 		t.Fatalf("raw evidence borrowed caller state: %+v %v", raw, err)
 	}
-	if err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, in); err == nil {
+	if err := s.observeSourceAttributeLexical(context.Background(), key, o.Subject, name, in); err == nil {
 		t.Fatal("accepted duplicate lexical ingress")
 	}
 }
@@ -226,7 +226,7 @@ func TestSourceAttributeLexicalGatesAndBudgets(t *testing.T) {
 			case "physical-absent":
 				raw = stateAbsent[string]()
 			case "closed":
-				if err := s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+				if err := s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 					t.Fatal(err)
 				}
 			case "canceled":
@@ -244,7 +244,7 @@ func TestSourceAttributeLexicalGatesAndBudgets(t *testing.T) {
 				}
 			}
 			before := s.retained
-			err := s.SourceAttributeLexical(ctx, key, subject, name, raw)
+			err := s.observeSourceAttributeLexical(ctx, key, subject, name, raw)
 			if err == nil {
 				t.Fatal("accepted invalid lexical ingress")
 			}
@@ -317,23 +317,23 @@ func TestSourceResourceAttributeSeparatesEffectiveAndPhysicalEvidence(t *testing
 func TestSourceLexicalModeIsSelectedAndSessionLocal(t *testing.T) {
 	legacy, old, oldKey := sourceOriginFixture(t, Budgets{})
 	defer old.cleanup()
-	if key, ok := legacy.SourceAttributeLexicalProvider("source-schema-test", AssemblyMusicXML); ok || key != (RuleKey{}) {
+	if key, ok := legacy.sourceAttributeLexicalProvider("source-schema-test", AssemblyMusicXML); ok || key != (RuleKey{}) {
 		t.Fatal("legacy source origin acquired lexical transport")
 	}
 	e, current, key := sourceResourceFixture(t, Budgets{})
-	if _, ok := e.SourceAttributeLexicalProvider("source-schema-test", AssemblyOpus); ok {
+	if _, ok := e.sourceAttributeLexicalProvider("source-schema-test", AssemblyOpus); ok {
 		t.Fatal("elected wrong assembly")
 	}
-	if _, ok := e.SourceAttributeLexicalProvider("unknown", AssemblyMusicXML); ok {
+	if _, ok := e.sourceAttributeLexicalProvider("unknown", AssemblyMusicXML); ok {
 		t.Fatal("elected unknown profile")
 	}
 	name := QName{Local: "id"}
 	sourceResourceAdmit(t, old, oldKey, SourceOriginPhysical, name, "old", true)
 	o := sourceResourceAdmit(t, current, key, SourceOriginPhysical, name, "new", true)
-	if err := old.SourceAttributeLexical(context.Background(), oldKey, o.Subject, name, stateKnown("old")); err == nil {
+	if err := old.observeSourceAttributeLexical(context.Background(), oldKey, o.Subject, name, stateKnown("old")); err == nil {
 		t.Fatal("legacy mode accepted new transport")
 	}
-	if err := current.SourceAttributeLexical(context.Background(), key, o.Subject, name, stateKnown(" current ")); err != nil {
+	if err := current.observeSourceAttributeLexical(context.Background(), key, o.Subject, name, stateKnown(" current ")); err != nil {
 		t.Fatal(err)
 	}
 	_, independent, independentKey := sourceResourceFixture(t, Budgets{})
@@ -387,11 +387,11 @@ func TestSourceOriginIndexAccountingEnvelopeAndOwnedPointers(t *testing.T) {
 
 func TestSourceResourceModeCloneDigestAndTargetGates(t *testing.T) {
 	schema := miniatureSourceSchema(t)
-	legacy, err := NewSchemaHintContextPlan(schema)
+	legacy, err := newSchemaHintContextPlan(schema)
 	if err != nil {
 		t.Fatal(err)
 	}
-	source, err := NewSourceSchemaHintContextPlan(schema)
+	source, err := newSourceSchemaHintContextPlan(schema)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -418,10 +418,10 @@ func TestSourceResourceModeCloneDigestAndTargetGates(t *testing.T) {
 	if err := local.validateFor(rule); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Fatalf("source presence plan accepted model target: %v", err)
 	}
-	if _, err := NewSourceLocalLinkContextPlan(nil); !errors.Is(err, ErrInvalidConfiguration) {
+	if _, err := newSourceLocalLinkContextPlan(nil); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Fatalf("nil link schema: %v", err)
 	}
-	if _, err := NewSourceSchemaHintContextPlan(nil); !errors.Is(err, ErrInvalidConfiguration) {
+	if _, err := newSourceSchemaHintContextPlan(nil); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Fatalf("nil hint schema: %v", err)
 	}
 }
@@ -465,7 +465,7 @@ func TestSourceAttributeLexicalExactAdmissionAndCancellation(t *testing.T) {
 	o := sourceResourceAdmit(t, probe, key, SourceOriginPhysical, name, "effective", true)
 	before := rationalUsage(t, probe, BudgetBufferedBytes)
 	counter := &rationalCancelContext{Context: ctx, at: 1 << 30}
-	if err := probe.SourceAttributeLexical(counter, key, o.Subject, name, raw); err != nil {
+	if err := probe.observeSourceAttributeLexical(counter, key, o.Subject, name, raw); err != nil {
 		t.Fatal(err)
 	}
 	bytes := rationalUsage(t, probe, BudgetBufferedBytes) - before
@@ -478,7 +478,7 @@ func TestSourceAttributeLexicalExactAdmissionAndCancellation(t *testing.T) {
 			t.Fatal(err)
 		}
 		before := s.retained
-		err := s.SourceAttributeLexical(ctx, key, o.Subject, name, raw)
+		err := s.observeSourceAttributeLexical(ctx, key, o.Subject, name, raw)
 		if delta == 0 {
 			if err != nil || len(s.sourceAttributeLexical) != 1 || s.retained != before+bytes {
 				t.Fatalf("exact admission: %v %+v", err, s.sourceAttributeLexical)
@@ -498,7 +498,7 @@ func TestSourceAttributeLexicalExactAdmissionAndCancellation(t *testing.T) {
 		_, s, key := sourceResourceFixture(t, Budgets{})
 		sourceResourceAdmit(t, s, key, SourceOriginPhysical, name, "effective", true)
 		before := s.retained
-		err := s.SourceAttributeLexical(&rationalCancelContext{Context: ctx, at: at}, key, o.Subject, name, raw)
+		err := s.observeSourceAttributeLexical(&rationalCancelContext{Context: ctx, at: at}, key, o.Subject, name, raw)
 		if !errors.Is(err, context.Canceled) || s.sourceAttributeLexical != nil || s.retained != before {
 			t.Fatalf("cancellation %d/%d: %v retained=%d/%d", at, counter.calls, err, s.retained, before)
 		}
@@ -509,10 +509,10 @@ func TestSourceHintNoNamespaceValueSurvivesPhysicalAbsence(t *testing.T) {
 	_, s, key := sourceResourceFixture(t, Budgets{})
 	name := QName{Space: "http://www.w3.org/2001/XMLSchema-instance", Local: "noNamespaceSchemaLocation"}
 	o := sourceResourceAdmit(t, s, key, SourceOriginDefault, name, "  hints.xsd  ", false)
-	if err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, stateAbsent[string]()); err != nil {
+	if err := s.observeSourceAttributeLexical(context.Background(), key, o.Subject, name, stateAbsent[string]()); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(context.Background(), schemaLexemeEnd("1")); err != nil {
+	if err := s.CloseNode(context.Background(), schemaLexemeEnd("1")); err != nil {
 		t.Fatal(err)
 	}
 	r := &contextReader{ctx: context.Background(), s: s, sourceInfoset: true}
@@ -556,7 +556,7 @@ func TestSourceAttributeLexicalRaisedLimitMidScanCancellation(t *testing.T) {
 	o := sourceResourceAdmit(t, s, key, SourceOriginPhysical, name, "effective", true)
 	before := s.retained
 	ctx := &rationalCancelContext{Context: context.Background(), at: 4}
-	err := s.SourceAttributeLexical(ctx, key, o.Subject, name, raw)
+	err := s.observeSourceAttributeLexical(ctx, key, o.Subject, name, raw)
 	if !errors.Is(err, context.Canceled) || s.retained != before || s.sourceAttributeLexical != nil {
 		t.Fatalf("raw scan ignored cancellation: %v retained=%d/%d", err, s.retained, before)
 	}
@@ -568,7 +568,7 @@ func TestSourceAttributeLexicalChunkBoundariesAndCopyCancellation(t *testing.T) 
 		name := QName{Local: "id"}
 		o := sourceResourceAdmit(t, s, key, SourceOriginPhysical, name, "effective", true)
 		before := s.retained
-		err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, stateKnown(raw))
+		err := s.observeSourceAttributeLexical(context.Background(), key, o.Subject, name, stateKnown(raw))
 		if utf8.ValidString(raw) {
 			if err != nil || s.sourceAttributeLexical[sourceOriginSubject{Node: 1, Attribute: name}].Value != raw {
 				t.Fatalf("valid chunk boundary rejected: %v", err)
@@ -582,7 +582,7 @@ func TestSourceAttributeLexicalChunkBoundariesAndCopyCancellation(t *testing.T) 
 	name := QName{Local: "id"}
 	o := sourceResourceAdmit(t, probe, key, SourceOriginPhysical, name, "effective", true)
 	counter := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
-	if err := probe.SourceAttributeLexical(counter, key, o.Subject, name, stateKnown(raw)); err != nil {
+	if err := probe.observeSourceAttributeLexical(counter, key, o.Subject, name, stateKnown(raw)); err != nil {
 		t.Fatal(err)
 	}
 	if counter.calls < 20 {
@@ -592,7 +592,7 @@ func TestSourceAttributeLexicalChunkBoundariesAndCopyCancellation(t *testing.T) 
 		_, s, key := sourceResourceFixture(t, Budgets{MaxScalarBytes: 1 << 28})
 		sourceResourceAdmit(t, s, key, SourceOriginPhysical, name, "effective", true)
 		before := s.retained
-		err := s.SourceAttributeLexical(&rationalCancelContext{Context: context.Background(), at: at}, key, o.Subject, name, stateKnown(raw))
+		err := s.observeSourceAttributeLexical(&rationalCancelContext{Context: context.Background(), at: at}, key, o.Subject, name, stateKnown(raw))
 		if !errors.Is(err, context.Canceled) || s.sourceAttributeLexical != nil || s.retained != before {
 			t.Fatalf("scan/copy cancellation %d/%d: %v retained=%d/%d", at, counter.calls, err, s.retained, before)
 		}
@@ -620,7 +620,7 @@ func TestSourceAttributeLexicalBoundsMetadataBeforeSizing(t *testing.T) {
 				raw = Evidence[string]{State: EvidenceInvalid, Reason: "invalid-raw", Cause: &DecisionRef{Rule: RuleKey{"raw-cause", 1}, Subject: NodeRef{oversized, 1}}}
 			}
 			before := s.retained
-			err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, raw)
+			err := s.observeSourceAttributeLexical(context.Background(), key, o.Subject, name, raw)
 			if !errors.Is(err, ErrInvalidConfiguration) || s.sourceAttributeLexical != nil || s.retained != before {
 				t.Fatalf("unbounded metadata admission: %v", err)
 			}

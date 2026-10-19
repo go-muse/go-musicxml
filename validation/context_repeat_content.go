@@ -543,7 +543,7 @@ func contextRepeatScopedNotes(ctx context.Context, s *Session, notes []contextRe
 	if err != nil {
 		return nil, Evidence[bool]{}, noop, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return nil, Evidence[bool]{}, noop, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {

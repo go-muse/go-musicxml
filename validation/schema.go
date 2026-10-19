@@ -2,75 +2,191 @@ package validation
 
 import "github.com/go-muse/go-musicxml/internal/xsd"
 
-// The Schema* metadata types below are aliases of the schema kernel's types.
-// Their exported fields are part of this package's API even though the
-// declarations live in an internal package; see `go doc` on the internal
-// package source for field-level comments. Build values with keyed composite
-// literals, because fields may be added.
+// The Schema* types describe XML-neutral XSD metadata for CompileSchema. Build
+// values with keyed composite literals, because fields may be added. Expanded
+// names are QName values; a built-in type is named in SchemaXSDNamespace.
+// Pointers may be shared, and sharing is significant: a type or element reached
+// through one pointer is one schema component.
 
 // SchemaData is XML-neutral XSD metadata. CompileSchema snapshots it; successful
 // compilation is not a claim of general XSD schema validity or UPA closure.
-type SchemaData = xsd.SchemaData
+type SchemaData struct {
+	// Types holds the named simple and complex types.
+	Types map[QName]*SchemaType
+	// Elements holds the global element declarations.
+	Elements map[QName]*SchemaElement
+}
 
-// SchemaName is an expanded name in a schema metadata graph.
-type SchemaName = xsd.QName
+// SchemaType describes a named simple or complex type. Exactly one of Simple
+// and Complex is set.
+type SchemaType struct {
+	Simple  *SchemaSimple
+	Complex *SchemaComplex
+}
 
-// SchemaType describes a named simple or complex type.
-type SchemaType = xsd.TypeSchema
-
-// SchemaTypeRef names a type or contains its anonymous definition.
-type SchemaTypeRef = xsd.TypeRef
+// SchemaTypeRef names a type or contains its anonymous definition. Exactly one
+// of Name, InlineSimple and InlineComplex is set.
+type SchemaTypeRef struct {
+	Name          QName
+	InlineSimple  *SchemaSimple
+	InlineComplex *SchemaComplex
+}
 
 // SchemaSimple describes one restriction, list or ordered union definition.
-type SchemaSimple = xsd.SimpleSchema
+type SchemaSimple struct {
+	// Final prohibits the listed derivations from this type.
+	Final SchemaDerivation
+	Form  SchemaSimpleForm
+	// Base is the restricted type of a restriction.
+	Base *SchemaSimpleMember
+	// Enumerations lists the permitted lexical values; empty permits all.
+	Enumerations []string
+	// Members lists the member types of a union, in order.
+	Members []*SchemaSimpleMember
+	// Item is the item type of a list.
+	Item *SchemaSimpleMember
+	// Patterns lists the XSD regular expressions of this restriction layer;
+	// empty permits all. Only a restriction uses them; a list or union ignores
+	// them. Within one layer they are alternatives: a value must match at least
+	// one. Layers intersect: a value must also satisfy the patterns of every
+	// base type it restricts.
+	Patterns []string
 
-// SchemaSimpleMember names or embeds a simple type.
-type SchemaSimpleMember = xsd.SimpleMember
+	// Bound facets are lexical values in the base type's value space. Each
+	// one applies only when its Has field is true.
+	MinInclusive   string
+	MaxInclusive   string
+	MinExclusive   string
+	MaxExclusive   string
+	Length         uint64
+	MinLength      uint64
+	MaxLength      uint64
+	TotalDigits    uint64
+	FractionDigits uint64
+	// WhiteSpace is "preserve", "replace", "collapse" or "" to inherit.
+	WhiteSpace string
+
+	HasMinInclusive   bool
+	HasMaxInclusive   bool
+	HasMinExclusive   bool
+	HasMaxExclusive   bool
+	HasLength         bool
+	HasMinLength      bool
+	HasMaxLength      bool
+	HasTotalDigits    bool
+	HasFractionDigits bool
+}
+
+// SchemaSimpleMember names or embeds a simple type. Exactly one of Name and
+// Inline is set.
+type SchemaSimpleMember struct {
+	Name   QName
+	Inline *SchemaSimple
+}
 
 // SchemaComplex describes complex content and attribute declarations.
-type SchemaComplex = xsd.ComplexSchema
+type SchemaComplex struct {
+	// Block and Final prohibit the listed derivations and substitutions.
+	Block, Final SchemaDerivation
+	Abstract     bool
+	// SimpleContent is a local restriction layer. A missing scalar Base is
+	// bound to the inherited effective scalar in a per-context copy.
+	SimpleContent *SchemaSimple
+	Form          SchemaComplexForm
+	// Base is the base type of an extension or restriction.
+	Base *SchemaTypeRef
+	// Particle is the content model, or nil for empty or simple content.
+	Particle     *SchemaParticle
+	Attributes   []SchemaAttribute
+	AnyAttribute *SchemaAnyAttribute
+	Mixed        bool
+}
 
 // SchemaAttribute describes one exact declared attribute use.
-type SchemaAttribute = xsd.AttributeSchema
+type SchemaAttribute struct {
+	Name       QName
+	Type       SchemaTypeRef
+	Use        SchemaAttributeUse
+	Constraint *SchemaValueConstraint
+}
 
 // SchemaValueConstraint records a default or fixed schema value.
-type SchemaValueConstraint = xsd.ValueConstraint
+type SchemaValueConstraint struct {
+	// Kind is SchemaConstraintDefault or SchemaConstraintFixed.
+	Kind  string
+	Value string
+}
 
 // SchemaAnyAttribute describes an attribute wildcard and its processing mode.
-type SchemaAnyAttribute = xsd.AnyAttributeSchema
+type SchemaAnyAttribute struct {
+	// Namespace is the XSD namespace constraint, such as "##other".
+	Namespace string
+	// ProcessContents is one of the SchemaProcess constants, or "" for strict.
+	ProcessContents string
+}
 
 // SchemaParticle describes a nested sequence, choice, all, element or wildcard.
-type SchemaParticle = xsd.ParticleSchema
+type SchemaParticle struct {
+	Kind       SchemaParticleKind
+	Occurrence SchemaOccurrence
+	// Element is set for an element particle.
+	Element *SchemaElement
+	// Children are the nested particles of a sequence, choice or all.
+	Children []*SchemaParticle
+	// Any is set for a wildcard particle.
+	Any *SchemaAny
+}
 
-// SchemaOccurrence records exact particle occurrence bounds.
-type SchemaOccurrence = xsd.Occurrence
+// SchemaOccurrence records exact particle occurrence bounds. Unbounded
+// replaces Max.
+type SchemaOccurrence struct {
+	Min       uint64
+	Max       uint64
+	Unbounded bool
+}
 
 // SchemaAny describes an element wildcard and its processing mode.
-type SchemaAny = xsd.AnySchema
+type SchemaAny struct {
+	// Namespace is the XSD namespace constraint, such as "##any".
+	Namespace string
+	// ProcessContents is one of the SchemaProcess constants, or "" for strict.
+	ProcessContents string
+}
 
 // SchemaElement describes an element declaration or reference use.
-type SchemaElement = xsd.ElementSchema
+type SchemaElement struct {
+	// Block and Final prohibit the listed derivations and substitutions.
+	Block, Final SchemaDerivation
+	Name         QName
+	// Reference names the global declaration that this use refers to.
+	Reference QName
+	Type      SchemaTypeRef
+	Default   *string
+	Fixed     *string
+	Nillable  bool
+	Abstract  bool
+}
 
 // SchemaSimpleForm identifies an XSD simple-type composition.
-type SchemaSimpleForm = xsd.SimpleForm
+type SchemaSimpleForm string
 
 // SchemaComplexForm identifies an XSD complex-type composition.
-type SchemaComplexForm = xsd.ComplexForm
+type SchemaComplexForm string
 
 // SchemaAttributeUse identifies an attribute use constraint.
-type SchemaAttributeUse = xsd.AttributeUse
+type SchemaAttributeUse string
 
 // SchemaParticleKind identifies an XSD particle operator.
-type SchemaParticleKind = xsd.ParticleKind
+type SchemaParticleKind string
 
 // SchemaDerivation carries XSD derivation prohibition bits.
-type SchemaDerivation = xsd.Derivation
+type SchemaDerivation uint8
 
 // SchemaXSDNamespace is the XML Schema namespace that qualifies built-in type
 // names in SchemaData, for example {http://www.w3.org/2001/XMLSchema}string.
 const SchemaXSDNamespace = xsd.XSDNamespace
 
-// Untyped vocabulary for string fields of the schema metadata aliases:
+// Untyped vocabulary for string fields of the schema metadata types:
 // SchemaValueConstraint.Kind and the ProcessContents field of SchemaAny and
 // SchemaAnyAttribute. An empty ProcessContents selects the XSD default,
 // strict processing.
@@ -126,7 +242,7 @@ func CompileSchema(assembly Assembly, data SchemaData) (*CompiledSchema, error) 
 	if !validAssembly(assembly) {
 		return nil, contract("schema assembly", "unknown assembly")
 	}
-	kernel, err := xsd.Compile(data, xsd.CompileLimits{})
+	kernel, err := xsd.CompileGraph(data, xsd.CompileLimits{})
 	if err != nil {
 		return nil, &ConfigurationError{Field: "schema", Reason: err.Error()}
 	}
@@ -164,7 +280,7 @@ func (s *CompiledSchema) Root(name QName) (DeclarationID, bool) {
 	if s == nil || s.kernel == nil {
 		return DeclarationID{}, false
 	}
-	use, ok := s.kernel.Root(SchemaName{Space: name.Space, Local: name.Local})
+	use, ok := s.kernel.Root(xsd.QName{Space: name.Space, Local: name.Local})
 	if !ok {
 		return DeclarationID{}, false
 	}
@@ -204,14 +320,14 @@ func NewXSDPlan(schema *CompiledSchema, check XSDCheck) (Plan, error) {
 	return checkedPlan(Plan{kind: planXSD, schema: schema, xsdCheck: check})
 }
 
-// NewXSDPlanWithSourceDeclarations selects the bounded source-document
+// newXSDPlanWithSourceDeclarations selects the bounded source-document
 // ENTITY/ENTITIES declaration prerequisite for this composite operation. Direct
 // built-in types and restriction descendants use effective general-entity facts;
 // reached arbitrary constructed ENTITY-bearing list/union semantics remain
 // unavailable under the pinned XSD 1.0 contract. All selected XSD operations in
 // an assembly must agree on this mode. Only source-target rules are accepted.
 // The Session must receive SourceEntityDeclarations before root attribute facts.
-func NewXSDPlanWithSourceDeclarations(schema *CompiledSchema, check XSDCheck) (Plan, error) {
+func newXSDPlanWithSourceDeclarations(schema *CompiledSchema, check XSDCheck) (Plan, error) {
 	return checkedPlan(Plan{kind: planXSD, schema: schema, xsdCheck: check, xsdMode: xsdSourceDeclarationsV1})
 }
 

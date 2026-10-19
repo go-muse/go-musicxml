@@ -49,7 +49,7 @@ func performanceIndexReservation(s *Session, service *timelineService) (int64, e
 	if err != nil {
 		return 0, err
 	}
-	if _, err = AllocationSize(cost); err != nil {
+	if _, err = allocationSize(cost); err != nil {
 		return 0, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, cost); err != nil {

@@ -174,6 +174,9 @@ func (r *complexTypeRenderer) modelRepresentation(goType, xmlType string, inline
 	if r.structures[goType] != nil {
 		return "", goType, nil
 	}
+	if kind, found := r.simpleRenderer.builtinKind(goType); found {
+		return modelKind(kind, "")
+	}
 	for _, value := range builtinGoTypes {
 		if value.Expression == goType {
 			return modelKind(value.Kind, xmlType)

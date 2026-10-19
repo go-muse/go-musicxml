@@ -142,8 +142,8 @@ type Account struct {
 }
 
 // NewBudgetAccount validates limits and substitutes finite defaults for zeros.
-// Large cumulative limits remain int64 even on 32-bit hosts; AllocationSize
-// separately validates each concrete allocation before host-int conversion.
+// Large cumulative limits remain int64 even on 32-bit hosts; each concrete
+// allocation is validated separately before host-int conversion.
 func NewBudgetAccount(limits Budgets) (*Account, error) {
 	defaults := DefaultBudgets()
 	fields, fallback := budgetValues(&limits), budgetValues(&defaults)
@@ -250,13 +250,10 @@ func (a *Account) Usage(kind BudgetKind) (int64, error) {
 	return a.usage[index], nil
 }
 
-// AllocationSize converts a nonnegative byte allocation to the host int size
+// allocationSize converts a nonnegative byte allocation to the host int size
 // only after checking its range. It does not allocate or charge an account;
 // callers must first apply the appropriate scalar and retained-buffer limits.
-//
-// Adapter API: the root musicxml package uses this to stream facts into an
-// engine; application code is not expected to call it.
-func AllocationSize(bytes int64) (int, error) {
+func allocationSize(bytes int64) (int, error) {
 	if bytes < 0 {
 		return 0, &ConfigurationError{Field: "allocation", Reason: "must not be negative"}
 	}

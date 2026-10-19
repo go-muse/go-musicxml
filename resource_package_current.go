@@ -170,7 +170,7 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 	if intrinsic.Snapshot == nil {
 		return g.retainUntransferredIntrinsic(intrinsic, pin, nil)
 	}
-	id, err := g.session.AddResource(g.ctx, pin, intrinsic.Snapshot, true)
+	id, err := validationPackageSessionAddResource(g.session, g.ctx, pin, intrinsic.Snapshot, true)
 	if err != nil {
 		return g.retainUntransferredIntrinsic(intrinsic, pin, err)
 	}

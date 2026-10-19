@@ -304,11 +304,11 @@ type adapterRecordingSink struct {
 	facts *recordingSourceFacts
 }
 
-func (s *adapterRecordingSink) Open(ctx context.Context, n validation.NodeHeader) error {
-	if err := s.facts.Open(ctx, n); err != nil {
+func (s *adapterRecordingSink) OpenNode(ctx context.Context, n validation.NodeHeader) error {
+	if err := s.facts.OpenNode(ctx, n); err != nil {
 		return err
 	}
-	return s.sourceFactSink.Open(ctx, n)
+	return s.sourceFactSink.OpenNode(ctx, n)
 }
 func (s *adapterRecordingSink) Attribute(ctx context.Context, n validation.AttributeFact) error {
 	if err := s.facts.Attribute(ctx, n); err != nil {

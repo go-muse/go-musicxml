@@ -174,7 +174,7 @@ func newDocumentDecoder(
 	reader io.Reader,
 	options DecodeOptions,
 ) (*xml.Decoder, xml.StartElement, error) {
-	if reader == nil {
+	if nilValue(reader) {
 		return nil, xml.StartElement{}, ErrNilReader
 	}
 	maxDepth, err := options.xmlDepth()

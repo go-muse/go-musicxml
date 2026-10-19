@@ -78,10 +78,10 @@ func queryPartialStateWithProject[T, V any](ctx context.Context, s *Session, h *
 	if err != nil {
 		return out, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return out, err
 	}
-	capacity, err := AllocationSize(count)
+	capacity, err := allocationSize(count)
 	if err != nil {
 		return out, err
 	}

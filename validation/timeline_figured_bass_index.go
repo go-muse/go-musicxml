@@ -23,7 +23,7 @@ func (service *timelineService) buildFiguredBassNoteIndex(r *stateReader, domain
 		if err != nil {
 			return err
 		}
-		if _, err = AllocationSize(total); err != nil {
+		if _, err = allocationSize(total); err != nil {
 			return err
 		}
 		if err = r.s.account.Charge(BudgetBufferedBytes, n); err != nil {

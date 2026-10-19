@@ -17,7 +17,7 @@ func TestSourceDTDIDDeclarationDiagnosticNamesExactField(t *testing.T) {
 				} else {
 					f.Declaration.Attribute = lexical
 				}
-				err := s.SourceDTDIDAttribute(context.Background(), f)
+				err := s.sourceDTDIDAttribute(context.Background(), f)
 				var configuration *ConfigurationError
 				if !errors.As(err, &configuration) || configuration.Field != "source DTD ID declaration "+field {
 					t.Fatalf("wrong declaration field diagnostic: %v", err)

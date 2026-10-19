@@ -44,11 +44,11 @@ func (roster *contextRepeatContentRoster) partNotes(ctx context.Context, s *Sess
 	if err != nil {
 		return nil, nil, err
 	}
-	capacity, err := AllocationSize(count)
+	capacity, err := allocationSize(count)
 	if err != nil {
 		return nil, nil, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return nil, nil, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {

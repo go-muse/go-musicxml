@@ -157,7 +157,7 @@ func TestIndependentTimelineCheckedCountOverflow(t *testing.T) {
 	if got := rationalUsage(t, s, BudgetBufferedBytes); got != 0 {
 		t.Fatalf("overflow acquired bytes=%d", got)
 	}
-	if _, err := AllocationSize(math.MaxInt64); uint64(^uint(0)>>1) < math.MaxInt64 && !errors.Is(err, ErrResourceLimit) {
+	if _, err := allocationSize(math.MaxInt64); uint64(^uint(0)>>1) < math.MaxInt64 && !errors.Is(err, ErrResourceLimit) {
 		t.Fatalf("host int truncation err=%v", err)
 	}
 }

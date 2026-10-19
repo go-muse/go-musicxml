@@ -1,3 +1,6 @@
+XMLSchema builtin integer	Integer
+XMLSchema builtin nonNegativeInteger	NonNegativeInteger
+XMLSchema builtin positiveInteger	PositiveInteger
 musicxml.xsd element score-partwise	ScorePartwise
 musicxml.xsd element score-partwise element part	ScorePartwisePart
 musicxml.xsd element score-partwise element part element measure	ScorePartwisePartMeasure

@@ -144,7 +144,7 @@ func (w *schemaBindScratch) reserve(count, slot int64) error {
 	if err != nil {
 		return err
 	}
-	if _, err := AllocationSize(n); err != nil {
+	if _, err := allocationSize(n); err != nil {
 		return err
 	}
 	if err := w.account.Charge(BudgetBufferedBytes, n); err != nil {

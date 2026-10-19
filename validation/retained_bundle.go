@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-// FinishWithRetainedBundle finalizes like Finish, then keeps the published
+// finishWithRetainedBundle finalizes like Finish, then keeps the published
 // bundle's live storage charged to the session's account in a lease, so that
 // a dependent stage of the same root operation stays bounded by the combined
 // live storage. Finish itself releases every package and resource reservation
@@ -18,15 +18,12 @@ import (
 // lease; callers must not continue dependent work. A nonnil lease must be
 // closed, even when an error accompanies it, when the bundle's storage leaves
 // the root operation.
-//
-// Adapter API: the root musicxml package uses this for strict MXL loading;
-// application code is not expected to call it.
-func (s *PackageSession) FinishWithRetainedBundle(ctx context.Context, end PackageCompletion) (AssessmentBundle, *ReportLease, error) {
+func (s *PackageSession) finishWithRetainedBundle(ctx context.Context, end PackageCompletion) (AssessmentBundle, *ReportLease, error) {
 	var account *Account
 	if s != nil {
 		account = s.account
 	}
-	bundle, err := s.Finish(ctx, end)
+	bundle, err := s.finish(ctx, end)
 	if account == nil || bundle.data == nil {
 		return bundle, nil, err
 	}

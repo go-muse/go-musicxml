@@ -66,7 +66,7 @@ func dictionaryRequire(p *validation.Profile, key validation.RuleKey) {
 	p.Support = append(p.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 }
 func dictionaryRule(schema *validation.CompiledSchema, op validation.DictionaryOperation, targets []validation.Target) (validation.RuleDefinition, validation.Plan, error) {
-	plan, err := validation.NewDictionaryPlan(schema, op)
+	plan, err := validationNewDictionaryPlan(schema, op)
 	if err != nil {
 		return validation.RuleDefinition{}, validation.Plan{}, err
 	}
@@ -94,7 +94,7 @@ func dictionaryRule(schema *validation.CompiledSchema, op validation.DictionaryO
 	return rule, plan, nil
 }
 func appendDictionarySoundsDefinitions(d *assessmentDefinitions) error {
-	schema, err := validation.CompileSchema(validation.AssemblySounds, soundsValidationSchema)
+	schema, err := compileValidationSchema(validation.AssemblySounds, soundsValidationSchema)
 	if err != nil {
 		return err
 	}
@@ -115,11 +115,11 @@ func appendDictionarySoundsDefinitions(d *assessmentDefinitions) error {
 		d.plans = append(d.plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})
 		dictionaryRequire(&p, key)
 	}
-	mapping, err := validation.NewSoundsMappingContextPlan(schema)
+	mapping, err := validationNewSoundsMappingContextPlan(schema)
 	if err != nil {
 		return err
 	}
-	hints, err := validation.NewSchemaHintContextPlan(schema)
+	hints, err := validationNewSchemaHintContextPlan(schema)
 	if err != nil {
 		return err
 	}

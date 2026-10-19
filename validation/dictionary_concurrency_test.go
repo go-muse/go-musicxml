@@ -91,10 +91,10 @@ func TestDictionaryNilAndUnusedAttachmentPreserveOriginalReportJSON(t *testing.T
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := s.Open(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
+			if err := s.OpenNode(ctx, factHeader(1, 0, "test.root", "root")); err != nil {
 				t.Fatal(err)
 			}
-			if err := s.Close(ctx, factEnd(1)); err != nil {
+			if err := s.CloseNode(ctx, factEnd(1)); err != nil {
 				t.Fatal(err)
 			}
 			report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -123,7 +123,7 @@ func TestDictionaryNilAndUnusedAttachmentPreserveOriginalReportJSON(t *testing.T
 		t.Fatalf("zero close: %v", err)
 	}
 	var absent *DictionarySet
-	if err := absent.Close(); !errors.Is(err, ErrInvalidConfiguration) {
+	if err := absent.Close(); err != nil {
 		t.Fatalf("nil close: %v", err)
 	}
 }

@@ -255,7 +255,7 @@ func decodeDictionaryComponent(ctx context.Context, a *validation.Account, id va
 	default:
 		return nil, dictionaryImportError("unsupported corpus decoder")
 	}
-	if _, err = validation.AllocationSize(retained); err != nil {
+	if _, err = validationAllocationSize(retained); err != nil {
 		return nil, err
 	}
 	if err = a.Charge(validation.BudgetBufferedBytes, retained); err != nil {

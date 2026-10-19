@@ -28,7 +28,7 @@ type modelRecordingSink struct {
 	cancelAt        int
 }
 
-func (s *modelRecordingSink) Open(_ context.Context, v validation.NodeHeader) error {
+func (s *modelRecordingSink) OpenNode(_ context.Context, v validation.NodeHeader) error {
 	if s.account != nil {
 		if err := s.account.Charge(validation.BudgetDepth, 1); err != nil {
 			return err
@@ -59,7 +59,7 @@ func (s *modelRecordingSink) ModelRepresentation(_ context.Context, v validation
 	s.representations[v.Owner] = v
 	return nil
 }
-func (s *modelRecordingSink) Close(_ context.Context, v validation.NodeEnd) error {
+func (s *modelRecordingSink) CloseNode(_ context.Context, v validation.NodeEnd) error {
 	if s.ends == nil {
 		s.ends = map[validation.NodeID]validation.NodeEnd{}
 	}

@@ -13,10 +13,11 @@ const MaxExactValueBytes = 1 << 20
 // Integer is an immutable exact integer. Its zero value is uninitialized, not
 // numeric zero. Initialized values can be copied and shared across goroutines.
 //
-// Compare values with Cmp or Equal. The == operator compiles but compares
-// internal pointers, so numerically equal values are generally not ==, and
-// Integer is not suitable as a map key.
+// Compare values with Cmp or Equal. Integer is not comparable with == and cannot
+// be a map key: its representation holds a pointer, so == would compare
+// identity rather than value.
 type Integer struct {
+	_     [0]func() // not comparable
 	value *big.Int
 	text  string
 	bytes int64
@@ -82,14 +83,22 @@ func (n Integer) String() string {
 // excludes fixed Go-object overhead; zero is returned for an uninitialized value.
 func (n Integer) ByteSize() int64 { return n.bytes }
 
+func (n Integer) isZero() bool { return n.value == nil && n.text == "" && n.bytes == 0 }
+
+// identical reports whether n and other share one representation.
+func (n Integer) identical(other Integer) bool {
+	return n.value == other.value && n.text == other.text && n.bytes == other.bytes
+}
+
 // Decimal is an immutable exact finite decimal. Its normalized rational has a
 // positive denominator containing only factors 2 and 5. Its zero value is
 // uninitialized; initialized values can be copied and shared across goroutines.
 //
-// Compare values with Cmp or Equal. The == operator compiles but compares
-// internal pointers, so numerically equal values are generally not ==, and
-// Decimal is not suitable as a map key.
+// Compare values with Cmp or Equal. Decimal is not comparable with == and cannot
+// be a map key: its representation holds a pointer, so == would compare
+// identity rather than value.
 type Decimal struct {
+	_     [0]func() // not comparable
 	value *big.Rat
 	text  string
 	bytes int64
@@ -185,6 +194,13 @@ func (n Decimal) String() string {
 // ByteSize returns retained canonical-text and significant numerator/denominator
 // bytes, excluding fixed Go-object overhead. Uninitialized values return zero.
 func (n Decimal) ByteSize() int64 { return n.bytes }
+
+func (n Decimal) isZero() bool { return n.value == nil && n.text == "" && n.bytes == 0 }
+
+// identical reports whether n and other share one representation.
+func (n Decimal) identical(other Decimal) bool {
+	return n.value == other.value && n.text == other.text && n.bytes == other.bytes
+}
 
 func magnitudeBytes(value *big.Int) int64 { return (int64(value.BitLen()) + 7) / 8 }
 

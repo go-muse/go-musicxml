@@ -16,10 +16,10 @@ func interruptionSnapshot(t *testing.T, a *Account, doc, text string) (*Resource
 	}
 	h := schemaPendingHeader()
 	h.Location.DocumentID = doc
-	if err = s.Open(context.Background(), h); err != nil {
+	if err = s.OpenNode(context.Background(), h); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Close(context.Background(), schemaLexemeEnd(text)); err != nil {
+	if err = s.CloseNode(context.Background(), schemaLexemeEnd(text)); err != nil {
 		t.Fatal(err)
 	}
 	r, snap, err := s.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
@@ -33,7 +33,7 @@ func interruptionPin(name string) ResourcePin {
 }
 func interruptionAdopt(t *testing.T, s *PackageSession, id ResourceAssessmentID, doc string, root bool, base string) ResourceAdoptionID {
 	t.Helper()
-	a, err := s.AdoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: doc, Root: root, BaseURI: base})
+	a, err := s.adoptResource(context.Background(), id, ResourceAdoptionOptions{Package: "outer", DocumentID: doc, Root: root, BaseURI: base})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,25 +53,25 @@ func TestPackageEstablishedRoleFailureSurvivesCancellation(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				s, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: a})
+				s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: a})
 				if err != nil {
 					t.Fatal(err)
 				}
-				if err = s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+				if err = s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 					t.Fatal(err)
 				}
-				partID, err := s.AddResource(context.Background(), interruptionPin("part"), part, true)
+				partID, err := s.addResource(context.Background(), interruptionPin("part"), part, true)
 				if err != nil {
 					t.Fatal(err)
 				}
-				scoreID, err := s.AddResource(context.Background(), interruptionPin("score"), score, true)
+				scoreID, err := s.addResource(context.Background(), interruptionPin("score"), score, true)
 				if err != nil {
 					t.Fatal(err)
 				}
 				interruptionAdopt(t, s, partID, "part", true, "")
 				interruptionAdopt(t, s, scoreID, "score-view", false, "")
 				sealFixtureExpansions(t, s)
-				if err = s.SealResourceMembers(context.Background(), "outer", Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
+				if err = s.sealResourceMembers(context.Background(), "outer", Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
 					t.Fatal(err)
 				}
 				q := ResourceRoleRequest{ID: "roles", Package: "outer", Resources: []ResourcePin{interruptionPin("part"), interruptionPin("score")}, ScopeComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
@@ -81,18 +81,18 @@ func TestPackageEstablishedRoleFailureSurvivesCancellation(t *testing.T) {
 					{Resource: interruptionPin("score"), Role: ResourceRoleScore, Membership: Evidence[bool]{State: EvidenceKnown, Value: true}},
 				}, Authority: EvidenceAuthority{ID: "role-table", ExactRelationComplete: true, Provenance: []SourceRef{{IDs: []string{"scope"}, URL: "https://example.test/roles", Locator: "all"}}}}
 				observeRoles := func() {
-					if err := s.ObserveRoles(context.Background(), r); err != nil {
+					if err := s.observeRoles(context.Background(), r); err != nil {
 						t.Fatal(err)
 					}
 				}
 				if rolesFirst {
 					observeRoles()
 				}
-				if err = s.ObserveEntry(context.Background(), packageTestEntry(1, "part.xml")); err != nil {
+				if err = s.observeEntry(context.Background(), packageTestEntry(1, "part.xml")); err != nil {
 					t.Fatal(err)
 				}
 				root := PackageRootfileObservation{ID: 2, Package: "outer", Source: NodeRef{"container", 1}, Location: Location{Target: TargetPackage, DocumentID: "package", Path: "/rootfiles/rootfile[1]"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown, Value: "part.xml"}, MediaType: Evidence[string]{State: EvidenceAbsent}, Entry: Evidence[PackageFactID]{State: EvidenceKnown, Value: 1}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceKnown, Value: partID}, Indirection: Evidence[bool]{State: EvidenceKnown}}
-				if err = s.ObserveRootfile(context.Background(), root); err != nil {
+				if err = s.observeRootfile(context.Background(), root); err != nil {
 					t.Fatal(err)
 				}
 				if !rolesFirst {
@@ -104,7 +104,7 @@ func TestPackageEstablishedRoleFailureSurvivesCancellation(t *testing.T) {
 					ctx, cancel = context.WithCancel(ctx)
 					cancel()
 				}
-				bundle, err := s.Finish(ctx, PackageCompletion{InputComplete: false})
+				bundle, err := s.finish(ctx, PackageCompletion{InputComplete: false})
 				if canceled && !errors.Is(err, context.Canceled) {
 					t.Fatalf("err=%v", err)
 				}
@@ -134,29 +134,29 @@ func TestPackageEstablishedAdviceFailureSurvivesCancellation(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					s, err = catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
+					s, err = catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
 					if err != nil {
 						t.Fatal(err)
 					}
-					if err := s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+					if err := s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 						t.Fatal(err)
 					}
 					e := packageTestEntry(1, "mimetype")
 					if kind == "mimetype-order" {
 						e.PhysicalOrder.Value = 1
 					}
-					if err := s.ObserveEntry(context.Background(), e); err != nil {
+					if err := s.observeEntry(context.Background(), e); err != nil {
 						t.Fatal(err)
 					}
 					if kind == "mimetype-content" {
-						if err := s.ObserveMimetype(context.Background(), PackageMimetypeObservation{Entry: 1, Prefix: []byte("wrong"), ByteLength: Evidence[uint64]{State: EvidenceKnown, Value: 5}, ContentComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}); err != nil {
+						if err := s.observeMimetype(context.Background(), PackageMimetypeObservation{Entry: 1, Prefix: []byte("wrong"), ByteLength: Evidence[uint64]{State: EvidenceKnown, Value: 5}, ContentComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}); err != nil {
 							t.Fatal(err)
 						}
 					}
 				} else if kind == "file" {
 					var pin ResourcePin
 					s, _, pin = packageAdviceFixtureCheck(t, PackageCheckFileMetadataAdvice)
-					if err := s.ObserveFileMetadata(context.Background(), PackageFileMetadataObservation{ID: 1, Package: "outer", Pin: pin, Name: Evidence[string]{State: EvidenceKnown, Value: "score.bad"}, MediaType: Evidence[string]{State: EvidenceAbsent}}); err != nil {
+					if err := s.observeFileMetadata(context.Background(), PackageFileMetadataObservation{ID: 1, Package: "outer", Pin: pin, Name: Evidence[string]{State: EvidenceKnown, Value: "score.bad"}, MediaType: Evidence[string]{State: EvidenceAbsent}}); err != nil {
 						t.Fatal(err)
 					}
 				} else {
@@ -165,7 +165,7 @@ func TestPackageEstablishedAdviceFailureSurvivesCancellation(t *testing.T) {
 					s, adoption, pin = packageAdviceFixture(t)
 					q := ImageMetadataRequest{Package: "outer", ID: "image", Source: pin, Subject: NodeRef{"source", 2}, Href: "image.png", MediaType: "image/png"}
 					m := ImageMetadataResult{Request: q, Resource: ResourcePin{CanonicalID: "image", Digest: strings.Repeat("d", 64), Representation: ResourceBinary}, Width: Evidence[Decimal]{State: EvidenceKnown, Value: localDecimal(t, "400")}, Height: Evidence[Decimal]{State: EvidenceKnown, Value: localDecimal(t, "400")}, Unit: ImageUnitPixel, PixelAspectRatio: Evidence[Decimal]{State: EvidenceKnown, Value: localDecimal(t, "1")}, Authority: EvidenceAuthority{ID: "image-reader", Revision: "1", Provenance: []SourceRef{{IDs: []string{"image"}, URL: "https://example.test/image", Locator: "dimensions"}}}}
-					if err := s.ObserveImageMetadata(context.Background(), adoption, 0, q, ResourceResult{RequestID: q.ID, State: EvidenceKnown, Image: &m}); err != nil {
+					if err := s.observeImageMetadata(context.Background(), adoption, 0, q, ResourceResult{RequestID: q.ID, State: EvidenceKnown, Image: &m}); err != nil {
 						t.Fatal(err)
 					}
 				}
@@ -175,7 +175,7 @@ func TestPackageEstablishedAdviceFailureSurvivesCancellation(t *testing.T) {
 					ctx, cancel = context.WithCancel(ctx)
 					cancel()
 				}
-				bundle, err := s.Finish(ctx, PackageCompletion{InputComplete: false})
+				bundle, err := s.finish(ctx, PackageCompletion{InputComplete: false})
 				if canceled && !errors.Is(err, context.Canceled) {
 					t.Fatalf("err=%v", err)
 				}
@@ -204,26 +204,26 @@ func TestPackageMimetypeAdviceRequiresKnownOrderForPass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := c.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
+	s, err := c.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err = s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
 	e := packageTestEntry(1, "mimetype")
 	e.PhysicalOrder = Evidence[uint64]{State: EvidenceUnknown, Reason: "order-unavailable"}
-	if err = s.ObserveEntry(context.Background(), e); err != nil {
+	if err = s.observeEntry(context.Background(), e); err != nil {
 		t.Fatal(err)
 	}
 	content := []byte("application/vnd.recordare.musicxml")
-	if err = s.ObserveMimetype(context.Background(), PackageMimetypeObservation{Entry: 1, Prefix: content, ByteLength: Evidence[uint64]{State: EvidenceKnown, Value: uint64(len(content))}, ContentComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}); err != nil {
+	if err = s.observeMimetype(context.Background(), PackageMimetypeObservation{Entry: 1, Prefix: content, ByteLength: Evidence[uint64]{State: EvidenceKnown, Value: uint64(len(content))}, ContentComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+	if err = s.sealEnumeration(context.Background(), completePackage("outer")); err != nil {
 		t.Fatal(err)
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if err != nil {
 		t.Fatal(err)
 	}

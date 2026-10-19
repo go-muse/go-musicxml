@@ -12,7 +12,7 @@ func TestPackageRawNameOwnedObservationOnly(t *testing.T) {
 	e.RawName = raw
 	e.UTF8Name = Evidence[bool]{State: EvidenceKnown}
 	e.Location.Path = "raw-entry-name-hex[7882]"
-	if err := s.ObserveEntry(context.Background(), e); err != nil {
+	if err := s.observeEntry(context.Background(), e); err != nil {
 		t.Fatal(err)
 	}
 	raw[0] = 'y'
@@ -25,10 +25,10 @@ func TestPackageRawNameOwnedObservationOnly(t *testing.T) {
 	duplicate := e
 	duplicate.ID = 11
 	duplicate.RawName = []byte{'x', 0x82}
-	if err := s.ObserveEntry(context.Background(), duplicate); err == nil {
+	if err := s.observeEntry(context.Background(), duplicate); err == nil {
 		t.Fatal("duplicate raw byte identity accepted")
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 	if used, _ := s.account.Usage(BudgetBufferedBytes); used != 0 {
 		t.Fatal(used)
 	}
@@ -49,10 +49,10 @@ func TestPackageRawNameRejectsTextAndCurrentClaims(t *testing.T) {
 		case "current":
 			s.boundaries["outer"].identity.Representation = ResourceCurrentMXL
 		}
-		if err := s.ObserveEntry(context.Background(), e); err == nil {
+		if err := s.observeEntry(context.Background(), e); err == nil {
 			t.Fatal("accepted", mode)
 		}
-		_, _ = s.Finish(context.Background(), PackageCompletion{})
+		_, _ = s.finish(context.Background(), PackageCompletion{})
 		if used, _ := s.account.Usage(BudgetBufferedBytes); used != 0 {
 			t.Fatal(used)
 		}
@@ -63,7 +63,7 @@ func TestPackageRawNameCannotCompleteRoleUniverse(t *testing.T) {
 	e := packageTestEntry(10, "")
 	e.RawName = []byte{0x82}
 	e.UTF8Name = Evidence[bool]{State: EvidenceKnown}
-	if err := s.ObserveEntry(context.Background(), e); err != nil {
+	if err := s.observeEntry(context.Background(), e); err != nil {
 		t.Fatal(err)
 	}
 	b := s.boundaries["outer"]
@@ -73,19 +73,19 @@ func TestPackageRawNameCannotCompleteRoleUniverse(t *testing.T) {
 	if s.roleUniverseComplete(context.Background(), b, roles) {
 		t.Fatal("empty textual name covered raw byte entry")
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 }
 func TestPackageRawNameCannotBindRootfile(t *testing.T) {
 	s, _, _ := packageAdviceFixtureCheck(t, PackageCheckFileMetadataAdvice)
 	e := packageTestEntry(10, "")
 	e.RawName = []byte{0x82}
 	e.UTF8Name = Evidence[bool]{State: EvidenceKnown}
-	if err := s.ObserveEntry(context.Background(), e); err != nil {
+	if err := s.observeEntry(context.Background(), e); err != nil {
 		t.Fatal(err)
 	}
 	r := PackageRootfileObservation{ID: 11, Package: "outer", Source: NodeRef{DocumentID: "source", Node: 1}, Location: Location{Target: TargetPackage, DocumentID: "package"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown}, MediaType: Evidence[string]{State: EvidenceAbsent}, Entry: Evidence[PackageFactID]{State: EvidenceKnown, Value: 10}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceUnknown, Reason: "unavailable"}, Indirection: Evidence[bool]{State: EvidenceKnown}}
-	if err := s.ObserveRootfile(context.Background(), r); err == nil {
+	if err := s.observeRootfile(context.Background(), r); err == nil {
 		t.Fatal("raw byte entry became rootfile path")
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 }

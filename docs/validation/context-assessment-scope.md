@@ -49,9 +49,8 @@ profiles no longer select the former numeric-subset predicate, so nondecimal
 text does not create an unsupported conformance obligation. The XSD declaration,
 attributes and raw contextual text remain assessed. This withdraws an invented
 lexical requirement; it does not prove all strings numeric or implement a total
-notation interpreter. The exported `NewFigureNumberNumericPlan` remains a
-deprecated, explicitly selected compatibility overconstraint, with its old binding
-and outcomes. See the [source-backed correction and profile migration](evidence/figure-number-conformance-correction.md).
+notation interpreter. The former `NewFigureNumberNumericPlan` overconstraint is internal since
+v0.2 and selected by no profile. See the [source-backed correction and profile migration](evidence/figure-number-conformance-correction.md).
 
 A missing optional node does not instantiate its node-local predicate.
 Resource exhaustion is incomplete assessment, never a MusicXML defect.

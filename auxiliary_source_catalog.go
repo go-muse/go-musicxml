@@ -43,7 +43,7 @@ func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error)
 	var profiles []validation.Profile
 	for _, input := range []struct {
 		assembly validation.Assembly
-		data     validation.SchemaData
+		data     validationSchemaSet
 		file     string
 		id       validation.ProfileID
 		root     string
@@ -56,7 +56,7 @@ func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error)
 			SupportedRoots:   []validation.QName{{Local: input.root}},
 			NormativeClosure: "Source-only execution of the pinned MusicXML 4.0 " + string(input.assembly) + " XSD assembly. Counts are composite operation instances, not research coverage. Mandatory XML syntax, unread external-DTD and reached unsupported-capability limits remain active. No Document model, package, linked-target, dictionary or playback conformance is asserted.",
 		}
-		schema, err := validation.CompileSchema(input.assembly, input.data)
+		schema, err := compileValidationSchema(input.assembly, input.data)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +99,7 @@ func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error)
 		}
 
 		if input.assembly == validation.AssemblyContainer {
-			plan, err := validation.NewContainerMetadataContextPlan(schema)
+			plan, err := validationNewContainerMetadataContextPlan(schema)
 			if err != nil {
 				return nil, err
 			}
@@ -113,7 +113,7 @@ func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error)
 			profile.NormativeClosure += " Exact ordered container/rootfiles/rootfile metadata is independently owned. Raw lexemes, effective token values, absence and invalid prerequisites remain distinct; incomplete child bindings never certify complete inventory."
 		}
 		if input.assembly == validation.AssemblySounds {
-			plan, err := validation.NewSoundsMappingContextPlan(schema)
+			plan, err := validationNewSoundsMappingContextPlan(schema)
 			if err != nil {
 				return nil, err
 			}
@@ -126,7 +126,7 @@ func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error)
 			profile.Support = append(profile.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 			profile.NormativeClosure += " Exact sound/any/solo/ensemble directional mapping context is independently owned. Omitted primary has no default; competing preferences and empty mappings remain data."
 		}
-		hints, err := validation.NewSchemaHintContextPlan(schema)
+		hints, err := validationNewSchemaHintContextPlan(schema)
 		if err != nil {
 			return nil, err
 		}

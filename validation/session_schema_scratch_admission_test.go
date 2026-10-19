@@ -326,11 +326,11 @@ func TestSchemaBindingScratchReleaseBeforeCompletionAssignment(t *testing.T) {
 
 func TestSchemaBindingScratchSkippedWitnessUsesCompletionCapacity(t *testing.T) {
 	s := schemaScratchFixture(t, 2, "string", Budgets{})
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{
-		{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{
+		{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{
 			Form: SchemaComplexDirect,
 			Particle: &SchemaParticle{Kind: SchemaParticleSequence, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{
-				{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: "child"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "string"}}}},
+				{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: "child"}, Type: SchemaTypeRef{Name: QName{Space: xsd.XSDNamespace, Local: "string"}}}},
 				{Kind: SchemaParticleAny, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Any: &SchemaAny{Namespace: "##any", ProcessContents: "skip"}},
 			}},
 		}}},

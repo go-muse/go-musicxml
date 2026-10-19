@@ -23,7 +23,7 @@ func TestPackageReviewFindingSurvivesDecisionCacheRefusal(t *testing.T) {
 		t.Errorf("err=%v", err)
 	}
 	_ = s.account.Release(BudgetBufferedBytes, fill)
-	b, _ := s.Finish(context.Background(), PackageCompletion{})
+	b, _ := s.finish(context.Background(), PackageCompletion{})
 	report := b.PackageReport()
 	if report.Counts.Fail != 1 || len(report.Findings) != 1 || report.Findings[0].Reason != d.Reason {
 		t.Errorf("authoritative finding lost at cache admission: %+v", report)
@@ -36,10 +36,10 @@ func TestPackageReviewFailurePreservesOriginalTerminal(t *testing.T) {
 	if err == nil || report.Terminal == nil || report.Terminal.Category != CategorySyntax {
 		t.Fatalf("bad fixture: %+v %v", report, err)
 	}
-	if err := s.RecordResourceFailure(context.Background(), interruptionPin("malformed"), report, errors.New("snapshot unavailable")); err == nil {
+	if err := s.recordResourceFailure(context.Background(), interruptionPin("malformed"), report, errors.New("snapshot unavailable")); err == nil {
 		t.Error("failure ingress lost error")
 	}
-	b, _ := s.Finish(context.Background(), PackageCompletion{})
+	b, _ := s.finish(context.Background(), PackageCompletion{})
 	summary, ok := b.Failure()
 	if !ok || summary.Terminal != *report.Terminal {
 		t.Errorf("summary=%+v original=%+v", summary, report.Terminal)
@@ -47,29 +47,29 @@ func TestPackageReviewFailurePreservesOriginalTerminal(t *testing.T) {
 }
 func TestPackageReviewTerminalCauseIsReadOnly(t *testing.T) {
 	s := beginPackageFixture(t, PackageCheckMimetypeStored)
-	reader, ok := any(s).(interface{ TerminalCause() error })
+	reader, ok := any(s).(interface{ terminalCause() error })
 	if !ok {
-		_, _ = s.Finish(context.Background(), PackageCompletion{})
+		_, _ = s.finish(context.Background(), PackageCompletion{})
 		t.Fatal("missing read-only terminal cause accessor")
 	}
-	if reader.TerminalCause() != nil {
+	if reader.terminalCause() != nil {
 		t.Error("healthy session has terminal cause")
 	}
 	stop := errors.New("original stop")
 	s.fail(stop)
 	used, _ := s.account.Usage(BudgetRuleSteps)
-	if !errors.Is(reader.TerminalCause(), stop) {
+	if !errors.Is(reader.terminalCause(), stop) {
 		t.Error("terminal accessor lost original cause")
 	}
 	after, _ := s.account.Usage(BudgetRuleSteps)
 	if after != used {
 		t.Error("read-only accessor charged steps")
 	}
-	if err := s.OpenPackage(context.Background(), packageTestIdentity()); !errors.Is(err, stop) {
+	if err := s.openPackage(context.Background(), packageTestIdentity()); !errors.Is(err, stop) {
 		t.Errorf("ordinary event after terminal=%v", err)
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
-	if !errors.Is(reader.TerminalCause(), stop) {
+	_, _ = s.finish(context.Background(), PackageCompletion{})
+	if !errors.Is(reader.terminalCause(), stop) {
 		t.Error("finish lost original cause")
 	}
 }
@@ -80,7 +80,7 @@ func TestPackageReviewChildDiagnosticsCannotHidePackageBlocker(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: account})
+	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func TestPackageReviewChildDiagnosticsCannotHidePackageBlocker(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{})
+	b, err := s.finish(context.Background(), PackageCompletion{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestPackageDiagnosticSummaryCaptureIsPrepaidAndDeterministic(t *testing.T) 
 	}
 	defer func() {
 		_ = session.account.Release(BudgetBufferedBytes, fill)
-		_, _ = session.Finish(context.Background(), PackageCompletion{})
+		_, _ = session.finish(context.Background(), PackageCompletion{})
 	}()
 	if allocations := testing.AllocsPerRun(1000, func() { summary.omitted = 0; summary.capture(rule, first, "original-package") }); allocations != 0 {
 		t.Errorf("capture allocates after exhaustion: %g", allocations)

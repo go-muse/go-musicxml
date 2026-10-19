@@ -106,7 +106,7 @@ func timelineUnitPublishers(ctx context.Context, s *Session, b *timelineBindings
 	if err != nil {
 		return nil, timelineNoScratch, err
 	}
-	_, err = AllocationSize(bytes)
+	_, err = allocationSize(bytes)
 	if err != nil {
 		return nil, timelineNoScratch, err
 	}
@@ -185,7 +185,7 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 	if err = stateRetainCount(s, len(v.unitExcursions), timelineUnitGateBytes*2); err != nil {
 		return err
 	}
-	if _, err = AllocationSize(int64(len(v.unitExcursions))); err != nil {
+	if _, err = allocationSize(int64(len(v.unitExcursions))); err != nil {
 		return err
 	}
 	positive := make(map[NodeRef]bool, len(v.unitExcursions))

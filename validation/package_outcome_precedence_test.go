@@ -23,18 +23,18 @@ func packageHintPrecedenceFixture(t *testing.T, values ...Evidence[bool]) (*Pack
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: intrinsic.account})
+	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: intrinsic.account})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err := s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
-	resource, err := s.AddResource(context.Background(), testResourcePin("source"), snapshot, true)
+	resource, err := s.addResource(context.Background(), testResourcePin("source"), snapshot, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.AdoptResource(context.Background(), resource, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true}); err != nil {
+	if _, err := s.adoptResource(context.Background(), resource, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true}); err != nil {
 		t.Fatal(err)
 	}
 	snapshot.contexts = nil
@@ -49,7 +49,7 @@ func packageHintPrecedenceFixture(t *testing.T, values ...Evidence[bool]) (*Pack
 	}
 	t.Cleanup(func() {
 		if !s.finished {
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 		}
 	})
 	return s, rules[0]
@@ -141,7 +141,7 @@ func TestPackageSchemaHintContinuedScanHonorsInterruption(t *testing.T) {
 			if err := s.evaluateResourceRule(ctx, rule); !errors.Is(err, want) {
 				t.Fatalf("continued scan ignored interruption: %v", err)
 			}
-			b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+			b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 			if !errors.Is(err, want) || b.Satisfied() || b.EnumerationComplete() || b.PackageReport().AssessmentComplete || len(b.PackageReport().Findings) != 0 {
 				t.Errorf("interrupted scan published a premature fallback or success: %v %+v", err, b.PackageReport())
 			}

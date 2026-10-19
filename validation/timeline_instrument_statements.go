@@ -77,7 +77,7 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 	if err != nil {
 		return nil, err
 	}
-	if _, err = AllocationSize(cost); err != nil {
+	if _, err = allocationSize(cost); err != nil {
 		return nil, err
 	}
 	if err = s.retain(cost); err != nil {

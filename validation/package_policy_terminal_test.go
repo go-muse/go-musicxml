@@ -38,7 +38,7 @@ func TestPackagePolicyRefusalIsIncompleteWithoutNormativeViolation(t *testing.T)
 	s := beginPackageFixture(t, PackageCheckMimetypeStored)
 	legacy := errors.New("legacy path refusal")
 	original := errors.Join(legacy, ErrProcessingPolicy)
-	b, err := s.Finish(context.Background(), PackageCompletion{Cause: original})
+	b, err := s.finish(context.Background(), PackageCompletion{Cause: original})
 	report := b.PackageReport()
 	if !errors.Is(err, legacy) || !errors.Is(err, ErrProcessingPolicy) {
 		t.Errorf("lost error identities: %v", err)

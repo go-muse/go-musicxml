@@ -14,28 +14,28 @@ func TestSourceOriginRequiresCompleteAttributeEnumeration(t *testing.T) {
 				ctx := context.Background()
 				h := schemaPendingHeader()
 				h.Location = sourceOriginPhysical().Physical.Value
-				if err := s.Open(ctx, h); err != nil {
+				if err := s.OpenNode(ctx, h); err != nil {
 					t.Fatal(err)
 				}
-				if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
+				if err := s.sourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
 					t.Fatal(err)
 				}
 				if scope == "child" {
 					child := h
 					child.ID = 2
 					child.Parent = 1
-					if err := s.Open(ctx, child); err != nil {
+					if err := s.OpenNode(ctx, child); err != nil {
 						t.Fatal(err)
 					}
 					origin := sourceOriginPhysical()
 					origin.Subject.Node = 2
-					if err := s.SourceOrigin(ctx, key, origin); err != nil {
+					if err := s.sourceOrigin(ctx, key, origin); err != nil {
 						t.Fatal(err)
 					}
 					end := schemaLexemeEnd("1")
 					end.ID = 2
 					end.AttributesComplete = complete
-					if err := s.Close(ctx, end); err != nil {
+					if err := s.CloseNode(ctx, end); err != nil {
 						t.Fatal(err)
 					}
 				}
@@ -43,10 +43,10 @@ func TestSourceOriginRequiresCompleteAttributeEnumeration(t *testing.T) {
 				if scope == "root" {
 					end.AttributesComplete = complete
 				}
-				if err := s.Close(ctx, end); err != nil {
+				if err := s.CloseNode(ctx, end); err != nil {
 					t.Fatal(err)
 				}
-				if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
+				if err := s.completeSourceOrigins(ctx, key, stateKnown(true)); err != nil {
 					t.Fatal(err)
 				}
 				s.inputComplete = true
@@ -91,11 +91,11 @@ func TestSourceOriginIngressValidatesPayloadOnce(t *testing.T) {
 			in.Ancestry = []SourceOriginStep{{Entity: "outer", Declaration: in.Declaration, Use: in.Use}, {Entity: "inner", Declaration: in.Declaration, Use: in.Use}}
 			h.Location.Position = nil
 		}
-		if err := s.Open(ctx, h); err != nil {
+		if err := s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
 		before := rationalUsage(t, s, BudgetRuleSteps)
-		if err := s.SourceOrigin(ctx, key, in); err != nil {
+		if err := s.sourceOrigin(ctx, key, in); err != nil {
 			t.Fatal(err)
 		}
 		ingress := rationalUsage(t, s, BudgetRuleSteps) - before

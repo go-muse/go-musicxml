@@ -144,27 +144,27 @@ func TestAuxiliarySoundsBrokenGrammarRetainsKnownSound(t *testing.T) {
 }
 
 func TestAuxiliarySoundsAssemblyAndSourceOnly(t *testing.T) {
-	sounds, err := validation.CompileSchema(validation.AssemblySounds, soundsValidationSchema)
+	sounds, err := compileValidationSchema(validation.AssemblySounds, soundsValidationSchema)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plan, err := validation.NewSoundsMappingContextPlan(sounds)
+	plan, err := validationNewSoundsMappingContextPlan(sounds)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, entry := range []struct {
 		assembly validation.Assembly
-		data     validation.SchemaData
+		data     validationSchemaSet
 	}{{validation.AssemblyMusicXML, scoreValidationSchema}, {validation.AssemblyOpus, opusValidationSchema}, {validation.AssemblyContainer, containerValidationSchema}} {
-		schema, err := validation.CompileSchema(entry.assembly, entry.data)
+		schema, err := compileValidationSchema(entry.assembly, entry.data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err = validation.NewSoundsMappingContextPlan(schema); !errors.Is(err, validation.ErrInvalidConfiguration) {
+		if _, err = validationNewSoundsMappingContextPlan(schema); !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Fatalf("wrong assembly accepted %s: %v", entry.assembly, err)
 		}
 	}
-	if _, err = validation.NewLocalContextPlan(sounds); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err = validationNewLocalContextPlan(sounds); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatal("score plan accepted sounds")
 	}
 	for _, bad := range []string{"target", "assembly", "role"} {

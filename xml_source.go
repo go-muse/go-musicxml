@@ -271,7 +271,7 @@ func (b *sourceXMLBuilder) grow(n int64) error {
 		if b.r.account != nil && capacity > b.r.account.Limits().MaxScalarBytes {
 			capacity = b.r.account.Limits().MaxScalarBytes
 		}
-		count, err := validation.AllocationSize(capacity)
+		count, err := validationAllocationSize(capacity)
 		if err != nil {
 			return err
 		}

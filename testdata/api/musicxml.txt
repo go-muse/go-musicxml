@@ -916,19 +916,17 @@ type Attributes struct, field Directive []struct{Value string "xml:\",chardata\"
 type Attributes struct, field Divisions *PositiveDivisions `xml:"divisions,omitempty"`
 type Attributes struct, field Footnote *FormattedText `xml:"footnote,omitempty"`
 type Attributes struct, field ForPart []ForPart `xml:"for-part"`
-type Attributes struct, field Instruments *uint64 `xml:"instruments,omitempty"`
+type Attributes struct, field Instruments *NonNegativeInteger `xml:"instruments,omitempty"`
 type Attributes struct, field Key []Key `xml:"key"`
 type Attributes struct, field Level *Level `xml:"level,omitempty"`
 type Attributes struct, field MeasureStyle []MeasureStyle `xml:"measure-style"`
 type Attributes struct, field PartSymbol *PartSymbol `xml:"part-symbol,omitempty"`
 type Attributes struct, field StaffDetails []StaffDetails `xml:"staff-details"`
-type Attributes struct, field Staves *uint64 `xml:"staves,omitempty"`
+type Attributes struct, field Staves *NonNegativeInteger `xml:"staves,omitempty"`
 type Attributes struct, field Time []Time `xml:"time"`
 type Attributes struct, field Transpose []Transpose `xml:"transpose"`
 type Attributes struct, field order Footnote Level Divisions Key Time Staves PartSymbol Instruments Clef StaffDetails Transpose ForPart Directive MeasureStyle
 type Attributes struct, not comparable
-type Attributes, method (*Attributes) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Attributes, method (Attributes) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Backup struct, comparable
 type Backup struct, field Duration PositiveDivisions `xml:"duration"`
 type Backup struct, field Footnote *FormattedText `xml:"footnote,omitempty"`
@@ -1002,13 +1000,11 @@ type BeamValue, method (BeamValue) Values() []BeamValue
 type BeatRepeat struct, field ExceptVoice []string `xml:"except-voice"`
 type BeatRepeat struct, field SlashDot []Empty `xml:"slash-dot"`
 type BeatRepeat struct, field SlashType *NoteTypeValue `xml:"slash-type,omitempty"`
-type BeatRepeat struct, field Slashes *uint64 `xml:"slashes,attr,omitempty"`
+type BeatRepeat struct, field Slashes *PositiveInteger `xml:"slashes,attr,omitempty"`
 type BeatRepeat struct, field Type StartStop `xml:"type,attr"`
 type BeatRepeat struct, field UseDots *YesNo `xml:"use-dots,attr,omitempty"`
 type BeatRepeat struct, field order SlashType SlashDot ExceptVoice Type Slashes UseDots
 type BeatRepeat struct, not comparable
-type BeatRepeat, method (*BeatRepeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type BeatRepeat, method (BeatRepeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type BeatUnitTied struct, field BeatUnit NoteTypeValue `xml:"beat-unit"`
 type BeatUnitTied struct, field BeatUnitDot []Empty `xml:"beat-unit-dot"`
 type BeatUnitTied struct, field order BeatUnit BeatUnitDot
@@ -1047,10 +1043,8 @@ type Bookmark struct, comparable
 type Bookmark struct, field Element *string `xml:"element,attr,omitempty"`
 type Bookmark struct, field ID string `xml:"id,attr"`
 type Bookmark struct, field Name *string `xml:"name,attr,omitempty"`
-type Bookmark struct, field Position *uint64 `xml:"position,attr,omitempty"`
+type Bookmark struct, field Position *PositiveInteger `xml:"position,attr,omitempty"`
 type Bookmark struct, field order ID Name Element Position
-type Bookmark, method (*Bookmark) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Bookmark, method (Bookmark) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Bracket struct, comparable
 type Bracket struct, field Color *Color `xml:"color,attr,omitempty"`
 type Bracket struct, field DashLength *Tenths `xml:"dash-length,attr,omitempty"`
@@ -1114,7 +1108,7 @@ type CircularArrow, method (CircularArrow) Values() []CircularArrow
 type Clef struct, comparable
 type Clef struct, field Additional *YesNo `xml:"additional,attr,omitempty"`
 type Clef struct, field AfterBarline *YesNo `xml:"after-barline,attr,omitempty"`
-type Clef struct, field ClefOctaveChange *int64 `xml:"clef-octave-change,omitempty"`
+type Clef struct, field ClefOctaveChange *Integer `xml:"clef-octave-change,omitempty"`
 type Clef struct, field Color *Color `xml:"color,attr,omitempty"`
 type Clef struct, field DefaultX *Tenths `xml:"default-x,attr,omitempty"`
 type Clef struct, field DefaultY *Tenths `xml:"default-y,attr,omitempty"`
@@ -1159,7 +1153,7 @@ type ConversionError, method (*ConversionError) Error() string
 type ConversionError, method (*ConversionError) Unwrap() error
 type Credit struct, field Content CreditContents `xml:",any"`
 type Credit struct, field ID *string `xml:"id,attr,omitempty"`
-type Credit struct, field Page *uint64 `xml:"page,attr,omitempty"`
+type Credit struct, field Page *PositiveInteger `xml:"page,attr,omitempty"`
 type Credit struct, field order Content Page ID
 type Credit struct, not comparable
 type Credit, method (*Credit) AddBookmark(element *Bookmark) *Bookmark
@@ -1168,8 +1162,6 @@ type Credit, method (*Credit) AddCreditSymbol(element *FormattedSymbolID) *Forma
 type Credit, method (*Credit) AddCreditType(element *string) *string
 type Credit, method (*Credit) AddCreditWords(element *FormattedTextID) *FormattedTextID
 type Credit, method (*Credit) AddLink(element *Link) *Link
-type Credit, method (*Credit) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Credit, method (Credit) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type CreditContent struct, comparable
 type CreditContent struct, field Bookmark *Bookmark
 type CreditContent struct, field CreditImage *Image
@@ -1306,10 +1298,8 @@ type DegreeValue struct, field RelativeX *Tenths `xml:"relative-x,attr,omitempty
 type DegreeValue struct, field RelativeY *Tenths `xml:"relative-y,attr,omitempty"`
 type DegreeValue struct, field Symbol *DegreeSymbolValue `xml:"symbol,attr,omitempty"`
 type DegreeValue struct, field Text *string `xml:"text,attr,omitempty"`
-type DegreeValue struct, field Value uint64 `xml:",chardata"`
+type DegreeValue struct, field Value PositiveInteger `xml:",chardata"`
 type DegreeValue struct, field order Value Symbol Text DefaultX DefaultY RelativeX RelativeY FontFamily FontStyle FontSize FontWeight Color
-type DegreeValue, method (*DegreeValue) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type DegreeValue, method (DegreeValue) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type DictionaryComponentRequest struct, comparable
 type DictionaryComponentRequest struct, field Component validation.DictionaryComponentPin
 type DictionaryComponentRequest struct, field Manifest validation.DictionaryManifestID
@@ -1345,13 +1335,11 @@ type Direction struct, field Listening *Listening `xml:"listening,omitempty"`
 type Direction struct, field Offset *Offset `xml:"offset,omitempty"`
 type Direction struct, field Placement *AboveBelow `xml:"placement,attr,omitempty"`
 type Direction struct, field Sound *Sound `xml:"sound,omitempty"`
-type Direction struct, field Staff *uint64 `xml:"staff,omitempty"`
+type Direction struct, field Staff *PositiveInteger `xml:"staff,omitempty"`
 type Direction struct, field System *SystemRelation `xml:"system,attr,omitempty"`
 type Direction struct, field Voice *string `xml:"voice,omitempty"`
 type Direction struct, field order DirectionType Offset Footnote Level Voice Staff Sound Listening Placement Directive System ID
 type Direction struct, not comparable
-type Direction, method (*Direction) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Direction, method (Direction) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type DirectionType struct, field AccordionRegistration *AccordionRegistration `xml:"accordion-registration,omitempty"`
 type DirectionType struct, field Bracket *Bracket `xml:"bracket,omitempty"`
 type DirectionType struct, field Coda []Coda `xml:"coda"`
@@ -1754,10 +1742,8 @@ type Fingering struct, field order Value Substitution Alternate DefaultX Default
 type FirstFret struct, comparable
 type FirstFret struct, field Location *LeftRight `xml:"location,attr,omitempty"`
 type FirstFret struct, field Text *string `xml:"text,attr,omitempty"`
-type FirstFret struct, field Value uint64 `xml:",chardata"`
+type FirstFret struct, field Value PositiveInteger `xml:",chardata"`
 type FirstFret struct, field order Value Text Location
-type FirstFret, method (*FirstFret) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type FirstFret, method (FirstFret) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type FontFamily string
 type FontSize string
 type FontStyle string
@@ -1874,18 +1860,16 @@ type Forward struct, comparable
 type Forward struct, field Duration PositiveDivisions `xml:"duration"`
 type Forward struct, field Footnote *FormattedText `xml:"footnote,omitempty"`
 type Forward struct, field Level *Level `xml:"level,omitempty"`
-type Forward struct, field Staff *uint64 `xml:"staff,omitempty"`
+type Forward struct, field Staff *PositiveInteger `xml:"staff,omitempty"`
 type Forward struct, field Voice *string `xml:"voice,omitempty"`
 type Forward struct, field order Duration Footnote Level Voice Staff
-type Forward, method (*Forward) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Forward, method (Forward) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Frame struct, field Color *Color `xml:"color,attr,omitempty"`
 type Frame struct, field DefaultX *Tenths `xml:"default-x,attr,omitempty"`
 type Frame struct, field DefaultY *Tenths `xml:"default-y,attr,omitempty"`
 type Frame struct, field FirstFret *FirstFret `xml:"first-fret,omitempty"`
-type Frame struct, field FrameFrets uint64 `xml:"frame-frets"`
+type Frame struct, field FrameFrets PositiveInteger `xml:"frame-frets"`
 type Frame struct, field FrameNote []FrameNote `xml:"frame-note"`
-type Frame struct, field FrameStrings uint64 `xml:"frame-strings"`
+type Frame struct, field FrameStrings PositiveInteger `xml:"frame-strings"`
 type Frame struct, field Halign *LeftCenterRight `xml:"halign,attr,omitempty"`
 type Frame struct, field Height *Tenths `xml:"height,attr,omitempty"`
 type Frame struct, field ID *string `xml:"id,attr,omitempty"`
@@ -1896,8 +1880,6 @@ type Frame struct, field Valign *ValignImage `xml:"valign,attr,omitempty"`
 type Frame struct, field Width *Tenths `xml:"width,attr,omitempty"`
 type Frame struct, field order FrameStrings FrameFrets FirstFret FrameNote Height Width Unplayed DefaultX DefaultY RelativeX RelativeY Color Halign Valign ID
 type Frame struct, not comparable
-type Frame, method (*Frame) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Frame, method (Frame) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type FrameNote struct, comparable
 type FrameNote struct, field Barre *Barre `xml:"barre,omitempty"`
 type FrameNote struct, field Fingering *Fingering `xml:"fingering,omitempty"`
@@ -1910,10 +1892,8 @@ type Fret struct, field FontFamily *FontFamily `xml:"font-family,attr,omitempty"
 type Fret struct, field FontSize *FontSize `xml:"font-size,attr,omitempty"`
 type Fret struct, field FontStyle *FontStyle `xml:"font-style,attr,omitempty"`
 type Fret struct, field FontWeight *FontWeight `xml:"font-weight,attr,omitempty"`
-type Fret struct, field Value uint64 `xml:",chardata"`
+type Fret struct, field Value NonNegativeInteger `xml:",chardata"`
 type Fret struct, field order Value FontFamily FontStyle FontSize FontWeight Color
-type Fret, method (*Fret) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Fret, method (Fret) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Glass struct, comparable
 type Glass struct, field SMuFL *SMuFLPictogramGlyphName `xml:"smufl,attr,omitempty"`
 type Glass struct, field Value GlassValue `xml:",chardata"`
@@ -2082,7 +2062,7 @@ type Harmony struct, field PrintFrame *YesNo `xml:"print-frame,attr,omitempty"`
 type Harmony struct, field PrintObject *YesNo `xml:"print-object,attr,omitempty"`
 type Harmony struct, field RelativeX *Tenths `xml:"relative-x,attr,omitempty"`
 type Harmony struct, field RelativeY *Tenths `xml:"relative-y,attr,omitempty"`
-type Harmony struct, field Staff *uint64 `xml:"staff,omitempty"`
+type Harmony struct, field Staff *PositiveInteger `xml:"staff,omitempty"`
 type Harmony struct, field System *SystemRelation `xml:"system,attr,omitempty"`
 type Harmony struct, field Type *HarmonyType `xml:"type,attr,omitempty"`
 type Harmony struct, field order Content Frame Offset Footnote Level Staff Type PrintFrame Arrangement PrintObject DefaultX DefaultY RelativeX RelativeY FontFamily FontStyle FontSize FontWeight Color Placement System ID
@@ -2094,8 +2074,6 @@ type Harmony, method (*Harmony) AddInversion(element *Inversion) *Inversion
 type Harmony, method (*Harmony) AddKind(element *Kind) *Kind
 type Harmony, method (*Harmony) AddNumeral(element *Numeral) *Numeral
 type Harmony, method (*Harmony) AddRoot(element *Root) *Root
-type Harmony, method (*Harmony) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Harmony, method (Harmony) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type HarmonyAlter struct, comparable
 type HarmonyAlter struct, field Color *Color `xml:"color,attr,omitempty"`
 type HarmonyAlter struct, field DefaultX *Tenths `xml:"default-x,attr,omitempty"`
@@ -2229,6 +2207,7 @@ type InstrumentChange struct, field VirtualInstrument *VirtualInstrument `xml:"v
 type InstrumentChange struct, field order InstrumentSound Solo Ensemble VirtualInstrument ID
 type InstrumentLink struct, comparable
 type InstrumentLink struct, field ID string `xml:"id,attr"`
+type Integer int64
 type Interchangeable struct, field Content InterchangeableContents `xml:",any"`
 type Interchangeable struct, field Separator *TimeSeparator `xml:"separator,attr,omitempty"`
 type Interchangeable struct, field Symbol *TimeSymbol `xml:"symbol,attr,omitempty"`
@@ -2258,10 +2237,8 @@ type Inversion struct, field FontWeight *FontWeight `xml:"font-weight,attr,omite
 type Inversion struct, field RelativeX *Tenths `xml:"relative-x,attr,omitempty"`
 type Inversion struct, field RelativeY *Tenths `xml:"relative-y,attr,omitempty"`
 type Inversion struct, field Text *string `xml:"text,attr,omitempty"`
-type Inversion struct, field Value uint64 `xml:",chardata"`
+type Inversion struct, field Value NonNegativeInteger `xml:",chardata"`
 type Inversion struct, field order Value Text DefaultX DefaultY RelativeX RelativeY FontFamily FontStyle FontSize FontWeight Color
-type Inversion, method (*Inversion) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Inversion, method (Inversion) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Key struct, field Cancel *Cancel `xml:"cancel,omitempty"`
 type Key struct, field Color *Color `xml:"color,attr,omitempty"`
 type Key struct, field Content KeyContents `xml:",any"`
@@ -2301,11 +2278,9 @@ type KeyContents []KeyContent
 type KeyContents, method (*KeyContents) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
 type KeyOctave struct, comparable
 type KeyOctave struct, field Cancel *YesNo `xml:"cancel,attr,omitempty"`
-type KeyOctave struct, field Number uint64 `xml:"number,attr"`
+type KeyOctave struct, field Number PositiveInteger `xml:"number,attr"`
 type KeyOctave struct, field Value Octave `xml:",chardata"`
 type KeyOctave struct, field order Value Number Cancel
-type KeyOctave, method (*KeyOctave) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type KeyOctave, method (KeyOctave) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Kind struct, comparable
 type Kind struct, field BracketDegrees *YesNo `xml:"bracket-degrees,attr,omitempty"`
 type Kind struct, field Color *Color `xml:"color,attr,omitempty"`
@@ -2375,7 +2350,7 @@ type Link struct, field DefaultY *Tenths `xml:"default-y,attr,omitempty"`
 type Link struct, field Element *string `xml:"element,attr,omitempty"`
 type Link struct, field Href string `xml:"http://www.w3.org/1999/xlink href,attr"`
 type Link struct, field Name *string `xml:"name,attr,omitempty"`
-type Link struct, field Position *uint64 `xml:"position,attr,omitempty"`
+type Link struct, field Position *PositiveInteger `xml:"position,attr,omitempty"`
 type Link struct, field RelativeX *Tenths `xml:"relative-x,attr,omitempty"`
 type Link struct, field RelativeY *Tenths `xml:"relative-y,attr,omitempty"`
 type Link struct, field Role *string `xml:"http://www.w3.org/1999/xlink role,attr,omitempty"`
@@ -2387,8 +2362,6 @@ type Link, method (*Link) EffectiveActuate() string
 type Link, method (*Link) EffectiveShow() string
 type Link, method (*Link) EffectiveType() string
 type Link, method (*Link) TypeMatchesFixed() bool
-type Link, method (*Link) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Link, method (Link) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type LinkedAssessmentOptions struct, field Dependencies []ResourceDependency
 type LinkedAssessmentOptions struct, field Graph AssessmentOptions
 type LinkedAssessmentOptions struct, field Identity ResourceIdentity
@@ -2597,12 +2570,10 @@ type MeasureNumberingValue string
 type MeasureNumberingValue, method (MeasureNumberingValue) IsKnown() bool
 type MeasureNumberingValue, method (MeasureNumberingValue) Values() []MeasureNumberingValue
 type MeasureRepeat struct, comparable
-type MeasureRepeat struct, field Slashes *uint64 `xml:"slashes,attr,omitempty"`
+type MeasureRepeat struct, field Slashes *PositiveInteger `xml:"slashes,attr,omitempty"`
 type MeasureRepeat struct, field Type StartStop `xml:"type,attr"`
 type MeasureRepeat struct, field Value PositiveIntegerOrEmpty `xml:",chardata"`
 type MeasureRepeat struct, field order Value Type Slashes
-type MeasureRepeat, method (*MeasureRepeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type MeasureRepeat, method (MeasureRepeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type MeasureStyle struct, comparable
 type MeasureStyle struct, field BeatRepeat *BeatRepeat `xml:"beat-repeat,omitempty"`
 type MeasureStyle struct, field Color *Color `xml:"color,attr,omitempty"`
@@ -2691,8 +2662,6 @@ type MetronomeTuplet struct, field ShowNumber *ShowTuplet `xml:"show-number,attr
 type MetronomeTuplet struct, field Type StartStop `xml:"type,attr"`
 type MetronomeTuplet struct, field order TimeModification Type Bracket ShowNumber
 type MetronomeTuplet struct, not comparable
-type MetronomeTuplet, method (*MetronomeTuplet) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type MetronomeTuplet, method (MetronomeTuplet) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Millimeters float64
 type Millimeters, method (*Millimeters) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
 type Millimeters, method (*Millimeters) UnmarshalXMLAttr(attribute xml.Attr) error
@@ -2716,10 +2685,8 @@ type Mordent struct, field Long *YesNo `xml:"long,attr,omitempty"`
 type Mordent struct, field order EmptyTrillSound Long Approach Departure
 type MultipleRest struct, comparable
 type MultipleRest struct, field UseSymbols *YesNo `xml:"use-symbols,attr,omitempty"`
-type MultipleRest struct, field Value uint64 `xml:",chardata"`
+type MultipleRest struct, field Value PositiveInteger `xml:",chardata"`
 type MultipleRest struct, field order Value UseSymbols
-type MultipleRest, method (*MultipleRest) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type MultipleRest, method (MultipleRest) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Mute string
 type Mute, method (Mute) IsKnown() bool
 type Mute, method (Mute) Values() []Mute
@@ -2755,6 +2722,8 @@ type NonNegativeDecimal, method (*NonNegativeDecimal) UnmarshalXML(decoder *xml.
 type NonNegativeDecimal, method (*NonNegativeDecimal) UnmarshalXMLAttr(attribute xml.Attr) error
 type NonNegativeDecimal, method (NonNegativeDecimal) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type NonNegativeDecimal, method (NonNegativeDecimal) MarshalXMLAttr(name xml.Name) (xml.Attr, error)
+type NonNegativeInteger uint64
+type NonNegativeInteger, method (*NonNegativeInteger) UnmarshalText(text []byte) error
 type Notations struct, field Content NotationsContents `xml:",any"`
 type Notations struct, field Footnote *FormattedText `xml:"footnote,omitempty"`
 type Notations struct, field ID *string `xml:"id,attr,omitempty"`
@@ -2836,7 +2805,7 @@ type Note struct, field RelativeX *Tenths `xml:"relative-x,attr,omitempty"`
 type Note struct, field RelativeY *Tenths `xml:"relative-y,attr,omitempty"`
 type Note struct, field Release *Divisions `xml:"release,attr,omitempty"`
 type Note struct, field Rest *Rest `xml:"rest,omitempty"`
-type Note struct, field Staff *uint64 `xml:"staff,omitempty"`
+type Note struct, field Staff *PositiveInteger `xml:"staff,omitempty"`
 type Note struct, field Stem *Stem `xml:"stem,omitempty"`
 type Note struct, field Tie []Tie `xml:"tie"`
 type Note struct, field TimeModification *TimeModification `xml:"time-modification,omitempty"`
@@ -2846,8 +2815,6 @@ type Note struct, field Unpitched *Unpitched `xml:"unpitched,omitempty"`
 type Note struct, field Voice *string `xml:"voice,omitempty"`
 type Note struct, field order Grace Cue Chord Pitch Unpitched Rest Duration Tie Instrument Footnote Level Voice Type Dot Accidental TimeModification Stem Notehead NoteheadText Staff Beam Notations Lyric Play Listen PrintLeger Dynamics EndDynamics Attack Release TimeOnly Pizzicato DefaultX DefaultY RelativeX RelativeY FontFamily FontStyle FontSize FontWeight Color PrintDot PrintLyric PrintObject PrintSpacing ID
 type Note struct, not comparable
-type Note, method (*Note) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Note, method (Note) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type NoteSize struct, comparable
 type NoteSize struct, field Type NoteSizeType `xml:"type,attr"`
 type NoteSize struct, field Value NonNegativeDecimal `xml:",chardata"`
@@ -2944,13 +2911,11 @@ type OctaveShift struct, field ID *string `xml:"id,attr,omitempty"`
 type OctaveShift struct, field Number *NumberLevel `xml:"number,attr,omitempty"`
 type OctaveShift struct, field RelativeX *Tenths `xml:"relative-x,attr,omitempty"`
 type OctaveShift struct, field RelativeY *Tenths `xml:"relative-y,attr,omitempty"`
-type OctaveShift struct, field Size *uint64 `xml:"size,attr,omitempty"`
+type OctaveShift struct, field Size *PositiveInteger `xml:"size,attr,omitempty"`
 type OctaveShift struct, field SpaceLength *Tenths `xml:"space-length,attr,omitempty"`
 type OctaveShift struct, field Type UpDownStopContinue `xml:"type,attr"`
 type OctaveShift struct, field order Type Number Size DashLength SpaceLength DefaultX DefaultY RelativeX RelativeY FontFamily FontStyle FontSize FontWeight Color ID
-type OctaveShift, method (*OctaveShift) EffectiveSize() uint64
-type OctaveShift, method (*OctaveShift) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type OctaveShift, method (OctaveShift) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
+type OctaveShift, method (*OctaveShift) EffectiveSize() PositiveInteger
 type Offset struct, comparable
 type Offset struct, field Sound *YesNo `xml:"sound,attr,omitempty"`
 type Offset struct, field Value Divisions `xml:",chardata"`
@@ -3147,7 +3112,7 @@ type PageMargins struct, field TopMargin Tenths `xml:"top-margin"`
 type PageMargins struct, field Type *MarginType `xml:"type,attr,omitempty"`
 type PageMargins struct, field order LeftMargin RightMargin TopMargin BottomMargin Type
 type PartClef struct, comparable
-type PartClef struct, field ClefOctaveChange *int64 `xml:"clef-octave-change,omitempty"`
+type PartClef struct, field ClefOctaveChange *Integer `xml:"clef-octave-change,omitempty"`
 type PartClef struct, field Line *StaffLinePosition `xml:"line,omitempty"`
 type PartClef struct, field Sign ClefSign `xml:"sign"`
 type PartClef struct, field order Sign Line ClefOctaveChange
@@ -3223,9 +3188,9 @@ type PartSymbol struct, field Value GroupSymbolValue `xml:",chardata"`
 type PartSymbol struct, field order Value TopStaff BottomStaff DefaultX DefaultY RelativeX RelativeY Color
 type PartTranspose struct, comparable
 type PartTranspose struct, field Chromatic Semitones `xml:"chromatic"`
-type PartTranspose struct, field Diatonic *int64 `xml:"diatonic,omitempty"`
+type PartTranspose struct, field Diatonic *Integer `xml:"diatonic,omitempty"`
 type PartTranspose struct, field Double *Double `xml:"double,omitempty"`
-type PartTranspose struct, field OctaveChange *int64 `xml:"octave-change,omitempty"`
+type PartTranspose struct, field OctaveChange *Integer `xml:"octave-change,omitempty"`
 type PartTranspose struct, field order Diatonic Chromatic OctaveChange Double
 type Pedal struct, comparable
 type Pedal struct, field Abbreviated *YesNo `xml:"abbreviated,attr,omitempty"`
@@ -3320,16 +3285,16 @@ type Play struct, field Content PlayContents `xml:",any"`
 type Play struct, field ID *string `xml:"id,attr,omitempty"`
 type Play struct, field order Content ID
 type Play struct, not comparable
-type Play, method (*Play) AddIpa(element *string) *string
+type Play, method (*Play) AddIPA(element *string) *string
 type Play, method (*Play) AddMute(element *Mute) *Mute
 type Play, method (*Play) AddOtherPlay(element *OtherPlay) *OtherPlay
 type Play, method (*Play) AddSemiPitched(element *SemiPitched) *SemiPitched
 type PlayContent struct, comparable
-type PlayContent struct, field Ipa *string
+type PlayContent struct, field IPA *string
 type PlayContent struct, field Mute *Mute
 type PlayContent struct, field OtherPlay *OtherPlay
 type PlayContent struct, field SemiPitched *SemiPitched
-type PlayContent struct, field order Ipa Mute SemiPitched OtherPlay
+type PlayContent struct, field order IPA Mute SemiPitched OtherPlay
 type PlayContent, method (*PlayContent) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
 type PlayContent, method (PlayContent) ElementName() string
 type PlayContent, method (PlayContent) MarshalXML(encoder *xml.Encoder, _ xml.StartElement) error
@@ -3350,6 +3315,8 @@ type PositiveDivisions, method (*PositiveDivisions) UnmarshalXML(decoder *xml.De
 type PositiveDivisions, method (*PositiveDivisions) UnmarshalXMLAttr(attribute xml.Attr) error
 type PositiveDivisions, method (PositiveDivisions) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type PositiveDivisions, method (PositiveDivisions) MarshalXMLAttr(name xml.Name) (xml.Attr, error)
+type PositiveInteger uint64
+type PositiveInteger, method (*PositiveInteger) UnmarshalText(text []byte) error
 type PositiveIntegerOrEmpty string
 type PrincipalVoice struct, comparable
 type PrincipalVoice struct, field Color *Color `xml:"color,attr,omitempty"`
@@ -3371,7 +3338,7 @@ type PrincipalVoice struct, field order Value Type Symbol DefaultX DefaultY Rela
 type PrincipalVoiceSymbol string
 type PrincipalVoiceSymbol, method (PrincipalVoiceSymbol) IsKnown() bool
 type PrincipalVoiceSymbol, method (PrincipalVoiceSymbol) Values() []PrincipalVoiceSymbol
-type Print struct, field BlankPage *uint64 `xml:"blank-page,attr,omitempty"`
+type Print struct, field BlankPage *PositiveInteger `xml:"blank-page,attr,omitempty"`
 type Print struct, field ID *string `xml:"id,attr,omitempty"`
 type Print struct, field MeasureLayout *MeasureLayout `xml:"measure-layout,omitempty"`
 type Print struct, field MeasureNumbering *MeasureNumbering `xml:"measure-numbering,omitempty"`
@@ -3386,8 +3353,6 @@ type Print struct, field StaffSpacing *Tenths `xml:"staff-spacing,attr,omitempty
 type Print struct, field SystemLayout *SystemLayout `xml:"system-layout,omitempty"`
 type Print struct, field order PageLayout SystemLayout StaffLayout MeasureLayout MeasureNumbering PartNameDisplay PartAbbreviationDisplay StaffSpacing NewSystem NewPage BlankPage PageNumber ID
 type Print struct, not comparable
-type Print, method (*Print) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Print, method (Print) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type Release struct, comparable
 type Release struct, embedded Empty Empty
 type Release struct, field Offset *Divisions `xml:"offset,attr,omitempty"`
@@ -3395,11 +3360,9 @@ type Release struct, field order Empty Offset
 type Repeat struct, comparable
 type Repeat struct, field AfterJump *YesNo `xml:"after-jump,attr,omitempty"`
 type Repeat struct, field Direction BackwardForward `xml:"direction,attr"`
-type Repeat struct, field Times *uint64 `xml:"times,attr,omitempty"`
+type Repeat struct, field Times *NonNegativeInteger `xml:"times,attr,omitempty"`
 type Repeat struct, field Winged *Winged `xml:"winged,attr,omitempty"`
 type Repeat struct, field order Direction Times AfterJump Winged
-type Repeat, method (*Repeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Repeat, method (Repeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type ResourceDependency string
 type ResourceIdentity struct, comparable
 type ResourceIdentity struct, field CanonicalID string
@@ -3740,20 +3703,18 @@ type SoundContent, method (SoundContent) MarshalXML(encoder *xml.Encoder, _ xml.
 type SoundContent, method (SoundContent) Value() any
 type SoundContents []SoundContent
 type SoundContents, method (*SoundContents) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type StaffDetails struct, field Capo *uint64 `xml:"capo,omitempty"`
+type StaffDetails struct, field Capo *NonNegativeInteger `xml:"capo,omitempty"`
 type StaffDetails struct, field LineDetail []LineDetail `xml:"line-detail"`
 type StaffDetails struct, field Number *StaffNumber `xml:"number,attr,omitempty"`
 type StaffDetails struct, field PrintObject *YesNo `xml:"print-object,attr,omitempty"`
 type StaffDetails struct, field PrintSpacing *YesNo `xml:"print-spacing,attr,omitempty"`
 type StaffDetails struct, field ShowFrets *ShowFrets `xml:"show-frets,attr,omitempty"`
-type StaffDetails struct, field StaffLines *uint64 `xml:"staff-lines,omitempty"`
+type StaffDetails struct, field StaffLines *NonNegativeInteger `xml:"staff-lines,omitempty"`
 type StaffDetails struct, field StaffSize *StaffSize `xml:"staff-size,omitempty"`
 type StaffDetails struct, field StaffTuning []StaffTuning `xml:"staff-tuning"`
 type StaffDetails struct, field StaffType *StaffType `xml:"staff-type,omitempty"`
 type StaffDetails struct, field order StaffType StaffLines LineDetail StaffTuning Capo StaffSize Number ShowFrets PrintObject PrintSpacing
 type StaffDetails struct, not comparable
-type StaffDetails, method (*StaffDetails) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type StaffDetails, method (StaffDetails) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type StaffDivide struct, comparable
 type StaffDivide struct, field Color *Color `xml:"color,attr,omitempty"`
 type StaffDivide struct, field DefaultX *Tenths `xml:"default-x,attr,omitempty"`
@@ -3903,14 +3864,12 @@ type Supports struct, field Type YesNo `xml:"type,attr"`
 type Supports struct, field Value *string `xml:"value,attr,omitempty"`
 type Supports struct, field order Type Element Attribute Value
 type Swing struct, comparable
-type Swing struct, field First *uint64 `xml:"first,omitempty"`
-type Swing struct, field Second *uint64 `xml:"second,omitempty"`
+type Swing struct, field First *PositiveInteger `xml:"first,omitempty"`
+type Swing struct, field Second *PositiveInteger `xml:"second,omitempty"`
 type Swing struct, field Straight *Empty `xml:"straight,omitempty"`
 type Swing struct, field SwingStyle *string `xml:"swing-style,omitempty"`
 type Swing struct, field SwingType *SwingTypeValue `xml:"swing-type,omitempty"`
 type Swing struct, field order Straight First Second SwingType SwingStyle
-type Swing, method (*Swing) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type Swing, method (Swing) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type SwingTypeValue string
 type SwingTypeValue, method (SwingTypeValue) IsKnown() bool
 type SwingTypeValue, method (SwingTypeValue) Values() []SwingTypeValue
@@ -4124,14 +4083,12 @@ type TimeContent, method (TimeContent) MarshalXML(encoder *xml.Encoder, _ xml.St
 type TimeContent, method (TimeContent) Value() any
 type TimeContents []TimeContent
 type TimeContents, method (*TimeContents) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type TimeModification struct, field ActualNotes uint64 `xml:"actual-notes"`
+type TimeModification struct, field ActualNotes NonNegativeInteger `xml:"actual-notes"`
 type TimeModification struct, field NormalDot []Empty `xml:"normal-dot"`
-type TimeModification struct, field NormalNotes uint64 `xml:"normal-notes"`
+type TimeModification struct, field NormalNotes NonNegativeInteger `xml:"normal-notes"`
 type TimeModification struct, field NormalType *NoteTypeValue `xml:"normal-type,omitempty"`
 type TimeModification struct, field order ActualNotes NormalNotes NormalType NormalDot
 type TimeModification struct, not comparable
-type TimeModification, method (*TimeModification) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type TimeModification, method (TimeModification) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type TimeOnly string
 type TimeRelation string
 type TimeRelation, method (TimeRelation) IsKnown() bool
@@ -4152,11 +4109,11 @@ type TopBottom, method (TopBottom) IsKnown() bool
 type TopBottom, method (TopBottom) Values() []TopBottom
 type Transpose struct, comparable
 type Transpose struct, field Chromatic Semitones `xml:"chromatic"`
-type Transpose struct, field Diatonic *int64 `xml:"diatonic,omitempty"`
+type Transpose struct, field Diatonic *Integer `xml:"diatonic,omitempty"`
 type Transpose struct, field Double *Double `xml:"double,omitempty"`
 type Transpose struct, field ID *string `xml:"id,attr,omitempty"`
 type Transpose struct, field Number *StaffNumber `xml:"number,attr,omitempty"`
-type Transpose struct, field OctaveChange *int64 `xml:"octave-change,omitempty"`
+type Transpose struct, field OctaveChange *Integer `xml:"octave-change,omitempty"`
 type Transpose struct, field order Diatonic Chromatic OctaveChange Double Number ID
 type Tremolo struct, comparable
 type Tremolo struct, field Color *Color `xml:"color,attr,omitempty"`
@@ -4215,10 +4172,8 @@ type TupletNumber struct, field FontFamily *FontFamily `xml:"font-family,attr,om
 type TupletNumber struct, field FontSize *FontSize `xml:"font-size,attr,omitempty"`
 type TupletNumber struct, field FontStyle *FontStyle `xml:"font-style,attr,omitempty"`
 type TupletNumber struct, field FontWeight *FontWeight `xml:"font-weight,attr,omitempty"`
-type TupletNumber struct, field Value uint64 `xml:",chardata"`
+type TupletNumber struct, field Value NonNegativeInteger `xml:",chardata"`
 type TupletNumber struct, field order Value FontFamily FontStyle FontSize FontWeight Color
-type TupletNumber, method (*TupletNumber) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
-type TupletNumber, method (TupletNumber) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
 type TupletPortion struct, field TupletDot []TupletDot `xml:"tuplet-dot"`
 type TupletPortion struct, field TupletNumber *TupletNumber `xml:"tuplet-number,omitempty"`
 type TupletPortion struct, field TupletType *TupletType `xml:"tuplet-type,omitempty"`

@@ -297,7 +297,7 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	if err := assessmentContext(ctx, "canceled-before-source"); err != nil {
 		return nil, err
 	}
-	if reader == nil {
+	if nilValue(reader) {
 		return nil, ErrNilReader
 	}
 	if _, err := decode.xmlDepth(); err != nil {
@@ -324,7 +324,7 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 	if err := assessmentContext(ctx, "canceled-before-source"); err != nil {
 		return nil, err
 	}
-	if reader == nil {
+	if nilValue(reader) {
 		return nil, ErrNilReader
 	}
 	maxDepth, err := decode.xmlDepth()
@@ -358,7 +358,7 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		return run, errors.Join(cause, finishErr)
 	}
 	internalDTD, sourceDeclarations, captureAttributeLexical := sourceDTDPolicy(config.Profile)
-	sourceDTDIDs := config.Engine.SourceDTDIDsSelected(config.Profile)
+	sourceDTDIDs := validationEngineSourceDTDIDsSelected(config.Engine, config.Profile)
 	// Profiles that read DTD declarations also read a bundled or caller
 	// external subset; the others keep reporting it as unread.
 	var dtd *sourceDTDResolver

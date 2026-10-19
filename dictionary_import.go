@@ -138,7 +138,7 @@ func loadValidatedDictionarySet(ctx context.Context, a *validation.Account, o Di
 	for i, s := range o.Selections {
 		selections[i] = validation.DictionarySelection{Manifest: s.Manifest, Relations: append([]validation.DictionaryRelation(nil), s.Relations...)}
 	}
-	if dictionaryNil(o.Source) {
+	if nilValue(o.Source) {
 		return validation.NewDictionarySet(ctx, a, selections, nil)
 	}
 	imports := make([]validation.DictionaryImport, 0, len(selections))
@@ -190,7 +190,7 @@ func importDictionaryComponent(ctx context.Context, a *validation.Account, sourc
 	}()
 	result, err := source.Open(ctx, request)
 	closeResult := func(cause error) error {
-		if !dictionaryNil(result.Body) {
+		if !nilValue(result.Body) {
 			cause = errors.Join(cause, result.Body.Close())
 			result.Body = nil
 		}
@@ -209,13 +209,13 @@ func importDictionaryComponent(ctx context.Context, a *validation.Account, sourc
 	switch result.State {
 	case validation.EvidenceUnknown, validation.EvidenceUnsupported:
 		reason := string(result.Reason)
-		if !dictionaryNil(result.Body) || len(reason) == 0 || len(reason) > 128 || !utf8.ValidString(reason) || strings.IndexFunc(reason, func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }) >= 0 {
+		if !nilValue(result.Body) || len(reason) == 0 || len(reason) > 128 || !utf8.ValidString(reason) || strings.IndexFunc(reason, func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }) >= 0 {
 			return nil, closeResult(bad("unavailable component requires a bounded reason and no body"))
 		}
 		// Copy provider text; the control envelope admits this <=128-byte value.
 		return &dictionaryImported{data: validation.DictionaryImport{Manifest: request.Manifest, State: result.State, Reason: validation.Code(strings.Clone(reason))}}, nil
 	case validation.EvidenceKnown:
-		if result.Reason != "" || dictionaryNil(result.Body) {
+		if result.Reason != "" || nilValue(result.Body) {
 			return nil, closeResult(bad("known component requires a usable body and no reason"))
 		}
 	default:

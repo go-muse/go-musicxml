@@ -29,10 +29,10 @@ func TestDictionaryPackageSnapshotsDoNotAliasActualCapabilities(t *testing.T) {
 		}
 		h := schemaPendingHeader()
 		h.Location.DocumentID = document
-		if err = s.Open(ctx, h); err != nil {
+		if err = s.OpenNode(ctx, h); err != nil {
 			t.Fatal(err)
 		}
-		if err = s.Close(ctx, schemaLexemeEnd("1")); err != nil {
+		if err = s.CloseNode(ctx, schemaLexemeEnd("1")); err != nil {
 			t.Fatal(err)
 		}
 		_ = set.Close()
@@ -53,26 +53,26 @@ func TestDictionaryPackageSnapshotsDoNotAliasActualCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	session, err := catalog.Begin(ctx, RunOptions{DocumentID: "package", Profile: "test.package", Account: account})
+	session, err := catalog.begin(ctx, RunOptions{DocumentID: "package", Profile: "test.package", Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = session.OpenPackage(ctx, packageTestIdentity()); err != nil {
+	if err = session.openPackage(ctx, packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
 	pin := ResourcePin{CanonicalID: "same", Revision: "1", Digest: strings.Repeat("c", 64), Representation: ResourceSourceXML}
-	a, err := session.AddResource(ctx, pin, first, false)
+	a, err := session.addResource(ctx, pin, first, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := session.AddResource(ctx, pin, second, false)
+	b, err := session.addResource(ctx, pin, second, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if a == b {
 		t.Fatal("actual capability variants reused")
 	}
-	again, err := session.AddResource(ctx, pin, second, true)
+	again, err := session.addResource(ctx, pin, second, true)
 	if err != nil || again != b {
 		t.Fatalf("same-pointer idempotence: %s %v", again, err)
 	}
@@ -80,10 +80,10 @@ func TestDictionaryPackageSnapshotsDoNotAliasActualCapabilities(t *testing.T) {
 	report.AssessmentComplete = false
 	report.Conformance = ConformanceUndetermined
 	report.Counts.Unknown++
-	if err = session.RecordResourceFailure(ctx, pin, report, errors.New("failed variant without fingerprint")); !errors.Is(err, ErrInvalidConfiguration) {
+	if err = session.recordResourceFailure(ctx, pin, report, errors.New("failed variant without fingerprint")); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Fatalf("unsealed failure shadowed transferred capability: %v", err)
 	}
-	_, _ = session.Finish(ctx, PackageCompletion{})
+	_, _ = session.finish(ctx, PackageCompletion{})
 	if n, _ := account.Usage(BudgetBufferedBytes); n != 0 {
 		t.Fatalf("snapshot/capability lease leak: %d", n)
 	}

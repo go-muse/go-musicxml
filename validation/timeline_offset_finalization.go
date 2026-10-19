@@ -37,7 +37,7 @@ func newTimelinePendingOffsets(r *stateReader, block timelineMeasureBlock) ([]ti
 	if err != nil {
 		return nil, func() {}, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return nil, func() {}, err
 	}
 	if err = r.s.account.Charge(BudgetBufferedBytes, bytes); err != nil {

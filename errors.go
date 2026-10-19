@@ -161,7 +161,7 @@ var (
 
 // UnsupportedRootError identifies an unsupported XML root element.
 //
-// It is unrelated to validation.UnsupportedRootError, which reports a root
+// It is unrelated to validation.ExcludedRootError, which reports a root
 // declaration that a selected validation profile does not accept.
 type UnsupportedRootError struct {
 	Name xml.Name

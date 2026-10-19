@@ -33,7 +33,7 @@ func TestPackageReviewMediaParametersAndScratch(t *testing.T) {
 			if after != before {
 				t.Errorf("transient MIME parse retained %d bytes", after-before)
 			}
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 		})
 	}
 }
@@ -62,7 +62,7 @@ func TestPackageReviewMediaRechecksCancellation(t *testing.T) {
 	if after != before {
 		t.Errorf("canceled parse retained %d bytes", after-before)
 	}
-	_, _ = s.Finish(context.Background(), PackageCompletion{})
+	_, _ = s.finish(context.Background(), PackageCompletion{})
 }
 
 func TestPackageReviewFileAdviceSharesMIMEPolicy(t *testing.T) {
@@ -85,10 +85,10 @@ func TestPackageReviewFileAdviceSharesMIMEPolicy(t *testing.T) {
 				pin = s.boundaries["outer"].identity.Pin
 			}
 			v := PackageFileMetadataObservation{ID: 11, Package: "outer", Pin: pin, Name: Evidence[string]{State: EvidenceKnown, Value: tc.name}, MediaType: Evidence[string]{State: EvidenceKnown, Value: tc.media}}
-			if err := s.ObserveFileMetadata(context.Background(), v); err != nil {
+			if err := s.observeFileMetadata(context.Background(), v); err != nil {
 				t.Fatal(err)
 			}
-			b, err := s.Finish(context.Background(), PackageCompletion{})
+			b, err := s.finish(context.Background(), PackageCompletion{})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -105,16 +105,16 @@ func TestPackageReviewFileAdviceSharesMIMEPolicy(t *testing.T) {
 }
 func TestPackageReviewBinaryMetadataOutsideMusicXMLScope(t *testing.T) {
 	s, _, _ := packageAdviceFixtureCheck(t, PackageCheckFileMetadataAdvice)
-	if err := s.ObserveEntry(context.Background(), packageTestEntry(10, "cover.png")); err != nil {
+	if err := s.observeEntry(context.Background(), packageTestEntry(10, "cover.png")); err != nil {
 		t.Fatal(err)
 	}
 	pin := interruptionPin("cover")
 	pin.Representation = ResourceBinary
 	v := PackageFileMetadataObservation{ID: 11, Package: "outer", Pin: pin, Entry: 10, ArchiveEntry: "cover.png", Location: Location{Target: TargetPackage, DocumentID: "package", Entry: "cover.png"}, Name: Evidence[string]{State: EvidenceKnown, Value: "cover.png"}, MediaType: Evidence[string]{State: EvidenceKnown, Value: "image/png"}}
-	if err := s.ObserveFileMetadata(context.Background(), v); err != nil {
+	if err := s.observeFileMetadata(context.Background(), v); err != nil {
 		t.Fatal(err)
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{})
+	b, err := s.finish(context.Background(), PackageCompletion{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,21 +132,21 @@ func TestPackageReviewMimetypePartialPrefixIsUnknown(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
+	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+	if err = s.openPackage(context.Background(), packageTestIdentity()); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.ObserveEntry(context.Background(), packageTestEntry(1, "mimetype")); err != nil {
+	if err = s.observeEntry(context.Background(), packageTestEntry(1, "mimetype")); err != nil {
 		t.Fatal(err)
 	}
 	m := PackageMimetypeObservation{Entry: 1, Prefix: []byte("application/vnd.r"), ByteLength: Evidence[uint64]{State: EvidenceKnown, Value: uint64(len("application/vnd.recordare.musicxml"))}, ContentComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
-	if err = s.ObserveMimetype(context.Background(), m); err != nil {
+	if err = s.observeMimetype(context.Background(), m); err != nil {
 		t.Fatal(err)
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{})
+	b, err := s.finish(context.Background(), PackageCompletion{})
 	if err != nil {
 		t.Fatal(err)
 	}

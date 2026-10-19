@@ -28,7 +28,7 @@ func buildLocalContextTestEngine() (*validation.Engine, error) {
 		return nil, err
 	}
 	schema := d.schemas[validation.AssemblyMusicXML]
-	plan, err := validation.NewLocalContextPlan(schema)
+	plan, err := validationNewLocalContextPlan(schema)
 	if err != nil {
 		return nil, err
 	}

@@ -199,7 +199,7 @@ func TestRecoveryPackageInvalidParentCannotInventRootContexts(t *testing.T) {
 		if len(g.packageList[0].rootfiles) != 0 || len(g.queue) != 1 {
 			t.Fatal("invented package child identity")
 		}
-		adoption, err := g.session.Adoption(g.ctx, g.queue[0].adoption)
+		adoption, err := validationPackageSessionAdoption(g.session, g.ctx, g.queue[0].adoption)
 		if err != nil {
 			t.Fatal(err)
 		}

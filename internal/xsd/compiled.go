@@ -266,14 +266,57 @@ func (c *Compiled) Components() []TypeID {
 // validity. The caller must not mutate data concurrently with this call; it may
 // freely mutate its input after the call returns.
 func Compile(data SchemaData, limits CompileLimits) (*Compiled, error) {
+	return compileGraph(reflect.ValueOf(data), limits)
+}
+
+// CompileGraph is Compile for metadata held in another family of types with
+// the shape of SchemaData: the same field names and kinds at every level, such
+// as the validation package's Schema* types. The copy preserves sharing,
+// interior pointers and cycles, so the digest equals that of the same graph
+// held in SchemaData.
+func CompileGraph(data any, limits CompileLimits) (*Compiled, error) {
+	source := reflect.ValueOf(data)
+	if err := checkSchemaShape(source); err != nil {
+		return nil, err
+	}
+	return compileGraph(source, limits)
+}
+
+// ConvertGraph replaces *target with a copy of the schema graph source, both of
+// the shape of SchemaData, within the default compile limits. The copy preserves sharing,
+// interior pointers and cycles.
+func ConvertGraph(target, source any) error {
+	from, to := reflect.ValueOf(source), reflect.ValueOf(target)
+	if to.Kind() != reflect.Pointer || to.IsNil() {
+		return fmt.Errorf("xsd: convert target %T is not a non-nil pointer", target)
+	}
+	if err := checkSchemaShape(from); err != nil {
+		return err
+	}
+	if err := checkSchemaShape(to.Elem()); err != nil {
+		return err
+	}
+	b, err := newCompileBudget(CompileLimits{})
+	if err != nil {
+		return err
+	}
+	if err := b.audit(from); err != nil {
+		return err
+	}
+	to.Elem().Set(reflect.Zero(to.Elem().Type()))
+	copySchemaGraphInto(from, to.Elem())
+	return nil
+}
+
+func compileGraph(source reflect.Value, limits CompileLimits) (*Compiled, error) {
 	b, err := newCompileBudget(limits)
 	if err != nil {
 		return nil, err
 	}
-	if err = b.audit(reflect.ValueOf(data)); err != nil {
+	if err = b.audit(source); err != nil {
 		return nil, err
 	}
-	owned, digest, records := copySchemaGraph(data)
+	owned, digest, records := copySchemaGraph(source)
 	c := &Compiled{data: owned, digest: digest, records: records, roots: make(map[QName]Use), simpleTypes: make(map[*SimpleSchema]TypeID), complexTypes: make(map[*ComplexSchema]TypeID), builtinTypes: make(map[string]TypeID), namedTypes: make(map[QName]TypeID), particleUses: make(map[particleUseKey][]Use), attributeUses: make(map[attributeUseKey]Use)}
 	if err = c.index(b); err != nil {
 		return nil, err
@@ -415,7 +458,7 @@ func lessSchemaName(a, b QName) bool {
 }
 func sortedSchemaMapKeys(v reflect.Value) []reflect.Value {
 	keys := v.MapKeys()
-	sort.Slice(keys, func(i, j int) bool { return lessSchemaName(keys[i].Interface().(QName), keys[j].Interface().(QName)) })
+	sort.Slice(keys, func(i, j int) bool { return lessSchemaName(schemaMapName(keys[i]), schemaMapName(keys[j])) })
 	return keys
 }
 
@@ -461,8 +504,16 @@ func walkSchema(root reflect.Value, visit func(reflect.Value, bool)) {
 // their containing storage before fixing links. In particular, a *TypeRef may
 // point at an attribute's embedded Type and a *string at a QName field. Those
 // aliases must survive just like separately allocated shared pointer objects.
-func copySchemaGraph(data SchemaData) (SchemaData, string, map[graphPointer]uint64) {
-	source := reflect.ValueOf(data)
+func copySchemaGraph(source reflect.Value) (SchemaData, string, map[graphPointer]uint64) {
+	var output SchemaData
+	records := copySchemaGraphInto(source, reflect.ValueOf(&output).Elem())
+	return output, schemaGraphDigest(output, records), records
+}
+
+// copySchemaGraphInto copies source into the addressable output, which has the
+// same shape but may belong to another family of types, and returns the
+// canonical record IDs of the output's pointer targets.
+func copySchemaGraphInto(source, output reflect.Value) map[graphPointer]uint64 {
 	pointerTargets := map[graphPointer]bool{}
 	walkSchema(source, func(v reflect.Value, _ bool) {
 		if v.Kind() == reflect.Pointer && !v.IsNil() {
@@ -478,7 +529,6 @@ func copySchemaGraph(data SchemaData) (SchemaData, string, map[graphPointer]uint
 			}
 		}
 	})
-	var output SchemaData
 	targets := make(map[graphPointer]reflect.Value)
 	records := make(map[graphPointer]uint64)
 	register := func(key graphPointer, target reflect.Value) {
@@ -489,7 +539,7 @@ func copySchemaGraph(data SchemaData) (SchemaData, string, map[graphPointer]uint
 		records[pointerKey(target)] = uint64(len(targets))
 	}
 	var fixups []schemaPointerFixup
-	stack := []schemaCopyTask{{source: source, target: reflect.ValueOf(&output).Elem()}}
+	stack := []schemaCopyTask{{source: source, target: output}}
 	for len(stack) != 0 {
 		task := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
@@ -518,7 +568,7 @@ func copySchemaGraph(data SchemaData) (SchemaData, string, map[graphPointer]uint
 				fixups = append(fixups, schemaPointerFixup{key, dst})
 				continue
 			}
-			value := reflect.New(v.Type().Elem())
+			value := reflect.New(dst.Type().Elem())
 			register(key, value)
 			dst.Set(value)
 			stack = append(stack, schemaCopyTask{source: v.Elem(), target: value.Elem()})
@@ -530,17 +580,17 @@ func copySchemaGraph(data SchemaData) (SchemaData, string, map[graphPointer]uint
 			if v.IsNil() {
 				continue
 			}
-			dst.Set(reflect.MakeMapWithSize(v.Type(), v.Len()))
+			dst.Set(reflect.MakeMapWithSize(dst.Type(), v.Len()))
 			keys := sortedSchemaMapKeys(v)
 			for i := len(keys) - 1; i >= 0; i-- {
-				key, value := reflect.New(v.Type().Key()).Elem(), reflect.New(v.Type().Elem()).Elem()
+				key, value := reflect.New(dst.Type().Key()).Elem(), reflect.New(dst.Type().Elem()).Elem()
 				stack = append(stack, schemaCopyTask{mapTarget: dst, mapKey: key, mapValue: value}, schemaCopyTask{source: v.MapIndex(keys[i]), target: value}, schemaCopyTask{source: keys[i], target: key})
 			}
 		case reflect.Slice:
 			if v.IsNil() {
 				continue
 			}
-			dst.Set(reflect.MakeSlice(v.Type(), v.Len(), v.Len()))
+			dst.Set(reflect.MakeSlice(dst.Type(), v.Len(), v.Len()))
 			for i := v.Len() - 1; i >= 0; i-- {
 				stack = append(stack, schemaCopyTask{source: v.Index(i), target: dst.Index(i)})
 			}
@@ -555,7 +605,7 @@ func copySchemaGraph(data SchemaData) (SchemaData, string, map[graphPointer]uint
 	for _, fixup := range fixups {
 		fixup.target.Set(targets[fixup.key])
 	}
-	return output, schemaGraphDigest(output, records), records
+	return records
 }
 
 // Canonical graph IDs, including embedded pointer targets, encode sharing and

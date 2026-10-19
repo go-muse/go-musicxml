@@ -76,13 +76,13 @@ func qaFinding(t *testing.T, r Report, id string, node NodeID) Finding {
 }
 func qaOpenRoot(t *testing.T, s *Session) {
 	t.Helper()
-	if err := s.Open(context.Background(), factHeader(1, 0, "test.root", "root")); err != nil {
+	if err := s.OpenNode(context.Background(), factHeader(1, 0, "test.root", "root")); err != nil {
 		t.Fatal(err)
 	}
 }
 func qaClose(t *testing.T, s *Session, end NodeEnd) {
 	t.Helper()
-	if err := s.Close(context.Background(), end); err != nil {
+	if err := s.CloseNode(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -186,7 +186,7 @@ func TestQAComputedViolationSurvivesDecisionCacheExhaustion(t *testing.T) {
 	if err := a.Charge(BudgetBufferedBytes, reservation); err != nil {
 		t.Fatal(err)
 	}
-	err := s.Close(context.Background(), end)
+	err := s.CloseNode(context.Background(), end)
 	var refused *ResourceError
 	if !errors.As(err, &refused) || !s.nodes[1].closed {
 		t.Fatalf("expected decision-cache resource failure after end retention: %v", err)

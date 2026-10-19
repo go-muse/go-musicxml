@@ -60,7 +60,7 @@ func TestReviewDocumentPrerequisiteLinearWork(t *testing.T) {
 			qaOpenRoot(t, s)
 			for i := 0; i < count; i++ {
 				id := NodeID(i + 2)
-				if err := s.Open(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
+				if err := s.OpenNode(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
 					t.Fatal(err)
 				}
 				qaClose(t, s, factEnd(id))
@@ -127,7 +127,7 @@ func TestReviewOversizedBindingsRejectBeforeHeaderAccounting(t *testing.T) {
 	before := s.retained
 	h := factHeader(1, 0, "test.root", "root")
 	h.Bindings = make([]Binding, 65537)
-	if err := s.Open(context.Background(), h); !errors.Is(err, ErrInvalidConfiguration) {
+	if err := s.OpenNode(context.Background(), h); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Fatalf("oversized bindings: %v", err)
 	}
 	if s.retained != before || s.depth != 0 || len(s.nodes) != 0 {
@@ -262,7 +262,7 @@ func TestReviewUnusedDocumentPrerequisiteDoesNotScan(t *testing.T) {
 	qaOpenRoot(t, s)
 	for i := 0; i < count; i++ {
 		id := NodeID(i + 2)
-		if err := s.Open(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
+		if err := s.OpenNode(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
 			t.Fatal(err)
 		}
 		qaClose(t, s, factEnd(id))
@@ -518,7 +518,7 @@ func TestReviewManySuccessfulRulesFitFiniteBuffer(t *testing.T) {
 	qaOpenRoot(t, s)
 	for i := 0; i < children; i++ {
 		id := NodeID(i + 2)
-		if err := s.Open(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
+		if err := s.OpenNode(context.Background(), factHeader(id, 1, "test.child", "child")); err != nil {
 			t.Fatal(err)
 		}
 		qaClose(t, s, factEnd(id))

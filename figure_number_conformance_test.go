@@ -128,7 +128,7 @@ func legacyFigureNumberTestEngine(t *testing.T) *validation.Engine {
 		t.Fatal(err)
 	}
 	schema := d.schemas[validation.AssemblyMusicXML]
-	plan, err := validation.NewFigureNumberNumericPlan(schema)
+	plan, err := validationNewFigureNumberNumericPlan(schema)
 	if err != nil {
 		t.Fatal(err)
 	}

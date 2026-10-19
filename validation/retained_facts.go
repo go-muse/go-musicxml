@@ -155,10 +155,10 @@ func (s *Session) retainLexeme(v Evidence[string]) (*Evidence[string], error) {
 	return &owned, nil
 }
 func (s *Session) retainAtomic(v Evidence[Atomic]) (*Evidence[Atomic], error) {
-	if v == s.facts.pendingAtomic {
+	if atomicEvidenceIdentical(v, s.facts.pendingAtomic) {
 		return &s.facts.pendingAtomic, nil
 	}
-	if v == s.facts.absentAtomic {
+	if atomicEvidenceIdentical(v, s.facts.absentAtomic) {
 		return &s.facts.absentAtomic, nil
 	}
 	n, err := retainedFactSize(retainedAtomicBytes, evidenceLogicalBytes(v), int64(len(v.Value.Text)), int64(len(v.Value.Name.Space)), int64(len(v.Value.Name.Local)), v.Value.Integer.ByteSize(), v.Value.Decimal.ByteSize())
@@ -417,7 +417,7 @@ func growFactSlice[T retainedFactSlot](ctx context.Context, s *Session, v []T) (
 	if err != nil {
 		return v, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return v, err
 	}
 	if err = s.retain(bytes); err != nil {
@@ -455,7 +455,7 @@ func (s *Session) growFactNodes(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return err
 	}
 	if err = s.retain(bytes); err != nil {
@@ -510,7 +510,7 @@ func retainedFactSize(parts ...int64) (int64, error) {
 			return 0, err
 		}
 	}
-	if _, err := AllocationSize(n); err != nil {
+	if _, err := allocationSize(n); err != nil {
 		return 0, err
 	}
 	return n, nil

@@ -56,25 +56,25 @@ func (e *SessionError) Unwrap() []error {
 	return []error{ErrInvalidSession, e.Cause}
 }
 
-// UnsupportedRootError describes a known root excluded by the selected profile.
+// ExcludedRootError describes a known root excluded by the selected profile.
 // It denotes a capability boundary, not malformed XML or normative invalidity.
 // It is unrelated to musicxml.UnsupportedRootError, which reports an XML root
 // element that the decoder cannot represent.
-type UnsupportedRootError struct {
+type ExcludedRootError struct {
 	Name    QName
 	Profile ProfileID
 }
 
 // Error identifies the excluded root and selected profile.
-func (e *UnsupportedRootError) Error() string {
+func (e *ExcludedRootError) Error() string {
 	if e == nil {
-		return "validation: nil unsupported root error"
+		return "validation: nil excluded root error"
 	}
-	return fmt.Sprintf("validation: root {%s}%s is unsupported by profile %s", e.Name.Space, e.Name.Local, e.Profile)
+	return fmt.Sprintf("validation: root {%s}%s is excluded by profile %s", e.Name.Space, e.Name.Local, e.Profile)
 }
 
 // Unwrap classifies unsupported roots as incomplete assessment.
-func (e *UnsupportedRootError) Unwrap() error { return ErrIncompleteAssessment }
+func (e *ExcludedRootError) Unwrap() error { return ErrIncompleteAssessment }
 
 type factNode struct {
 	modelRepresentation *modelRepresentationRecord
@@ -305,14 +305,14 @@ func (s *Session) retain(amount int64) error {
 	return nil
 }
 
-// Open starts one balanced occurrence and copies retained headers and bindings.
-// It is an XML node event paired with Close, not a resource acquisition.
-func (s *Session) Open(ctx context.Context, node NodeHeader) error {
-	if err := s.event(ctx, "Open"); err != nil {
+// OpenNode starts one balanced occurrence and copies retained headers and
+// bindings. It is an XML node event paired with CloseNode.
+func (s *Session) OpenNode(ctx context.Context, node NodeHeader) error {
+	if err := s.event(ctx, "OpenNode"); err != nil {
 		return err
 	}
 	if len(s.stack) != 0 && s.stack[len(s.stack)-1].modelRepresentation != nil {
-		return s.fail(&SessionError{Operation: "Open", Reason: "child after model representation seal"})
+		return s.fail(&SessionError{Operation: "OpenNode", Reason: "child after model representation seal"})
 	}
 	if len(node.Bindings) > 65536 {
 		return s.fail(contract("bindings", "too many bindings"))
@@ -328,14 +328,14 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 		if errors.Is(err, ErrResourceLimit) {
 			return s.fail(err)
 		}
-		return s.fail(&SessionError{Operation: "Open", Reason: "invalid node header", Cause: err})
+		return s.fail(&SessionError{Operation: "OpenNode", Reason: "invalid node header", Cause: err})
 	}
 	if _, exists := s.nodes[node.ID]; exists {
-		return s.fail(&SessionError{Operation: "Open", Reason: "duplicate occurrence ID"})
+		return s.fail(&SessionError{Operation: "OpenNode", Reason: "duplicate occurrence ID"})
 	}
 	if len(s.stack) == 0 {
 		if s.root != nil || node.Parent != 0 {
-			return s.fail(&SessionError{Operation: "Open", Reason: "duplicate root or nonzero root parent"})
+			return s.fail(&SessionError{Operation: "OpenNode", Reason: "duplicate root or nonzero root parent"})
 		}
 		found := false
 		for _, name := range s.profile.SupportedRoots {
@@ -355,10 +355,10 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 				return s.fail(err)
 			}
 			s.rejectedRootName = QName{Space: strings.Clone(node.Name.Space), Local: strings.Clone(node.Name.Local)}
-			return s.fail(&UnsupportedRootError{Name: node.Name, Profile: s.profile.ID})
+			return s.fail(&ExcludedRootError{Name: node.Name, Profile: s.profile.ID})
 		}
 	} else if node.Parent != s.stack[len(s.stack)-1].header.ID {
-		return s.fail(&SessionError{Operation: "Open", Reason: "parent is not current open occurrence"})
+		return s.fail(&SessionError{Operation: "OpenNode", Reason: "parent is not current open occurrence"})
 	}
 	if len(s.stack) == 0 && s.schema != nil {
 		for _, schema := range s.schema.schemas {
@@ -483,25 +483,23 @@ func (s *Session) CompleteAttributes(ctx context.Context, id NodeID, complete Ev
 	return nil
 }
 
-// Close seals one occurrence. Ordinary predicate failures are retained findings,
-// not method errors. Independent local decisions are established before EOF.
-//
-// Close is the node event paired with Open; it does not release the session
-// and Session does not implement io.Closer. Finish (or one of its variants)
-// ends the session and releases its storage.
-func (s *Session) Close(ctx context.Context, end NodeEnd) error {
-	if err := s.event(ctx, "Close"); err != nil {
+// CloseNode seals one occurrence. Ordinary predicate failures are retained
+// findings, not method errors. Independent local decisions are established
+// before EOF. Finish (or one of its variants) ends the session and releases its
+// storage.
+func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
+	if err := s.event(ctx, "CloseNode"); err != nil {
 		return err
 	}
 	if len(s.stack) == 0 || s.stack[len(s.stack)-1].header.ID != end.ID {
-		return s.fail(&SessionError{Operation: "Close", Reason: "unbalanced close"})
+		return s.fail(&SessionError{Operation: "CloseNode", Reason: "unbalanced close"})
 	}
 	n := s.stack[len(s.stack)-1]
 	if err := s.checkScalar(end.Scalar); err != nil {
 		return s.fail(err)
 	}
 	if err := validateEnd(end, s.profile.Target); err != nil {
-		return s.fail(&SessionError{Operation: "Close", Reason: "invalid closure facts", Cause: err})
+		return s.fail(&SessionError{Operation: "CloseNode", Reason: "invalid closure facts", Cause: err})
 	}
 	if err := s.validateModelRepresentationEnd(ctx, n, end); err != nil {
 		return s.fail(err)
@@ -513,7 +511,7 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 		}
 	}
 	if n.attributeSeal != nil && n.attributeSeal.State == EvidenceKnown && n.attributeSeal.Value && (end.AttributesComplete.State != EvidenceKnown || !end.AttributesComplete.Value) {
-		return s.fail(&SessionError{Operation: "Close", Reason: "attribute completeness contradicts sealed start tag"})
+		return s.fail(&SessionError{Operation: "CloseNode", Reason: "attribute completeness contradicts sealed start tag"})
 	}
 	if end.AttributesComplete.State != EvidenceKnown || !end.AttributesComplete.Value {
 		s.attributeEnumerationIncomplete = true
@@ -710,7 +708,7 @@ func terminalClassification(err error, malformedSource bool) (DiagnosticCategory
 	case errors.Is(err, ErrProcessingPolicy):
 		return CategoryPolicy, "processing-policy"
 	}
-	var root *UnsupportedRootError
+	var root *ExcludedRootError
 	if errors.As(err, &root) {
 		return CategoryCapability, "unsupported-root"
 	}

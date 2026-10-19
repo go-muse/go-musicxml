@@ -15,7 +15,7 @@ import (
 func TestQAPostExportRetentionKeepsFullReportWhenAffordable(t *testing.T) {
 	g, intrinsic, pin, _ := qaInvalidIntrinsicGraph(t, context.Background())
 	expected := intrinsic.Report
-	if err := g.session.TerminalCause(); err != nil {
+	if err := validationPackageSessionTerminalCause(g.session); err != nil {
 		t.Fatal("fixture package already terminal", err)
 	}
 	cause := errors.New("fixture pre-admission failure")

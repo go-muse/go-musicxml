@@ -215,7 +215,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	if err != nil {
 		return err
 	}
-	if _, err := AllocationSize(scratch); err != nil {
+	if _, err := allocationSize(scratch); err != nil {
 		return err
 	}
 	if err := s.account.Charge(BudgetBufferedBytes, scratch); err != nil {
@@ -296,7 +296,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			if err = s.retain(bytes); err != nil {
 				return err
 			}
-			if _, err = AllocationSize(bytes); err != nil {
+			if _, err = allocationSize(bytes); err != nil {
 				return err
 			}
 			out.Figures = make([]NodeRef, len(figures))

@@ -58,9 +58,9 @@ func independentModelAttribute(id NodeID, name, text string) AttributeFact {
 }
 
 func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
-	integer := SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
-		{Name: SchemaName{Local: "broken"}, Type: integer}, {Name: SchemaName{Local: "other"}, Type: integer}, {Name: SchemaName{Local: "good"}, Type: integer}, {Name: SchemaName{Local: "defaulted"}, Type: integer, Constraint: &SchemaValueConstraint{Kind: "default", Value: "7"}},
+	integer := SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
+		{Name: QName{Local: "broken"}, Type: integer}, {Name: QName{Local: "other"}, Type: integer}, {Name: QName{Local: "good"}, Type: integer}, {Name: QName{Local: "defaulted"}, Type: integer, Constraint: &SchemaValueConstraint{Kind: "default", Value: "7"}},
 	}}}}}})
 	if err != nil {
 		t.Fatal(err)
@@ -70,7 +70,7 @@ func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Open(ctx, independentModelHeader(1, 0, "root", "Root")); err != nil {
+	if err := s.OpenNode(ctx, independentModelHeader(1, 0, "root", "Root")); err != nil {
 		t.Fatal(err)
 	}
 	broken := independentModelAttribute(1, "broken", "")
@@ -84,7 +84,7 @@ func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
 	if err := s.ModelRepresentation(ctx, fact); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, independentModelEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, independentModelEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	for _, name := range []string{"broken", "other", "good", "defaulted"} {
@@ -127,8 +127,8 @@ func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
 }
 
 func TestIndependentModelKnownAttributeFailureWithPatternLimitKeepsCause(t *testing.T) {
-	pattern := &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}, Patterns: []string{"[0-9]+"}, HasMaxInclusive: true, MaxInclusive: "3"}
-	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "n"}, Type: SchemaTypeRef{InlineSimple: pattern}}}}}}}})
+	pattern := &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}, Patterns: []string{"[0-9]+"}, HasMaxInclusive: true, MaxInclusive: "3"}
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "n"}, Type: SchemaTypeRef{InlineSimple: pattern}}}}}}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ func TestIndependentModelKnownAttributeFailureWithPatternLimitKeepsCause(t *test
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Open(ctx, independentModelHeader(1, 0, "root", "Root")); err != nil {
+	if err := s.OpenNode(ctx, independentModelHeader(1, 0, "root", "Root")); err != nil {
 		t.Fatal(err)
 	}
 	integer, err := NewInteger(big.NewInt(4))
@@ -152,7 +152,7 @@ func TestIndependentModelKnownAttributeFailureWithPatternLimitKeepsCause(t *test
 	if err := s.ModelRepresentation(ctx, ModelRepresentationFact{Owner: 1, Complete: Evidence[bool]{State: EvidenceKnown, Value: true}}); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(ctx, independentModelEnd(1)); err != nil {
+	if err := s.CloseNode(ctx, independentModelEnd(1)); err != nil {
 		t.Fatal(err)
 	}
 	got, err := s.schemaEffectiveScalar(ctx, 1, QName{Local: "n"})

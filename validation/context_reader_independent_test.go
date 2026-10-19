@@ -8,15 +8,15 @@ import (
 
 func independentContextFallbackFixture(t *testing.T) (*Session, *contextBindings) {
 	t.Helper()
-	xs := SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+	xs := SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
 	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{
-		Types: map[SchemaName]*SchemaType{
-			{Local: "A"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "id"}, Type: xs}}}},
-			{Local: "B"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "id"}, Type: xs}}}},
+		Types: map[QName]*SchemaType{
+			{Local: "A"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "id"}, Type: xs}}}},
+			{Local: "B"}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: QName{Local: "id"}, Type: xs}}}},
 		},
-		Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleSequence, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{
-			{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: "a"}, Type: SchemaTypeRef{Name: SchemaName{Local: "A"}}}},
-			{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: "b"}, Type: SchemaTypeRef{Name: SchemaName{Local: "B"}}}},
+		Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleSequence, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{
+			{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: "a"}, Type: SchemaTypeRef{Name: QName{Local: "A"}}}},
+			{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: QName{Local: "b"}, Type: SchemaTypeRef{Name: QName{Local: "B"}}}},
 		}}}}}},
 	})
 	if err != nil {
@@ -30,7 +30,7 @@ func independentContextFallbackFixture(t *testing.T) (*Session, *contextBindings
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Open(context.Background(), schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	for i, name := range []string{"a", "b"} {
@@ -38,16 +38,16 @@ func independentContextFallbackFixture(t *testing.T) (*Session, *contextBindings
 		h.ID = NodeID(i + 2)
 		h.Parent = 1
 		h.Name.Local = name
-		if err = s.Open(context.Background(), h); err != nil {
+		if err = s.OpenNode(context.Background(), h); err != nil {
 			t.Fatal(err)
 		}
 		end := schemaLexemeEnd("")
 		end.ID = h.ID
-		if err = s.Close(context.Background(), end); err != nil {
+		if err = s.CloseNode(context.Background(), end); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
+	if err = s.CloseNode(context.Background(), schemaLexemeEnd("")); err != nil {
 		t.Fatal(err)
 	}
 	// Force the authoritative fallback instead of its static owner fast path.

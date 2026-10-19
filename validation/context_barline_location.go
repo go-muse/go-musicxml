@@ -4,11 +4,11 @@ import "context"
 
 const planBarlineLocation planKind = "musicxml-barline-location"
 
-// NewBarlineLocationPlan checks musical position and ordered musical-data
+// newBarlineLocationPlan checks musical position and ordered musical-data
 // placement against a structural origin and a bounded measure-end certificate.
 // First/last XML-child recommendations do not themselves establish violations,
 // and nominal meter capacity does not supply a measure-end certificate.
-func NewBarlineLocationPlan(spec ContextPlanSpec) (Plan, error) {
+func newBarlineLocationPlan(spec ContextPlanSpec) (Plan, error) {
 	if !catalogKey(spec.TimelineProvider) {
 		return Plan{}, contract("barline timeline", "exact provider revision required")
 	}

@@ -36,45 +36,45 @@ type contextPlan struct {
 	revision      uint32
 }
 
-// NewLocalContextPlan constructs the source-supported local default/fact
+// newLocalContextPlan constructs the source-supported local default/fact
 // provider. It has no timeline or navigation dependency.
-func NewLocalContextPlan(schema *CompiledSchema) (Plan, error) {
+func newLocalContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextLocal, ContextPlanSpec{Schema: schema})
 }
 
-// NewSpanContextPlan constructs a type-specific span context provider.
-func NewSpanContextPlan(spec ContextPlanSpec) (Plan, error) {
+// newSpanContextPlan constructs a type-specific span context provider.
+func newSpanContextPlan(spec ContextPlanSpec) (Plan, error) {
 	return newContextPlan(planContextSpans, spec)
 }
 
-// NewRepeatContextPlan constructs graphical repeat context, not playback expansion.
-func NewRepeatContextPlan(spec ContextPlanSpec) (Plan, error) {
+// newRepeatContextPlan constructs graphical repeat context, not playback expansion.
+func newRepeatContextPlan(spec ContextPlanSpec) (Plan, error) {
 	return newContextPlan(planContextRepeats, spec)
 }
 
-// NewNavigationContextPlan constructs bounded symbolic navigation/pass context.
-func NewNavigationContextPlan(spec ContextPlanSpec) (Plan, error) {
+// newNavigationContextPlan constructs bounded symbolic navigation/pass context.
+func newNavigationContextPlan(spec ContextPlanSpec) (Plan, error) {
 	return newContextPlan(planContextNavigation, spec)
 }
 
-// NewLayoutContextPlan constructs layout applicability/context without an engraver.
-func NewLayoutContextPlan(spec ContextPlanSpec) (Plan, error) {
+// newLayoutContextPlan constructs layout applicability/context without an engraver.
+func newLayoutContextPlan(spec ContextPlanSpec) (Plan, error) {
 	return newContextPlan(planContextLayout, spec)
 }
 
-// NewPerformanceContextPlan constructs source-supported performance context,
+// newPerformanceContextPlan constructs source-supported performance context,
 // preserving unresolved intent and physical-realization dependencies.
-func NewPerformanceContextPlan(spec ContextPlanSpec) (Plan, error) {
+func newPerformanceContextPlan(spec ContextPlanSpec) (Plan, error) {
 	return newContextPlan(planContextPerformance, spec)
 }
 
-// NewTimeOnlyOrderPlan compares exact time-only pass values without requiring
+// newTimeOnlyOrderPlan compares exact time-only pass values without requiring
 // musical time or expanding repeat traversals.
-func NewTimeOnlyOrderPlan(schema *CompiledSchema) (Plan, error) {
+func newTimeOnlyOrderPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planTimeOnlyOrder, ContextPlanSpec{Schema: schema})
 }
 
-// NewFigureNumberNumericPlan retains the legacy nonempty ASCII-digit subset
+// newFigureNumberNumericPlan retains the legacy nonempty ASCII-digit subset
 // check for the exact figure-number declaration. Other spellings return
 // Unsupported. Its mandatory/normative custom-catalog binding is preserved for
 // compatibility; selecting it adds a caller-chosen restriction beyond MusicXML.
@@ -82,34 +82,34 @@ func NewTimeOnlyOrderPlan(schema *CompiledSchema) (Plan, error) {
 // Deprecated: MusicXML deliberately leaves figure-number as unrestricted
 // style-text. Built-in conformance profiles do not select this legacy plan.
 // Its result is not a MusicXML numeric-validity determination.
-func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error) {
+func newFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planFigureNumberNumeric, ContextPlanSpec{Schema: schema})
 }
 
-// NewOpusLayoutContextPlan projects local Opus version defaults and pagination hints.
+// newOpusLayoutContextPlan projects local Opus version defaults and pagination hints.
 // It never resolves score links or supplies application-dependent page choices.
-func NewOpusLayoutContextPlan(schema *CompiledSchema) (Plan, error) {
+func newOpusLayoutContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextOpusLayout, ContextPlanSpec{Schema: schema})
 }
 
-// NewSoundsMappingContextPlan projects the four directional sounds mapping roles.
+// newSoundsMappingContextPlan projects the four directional sounds mapping roles.
 // Only the exact sounds assembly and source target are supported.
-func NewSoundsMappingContextPlan(schema *CompiledSchema) (Plan, error) {
+func newSoundsMappingContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextSoundsMapping, ContextPlanSpec{Schema: schema})
 }
 
-// NewContainerMetadataContextPlan projects ordered source container metadata.
+// newContainerMetadataContextPlan projects ordered source container metadata.
 // Only the exact container assembly and source target are supported.
-func NewContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
+func newContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextContainerMetadata, ContextPlanSpec{Schema: schema})
 }
 
-// NewSourceContainerMetadataContextPlan projects effective ordered container
+// newSourceContainerMetadataContextPlan projects effective ordered container
 // metadata separately from original XML-normalized attribute spellings. DTD
 // defaults and entity-generated attributes have no physical Raw spelling. It
 // requires a selected source-origin provider and supports only source input.
-func NewSourceContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
-	p, err := NewContainerMetadataContextPlan(schema)
+func newSourceContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
+	p, err := newContainerMetadataContextPlan(schema)
 	if err != nil {
 		return Plan{}, err
 	}
@@ -344,15 +344,19 @@ func validateContextProfile(c *CompiledCatalog, closure map[RuleKey]bool, schema
 	return nil
 }
 
-// ContextConsumerSpec binds a typed contextual predicate to one exact provider.
-type ContextConsumerSpec struct {
+// ConsumerSpec binds a consumer plan to one exact provider rule revision and
+// its matching schema. A contextual consumer reads that provider's context
+// results. A timeline consumer additionally requires the exact provider rule
+// with DependencyRule and RelationDocument in its RuleDefinition; a valid local
+// numeral-key is an independent alternative to querying the timeline service.
+type ConsumerSpec struct {
 	Schema   *CompiledSchema
 	Provider RuleKey
 }
 
-// NewBendReleaseSignPlan checks the source-supported sign relation only when
+// newBendReleaseSignPlan checks the source-supported sign relation only when
 // the selected performance service establishes the corresponding bend gesture.
-func NewBendReleaseSignPlan(spec ContextConsumerSpec) (Plan, error) {
+func newBendReleaseSignPlan(spec ConsumerSpec) (Plan, error) {
 	if !catalogKey(spec.Provider) {
 		return Plan{}, contract("bend consumer", "exact provider revision required")
 	}
@@ -363,10 +367,10 @@ func NewBendReleaseSignPlan(spec ContextConsumerSpec) (Plan, error) {
 	return checkedPlan(Plan{kind: planBendReleaseSign, context: &contextPlan{Schema: spec.Schema, Provider: spec.Provider, Bindings: b, revision: contextSemanticRevision}})
 }
 
-// NewGraphicalRepeatContentPlan consumes proved graphical repeat content
+// newGraphicalRepeatContentPlan consumes proved graphical repeat content
 // correspondence. It does not equate XML strings, infer missing musical events,
 // or declare unresolved event-equivalence policies to be violations.
-func NewGraphicalRepeatContentPlan(spec ContextConsumerSpec) (Plan, error) {
+func newGraphicalRepeatContentPlan(spec ConsumerSpec) (Plan, error) {
 	if !catalogKey(spec.Provider) {
 		return Plan{}, contract("repeat content consumer", "exact provider revision required")
 	}

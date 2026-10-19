@@ -59,7 +59,7 @@ func TestDictionaryGraphAdoptionsRemapNestedCausalEvidence(t *testing.T) {
 	}
 	defer g.finish(nil)
 	pin := g.primaryPin(validation.ResourceSourceXML, strings.Repeat("a", 64))
-	if err = g.session.OpenPackage(ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); err != nil {
+	if err = validationPackageSessionOpenPackage(g.session, ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); err != nil {
 		t.Fatal(err)
 	}
 	p := &graphPackage{id: "root", pin: pin}
@@ -69,11 +69,11 @@ func TestDictionaryGraphAdoptionsRemapNestedCausalEvidence(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, document := range []string{"alias-one", "alias-two"} {
-		id, e := g.session.AdoptResource(ctx, resource.id, validation.ResourceAdoptionOptions{DocumentID: document, Package: "root", ArchiveEntry: document + ".musicxml"})
+		id, e := validationPackageSessionAdoptResource(g.session, ctx, resource.id, validation.ResourceAdoptionOptions{DocumentID: document, Package: "root", ArchiveEntry: document + ".musicxml"})
 		if e != nil {
 			t.Fatal(e)
 		}
-		adoption, e := g.session.Adoption(ctx, id)
+		adoption, e := validationPackageSessionAdoption(g.session, ctx, id)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -124,18 +124,18 @@ func TestDictionaryGraphAdmitsExplicitSourceSoundsProfile(t *testing.T) {
 	}
 	defer g.finish(nil)
 	pin := g.primaryPin(validation.ResourceSourceXML, strings.Repeat("a", 64))
-	if err = g.session.OpenPackage(ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); err != nil {
+	if err = validationPackageSessionOpenPackage(g.session, ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); err != nil {
 		t.Fatal(err)
 	}
 	resource, _, err := g.assessPackageSource(&graphPackage{id: "root", pin: pin}, "sounds.xml", []byte(`<sounds><sound id="brass.alphorn"/><sound id="custom.sound"/></sounds>`), g.profiles.sounds)
 	if err != nil {
 		t.Fatal(err)
 	}
-	aid, err := g.session.AdoptResource(ctx, resource.id, validation.ResourceAdoptionOptions{DocumentID: "sound-adoption", Package: "root", ArchiveEntry: "sounds.xml"})
+	aid, err := validationPackageSessionAdoptResource(g.session, ctx, resource.id, validation.ResourceAdoptionOptions{DocumentID: "sound-adoption", Package: "root", ArchiveEntry: "sounds.xml"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	adoption, err := g.session.Adoption(ctx, aid)
+	adoption, err := validationPackageSessionAdoption(g.session, ctx, aid)
 	if err != nil {
 		t.Fatal(err)
 	}

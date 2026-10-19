@@ -15,17 +15,17 @@ func edgeIndirectionFixture(t *testing.T, check PackageCheck, root, text string,
 	sourceSnapshot.contexts = []ContextResult{{Subject: NodeRef{"source", 2}, Resource: &ResourceContextResult{Link: &ResourceLinkContext{Kind: ResourceOpusLink, Href: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "inner.mxl"}}}}}}}
 	targetSnapshot, _ := interruptionSnapshot(t, s.account, "inner", text)
 	targetSnapshot.header.Name = Evidence[QName]{State: EvidenceKnown, Value: QName{Local: root}}
-	targetResource, err := s.AddResource(context.Background(), testResourcePin("inner"), targetSnapshot, true)
+	targetResource, err := s.addResource(context.Background(), testResourcePin("inner"), targetSnapshot, true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	target, err := s.AdoptResource(context.Background(), targetResource, ResourceAdoptionOptions{Package: "outer", DocumentID: "inner-view"})
+	target, err := s.adoptResource(context.Background(), targetResource, ResourceAdoptionOptions{Package: "outer", DocumentID: "inner-view"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
 		if !s.finished {
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 		}
 	})
 	return s, PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: true}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}
@@ -34,10 +34,10 @@ func edgeIndirectionFixture(t *testing.T, check PackageCheck, root, text string,
 func finishIndirectionFixture(t *testing.T, s *PackageSession) AssessmentBundle {
 	t.Helper()
 	sealFixtureExpansions(t, s)
-	if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+	if err := s.sealEnumeration(context.Background(), completePackage("outer")); err != nil {
 		t.Fatal(err)
 	}
-	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	b, err := s.finish(context.Background(), PackageCompletion{InputComplete: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestPackageEdgeIndirectionDoesNotJudgeInnerPrimary(t *testing.T) {
 					s, e := edgeIndirectionFixture(t, PackageCheckLinkTarget, root, "1")
 					s.adoptions[e.Source].resource.snapshot.contexts[0].Resource.Link.Kind = kind
 					e.Indirection.Value = indirect
-					if err := s.ObserveEdge(context.Background(), e); err != nil {
+					if err := s.observeEdge(context.Background(), e); err != nil {
 						t.Fatal(err)
 					}
 					b := finishIndirectionFixture(t, s)
@@ -112,7 +112,7 @@ func TestPackageEdgeIndirectionPrecedesInnerFragmentAndRootEvidence(t *testing.T
 			s, e := edgeIndirectionFixture(t, PackageCheckLinkTarget, "opus", "1")
 			e.Fragment = Evidence[string]{State: EvidenceKnown, Value: fragment}
 			s.adoptions[e.Target.Value].resource.snapshot.header.Name = Evidence[QName]{State: EvidenceUnsupported, Reason: "inner-root-unavailable"}
-			if err := s.ObserveEdge(context.Background(), e); err != nil {
+			if err := s.observeEdge(context.Background(), e); err != nil {
 				t.Fatal(err)
 			}
 			assertIndirectionReport(t, finishIndirectionFixture(t, s).PackageReport(), OutcomeUnknown, "nested-link-indirection-unresolved")
@@ -127,7 +127,7 @@ func TestPackageEdgeIndirectionRetainsDirectFragmentSemantics(t *testing.T) {
 				s, e := edgeIndirectionFixture(t, PackageCheckLinkTarget, "opus", "1")
 				e.Indirection.Value = indirect
 				e.Fragment = Evidence[string]{State: EvidenceKnown, Value: fragment}
-				if err := s.ObserveEdge(context.Background(), e); err != nil {
+				if err := s.observeEdge(context.Background(), e); err != nil {
 					t.Fatal(err)
 				}
 				want, reason := OutcomePass, Code("linked-target-kind-established")
@@ -164,7 +164,7 @@ func TestPackageEdgeIndirectionEvidenceStatesAndOwnedCause(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s, e := edgeIndirectionFixture(t, PackageCheckLinkTarget, "opus", "1")
 			e.Indirection = stateClone(tc.value)
-			if err := s.ObserveEdge(context.Background(), e); err != nil {
+			if err := s.observeEdge(context.Background(), e); err != nil {
 				t.Fatal(err)
 			}
 			if e.Indirection.Cause != nil {
@@ -201,7 +201,7 @@ func TestPackageEdgeIndirectionRejectsMalformedEvidence(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			s, e := edgeIndirectionFixture(t, PackageCheckLinkTarget, "opus", "1")
 			e.Indirection = value
-			if err := s.ObserveEdge(context.Background(), e); !errors.Is(err, ErrInvalidConfiguration) {
+			if err := s.observeEdge(context.Background(), e); !errors.Is(err, ErrInvalidConfiguration) {
 				t.Fatalf("malformed evidence admitted: %v", err)
 			}
 			if len(s.edges) != 0 {
@@ -236,7 +236,7 @@ func TestPackageEdgeIndirectionPreservesPrerequisiteEvidence(t *testing.T) {
 					e.Target.Cause = cause
 				}
 			}
-			if err := s.ObserveEdge(context.Background(), e); err != nil {
+			if err := s.observeEdge(context.Background(), e); err != nil {
 				t.Fatal(err)
 			}
 			assertIndirectionReport(t, finishIndirectionFixture(t, s).PackageReport(), tc.want, tc.reason)
@@ -259,7 +259,7 @@ func TestPackageEdgeIndirectionAdmissionHonorsCancellationAndRetentionBudget(t *
 				ctx, cancel = context.WithCancel(ctx)
 				cancel()
 			}
-			err := s.ObserveEdge(ctx, e)
+			err := s.observeEdge(ctx, e)
 			if canceled {
 				if !errors.Is(err, context.Canceled) {
 					t.Fatalf("cancellation: %v", err)
@@ -276,7 +276,7 @@ func TestPackageEdgeIndirectionAdmissionHonorsCancellationAndRetentionBudget(t *
 			if err := s.account.Release(BudgetBufferedBytes, held); err != nil {
 				t.Fatal(err)
 			}
-			_, _ = s.Finish(context.Background(), PackageCompletion{})
+			_, _ = s.finish(context.Background(), PackageCompletion{})
 			if used, _ := s.account.Usage(BudgetBufferedBytes); used != 0 {
 				t.Fatalf("leaked %d bytes", used)
 			}
@@ -286,7 +286,7 @@ func TestPackageEdgeIndirectionAdmissionHonorsCancellationAndRetentionBudget(t *
 
 func TestPackageEdgeIndirectionRetainsInnerIntrinsicFailure(t *testing.T) {
 	s, e := edgeIndirectionFixture(t, PackageCheckLinkTarget, "score-partwise", "not-a-number")
-	if err := s.ObserveEdge(context.Background(), e); err != nil {
+	if err := s.observeEdge(context.Background(), e); err != nil {
 		t.Fatal(err)
 	}
 	b := finishIndirectionFixture(t, s)
@@ -319,7 +319,7 @@ func TestPackageEdgeIndirectionGatesGroupTargetOnly(t *testing.T) {
 					}
 					target.contexts = []ContextResult{{Subject: NodeRef{"inner", 2}, Resource: &ResourceContextResult{Group: &ResourceGroupContext{Value: Evidence[string]{State: EvidenceKnown, Value: other}}}}}
 				}
-				if err := s.ObserveEdge(context.Background(), e); err != nil {
+				if err := s.observeEdge(context.Background(), e); err != nil {
 					t.Fatal(err)
 				}
 				want, reason := OutcomePass, Code("group-link-strings-match")
@@ -349,7 +349,7 @@ func TestPackageEdgeIndirectionGatesGroupTargetOnly(t *testing.T) {
 					// Incomplete intrinsic scope cannot be sealed as a complete
 					// expansion; the already-recorded advice remains independently
 					// checkable without inventing that completion witness.
-					b, err := s.Finish(context.Background(), PackageCompletion{})
+					b, err := s.finish(context.Background(), PackageCompletion{})
 					if err != nil || len(b.PackageReport().Findings) != 1 || b.PackageReport().Findings[0].Reason != reason {
 						t.Fatalf("incomplete local scope: %v %+v", err, b.PackageReport())
 					}
@@ -370,7 +370,7 @@ func TestPackageEdgeIndirectionGatesAssociationMembership(t *testing.T) {
 			t.Run(fmt.Sprintf("indirect=%t/member=%t", indirect, member), func(t *testing.T) {
 				s, q := packageAssociationFixture(t, Evidence[bool]{State: EvidenceKnown, Value: indirect})
 				r := packageAssociationReply(q, Evidence[bool]{State: EvidenceKnown, Value: member})
-				if err := s.ObserveAssociation(context.Background(), q, r); err != nil {
+				if err := s.observeAssociation(context.Background(), q, r); err != nil {
 					t.Fatal(err)
 				}
 				if len(s.associations) != 1 || s.associations[0].result.Membership != r.Membership {
@@ -409,7 +409,7 @@ func TestPackageEdgeIndirectionAssociationUnavailableEvidence(t *testing.T) {
 		t.Run(string(tc.value.State), func(t *testing.T) {
 			original := stateClone(tc.value)
 			s, q := packageAssociationFixture(t, tc.value)
-			if err := s.ObserveAssociation(context.Background(), q, packageAssociationReply(q, Evidence[bool]{State: EvidenceKnown, Value: true})); err != nil {
+			if err := s.observeAssociation(context.Background(), q, packageAssociationReply(q, Evidence[bool]{State: EvidenceKnown, Value: true})); err != nil {
 				t.Fatal(err)
 			}
 			key := packageDecisionKey{RuleKey{ID: RuleID(PackageCheckInstrumentAssociation), Revision: 1}, s.associations[0].id}

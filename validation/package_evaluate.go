@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-func packageEvidenceDecision[T comparable](d Decision, e Evidence[T]) Decision {
+func packageEvidenceDecision[T any](d Decision, e Evidence[T]) Decision {
 	d.Reason = e.Reason
 	switch e.State {
 	case EvidenceKnown:
@@ -608,7 +608,7 @@ func (s *PackageSession) mediaDecision(ctx context.Context, d Decision, v Eviden
 	return d
 }
 
-func packageRequiredEvidenceDecision[T comparable](d Decision, e Evidence[T]) Decision {
+func packageRequiredEvidenceDecision[T any](d Decision, e Evidence[T]) Decision {
 	d = packageEvidenceDecision(d, e)
 	if d.Outcome == OutcomeNotApplicable || d.Outcome == OutcomePass {
 		d.Outcome = OutcomeUnknown

@@ -37,7 +37,7 @@ func (g *resourceGraphRun) walkImage(item graphExpansion, index uint64, v valida
 		return err
 	}
 	defer resultRelease()
-	return g.session.ObserveImageMetadata(g.ctx, item.adoption, index, q, result)
+	return validationPackageSessionObserveImageMetadata(g.session, g.ctx, item.adoption, index, q, result)
 }
 
 // resolveMetadata closes any unexpected transferred stream even when the
@@ -107,11 +107,11 @@ func (g *resourceGraphRun) walkAssociation(item graphExpansion, v validation.Con
 	if !ok {
 		return nil
 	}
-	a, err := g.session.Adoption(g.ctx, item.adoption)
+	a, err := validationPackageSessionAdoption(g.session, g.ctx, item.adoption)
 	if err != nil {
 		return err
 	}
-	child, err := g.session.Adoption(g.ctx, target.adoption)
+	child, err := validationPackageSessionAdoption(g.session, g.ctx, target.adoption)
 	if err != nil {
 		return err
 	}
@@ -182,5 +182,5 @@ func (g *resourceGraphRun) walkAssociation(item graphExpansion, v validation.Con
 		return err
 	}
 	defer resultRelease()
-	return g.session.ObserveAssociation(g.ctx, q, association)
+	return validationPackageSessionObserveAssociation(g.session, g.ctx, q, association)
 }

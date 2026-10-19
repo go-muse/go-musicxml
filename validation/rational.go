@@ -11,10 +11,11 @@ import (
 // Decimal and the XSD Atomic value space. Its zero value is uninitialized.
 // Initialized values may be copied and shared across goroutines.
 //
-// Compare values with Cmp or Equal. The == operator compiles but compares
-// internal pointers, so numerically equal values are generally not ==, and
-// Rational is not suitable as a map key.
+// Compare values with Cmp or Equal. Rational is not comparable with == and cannot
+// be a map key: its representation holds a pointer, so == would compare
+// identity rather than value.
 type Rational struct {
+	_     [0]func() // not comparable
 	value *big.Rat
 	text  string
 	bytes int64
@@ -191,7 +192,7 @@ func rationalSum(kind BudgetKind, values ...int64) (int64, error) {
 	}
 	return sum, nil
 }
-func rationalAllocation(bytes int64) (int, error) { return AllocationSize(bytes) }
+func rationalAllocation(bytes int64) (int, error) { return allocationSize(bytes) }
 func rationalMagnitude(bits int64) int64 {
 	n := bits / 8
 	if bits%8 != 0 {

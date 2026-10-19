@@ -36,7 +36,7 @@ func TestDictionarySharedNilCheckPreservesResourceProfiles(t *testing.T) {
 		}
 		nonNil := &optionNilResolver{}
 		cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: nonNil}, profile)
-		if err != nil || cfg.resolver != nonNil {
+		if err != nil || cfg.resolver != (absentTypedNilBodies{nonNil}) {
 			t.Fatalf("profile=%s resolver=%v err=%v", profile, cfg.resolver, err)
 		}
 	}

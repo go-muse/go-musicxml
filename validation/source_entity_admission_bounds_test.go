@@ -11,12 +11,12 @@ func TestSourceEntityDeclarationNameScanPollsCancellation(t *testing.T) {
 	e := entityDeclarationEngine(t, entityDeclarationSchema(t, entityBuiltin("string")), XSDCheckScalar)
 	s := entityDeclarationSession(t, e)
 	ctx := context.Background()
-	if err := s.Open(ctx, schemaPendingHeader()); err != nil {
+	if err := s.OpenNode(ctx, schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	probe := &rationalCancelContext{Context: ctx, at: 8}
 	facts := entitySnapshot(true, entityRow(strings.Repeat("a", 65536), true, 1))
-	err := s.SourceEntityDeclarations(probe, facts)
+	err := s.sourceEntityDeclarations(probe, facts)
 	if !errors.Is(err, context.Canceled) {
 		t.Errorf("large name scan did not observe bounded cancellation: %v", err)
 	}
@@ -50,12 +50,12 @@ func TestSourceEntityDeclarationMalformedMetadataIsRejected(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := entityDeclarationSession(t, e)
-			if err := s.Open(context.Background(), schemaPendingHeader()); err != nil {
+			if err := s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 				t.Fatal(err)
 			}
 			facts := entitySnapshot(true, entityRow("asset", true, 1))
 			tc.change(&facts)
-			err := s.SourceEntityDeclarations(context.Background(), facts)
+			err := s.sourceEntityDeclarations(context.Background(), facts)
 			if err == nil {
 				t.Fatal("malformed facts accepted")
 			}

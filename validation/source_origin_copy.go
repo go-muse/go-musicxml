@@ -143,7 +143,7 @@ func measureSourceOriginContext(ctx context.Context, s *Session, in *SourceOrigi
 			return 0, err
 		}
 	}
-	if _, err = AllocationSize(m.bytes); err != nil {
+	if _, err = allocationSize(m.bytes); err != nil {
 		return 0, err
 	}
 	return m.bytes, nil

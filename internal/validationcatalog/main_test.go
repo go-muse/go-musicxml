@@ -22,7 +22,7 @@ func TestGenerateInventoryReproducible(t *testing.T) {
 	if !bytes.Equal(first, second) {
 		t.Fatal("generation is not deterministic")
 	}
-	committed, err := os.ReadFile(filepath.Join("..", "..", "validation", "zz_generated_inventory.go"))
+	committed, err := os.ReadFile(filepath.Join("..", "..", "validation", "inventory", "zz_generated_inventory.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -236,7 +236,7 @@ func TestGenerateInventoryAutocrlfCheckout(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	committed, err := os.ReadFile(filepath.Join("..", "..", "validation", "zz_generated_inventory.go"))
+	committed, err := os.ReadFile(filepath.Join("..", "..", "validation", "inventory", "zz_generated_inventory.go"))
 	if err != nil {
 		t.Fatal(err)
 	}

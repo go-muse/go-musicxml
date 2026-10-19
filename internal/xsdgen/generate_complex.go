@@ -139,6 +139,9 @@ func GenerateComplexTypesWithOptions(
 		renderer.usedTypeNames[name] = describeDeclaration(declaration)
 		renderer.ownerKeys[name] = componentKey(declaration, "type")
 	}
+	simpleRenderer.namedBuiltins = true
+	simpleRenderer.takenNames = renderer.usedTypeNames
+	simpleRenderer.constantNames = enumerationConstantNames(simplePlans)
 
 	var body bytes.Buffer
 	for planIndex := range complexPlans {
@@ -155,6 +158,7 @@ func GenerateComplexTypesWithOptions(
 	if err := renderAttributeEnumerations(&body, index); err != nil {
 		return nil, err
 	}
+	simpleRenderer.renderNamedBuiltins(&body)
 
 	hasNumericXML, err := renderer.renderNumericXML(&body)
 	if err != nil {
@@ -782,9 +786,7 @@ func (r *complexTypeRenderer) simpleTypePlanGoType(
 			)
 		}
 
-		return r.simpleRenderer.memberGoType(
-			SimpleTypeMember{Declaration: plan.Declaration},
-		)
+		return r.simpleRenderer.fieldGoType(plan.Declaration)
 
 	case plan.Declaration == nil &&
 		plan.InlineSimple != nil &&
@@ -883,9 +885,7 @@ func (r *complexTypeRenderer) declarationGoType(
 
 	switch declaration.Kind {
 	case DeclarationBuiltinSimpleType, DeclarationSimpleType:
-		value, err := r.simpleRenderer.memberGoType(
-			SimpleTypeMember{Declaration: declaration},
-		)
+		value, err := r.simpleRenderer.fieldGoType(declaration)
 		if err != nil {
 			return "", err
 		}

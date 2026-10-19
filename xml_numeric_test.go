@@ -55,14 +55,14 @@ func TestXMLUnsignedIntegerLexicalForms(t *testing.T) {
 			var attributes Attributes
 			require.NoError(t, xml.Unmarshal([]byte(`<attributes><staves>`+lexical+`</staves></attributes>`), &attributes))
 			require.NotNil(t, attributes.Staves)
-			assert.Equal(t, want, *attributes.Staves)
+			assert.Equal(t, NonNegativeInteger(want), *attributes.Staves)
 			var fret Fret
 			require.NoError(t, xml.Unmarshal([]byte(`<fret>`+lexical+`</fret>`), &fret))
-			assert.Equal(t, want, fret.Value)
+			assert.Equal(t, NonNegativeInteger(want), fret.Value)
 			var repeat Repeat
 			require.NoError(t, xml.Unmarshal([]byte(`<repeat times="`+lexical+`"/>`), &repeat))
 			require.NotNil(t, repeat.Times)
-			assert.Equal(t, want, *repeat.Times)
+			assert.Equal(t, NonNegativeInteger(want), *repeat.Times)
 			var beam Beam
 			require.NoError(t, xml.Unmarshal([]byte(`<beam number="`+lexical+`">begin</beam>`), &beam))
 			require.NotNil(t, beam.Number)
@@ -113,8 +113,8 @@ func TestNumericXMLPreservesEmbeddedFieldsAndOmissions(t *testing.T) {
 	t.Parallel()
 	var value MetronomeTuplet
 	require.NoError(t, xml.Unmarshal([]byte(`<metronome-tuplet type="start" bracket="yes"><actual-notes>+3</actual-notes><normal-notes>+2</normal-notes><normal-type>eighth</normal-type></metronome-tuplet>`), &value))
-	assert.Equal(t, uint64(3), value.ActualNotes)
-	assert.Equal(t, uint64(2), value.NormalNotes)
+	assert.Equal(t, NonNegativeInteger(3), value.ActualNotes)
+	assert.Equal(t, NonNegativeInteger(2), value.NormalNotes)
 	assert.Equal(t, StartStopStart, value.Type)
 	require.NotNil(t, value.Bracket)
 	assert.Equal(t, YesNoYes, *value.Bracket)

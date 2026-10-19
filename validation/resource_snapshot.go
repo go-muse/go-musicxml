@@ -189,7 +189,7 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 			return nil, e
 		}
 	}
-	if _, err = AllocationSize(size); err != nil {
+	if _, err = allocationSize(size); err != nil {
 		return nil, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, size); err != nil {
@@ -346,7 +346,7 @@ func resourceMeasureAs(ctx context.Context, a *Account, v reflect.Value, to stri
 	default:
 		return 0, contract("resource payload", "unsupported private payload")
 	}
-	if _, err := AllocationSize(total); err != nil {
+	if _, err := allocationSize(total); err != nil {
 		return 0, err
 	}
 	return total, nil
@@ -361,7 +361,7 @@ func (s *Session) resourceIDs(ctx context.Context) ([]ResourceIDFact, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return nil, err
 	}
 	if err = s.retain(bytes); err != nil {

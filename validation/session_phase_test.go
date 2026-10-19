@@ -85,7 +85,7 @@ func TestQARound2DeferredLocalFailureSurvivesUnrelatedEnumeration(t *testing.T) 
 	predicate, _ := NewAtomicComparisonPlan(ComparisonEqual, Atomic{Kind: AtomicString, Text: "expected"})
 	s := qaSession(t, qaSpec{id: "a-provider", occurrence: "test.child", p: provider, role: RoleContextProvider}, qaSpec{id: "z-predicate", occurrence: "test.child", p: predicate, requires: []Dependency{{Kind: DependencyFact, Key: "ready", Relation: RelationSameNode}}})
 	qaOpenRoot(t, s)
-	if err := s.Open(context.Background(), factHeader(2, 1, "test.child", "child")); err != nil {
+	if err := s.OpenNode(context.Background(), factHeader(2, 1, "test.child", "child")); err != nil {
 		t.Fatal(err)
 	}
 	childEnd := factEnd(2)

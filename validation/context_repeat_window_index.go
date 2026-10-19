@@ -35,7 +35,7 @@ func contextRepeatBuildWindowIndex(ctx context.Context, s *Session, notes []cont
 	if err != nil {
 		return nil, nil, err
 	}
-	if _, err = AllocationSize(bytes); err != nil {
+	if _, err = allocationSize(bytes); err != nil {
 		return nil, nil, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {

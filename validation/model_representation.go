@@ -34,7 +34,7 @@ type ModelProblem struct {
 // currently open occurrence. Complete is explicit examination evidence, not a
 // claim that its values are valid. Problems remain authoritative even when the
 // examination is incomplete. At most 4096 problems may be supplied per owner.
-// After this event, only Close may extend that owner's facts.
+// After this event, only CloseNode may extend that owner's facts.
 type ModelRepresentationFact struct {
 	Owner    NodeID
 	Complete Evidence[bool]
@@ -65,8 +65,9 @@ func NewModelRepresentationPlan(assembly Assembly) (Plan, error) {
 
 // ModelRepresentation supplies one copied and bounded local examination seal.
 // It accepts only model targets and the currently open owner, once, before
-// Close. Invalid scalar/attribute values must initially be unknown/unsupported;
-// invalid children must have unavailable order and completeness at Close. The
+// CloseNode. Invalid scalar/attribute values must initially be
+// unknown/unsupported; invalid children must have unavailable order and
+// completeness at CloseNode. The
 // session records a real model verdict before publishing causal invalid facts.
 func (s *Session) ModelRepresentation(ctx context.Context, fact ModelRepresentationFact) error {
 	if err := s.event(ctx, "ModelRepresentation"); err != nil {

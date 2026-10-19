@@ -113,7 +113,7 @@ func buildSourceCompositionDefinitions() (*assessmentDefinitions, error) {
 // appendSourceOriginDefinitions extends only caller-owned source definitions.
 func appendSourceOriginDefinitions(d *assessmentDefinitions) error {
 	for _, assembly := range []validation.Assembly{validation.AssemblyMusicXML, validation.AssemblyOpus} {
-		plan, err := validation.NewSourceOriginPlan(assembly)
+		plan, err := validationNewSourceOriginPlan(assembly)
 		if err != nil {
 			return err
 		}
@@ -219,16 +219,16 @@ func compositionPlan(d *assessmentDefinitions, b *localCatalogBuilder, r validat
 	for _, assembly := range []validation.Assembly{validation.AssemblyMusicXML, validation.AssemblyOpus} {
 		for _, check := range []validation.XSDCheck{validation.XSDCheckBinding, validation.XSDCheckDeclaration, validation.XSDCheckAttributes, validation.XSDCheckScalar, validation.XSDCheckContent, validation.XSDCheckIdentity} {
 			if r.Key.ID == validation.RuleID("MX40-XSD-"+string(assembly)+"-"+string(check)) {
-				p, err := validation.NewXSDPlanWithSourceDeclarations(d.schemas[assembly], check)
+				p, err := validationNewXSDPlanWithSourceDeclarations(d.schemas[assembly], check)
 				return p, true, err
 			}
 		}
 		if r.Key.ID == validation.RuleID("MX40-RESOURCE-local-links/"+string(assembly)) {
-			p, err := validation.NewSourceLocalLinkContextPlan(d.schemas[assembly])
+			p, err := validationNewSourceLocalLinkContextPlan(d.schemas[assembly])
 			return p, true, err
 		}
 		if r.Key.ID == validation.RuleID("MX40-RESOURCE-schema-hints/"+string(assembly)) {
-			p, err := validation.NewSourceSchemaHintContextPlan(d.schemas[assembly])
+			p, err := validationNewSourceSchemaHintContextPlan(d.schemas[assembly])
 			return p, true, err
 		}
 	}

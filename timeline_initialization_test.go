@@ -39,11 +39,11 @@ func TestTimelineConstructorsShareImmutableBindings(t *testing.T) {
 			<-start
 			switch i % 3 {
 			case 0:
-				plans[i], errs[i] = validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: &copy, PartOwners: owners})
+				plans[i], errs[i] = validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: &copy, PartOwners: owners})
 			case 1:
-				plans[i], errs[i] = validation.NewChordDurationPlan(validation.TimelineConsumerSpec{Schema: &copy, Provider: validation.RuleKey{ID: "provider", Revision: 1}})
+				plans[i], errs[i] = validationNewChordDurationPlan(validation.ConsumerSpec{Schema: &copy, Provider: validation.RuleKey{ID: "provider", Revision: 1}})
 			case 2:
-				plans[i], errs[i] = validation.NewNumeralKeyPlan(validation.TimelineConsumerSpec{Schema: &copy, Provider: validation.RuleKey{ID: "provider", Revision: 1}})
+				plans[i], errs[i] = validationNewNumeralKeyPlan(validation.ConsumerSpec{Schema: &copy, Provider: validation.RuleKey{ID: "provider", Revision: 1}})
 			}
 		})
 	}
@@ -94,14 +94,14 @@ func TestTimelineCatalogKeepsSharedImmutableBindings(t *testing.T) {
 func TestTimelineBindingInitializationSeparatesSchemasAndErrors(t *testing.T) {
 	first := timelineContractSchema(t)
 	second := timelineContractSchema(t)
-	spec := validation.TimelineConsumerSpec{Provider: validation.RuleKey{ID: "provider", Revision: 1}}
+	spec := validation.ConsumerSpec{Provider: validation.RuleKey{ID: "provider", Revision: 1}}
 	spec.Schema = first
-	a, err := validation.NewChordDurationPlan(spec)
+	a, err := validationNewChordDurationPlan(spec)
 	if err != nil {
 		t.Fatal(err)
 	}
 	spec.Schema = second
-	b, err := validation.NewChordDurationPlan(spec)
+	b, err := validationNewChordDurationPlan(spec)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,19 +113,19 @@ func TestTimelineBindingInitializationSeparatesSchemasAndErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 	spec.Schema = invalid
-	_, err = validation.NewChordDurationPlan(spec)
+	_, err = validationNewChordDurationPlan(spec)
 	var config *validation.ConfigurationError
 	if !errors.As(err, &config) {
 		t.Fatalf("missing invalid-schema configuration error: %v", err)
 	}
 	want := *config
 	config.Field, config.Reason = "caller field", "caller reason"
-	_, err = validation.NewNumeralKeyPlan(spec)
+	_, err = validationNewNumeralKeyPlan(spec)
 	var again *validation.ConfigurationError
 	if !errors.As(err, &again) || *again != want {
 		t.Fatalf("caller mutation poisoned a later constructor error: %v", err)
 	}
-	if _, err := validation.NewNumeralKeyPlan(validation.TimelineConsumerSpec{Schema: first, Provider: spec.Provider}); err != nil {
+	if _, err := validationNewNumeralKeyPlan(validation.ConsumerSpec{Schema: first, Provider: spec.Provider}); err != nil {
 		t.Fatalf("invalid schema poisoned independent valid schema: %v", err)
 	}
 }

@@ -85,7 +85,7 @@ func TestCloseUsesCompiledRepresentationSchedule(t *testing.T) {
 				if target == TargetModel {
 					header, end = representationHeader, representationEnd
 				}
-				if err := s.Open(ctx, header(1, 0, "test.root", "root")); err != nil {
+				if err := s.OpenNode(ctx, header(1, 0, "test.root", "root")); err != nil {
 					t.Fatal(err)
 				}
 				// White-box fault injection makes each repeated classification observable
@@ -99,7 +99,7 @@ func TestCloseUsesCompiledRepresentationSchedule(t *testing.T) {
 				// later full assessment, which must still visit every selected rule.
 				s.schema = &schemaSession{}
 				for id := NodeID(2); id <= 4; id++ {
-					if err := s.Open(ctx, header(id, 1, "test.child", "child")); err != nil {
+					if err := s.OpenNode(ctx, header(id, 1, "test.child", "child")); err != nil {
 						t.Fatal(err)
 					}
 					if target == TargetModel {
@@ -114,7 +114,7 @@ func TestCloseUsesCompiledRepresentationSchedule(t *testing.T) {
 						closure.Scalar.Value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "model-nonfinite"}
 					}
 					before, _ := s.account.Usage(BudgetRuleSteps)
-					if err := s.Close(ctx, closure); err != nil {
+					if err := s.CloseNode(ctx, closure); err != nil {
 						t.Fatal(err)
 					}
 					after, _ := s.account.Usage(BudgetRuleSteps)

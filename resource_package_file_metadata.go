@@ -24,7 +24,7 @@ func (g *resourceGraphRun) observeFileMetadata(v validation.PackageFileMetadataO
 	if g.fileMetadata[key] {
 		return nil
 	}
-	if err := g.session.ObserveFileMetadata(g.ctx, v); err != nil {
+	if err := validationPackageSessionObserveFileMetadata(g.session, g.ctx, v); err != nil {
 		return err
 	}
 	// Core owns its copy; this bounded key prevents a later adoption from

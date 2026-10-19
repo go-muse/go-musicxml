@@ -123,7 +123,7 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 		if len(attributes) == cap(attributes) {
 			capacity := max(int64(4), 2*int64(cap(attributes)), int64(len(attributes))+1)
 			capacity = min(capacity, limit)
-			count, err := validation.AllocationSize(capacity)
+			count, err := validationAllocationSize(capacity)
 			if err != nil || capacity > int64(^uint64(0)>>1)/256 {
 				if err == nil {
 					err = &validation.ResourceError{Kind: validation.BudgetBufferedBytes, Requested: capacity}

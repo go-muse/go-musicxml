@@ -359,7 +359,7 @@ func stateRetainCopy(ctx context.Context, s *Session, v any) error {
 	if e != nil {
 		return e
 	}
-	if _, e = AllocationSize(n); e != nil {
+	if _, e = allocationSize(n); e != nil {
 		return e
 	}
 	return s.retain(n)
@@ -369,7 +369,7 @@ func stateRetainCount(s *Session, count int, width int64) error {
 	if e != nil {
 		return e
 	}
-	if _, e = AllocationSize(n); e != nil {
+	if _, e = allocationSize(n); e != nil {
 		return e
 	}
 	return s.retain(n)
@@ -379,7 +379,7 @@ func stateReserve(ctx context.Context, s *Session, value any) (int64, error) {
 	if e != nil {
 		return 0, e
 	}
-	if _, e = AllocationSize(n); e != nil {
+	if _, e = allocationSize(n); e != nil {
 		return 0, e
 	}
 	// Append growth may coexist with the old slice. Reserve a conservative second
@@ -926,7 +926,7 @@ func (s *Session) stateRationalInteger(ctx context.Context, v Integer) (Rational
 	if e = s.step(ctx, cost); e != nil {
 		return Rational{}, e
 	}
-	if _, e = AllocationSize(cost); e != nil {
+	if _, e = allocationSize(cost); e != nil {
 		return Rational{}, e
 	}
 	if e = s.account.Charge(BudgetBufferedBytes, cost); e != nil {

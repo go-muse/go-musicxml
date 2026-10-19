@@ -9,9 +9,9 @@ const (
 	planContextSoundsHints    planKind = "sounds-schema-hints"
 )
 
-// NewLocalLinkContextPlan constructs exact MusicXML or Opus local resource
+// newLocalLinkContextPlan constructs exact MusicXML or Opus local resource
 // projections. It performs no I/O, URI resolution, package parsing or traversal.
-func NewLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
+func newLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
 	if schema == nil || schema.kernel == nil || (schema.assembly != AssemblyMusicXML && schema.assembly != AssemblyOpus) {
 		return Plan{}, contract("local link schema", "compiled MusicXML or Opus assembly required")
 	}
@@ -26,9 +26,9 @@ func NewLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
 	return checkedPlan(Plan{kind: kind, context: &contextPlan{Schema: schema, Bindings: bindings, revision: contextSemanticRevision}})
 }
 
-// NewSchemaHintContextPlan projects standard source xsi discovery hints for one
+// newSchemaHintContextPlan projects standard source xsi discovery hints for one
 // exact selected schema assembly. It does not load or select hinted schemas.
-func NewSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
+func newSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
 	if schema == nil || schema.kernel == nil {
 		return Plan{}, contract("schema hints", "compiled schema required")
 	}
@@ -98,13 +98,13 @@ func resourceLinkBindingSpecs(assembly Assembly) []contextBindingSpec {
 	return out
 }
 
-// NewSourceLocalLinkContextPlan projects MusicXML or Opus effective resources
+// newSourceLocalLinkContextPlan projects MusicXML or Opus effective resources
 // while preserving physical presence and separately admitted lexical evidence.
 // DTD defaults and entity-generated markup have no physical Raw spelling. It
 // requires selected source-origin and source-declaration providers, retains
 // effective DTD ID occurrences for joined shorthand, and performs no I/O.
-func NewSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
-	p, err := NewLocalLinkContextPlan(schema)
+func newSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
+	p, err := newLocalLinkContextPlan(schema)
 	if err != nil {
 		return Plan{}, err
 	}
@@ -113,11 +113,11 @@ func NewSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
 	return checkedPlan(p)
 }
 
-// NewSourceSchemaHintContextPlan parses effective MusicXML, Opus, Container or
+// newSourceSchemaHintContextPlan parses effective MusicXML, Opus, Container or
 // Sounds source hints independently of their physical Raw spelling. It requires
 // a source-origin provider; hints never select a schema or authorize retrieval.
-func NewSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
-	p, err := NewSchemaHintContextPlan(schema)
+func newSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
+	p, err := newSchemaHintContextPlan(schema)
 	if err != nil {
 		return Plan{}, err
 	}
@@ -125,12 +125,12 @@ func NewSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
 	return checkedPlan(p)
 }
 
-// NewXMLFragmentLinkContextPlan elects the registered XML-media fragment
+// newXMLFragmentLinkContextPlan elects the registered XML-media fragment
 // baseline: XPointer Framework, shorthand and element(). Source infoset mode
 // joins effective DTD and XSD identities. The ordinary source/current-model mode
 // uses its present XSD identity and element order, without inventing DTD history.
-func NewXMLFragmentLinkContextPlan(schema *CompiledSchema, sourceInfoset bool) (Plan, error) {
-	p, err := NewLocalLinkContextPlan(schema)
+func newXMLFragmentLinkContextPlan(schema *CompiledSchema, sourceInfoset bool) (Plan, error) {
+	p, err := newLocalLinkContextPlan(schema)
 	if err != nil {
 		return Plan{}, err
 	}

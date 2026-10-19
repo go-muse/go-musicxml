@@ -166,26 +166,26 @@ func TestAuxiliaryContainerMetadataOwnedReportAndSourceOnly(t *testing.T) {
 }
 
 func TestAuxiliaryContainerMetadataSealedPlan(t *testing.T) {
-	schema, err := validation.CompileSchema(validation.AssemblyContainer, containerValidationSchema)
+	schema, err := compileValidationSchema(validation.AssemblyContainer, containerValidationSchema)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plan, err := validation.NewContainerMetadataContextPlan(schema)
+	plan, err := validationNewContainerMetadataContextPlan(schema)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := validation.NewContainerMetadataContextPlan(nil); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err := validationNewContainerMetadataContextPlan(nil); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatalf("nil schema accepted: %v", err)
 	}
 	for _, entry := range []struct {
 		assembly validation.Assembly
-		data     validation.SchemaData
+		data     validationSchemaSet
 	}{{validation.AssemblyMusicXML, scoreValidationSchema}, {validation.AssemblyOpus, opusValidationSchema}, {validation.AssemblySounds, soundsValidationSchema}} {
-		other, err := validation.CompileSchema(entry.assembly, entry.data)
+		other, err := compileValidationSchema(entry.assembly, entry.data)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := validation.NewContainerMetadataContextPlan(other); !errors.Is(err, validation.ErrInvalidConfiguration) {
+		if _, err := validationNewContainerMetadataContextPlan(other); !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Fatalf("wrong assembly accepted: %s %v", entry.assembly, err)
 		}
 	}
@@ -218,7 +218,7 @@ func TestAuxiliaryContainerMetadataSealedPlan(t *testing.T) {
 }
 
 func TestAuxiliaryContainerMetadataSchemaAndDigestBinding(t *testing.T) {
-	schema, err := validation.CompileSchema(validation.AssemblyContainer, containerValidationSchema)
+	schema, err := compileValidationSchema(validation.AssemblyContainer, containerValidationSchema)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -227,7 +227,7 @@ func TestAuxiliaryContainerMetadataSchemaAndDigestBinding(t *testing.T) {
 	root := *alternateData.Elements[validationQName{Local: "container"}]
 	root.Nillable = true
 	alternateData.Elements[validationQName{Local: "container"}] = &root
-	alternate, err := validation.CompileSchema(validation.AssemblyContainer, alternateData)
+	alternate, err := compileValidationSchema(validation.AssemblyContainer, alternateData)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -236,7 +236,7 @@ func TestAuxiliaryContainerMetadataSchemaAndDigestBinding(t *testing.T) {
 		if err != nil {
 			return nil, err
 		}
-		projection, err := validation.NewContainerMetadataContextPlan(contextSchema)
+		projection, err := validationNewContainerMetadataContextPlan(contextSchema)
 		if err != nil {
 			return nil, err
 		}
@@ -274,11 +274,11 @@ func TestAuxiliaryContainerMetadataSchemaAndDigestBinding(t *testing.T) {
 		t.Fatalf("context/schema digest mismatch accepted: %v", err)
 	}
 	root.Type.Name.Local = "rootfiles"
-	wrongRoot, err := validation.CompileSchema(validation.AssemblyContainer, alternateData)
+	wrongRoot, err := compileValidationSchema(validation.AssemblyContainer, alternateData)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := validation.NewContainerMetadataContextPlan(wrongRoot); !errors.Is(err, validation.ErrInvalidConfiguration) {
+	if _, err := validationNewContainerMetadataContextPlan(wrongRoot); !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatalf("wrong global root type accepted: %v", err)
 	}
 }

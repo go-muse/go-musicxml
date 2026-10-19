@@ -49,27 +49,17 @@ type sourceDTDIDs struct {
 	IDs          []SourceDTDIDAttribute
 }
 
+// sourceDTDIDsSelected reports whether this session's admitted root assembly
+// elects effective DTD ID occurrence input. It is false before root admission,
+// for current-model sessions, and for an unselected active assembly. This is a
+// read-only capability query; it neither admits input nor asserts completion.
 func (s *Session) sourceDTDIDsSelected() bool {
 	return s != nil && s.catalog != nil && s.root != nil && s.profile.Target == TargetSource && s.fragmentMode() != fragmentLegacy && s.schema != nil && s.schema.active != nil && s.catalog.fragmentDTDs[s.profile.ID][s.schema.active.assembly] && s.catalog.sourceDeclarations[s.profile.ID][s.schema.active.assembly] == xsdSourceDeclarationsV1
 }
 
-// SourceDTDIDsSelected reports whether this session's admitted root assembly
-// elects effective DTD ID occurrence input. It is false before root admission,
-// for current-model sessions, and for an unselected active assembly. This is a
-// read-only capability query; it neither admits input nor asserts completion.
-//
-// Adapter API: the root musicxml package uses this to stream facts into an
-// engine; application code is not expected to call it.
-func (s *Session) SourceDTDIDsSelected() bool {
-	return s.sourceDTDIDsSelected()
-}
-
-// SourceDTDIDsSelected reports whether the immutable selected source profile
+// sourceDTDIDsSelected reports whether the immutable selected source profile
 // elects effective DTD ID occurrence input. It does not claim completed input.
-//
-// Adapter API: the root musicxml package uses this to stream facts into an
-// engine; application code is not expected to call it.
-func (e *Engine) SourceDTDIDsSelected(profile ProfileID) bool {
+func (e *Engine) sourceDTDIDsSelected(profile ProfileID) bool {
 	if e == nil || e.catalog == nil || e.catalog.profiles[profile].Target != TargetSource {
 		return false
 	}
@@ -81,12 +71,9 @@ func (e *Engine) SourceDTDIDsSelected(profile ProfileID) bool {
 	return false
 }
 
-// SourceDTDIDDomain admits exactly one owned declaration-domain seal immediately
-// after root Open and before any root attribute. Missing input is unavailable.
-//
-// Adapter API: the root musicxml package uses this to stream facts into an
-// engine; application code is not expected to call it.
-func (s *Session) SourceDTDIDDomain(ctx context.Context, f SourceDTDIDDomain) (err error) {
+// sourceDTDIDDomain admits exactly one owned declaration-domain seal immediately
+// after root OpenNode and before any root attribute. Missing input is unavailable.
+func (s *Session) sourceDTDIDDomain(ctx context.Context, f SourceDTDIDDomain) (err error) {
 	if err = s.event(ctx, "SourceDTDIDDomain"); err != nil {
 		return err
 	}
@@ -124,13 +111,10 @@ func sourceDTDIDSeal(e Evidence[bool]) error {
 	return nil
 }
 
-// SourceDTDIDAttribute admits the exact most recently supplied attribute while
+// sourceDTDIDAttribute admits the exact most recently supplied attribute while
 // its owner is open. Every non-namespace source occurrence must be marked before
 // CompleteSourceDTDIDs can assert full enumeration. All retained data is copied.
-//
-// Adapter API: the root musicxml package uses this to stream facts into an
-// engine; application code is not expected to call it.
-func (s *Session) SourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribute) (err error) {
+func (s *Session) sourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribute) (err error) {
 	if err = s.event(ctx, "SourceDTDIDAttribute"); err != nil {
 		return err
 	}
@@ -309,12 +293,9 @@ func (s *Session) sourceDTDIDLexical(ctx context.Context, lexical string, want Q
 	return nil
 }
 
-// CompleteSourceDTDIDs seals observed occurrences after root closure. It never
+// completeSourceDTDIDs seals observed occurrences after root closure. It never
 // fills absent classifications and is called by the source adapter only at EOF.
-//
-// Adapter API: the root musicxml package uses this to stream facts into an
-// engine; application code is not expected to call it.
-func (s *Session) CompleteSourceDTDIDs(ctx context.Context, doc string) error {
+func (s *Session) completeSourceDTDIDs(ctx context.Context, doc string) error {
 	if err := s.event(ctx, "CompleteSourceDTDIDs"); err != nil {
 		return err
 	}

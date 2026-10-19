@@ -7,11 +7,11 @@ import (
 	"unicode/utf8"
 )
 
-// ObserveEdge binds one finalized local link template to exact adopted target
+// observeEdge binds one finalized local link template to exact adopted target
 // evidence. Caller resolution cannot turn an unavailable local prerequisite into
 // success or use an unrelated template. The target must be a fresh nonroot
 // occurrence, but may belong to another admitted package boundary.
-func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservation) error {
+func (s *PackageSession) observeEdge(ctx context.Context, e PackageEdgeObservation) error {
 	if err := s.event(ctx, "ObserveEdge"); err != nil {
 		return err
 	}
@@ -211,10 +211,10 @@ func snapshotIDByValue(ctx context.Context, s *PackageSession, snapshot *Resourc
 	return ResourceIDFact{}, false
 }
 
-// ObserveAssociation admits exact scoped caller evidence only after validating
+// observeAssociation admits exact scoped caller evidence only after validating
 // source local ID/owner/link prerequisites and optional target ID kind/ownership.
 // A partial table miss is Unknown; negative membership needs exact authority.
-func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRequest, r AssociationResult) error {
+func (s *PackageSession) observeAssociation(ctx context.Context, q AssociationRequest, r AssociationResult) error {
 	if err := s.event(ctx, "ObserveAssociation"); err != nil {
 		return err
 	}
@@ -332,10 +332,10 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 	return nil
 }
 
-// ObserveRoles validates the full exact echoed request and bounded package scope.
+// observeRoles validates the full exact echoed request and bounded package scope.
 // Caller assertions remain visibly authoritative metadata, never filename or
 // same-ID inference. Unknown/partial resource-role tables cannot prove exclusion.
-func (s *PackageSession) ObserveRoles(ctx context.Context, r ResourceRoleResult) error {
+func (s *PackageSession) observeRoles(ctx context.Context, r ResourceRoleResult) error {
 	if err := s.event(ctx, "ObserveRoles"); err != nil {
 		return err
 	}

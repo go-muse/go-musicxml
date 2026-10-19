@@ -35,12 +35,12 @@ func buildLayoutStateTestEngine() (*validation.Engine, error) {
 		owners = append(owners, validation.ReferenceOwner{Declaration: part.Declaration, Attribute: attribute, Rule: validation.RuleKey{ID: validation.RuleID("MX40-LOCAL-part-id-target/use-" + strconv.Itoa(i+1)), Revision: 1}})
 	}
 	timeline := validation.RuleKey{ID: "test-layout-timeline", Revision: 1}
-	timelinePlan, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: owners})
+	timelinePlan, err := validationNewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: owners})
 	if err != nil {
 		return nil, err
 	}
 	layout := validation.RuleKey{ID: "test-layout-state", Revision: 1}
-	layoutPlan, err := validation.NewLayoutContextPlan(validation.ContextPlanSpec{Schema: schema, TimelineProvider: timeline})
+	layoutPlan, err := validationNewLayoutContextPlan(validation.ContextPlanSpec{Schema: schema, TimelineProvider: timeline})
 	if err != nil {
 		return nil, err
 	}

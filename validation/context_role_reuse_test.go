@@ -18,8 +18,8 @@ func contextRoleRepeatedFixture(t *testing.T, count int) (*Session, *contextBind
 	t.Helper()
 	owner := strings.Repeat("long-owner-", 80)
 	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{
-		Types:    map[SchemaName]*SchemaType{{Local: owner}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: uint64(count), Max: uint64(count)}, Element: &SchemaElement{Name: SchemaName{Local: "item"}, Type: localBuiltin("string")}}}}},
-		Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: localType(owner)}},
+		Types:    map[QName]*SchemaType{{Local: owner}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: uint64(count), Max: uint64(count)}, Element: &SchemaElement{Name: QName{Local: "item"}, Type: localBuiltin("string")}}}}},
+		Elements: map[QName]*SchemaElement{{Local: "root"}: {Name: QName{Local: "root"}, Type: localType(owner)}},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -41,22 +41,22 @@ func contextRoleEngineSession(t *testing.T, engine *Engine, count int) *Session 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Open(context.Background(), schemaPendingHeader()); err != nil {
+	if err = s.OpenNode(context.Background(), schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
 	for id := NodeID(2); id < NodeID(count)+2; id++ {
 		h := schemaPendingHeader()
 		h.ID, h.Parent, h.Name.Local = id, 1, "item"
-		if err = s.Open(context.Background(), h); err != nil {
+		if err = s.OpenNode(context.Background(), h); err != nil {
 			t.Fatal(err)
 		}
 		end := schemaLexemeEnd("value")
 		end.ID = id
-		if err = s.Close(context.Background(), end); err != nil {
+		if err = s.CloseNode(context.Background(), end); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
+	if err = s.CloseNode(context.Background(), schemaLexemeEnd("")); err != nil {
 		t.Fatal(err)
 	}
 	// Finish sets finished before finalizing the schema and evaluating providers;

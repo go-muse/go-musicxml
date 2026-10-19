@@ -22,13 +22,13 @@ func ExampleEngine() {
 	ctx := context.Background()
 	session, _ := engine.Begin(ctx, v.RunOptions{DocumentID: "example-document", Profile: "example.model"})
 	open := func(id, parent v.NodeID, name string, declaration v.DeclarationID) {
-		err := session.Open(ctx, v.NodeHeader{ID: id, Parent: parent, Name: v.QName{Local: name}, Type: v.Evidence[v.ComponentID]{State: v.EvidenceUnknown, Reason: "not-needed"}, Declaration: v.Evidence[v.DeclarationID]{State: v.EvidenceKnown, Value: declaration}, Location: v.Location{Target: v.TargetModel, DocumentID: "example-document", Path: "/" + name}})
+		err := session.OpenNode(ctx, v.NodeHeader{ID: id, Parent: parent, Name: v.QName{Local: name}, Type: v.Evidence[v.ComponentID]{State: v.EvidenceUnknown, Reason: "not-needed"}, Declaration: v.Evidence[v.DeclarationID]{State: v.EvidenceKnown, Value: declaration}, Location: v.Location{Target: v.TargetModel, DocumentID: "example-document", Path: "/" + name}})
 		if err != nil {
 			panic(err)
 		}
 	}
 	closeNode := func(id v.NodeID) {
-		err := session.Close(ctx, v.NodeEnd{ID: id, Scalar: v.Scalar{Lexeme: v.Evidence[string]{State: v.EvidenceAbsent}, Value: v.Evidence[v.Atomic]{State: v.EvidenceAbsent}}, ChildrenComplete: v.Evidence[bool]{State: v.EvidenceKnown, Value: true}, AttributesComplete: v.Evidence[bool]{State: v.EvidenceKnown, Value: true}, Order: v.Evidence[v.OrderKind]{State: v.EvidenceKnown, Value: v.OrderModelFields}})
+		err := session.CloseNode(ctx, v.NodeEnd{ID: id, Scalar: v.Scalar{Lexeme: v.Evidence[string]{State: v.EvidenceAbsent}, Value: v.Evidence[v.Atomic]{State: v.EvidenceAbsent}}, ChildrenComplete: v.Evidence[bool]{State: v.EvidenceKnown, Value: true}, AttributesComplete: v.Evidence[bool]{State: v.EvidenceKnown, Value: true}, Order: v.Evidence[v.OrderKind]{State: v.EvidenceKnown, Value: v.OrderModelFields}})
 		if err != nil {
 			panic(err)
 		}

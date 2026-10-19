@@ -83,7 +83,7 @@ digest bytes remain unchanged. The new catalog is separate because catalog
 identity also includes its other rules and profiles.
 
 `Session.SourceEntityDeclarations` accepts one document-qualified snapshot after
-root `Open`, before attributes, children or closing events. It copies effective
+root `OpenNode`, before attributes, children or closing events. It copies effective
 bindings and independently available declaration locations. Declaration sequence
 IDs are document-local identities, not schema declarations or fabricated nodes.
 The session owns the storage until its borrowed XSD run has closed, including

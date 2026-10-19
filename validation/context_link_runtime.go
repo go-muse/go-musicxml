@@ -10,6 +10,12 @@ import (
 func resourceAbsentAttribute() ResourceAttribute {
 	return ResourceAttribute{Presence: Evidence[bool]{State: EvidenceAbsent}, Raw: Evidence[string]{State: EvidenceAbsent}, Value: Evidence[Atomic]{State: EvidenceAbsent}}
 }
+
+// absent reports whether a is exactly resourceAbsentAttribute().
+func (a ResourceAttribute) absent() bool {
+	return a.Presence == Evidence[bool]{State: EvidenceAbsent} && a.Raw == Evidence[string]{State: EvidenceAbsent} &&
+		a.Value.State == EvidenceAbsent && a.Value.Reason == "" && a.Value.Cause == nil && a.Value.Value.isZero()
+}
 func resourceAttribute(r *contextReader, n *factNode, role contextRole) ResourceAttribute {
 	out := resourceAbsentAttribute()
 	out.Value = r.attribute(n, role)

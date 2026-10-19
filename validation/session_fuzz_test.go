@@ -32,23 +32,23 @@ func FuzzSessionLifecycle(f *testing.F) {
 				if top == 0 {
 					occurrence, name = "test.root", "root"
 				}
-				eventErr = s.Open(ctx, factHeader(next, top, occurrence, name))
+				eventErr = s.OpenNode(ctx, factHeader(next, top, occurrence, name))
 				next++
 			case 1, 3:
 				end := factEnd(top)
 				if op%7 == 3 {
 					end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "fuzz-incomplete"}
 				}
-				eventErr = s.Close(ctx, end)
+				eventErr = s.CloseNode(ctx, end)
 			case 2:
 				eventErr = s.Attribute(ctx, AttributeFact{Owner: top, Name: QName{Local: "id"}, Declaration: Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "unbound"}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceKnown, Value: "value"}, Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "value"}}}, Location: Location{Target: TargetSource, DocumentID: "doc", Path: "/@id"}})
 			case 4:
-				eventErr = s.Open(ctx, factHeader(next, top+100, "test.child", "child"))
+				eventErr = s.OpenNode(ctx, factHeader(next, top+100, "test.child", "child"))
 				next++
 			case 5:
 				canceled, cancel := context.WithCancel(ctx)
 				cancel()
-				eventErr = s.Close(canceled, factEnd(top))
+				eventErr = s.CloseNode(canceled, factEnd(top))
 			case 6:
 				data = nil
 			}
@@ -76,7 +76,7 @@ func FuzzSessionLifecycle(f *testing.F) {
 				t.Fatalf("gauge %s after Finish=%d, %v", kind, used, err)
 			}
 		}
-		if err := s.Open(ctx, factHeader(next, 0, "test.root", "root")); !errors.Is(err, ErrInvalidSession) {
+		if err := s.OpenNode(ctx, factHeader(next, 0, "test.root", "root")); !errors.Is(err, ErrInvalidSession) {
 			t.Fatalf("post-Finish Open=%v", err)
 		}
 		if _, err := s.Finish(ctx, Completion{}); !errors.Is(err, ErrInvalidSession) {

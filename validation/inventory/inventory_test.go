@@ -1,4 +1,4 @@
-package validation
+package inventory
 
 import (
 	"crypto/sha256"
@@ -15,7 +15,7 @@ import (
 
 // The inventory is a compiled traceability artifact, not an executable profile.
 func TestMusicXML40InventoryPinnedCountsAndRelationships(t *testing.T) {
-	inv := MusicXML40Inventory()
+	inv := MusicXML40()
 	if inv.Version != "musicxml-validation-inventory-1" || inv.RegistryCommit != "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c" {
 		t.Fatalf("unexpected inventory identity: %s / %s", inv.Version, inv.RegistryCommit)
 	}
@@ -130,7 +130,7 @@ func TestMusicXML40InventoryPinnedCountsAndRelationships(t *testing.T) {
 }
 
 func TestMusicXML40InventoryExhaustivePlanningProjection(t *testing.T) {
-	inv := MusicXML40Inventory()
+	inv := MusicXML40()
 	bytes, err := json.Marshal(inv)
 	if err != nil {
 		t.Fatal(err)
@@ -204,7 +204,7 @@ func inventoryCheckFields() []string {
 
 func inventoryPlan(t *testing.T, name string) map[string]any {
 	t.Helper()
-	b, err := os.ReadFile(filepath.Join("..", "docs", "validation", "plan", name))
+	b, err := os.ReadFile(filepath.Join("..", "..", "docs", "validation", "plan", name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,7 +216,7 @@ func inventoryPlan(t *testing.T, name string) map[string]any {
 }
 
 func TestMusicXML40InventoryDigestsAndReproducibleOrdering(t *testing.T) {
-	inv := MusicXML40Inventory()
+	inv := MusicXML40()
 	b, err := json.Marshal(inv)
 	if err != nil {
 		t.Fatal(err)
@@ -234,7 +234,7 @@ func TestMusicXML40InventoryDigestsAndReproducibleOrdering(t *testing.T) {
 	if inv.SHA256 != hex.EncodeToString(sum[:]) {
 		t.Errorf("payload digest mismatch: %s", inv.SHA256)
 	}
-	paths, _ := filepath.Glob(filepath.Join("..", "docs", "validation", "plan", "*.json"))
+	paths, _ := filepath.Glob(filepath.Join("..", "..", "docs", "validation", "plan", "*.json"))
 	var manifest strings.Builder
 	if len(inv.SourceFiles) != len(paths) {
 		t.Fatalf("source file count %d, want %d", len(inv.SourceFiles), len(paths))
@@ -272,21 +272,21 @@ func TestMusicXML40InventoryDigestsAndReproducibleOrdering(t *testing.T) {
 }
 
 func TestMusicXML40InventoryOwnsAllNestedData(t *testing.T) {
-	pristine := MusicXML40Inventory()
-	victim := MusicXML40Inventory()
+	pristine := MusicXML40()
+	victim := MusicXML40()
 	mutateInventory(reflect.ValueOf(&victim).Elem())
 	if reflect.DeepEqual(victim, pristine) {
 		t.Fatal("mutation did not exercise inventory")
 	}
-	if fresh := MusicXML40Inventory(); !reflect.DeepEqual(fresh, pristine) {
+	if fresh := MusicXML40(); !reflect.DeepEqual(fresh, pristine) {
 		t.Fatal("caller mutation corrupted compiled inventory")
 	}
 	var wg sync.WaitGroup
 	for range 8 {
 		wg.Go(func() {
-			v := MusicXML40Inventory()
+			v := MusicXML40()
 			mutateInventory(reflect.ValueOf(&v).Elem())
-			if !reflect.DeepEqual(MusicXML40Inventory(), pristine) {
+			if !reflect.DeepEqual(MusicXML40(), pristine) {
 				t.Error("concurrent caller mutation leaked")
 			}
 		})
@@ -328,7 +328,7 @@ func mutateInventory(v reflect.Value) {
 }
 
 func TestMusicXML40InventoryRemainingPlanningRelations(t *testing.T) {
-	inv := MusicXML40Inventory()
+	inv := MusicXML40()
 	if len(inv.Overlaps) != 342 || len(inv.AdvisoryReviews) != 59 || len(inv.Stages) != 20 || len(inv.Questions) != 28 {
 		t.Fatalf("planning relation counts: %d/%d/%d/%d", len(inv.Overlaps), len(inv.AdvisoryReviews), len(inv.Stages), len(inv.Questions))
 	}
@@ -375,7 +375,7 @@ func TestMusicXML40InventoryRemainingPlanningRelations(t *testing.T) {
 }
 
 func TestMusicXML40InventoryCompoundAndStageLinks(t *testing.T) {
-	inv := MusicXML40Inventory()
+	inv := MusicXML40()
 	records, checks, requirements, stages := map[string]bool{}, map[string]bool{}, map[string]bool{}, map[string]bool{}
 	contracts := map[string]bool{}
 	for _, r := range inv.Checks {
@@ -448,7 +448,7 @@ func TestMusicXML40InventoryCompoundAndStageLinks(t *testing.T) {
 
 func TestInventoryExpectedOutcomesJSONContract(t *testing.T) {
 	for _, input := range []string{`"context stays separate"`, `{"unknown":"missing instance evidence","unsupported":"no provider"}`} {
-		var p InventoryExpectedOutcomes
+		var p ExpectedOutcomes
 		if err := json.Unmarshal([]byte(input), &p); err != nil {
 			t.Fatal(err)
 		}
@@ -461,12 +461,12 @@ func TestInventoryExpectedOutcomesJSONContract(t *testing.T) {
 		}
 	}
 	for _, input := range []string{`12`, `[]`, `{"unsupported":false}`} {
-		var p InventoryExpectedOutcomes
+		var p ExpectedOutcomes
 		if err := json.Unmarshal([]byte(input), &p); err == nil {
 			t.Errorf("accepted malformed outcome representation %s", input)
 		}
 	}
-	if _, err := json.Marshal(InventoryExpectedOutcomes{Description: "text", Outcomes: map[string]string{"fail": "false"}}); err == nil {
+	if _, err := json.Marshal(ExpectedOutcomes{Description: "text", Outcomes: map[string]string{"fail": "false"}}); err == nil {
 		t.Error("ambiguous outcome representation accepted")
 	}
 }

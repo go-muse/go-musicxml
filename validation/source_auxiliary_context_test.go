@@ -52,8 +52,8 @@ func TestSourceContainerMetadataSeparatesPhysicalRaw(t *testing.T) {
 
 func auxiliaryHintSchema(t *testing.T, assembly Assembly) *CompiledSchema {
 	t.Helper()
-	schema, err := CompileSchema(assembly, SchemaData{Elements: map[SchemaName]*SchemaElement{
-		{Local: string(assembly)}: {Name: SchemaName{Local: string(assembly)}, Type: SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}},
+	schema, err := CompileSchema(assembly, SchemaData{Elements: map[QName]*SchemaElement{
+		{Local: string(assembly)}: {Name: QName{Local: string(assembly)}, Type: SchemaTypeRef{Name: QName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}},
 	}})
 	if err != nil {
 		t.Fatal(err)
@@ -65,11 +65,11 @@ func TestSourceAuxiliaryHintsAdditivePlanContract(t *testing.T) {
 	for _, assembly := range []Assembly{AssemblyContainer, AssemblySounds} {
 		t.Run(string(assembly), func(t *testing.T) {
 			schema := auxiliaryHintSchema(t, assembly)
-			legacy, err := NewSchemaHintContextPlan(schema)
+			legacy, err := newSchemaHintContextPlan(schema)
 			if err != nil {
 				t.Fatal(err)
 			}
-			source, err := NewSourceSchemaHintContextPlan(schema)
+			source, err := newSourceSchemaHintContextPlan(schema)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -152,7 +152,7 @@ func auxiliaryHintCatalog(t *testing.T, assembly Assembly, mode string) (*Compil
 		}
 		add(RuleKey{"test.other-scalar", 1}, p, originAssembly, RolePredicate, ScopeNode, true, ImplementationAvailable)
 	}
-	origin, err := NewSourceOriginPlan(originAssembly)
+	origin, err := newSourceOriginPlan(originAssembly)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,9 +161,9 @@ func auxiliaryHintCatalog(t *testing.T, assembly Assembly, mode string) (*Compil
 		originSupport = ImplementationUnsupported
 	}
 	add(originKey, origin, originAssembly, RoleContextProvider, ScopeDocument, mode != "missing-origin", originSupport)
-	hint, err := NewSourceSchemaHintContextPlan(schema)
+	hint, err := newSourceSchemaHintContextPlan(schema)
 	if mode == "legacy" {
-		hint, err = NewSchemaHintContextPlan(schema)
+		hint, err = newSchemaHintContextPlan(schema)
 	}
 	if err != nil {
 		t.Fatal(err)
@@ -196,7 +196,7 @@ func TestSourceAuxiliaryHintOnlyLexicalElection(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				got, ok := engine.SourceAttributeLexicalProvider("auxiliary-hint-test", assembly)
+				got, ok := engine.sourceAttributeLexicalProvider("auxiliary-hint-test", assembly)
 				if mode == "selected" {
 					if !ok || got != key {
 						t.Fatalf("hints alone did not elect exact provider: %+v %v", got, ok)
@@ -210,7 +210,7 @@ func TestSourceAuxiliaryHintOnlyLexicalElection(t *testing.T) {
 						t.Fatal(err)
 					}
 					defer s.cleanup()
-					if err := s.SourceAttributeLexical(context.Background(), key, NodeRef{"source", 1}, QName{Local: "id"}, stateKnown("raw")); !errors.Is(err, ErrInvalidConfiguration) {
+					if err := s.observeSourceAttributeLexical(context.Background(), key, NodeRef{"source", 1}, QName{Local: "id"}, stateKnown("raw")); !errors.Is(err, ErrInvalidConfiguration) {
 						t.Fatalf("unelected ingress accepted: %v", err)
 					}
 				}
@@ -240,10 +240,10 @@ func TestSourceAuxiliaryHintOnlyEffectiveAndPhysicalValues(t *testing.T) {
 				h := schemaPendingHeader()
 				h.Name.Local = string(assembly)
 				h.Location = sourceOriginPhysical().Physical.Value
-				if err := s.Open(ctx, h); err != nil {
+				if err := s.OpenNode(ctx, h); err != nil {
 					t.Fatal(err)
 				}
-				if err := s.SourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
+				if err := s.sourceOrigin(ctx, key, sourceOriginPhysical()); err != nil {
 					t.Fatal(err)
 				}
 				physical := kind == SourceOriginPhysical
@@ -254,14 +254,14 @@ func TestSourceAuxiliaryHintOnlyEffectiveAndPhysicalValues(t *testing.T) {
 					if physical {
 						raw = stateKnown("  " + attribute.value + "  ")
 					}
-					if err := s.SourceAttributeLexical(ctx, key, o.Subject, name, raw); err != nil {
+					if err := s.observeSourceAttributeLexical(ctx, key, o.Subject, name, raw); err != nil {
 						t.Fatal(err)
 					}
 				}
-				if err := s.Close(ctx, schemaLexemeEnd("value")); err != nil {
+				if err := s.CloseNode(ctx, schemaLexemeEnd("value")); err != nil {
 					t.Fatal(err)
 				}
-				if err := s.CompleteSourceOrigins(ctx, key, stateKnown(true)); err != nil {
+				if err := s.completeSourceOrigins(ctx, key, stateKnown(true)); err != nil {
 					t.Fatal(err)
 				}
 				report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
