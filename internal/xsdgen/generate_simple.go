@@ -101,9 +101,11 @@ type simpleTypeRenderer struct {
 	// of namedBuiltinTypes. Only the complex generation sets it, because only
 	// it declares those types; other generations keep raw Go integers.
 	namedBuiltins bool
-	// takenNames holds the package-scope type names of this generation, so
-	// that a named built-in type avoids them when there is no manifest.
-	takenNames map[string]string
+	// takenNames holds the package-scope type names of this generation and
+	// constantNames the enumeration constants of the package, so that a named
+	// built-in type avoids both when there is no manifest.
+	takenNames    map[string]string
+	constantNames map[string]bool
 	// builtinNames maps the built-in types that fields reference by name to
 	// their Go names.
 	builtinNames map[string]string

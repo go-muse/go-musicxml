@@ -82,3 +82,35 @@ func TestConvertGraphRejectsOtherShapes(t *testing.T) {
 		t.Fatal("conversion ignored the compile limits")
 	}
 }
+
+// The Patterns contract: alternatives within one restriction layer, an
+// intersection across layers.
+func TestSchemaSimplePatternsAreAlternativesWithinALayer(t *testing.T) {
+	str := &SchemaSimpleMember{Name: QName{Space: SchemaXSDNamespace, Local: "string"}}
+	public := SchemaData{Types: map[QName]*SchemaType{
+		{Local: "word"}:  {Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: str, Patterns: []string{"[0-9]+", "[a-z]+"}}},
+		{Local: "short"}: {Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: QName{Local: "word"}}, Patterns: []string{".{3}"}}},
+		{Local: "free"}:  {Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: QName{Local: "word"}}}},
+	}}
+	var kernel xsd.SchemaData
+	if err := xsd.ConvertGraph(&kernel, public); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CompileSchema(AssemblyMusicXML, public); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		typ, value string
+		valid      bool
+	}{
+		{"word", "123", true}, {"word", "abc", true}, {"word", "12a", false},
+		{"short", "123", true}, {"short", "abc", true}, {"short", "1234", false}, {"short", "12a", false},
+		{"free", "1234", true}, {"free", "12a", false},
+	} {
+		c := &xsd.Context{Schema: &kernel}
+		_, failure := c.AssessSimpleValue(kernel.Types[xsd.QName{Local: test.typ}].Simple, test.value, test.value)
+		if (failure == nil) != test.valid {
+			t.Errorf("%s %q: failure %+v, want valid=%t", test.typ, test.value, failure, test.valid)
+		}
+	}
+}

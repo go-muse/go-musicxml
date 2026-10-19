@@ -45,7 +45,11 @@ type SchemaSimple struct {
 	Members []*SchemaSimpleMember
 	// Item is the item type of a list.
 	Item *SchemaSimpleMember
-	// Patterns lists XSD regular expressions; a value must match all of them.
+	// Patterns lists the XSD regular expressions of this restriction layer;
+	// empty permits all. Only a restriction uses them; a list or union ignores
+	// them. Within one layer they are alternatives: a value must match at least
+	// one. Layers intersect: a value must also satisfy the patterns of every
+	// base type it restricts.
 	Patterns []string
 
 	// Bound facets are lexical values in the base type's value space. Each

@@ -141,6 +141,7 @@ func GenerateComplexTypesWithOptions(
 	}
 	simpleRenderer.namedBuiltins = true
 	simpleRenderer.takenNames = renderer.usedTypeNames
+	simpleRenderer.constantNames = enumerationConstantNames(simplePlans)
 
 	var body bytes.Buffer
 	for planIndex := range complexPlans {

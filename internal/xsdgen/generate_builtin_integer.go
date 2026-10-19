@@ -72,9 +72,12 @@ func (r *simpleTypeRenderer) fieldGoType(declaration *Declaration) (GoType, erro
 			return GoType{}, err
 		}
 	} else {
-		// Without a manifest, avoid the names of this generation's types.
+		// Without a manifest, avoid the names of this generation's types and
+		// the package's enumeration constants. Names are then unique only
+		// within this generation: a package built from several generations
+		// (element, document) needs a shared manifest (-names).
 		name = named.Expression
-		for suffix := 2; r.takenNames[name] != ""; suffix++ {
+		for suffix := 2; r.takenNames[name] != "" || r.constantNames[name]; suffix++ {
 			name = named.Expression + strconv.Itoa(suffix)
 		}
 	}
@@ -127,4 +130,17 @@ func (r *simpleTypeRenderer) renderNamedBuiltins(target *bytes.Buffer) {
 		fmt.Fprintf(target, "func (value *%s) UnmarshalText(text []byte) error {\n", name)
 		fmt.Fprintf(target, "return (*%s)(value).UnmarshalText(text)\n}\n\n", named.codec)
 	}
+}
+
+// enumerationConstantNames returns the Go names of the enumeration constants
+// that the simple generation emits for plans, collected with the renderer's
+// own inlineEnumerations so that the two sets stay identical.
+func enumerationConstantNames(plans []SimpleTypePlan) map[string]bool {
+	names := make(map[string]bool)
+	for index := range plans {
+		for _, enumeration := range inlineEnumerations(plans[index].Definition) {
+			names[enumeration.GoName] = true
+		}
+	}
+	return names
 }

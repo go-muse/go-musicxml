@@ -148,3 +148,48 @@ func TestNamedBuiltinAvoidsSchemaNamesWithoutManifest(t *testing.T) {
 	require.NoError(t, err)
 	typeCheckGenerated(t, simple, plain)
 }
+
+// Without a manifest the named type also avoids enumeration constants, such
+// as PositiveInteger for the value "integer" of the type "positive".
+func TestNamedBuiltinAvoidsConstantsWithoutManifest(t *testing.T) {
+	t.Parallel()
+
+	index, err := NewIndex(&Set{Files: []*SchemaFile{parseSchemaFile(t, "types.xsd", `
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:simpleType name="positive">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="integer"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="non-negative">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:token">
+					<xs:enumeration value="integer"/>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:integer"/>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:complexType name="holder">
+		<xs:sequence>
+			<xs:element name="count" type="xs:positiveInteger"/>
+			<xs:element name="total" type="xs:nonNegativeInteger"/>
+			<xs:element name="tag" type="positive"/>
+			<xs:element name="kind" type="non-negative"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>`)}})
+	require.NoError(t, err)
+	simple, err := GenerateSimpleTypes(index, "example")
+	require.NoError(t, err)
+	complex, err := GenerateComplexTypes(index, "example")
+	require.NoError(t, err)
+	assert.Contains(t, string(simple), "PositiveInteger Positive = \"integer\"")
+	assert.Contains(t, string(simple), "NonNegativeInteger NonNegative = \"integer\"")
+	assert.Contains(t, string(complex), "type PositiveInteger2 uint64")
+	assert.Contains(t, string(complex), "type NonNegativeInteger2 uint64")
+	typeCheckGenerated(t, simple, complex)
+}
