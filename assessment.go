@@ -194,7 +194,7 @@ func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessm
 
 // decodeAssessedRun preserves the single source/parser owner for both the
 // original public API and additive capability wrappers.
-func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfig assessmentRunConfig, priorErr error, lenient bool) (result DecodeResult, err error) {
+func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, loadModel func() (assessmentRunConfig, error), lenient bool) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	// The mapping decoder only receives namespace-neutral projected elements and
 	// the existing allowlisted expanded attributes. Its namespace table is empty.
@@ -239,19 +239,23 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 	// operational failure, which no mode tolerates. The lenient mode still
 	// assesses the model after source findings, so that both reports exist.
 	acceptanceErr := sourceAcceptanceError(report)
-	// priorErr is a dictionary import failure that still returned a set. Line
-	// 3 runs anyway, so that its report shows the unavailable dictionary
-	// evidence; the failure still rejects the document.
-	streamErr := errors.Join(conversionErr, sourceErr, finishErr)
-	operationErr := errors.Join(priorErr, streamErr)
+	operationErr := errors.Join(conversionErr, sourceErr, finishErr)
 	modelAssessed := false
-	if streamErr == nil && (acceptanceErr == nil || lenient) {
-		var modelErr error
-		var modelStatus modelWalkStatus
-		result.ModelLine, modelStatus, modelErr = assessModelWithConfig(ctx, document, modelConfig, modelWalkOptions{})
-		operationErr = errors.Join(priorErr, modelErr)
-		acceptanceErr = errors.Join(acceptanceErr, modelAcceptanceError(result.ModelLine, modelStatus))
-		modelAssessed = true
+	if operationErr == nil && (acceptanceErr == nil || lenient) {
+		// Line 3 imports its dictionaries only now. An import failure that
+		// still returned a set lets line 3 run, so that its report shows the
+		// unavailable dictionary evidence; the failure still rejects the
+		// document.
+		modelConfig, importErr := loadModel()
+		operationErr = importErr
+		if modelConfig.Dictionaries != nil {
+			var modelErr error
+			var modelStatus modelWalkStatus
+			result.ModelLine, modelStatus, modelErr = assessModelWithConfig(ctx, document, modelConfig, modelWalkOptions{})
+			operationErr = errors.Join(importErr, modelErr, modelConfig.Dictionaries.Close())
+			acceptanceErr = errors.Join(acceptanceErr, modelAcceptanceError(result.ModelLine, modelStatus))
+			modelAssessed = true
+		}
 	}
 	accepted := operationErr == nil && acceptanceErr == nil && modelAssessed
 	err = operationErr

@@ -42,11 +42,14 @@ The acceptance sequence is:
 
 1. Validate context, profile, decode limits, budgets and dictionary configuration
    before reading input or calling a dictionary source.
-2. Import one dictionary set for line 3, then run line 2, `ProfileSourceLine`,
-   on the original source while converting through the existing mapping path.
-   Line 2 reads no dictionaries. Source EOF, line-2 acceptance, successful
-   conversion and no earlier stream error are required to advance.
-3. Run line 3, `ProfileModelSemantics`, on the actual converted Go object. The
+2. Run line 2, `ProfileSourceLine`, on the original source while converting
+   through the existing mapping path. Line 2 reads no dictionaries. Source EOF,
+   line-2 acceptance, successful conversion and no earlier stream error are
+   required to advance; the lenient mode advances after any line 2 without an
+   operational failure.
+3. Import one dictionary set for line 3, then run line 3,
+   `ProfileModelSemantics`, on the actual converted Go object. A document that
+   does not reach line 3 never calls the dictionary source. The
    walker uses current field/index facts directly; it does not invent source
    bytes, lexical values, namespace declarations or discarded attributes. A
    dictionary import that failed but returned a set does not stop line 3, so
