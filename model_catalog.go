@@ -59,7 +59,7 @@ func buildModelAssessmentDefinitions() (*assessmentDefinitions, error) {
 		ID: ProfileModelXSD, MusicXMLVersion: "4.0", Target: validation.TargetModel,
 		RegistryCommit:   assessmentRegistryCommit,
 		SupportedRoots:   []validation.QName{{Local: "score-partwise"}, {Local: "score-timewise"}, {Local: "opus"}},
-		NormativeClosure: "Current generated MusicXML 4.0 score and opus model structure and value XSD assessment, with required model representation checks. Current field/Content order is assessed without reconstructing original XML. Finite float64 decimal fields mean their exact current binary rational value. Source lexical history, encoder spellings, MusicXML prose, timeline, intent, packages, linked resources and external dictionaries are outside this profile. Reached unavailable lexical/value/default/identity capabilities remain incomplete. Composite counts are predicate instances, not research-record coverage.",
+		NormativeClosure: "Current generated MusicXML 4.0 score and opus model structure and value XSD assessment, with required model representation checks. Current field/Content order is assessed without reconstructing original XML. Finite float64 decimal fields mean the shortest decimal that reads back to the same float64. Source lexical history, encoder spellings, MusicXML prose, timeline, intent, packages, linked resources and external dictionaries are outside this profile. Reached unavailable lexical/value/default/identity capabilities remain incomplete. Composite counts are predicate instances, not research-record coverage.",
 	}
 	modelLocal := validation.Profile{
 		ID: ProfileModelLocal, MusicXMLVersion: "4.0", Target: validation.TargetModel,

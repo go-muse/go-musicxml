@@ -29,8 +29,8 @@ const modelDocumentID = "model"
 // without XML coordinates. The caller must not mutate the document concurrently.
 // Assessment never modifies the document or fetches linked resources.
 //
-// Finite float64 decimal fields mean their exact current binary rational value,
-// not an encoder's shortest decimal spelling. String-backed fields provide their
+// Finite float64 decimal fields mean the shortest decimal that reads back to the
+// same float64, so float64(0.1) is decimal 1/10. String-backed fields provide their
 // current string to shared schema-domain checks, never an original source lexeme.
 func AssessModel(ctx context.Context, document Document, options AssessmentOptions) (validation.Report, error) {
 	if assessment, dictionaries, ok := options.scenario(ProfileModelSemantics); ok {

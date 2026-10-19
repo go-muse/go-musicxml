@@ -180,22 +180,9 @@ func (b AssessmentBundle) Failures() BundleFailures {
 
 // reportViolated reports a proved violation, whether or not its diagnostics
 // were kept.
+// A failed model-category decision rejects the report like a violation.
 func reportViolated(r Report) bool {
-	return r.Conformance == ConformanceViolated || r.Counts.Fail != 0 || reportModelFailures(r) != 0
-}
-
-// reportModelFailures counts the stored failed model-category findings, such
-// as a value the Go model cannot hold. Each also counts as one blocking
-// problem; it rejects the report like a violation rather than leaving it
-// incomplete.
-func reportModelFailures(r Report) uint64 {
-	var n uint64
-	for _, f := range r.Findings {
-		if f.Outcome == OutcomeFail && f.Category == CategoryModel {
-			n++
-		}
-	}
-	return n
+	return r.Conformance == ConformanceViolated || r.Counts.Fail != 0 || r.ModelFailures != 0
 }
 
 // reportOnlyViolated reports that every acceptance axis except conformance is
@@ -203,6 +190,6 @@ func reportModelFailures(r Report) uint64 {
 func reportOnlyViolated(r Report) bool {
 	return r.Requested && r.Profile.ID != "" && r.Target == r.Profile.Target &&
 		r.InputComplete && reportSyntaxComplete(r.Target, r.Syntax) && r.AssessmentComplete &&
-		r.BlockingProblems <= reportModelFailures(r) && r.Terminal == nil &&
+		r.BlockingProblems <= r.ModelFailures && r.Terminal == nil &&
 		r.Counts.Unknown == 0 && r.Counts.Unsupported == 0 && r.Counts.Blocked == 0
 }

@@ -608,11 +608,17 @@ func decodeInfosetDocument(ctx context.Context, reader io.Reader, limits mxlLimi
 	if err != nil {
 		return nil, err
 	}
-	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: limits.infoset, MaxDepth: maxDepth, ByteOwner: sourceBytesPrimary, InternalDTD: true, DTD: newSourceDTDResolver(limits.dtd)})
+	// The archive bytes are already charged as input, as for the source stage.
+	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: limits.infoset, MaxDepth: maxDepth, ByteOwner: sourceBytesAccounted, InternalDTD: true, DTD: newSourceDTDResolver(limits.dtd)})
 	if err != nil {
 		return nil, err
 	}
 	defer func() { err = errors.Join(err, lexical.Close()) }()
 	projected := &namespaceXMLTokenReader{source: xml.NewTokenDecoder(lexical), allowQualifiedAttribute: musicXMLQualifiedAttribute}
-	return decodeProjectedDocument(xml.NewTokenDecoder(projected))
+	decoder := xml.NewTokenDecoder(projected)
+	if document, err = decodeProjectedDocument(decoder); err != nil {
+		return document, err
+	}
+	// Like DecodeContext, reject content after the document element.
+	return document, readDocumentTail(decoder)
 }

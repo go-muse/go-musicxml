@@ -13,7 +13,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   so `0.1 + 0.2` did not equal `0.3`, and timeline rules such as
   `MX40-TIMELINE-numeral-requires-key` failed or passed falsely on models, in
   `AssessModel` and in strict loading. A decimal field now means the shortest
-  decimal that reads back to the same `float64`.
+  decimal that reads back to the same `float64`. Model profile identities
+  change with this contract.
 - Strict loading rejects, in the source, every numeric value the model cannot
   hold unchanged, with the new model-category rule
   `MX40-SOURCE-REPRESENTABLE-musicxml`/`-opus`: a decimal with more than 17
@@ -542,7 +543,8 @@ or changed identifier to its replacement.
   `ProfileModelLocal`, plus `ProfileSourceLocal` for the same bounded local
   clauses on original input. Preserve the existing generated `Assess` type.
   Model reports use current field/index evidence without original XML positions;
-  finite `float64` decimals mean their exact binary rational value.
+  finite `float64` decimals mean the shortest decimal that reads back to the
+  same `float64`.
 
 - Add generated representation metadata, bounded iterative traversal,
   model-representation facts and sealed local/typed-reference plans sharing

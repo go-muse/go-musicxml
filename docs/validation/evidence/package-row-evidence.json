@@ -6826,56 +6826,56 @@
       "function": "TestAuxiliaryDiagnosticsCannotEraseViolation",
       "line": 323,
       "end_line_bound": 351,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliaryFrozenEightProfiles": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliaryFrozenEightProfiles",
       "line": 272,
       "end_line_bound": 322,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySoundsAssemblyAndSourceOnly": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySoundsAssemblyAndSourceOnly",
       "line": 146,
       "end_line_bound": 196,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySoundsBrokenGrammarRetainsKnownSound": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySoundsBrokenGrammarRetainsKnownSound",
       "line": 134,
       "end_line_bound": 145,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySoundsCausalInvalidFields": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySoundsCausalInvalidFields",
       "line": 96,
       "end_line_bound": 133,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySoundsDirectionalMappings": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySoundsDirectionalMappings",
       "line": 37,
       "end_line_bound": 95,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySourceOwnershipAndBudgets": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySourceOwnershipAndBudgets",
       "line": 218,
       "end_line_bound": 271,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence": {
       "file": "auxiliary_sounds_context_test.go",
       "function": "TestAuxiliarySourceUnavailableEvidence",
       "line": 197,
       "end_line_bound": 217,
-      "file_sha256": "8d4226a4b2e5d3dfd45fad9c96a715bf125253ee95c3124bb261d82928f4b317"
+      "file_sha256": "4fa40d829397b29ea106100ae165e70e310def933bbe39e809c7edbc175afb2c"
     },
     "auxiliary_source_assessment_test.go::TestAuxiliaryGeneratedSchemaMetadata": {
       "file": "auxiliary_source_assessment_test.go",

@@ -73,11 +73,27 @@ func (r ModelRepresentation) Represents(value Decimal) bool {
 	if value.Whole == "" && value.Fraction == "" {
 		return true
 	}
-	// A shortest binary64 form has at most 17 significant digits, and binary64
-	// covers 309 integral digits and 324 leading fractional zeros.
-	significant := strings.TrimLeft(value.Whole+value.Fraction, "0")
-	if len(significant) > 17 || len(value.Whole) > 309 || len(value.Fraction)-len(significant) > 324 {
+	// A binary64 covers 309 integral digits and 324 leading fractional zeros,
+	// and its shortest form has at most 17 significant digits. Check these
+	// bounds on the parsed parts before building any text: the significant
+	// digits run from the first to the last nonzero digit, and Decimal keeps
+	// neither leading integral nor trailing fractional zeros.
+	if len(value.Whole) > 309 {
 		return false
+	}
+	if value.Whole != "" {
+		last := len(strings.TrimRight(value.Whole, "0"))
+		if value.Fraction != "" {
+			last = len(value.Whole) + len(value.Fraction)
+		}
+		if last > 17 {
+			return false
+		}
+	} else {
+		leading := len(value.Fraction) - len(strings.TrimLeft(value.Fraction, "0"))
+		if leading > 324 || len(value.Fraction)-leading > 17 {
+			return false
+		}
 	}
 	text := "0" + value.Whole
 	if value.Fraction != "" {

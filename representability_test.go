@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"math"
 	"strings"
 	"testing"
 
@@ -65,7 +66,7 @@ func TestSourceRepresentabilityRule(t *testing.T) {
 			if result.Document != nil || !errors.Is(err, ErrInvalidDocument) {
 				t.Fatalf("unrepresentable document: document=%T error=%v", result.Document, err)
 			}
-			if errors.Is(err, ErrIncompleteAssessment) && !strings.Contains(tc.name, "integer") {
+			if errors.Is(err, ErrIncompleteAssessment) {
 				t.Errorf("a representability failure reported as incomplete: %v", err)
 			}
 		})
@@ -116,4 +117,60 @@ func ruleFailed(r validation.Report, rule string) bool {
 		}
 	}
 	return false
+}
+
+// Representability failures reject the document as invalid even when their
+// diagnostics are not stored: the decision is counted in ModelFailures.
+func TestRepresentabilityRejectionSurvivesDiagnosticTruncation(t *testing.T) {
+	two := representabilityScore("", representabilityNote("1.00000000000000000001", "")+representabilityNote("2.00000000000000000001", ""))
+	for name, budgets := range map[string]validation.Budgets{
+		"one stored diagnostic": {MaxDiagnostics: 1},
+		"no diagnostic bytes":   {MaxDiagnosticBytes: 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			result, err := DecodeAssessed(context.Background(), strings.NewReader(two), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Budgets: budgets}})
+			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || result.Source.ModelFailures != 2 || result.Document != nil {
+				t.Fatalf("truncated rejection: model failures=%d error=%v", result.Source.ModelFailures, err)
+			}
+			mxl, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(rawMXL(t, two)), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: budgets}}})
+			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || !mxl.Source.Failures().Violated {
+				t.Fatalf("truncated MXL rejection: failures=%+v error=%v", mxl.Source.Failures(), err)
+			}
+		})
+	}
+}
+
+// Every value a model holds survives Encode and strict loading: large
+// integral decimals, the largest float64 and the smallest subnormal.
+func TestEncodedModelValuesAreRepresentable(t *testing.T) {
+	for _, value := range []float64{1e22, 1e18, 123456.789, 0.1, math.MaxFloat64, math.SmallestNonzeroFloat64} {
+		x := Tenths(value)
+		document := &ScorePartwise{PartList: PartList{Content: PartListContents{{ScorePart: &ScorePart{ID: "P1", PartName: PartName{Value: "Piano"}}}}},
+			Part: []ScorePartwisePart{{ID: "P1", Measure: []ScorePartwisePartMeasure{{Number: "1", Width: &x}}}}}
+		var encoded bytes.Buffer
+		if err := Encode(&encoded, document); err != nil {
+			t.Fatal(err)
+		}
+		report, err := InspectXML(context.Background(), bytes.NewReader(encoded.Bytes()), AssessmentOptions{Profile: ProfileSourceSemantics})
+		if err != nil || hasRepresentabilityFailure(report) {
+			t.Errorf("%g: encoded model value rejected as unrepresentable: %v", value, err)
+		}
+	}
+}
+
+// The model stage classifies a failed model-category decision as the source
+// stage does: a violation, not an incomplete assessment.
+func TestModelAcceptanceTreatsModelFailuresAsViolations(t *testing.T) {
+	report := validation.Report{Requested: true, Profile: validation.Profile{ID: ProfileModelSemantics, Target: validation.TargetModel}, Target: validation.TargetModel,
+		Syntax: validation.SyntaxNotAssessed, Conformance: validation.ConformanceConformant, AssessmentComplete: true, InputComplete: true,
+		BlockingProblems: 1, ModelFailures: 1,
+		Findings: []validation.Finding{{Decision: validation.Decision{Rule: validation.RuleKey{ID: "MX40-MODEL-REPRESENTATION-musicxml", Revision: 1}, Outcome: validation.OutcomeFail, Reason: "model-nonfinite"}, Category: validation.CategoryModel}}}
+	err := modelAcceptanceError(report, modelWalkStatus{})
+	if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) {
+		t.Fatalf("model failure: %v", err)
+	}
+	report.BlockingProblems = 2
+	if err := modelAcceptanceError(report, modelWalkStatus{}); !errors.Is(err, ErrIncompleteAssessment) {
+		t.Fatalf("an extra blocking problem must stay incomplete: %v", err)
+	}
 }

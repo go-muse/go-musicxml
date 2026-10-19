@@ -453,15 +453,20 @@ type TerminalSummary struct {
 type Report struct {
 	// Context contains bounded independently owned facts from selected context
 	// providers. Optional fact availability is independent of conformance.
-	Context              []ContextResult
-	Requested            bool
-	Profile              Profile
-	Target               Target
-	Syntax               SyntaxState
-	Conformance          ConformanceState
-	AssessmentComplete   bool
-	Counts               Counts
-	BlockingProblems     uint64
+	Context            []ContextResult
+	Requested          bool
+	Profile            Profile
+	Target             Target
+	Syntax             SyntaxState
+	Conformance        ConformanceState
+	AssessmentComplete bool
+	Counts             Counts
+	BlockingProblems   uint64
+	// ModelFailures counts the failed model-category decisions, such as a
+	// value the Go model cannot hold. Each is also a blocking problem, and it
+	// rejects the report like a violation; it does not depend on whether its
+	// diagnostic was stored.
+	ModelFailures        uint64 `json:",omitempty"`
 	Findings             []Finding
 	Rules                []RuleDefinition
 	DiagnosticsTruncated bool

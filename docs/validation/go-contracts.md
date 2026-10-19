@@ -258,9 +258,12 @@ numeric strings on every comparison. Union members retain distinct whitespace
 policies and declaration order. Model adapters wrap their existing exact values;
 they do not duplicate source lexical/domain validation. No `float64` comparison
 substitutes for XSD decimal
-value-space validation. For current finite Go `float64` fields, the adapter may
-supply their exact binary value as a rational (for example, `big.Rat.SetFloat64`),
-marked as current-model evidence; it cannot recover the original decimal.
+value-space validation. For current finite Go `float64` fields, the adapter
+supplies the shortest decimal that reads back to the same `float64` (the value a
+decoder read from that text), marked as current-model evidence; it cannot
+recover the original decimal. This interpretation was selected by an explicit
+profile decision (model profile identities changed); strict loading rejects, in
+the source, values whose shortest form differs.
 NaN/Inf in a model decimal is a model/value-domain problem, not fabricated source
 syntax. Selecting a different decimal/export interpretation requires an explicit
 profile decision and tests; calling the encoder to obtain a value is prohibited.

@@ -446,33 +446,25 @@ func sourceAcceptanceError(report validation.Report) error {
 		return nil
 	}
 	// A failed model-category rule, such as a value the Go model cannot hold
-	// unchanged, rejects the document like a normative violation; it is counted
-	// as a blocking problem rather than in Counts.
+	// unchanged, rejects the document like a normative violation. It is counted
+	// in ModelFailures and as a blocking problem, not in Counts.
 	issues := make([]ValidationIssue, 0)
-	modelFailures := 0
 	for _, finding := range report.Findings {
-		if finding.Outcome != validation.OutcomeFail {
-			continue
-		}
-		switch finding.Category {
-		case validation.CategoryNormative:
+		if finding.Outcome == validation.OutcomeFail && (finding.Category == validation.CategoryNormative || finding.Category == validation.CategoryModel) {
 			issues = append(issues, assessmentIssue(finding))
-		case validation.CategoryModel:
-			issues = append(issues, assessmentIssue(finding))
-			modelFailures++
 		}
 	}
 	var invalid error
-	if report.Conformance == validation.ConformanceViolated || modelFailures != 0 {
+	if report.Conformance == validation.ConformanceViolated || report.ModelFailures != 0 {
 		invalid = &ValidationError{Issues: issues}
 		if report.DiagnosticsTruncated {
 			// Counts measure rule evaluations, not individual details. Preserve
 			// only stored details in Issues; a bounded operation summary neither
 			// invents missing locations nor consumes another diagnostic slot.
-			invalid = fmt.Errorf("%w; source assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail)
+			invalid = fmt.Errorf("%w; source assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail+report.ModelFailures)
 		}
 	}
-	if !report.AssessmentComplete || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.BlockingProblems > uint64(modelFailures) || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
+	if !report.AssessmentComplete || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.BlockingProblems > report.ModelFailures || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
 		return errors.Join(invalid, &validation.IncompleteError{Reason: "source-profile-not-satisfied"})
 	}
 	return invalid
