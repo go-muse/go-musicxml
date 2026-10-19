@@ -47,11 +47,13 @@ type DecodeMXLResult struct {
 // DecodeMXLAssessed is scenario 2, strict loading of an MXL archive. It reads
 // the archive once and runs validation line 2 on it, as InspectMXL does with
 // ProfileMXLSourceLine: the original archive bytes and schema hints that the
-// converted package does not keep, with the first rootfile document, which
-// conversion decodes, assessed by ProfileSourceLine. Line 2 follows no
-// resource links and leaves later rootfiles, which the package keeps as
-// bytes, to line 3. It then converts the
-// archive as DecodeMXLPackageContext does and runs line 3 on the current
+// converted package does not keep and the first rootfile's media type, with
+// the first rootfile document, which conversion decodes, assessed by
+// ProfileSourceLine. Line 2 follows no resource links, asks the caller's
+// resolver for nothing and leaves later rootfiles, which the package keeps as
+// bytes, to line 3. It then converts the archive as DecodeMXLPackageContext
+// does, decoding the root document and the container from the DTD infoset
+// that line 2 assessed, and runs line 3 on the current
 // state of the whole converted package, as AssessMXLPackage does with
 // ProfileMXLModelSemantics, including the linked files the package retains as
 // bytes. AssessMXLPackage on result.Package with the same Assessment options
@@ -59,8 +61,8 @@ type DecodeMXLResult struct {
 //
 // Every option is checked before the reader is touched. The archive is read
 // once into a buffer and indexed for line 2, both metered as in InspectMXL.
-// Both lines use the same resources, resolver and dependencies; only line 3
-// follows resource links and asks the caller's resolver for them. The lines
+// The resources, resolver and dependencies serve line 3; line 2 validates
+// them and dispatches no resolver request. The lines
 // share one account bounded by Assessment.Graph.Budgets; only line 3 imports
 // the dictionaries, and an import that fails but returns a set still lets it
 // report the unavailable evidence, while the package is withheld. The archive bytes stay charged to

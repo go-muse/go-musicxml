@@ -56,7 +56,7 @@ func TestMXLPackageSyncResolvedOpus(t *testing.T) {
 		RootFiles: []MXLRootFile{
 			{
 				FullPath:  "collections/main.musicxml",
-				MediaType: musicXMLMIMEType,
+				MediaType: Ptr(musicXMLMIMEType),
 			},
 		},
 		Resources: []MXLResource{
@@ -371,7 +371,7 @@ func newMXLOpusSyncTestPackage() *MXLPackage {
 		RootFiles: []MXLRootFile{
 			{
 				FullPath:  "collections/main.musicxml",
-				MediaType: musicXMLMIMEType,
+				MediaType: Ptr(musicXMLMIMEType),
 			},
 		},
 		Resources: []MXLResource{

@@ -33,8 +33,9 @@ of the semantic profiles changed with that split (see the CHANGELOG).
   evidence retain their separate scope. Retained source children are assessed as
   source even when their primary package document is a current model.
   `ProfileMXLSourceLine`, validation line 2 of strict MXL loading, selects only
-  the archive-byte checks and schema-hint pairing, binds `ProfileSourceLine`
-  for its documents and follows no resource links.
+  the archive-byte checks, the original first rootfile media type and
+  schema-hint pairing, binds `ProfileSourceLine` for its first rootfile and
+  follows no resource links.
 
 The source-only Container interpretation retains bounded DTD/effective metadata
 and independently owned physical origins. The existing explicit Sounds auxiliary

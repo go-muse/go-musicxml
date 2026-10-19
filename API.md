@@ -105,7 +105,9 @@ The three scenarios share three validation lines, named by the
    the numeric values the Go model cannot hold (see
    [Model representability](#model-representability)).
    `ProfileMXLSourceLine` adds the original archive bytes (container path,
-   mimetype entry, entry names, compression) and schema-hint pairing, and
+   mimetype entry, entry names, compression), the first rootfile's media type,
+   which conversion refuses when it is not MusicXML, and schema-hint pairing,
+   and
    assesses the first rootfile document, the one conversion decodes, with
    `ProfileSourceLine`; it follows no resource links and leaves later
    rootfiles, which the package keeps as bytes, to line 3.
@@ -123,6 +125,10 @@ lists the only accepted overlap with its reasons:
   (about 3% of `DecodeAssessed`, by the design estimate);
 - the archive-byte checks, which `ProfileMXLModelSemantics` applies only to
   the files a converted package keeps as bytes, such as a nested raw MXL;
+- the first rootfile's media type: line 2 decides it before conversion, which
+  refuses a non-MusicXML first rootfile, so that strict loading reports a
+  violation instead of a conversion error; line 3 decides it from the current
+  `RootFiles`, which keep it as written;
 - the source checks of those retained files: line 3 assesses them with source
   profiles, because for them the bytes are the structure. Line 2 assesses only
   what conversion consumes, the container and the first rootfile, so no file
@@ -265,16 +271,18 @@ strict mode the document is returned exactly when `Accepted` is true.
    `InspectMXL`; its terminated assessment returns an error that matches
    `ErrIncompleteAssessment`, in both modes.
 2. It runs validation line 2 on the original archive with
-   `ProfileMXLSourceLine`: the archive-byte checks and schema-hint pairing,
-   with the first rootfile document assessed by `ProfileSourceLine`. It
-   follows no resource links, so it does not ask the caller's resolver, and
+   `ProfileMXLSourceLine`: the archive-byte checks, the original first
+   rootfile media type and schema-hint pairing, with the first rootfile
+   document assessed by `ProfileSourceLine`. It follows no resource links and
+   asks the caller's resolver for nothing, whatever `Dependencies` select, and
    leaves later rootfiles to line 3.
 3. In the default strict mode only after line 2 accepts the archive, and in
    the lenient mode after any line-2 stage without an operational failure, it
    converts the buffered bytes as `DecodeMXLPackageContext` does, except that
-   the root document is decoded from the DTD infoset that line 2 assessed, as
-   `DecodeAssessed` does: DTD defaults reach the model and internal-subset
-   entities expand. DTDs resolve from `Graph.DTD` first, as in line 2.
+   the root document and `META-INF/container.xml` are decoded from the DTD
+   infoset that line 2 assessed, as `DecodeAssessed` does: DTD defaults reach
+   the model and `RootFiles`, and internal-subset entities expand. DTDs
+   resolve from `Graph.DTD` first, as in line 2.
 4. It runs validation line 3 on the current state of the converted package as
    `AssessMXLPackage` does with `ProfileMXLModelSemantics`, with the same
    resources, resolver and dependencies, and returns that bundle as
@@ -2065,7 +2073,9 @@ Resource order and bytes are preserved; ZIP compression metadata is not.
 Container elements and attributes are matched by their expanded XML names;
 namespace declarations and foreign-namespace lookalikes cannot select root
 files. Root-file paths and media types are interpreted using XSD token
-whitespace normalization. Opus hrefs use XSD anyURI whitespace normalization
+whitespace normalization. `MXLRootFile.MediaType` is nil when the
+`media-type` attribute is absent, which means the MusicXML media type; a
+present attribute is kept, even when it is empty, and encoded as written. Opus hrefs use XSD anyURI whitespace normalization
 before URI parsing; literal ZIP resource names and percent-encoded spaces are
 unchanged. Encoding validates archive paths and rejects collisions with
 reserved or primary paths. Root-file paths and media types must also be
@@ -2667,9 +2677,10 @@ alternate renditions are not fed to the musical XML parser. Primary target kind,
 media type and intrinsic child conformance remain separate evidence.
 
 Current package assessment walks `Document` directly with `ProfileModelLinks`.
-An empty `RootFiles` uses the encoder's current-state `score.musicxml` default;
-empty current media-type fields follow its omission convention. This does not
-recover the original container, source order, headers or attribute presence.
+An empty `RootFiles` uses the encoder's current-state `score.musicxml` default.
+A nil `MediaType` is absent and means the MusicXML media type; a non-nil one,
+even empty, is decided as written, as the encoder writes it. This does not
+recover the original container, source order or headers.
 Selected `Resources` bytes receive admitted independent copies before parsing.
 Callers must not mutate any inputs during assessment. Current field locations
 identify rootfile occurrences without inventing source XML nodes.

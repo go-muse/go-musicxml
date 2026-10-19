@@ -2548,7 +2548,7 @@ type MXLResource struct, field order Path Data
 type MXLResource struct, not comparable
 type MXLRootFile struct, comparable
 type MXLRootFile struct, field FullPath string
-type MXLRootFile struct, field MediaType string
+type MXLRootFile struct, field MediaType *string
 type MXLRootFile struct, field order FullPath MediaType
 type MarginType string
 type MarginType, method (MarginType) IsKnown() bool

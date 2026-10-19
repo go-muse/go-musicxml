@@ -16,7 +16,8 @@ import (
 // AssessMXLPackage assesses the current primary model directly and selected
 // retained resource bytes without encoding the package. Empty RootFiles uses
 // the encoder's current-state score.musicxml default; it proves no original
-// container, header, lexical media-type presence or source order. Callers must
+// container, header or source order. A nil rootfile MediaType is absent and
+// means the MusicXML media type; a non-nil one is decided as written. Callers must
 // not mutate the package or its resource bytes until this call returns.
 // An empty options.Graph.Profile selects ProfileMXLModelSemantics with the
 // bundled required dictionaries, or options.Graph.Dictionaries. Otherwise it
@@ -86,17 +87,17 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 	// making them. No source container is synthesized or assessed.
 	roots := value.RootFiles
 	if len(roots) == 0 {
-		roots = []MXLRootFile{{FullPath: mxlRootFilePath, MediaType: musicXMLMIMEType}}
+		roots = []MXLRootFile{{FullPath: mxlRootFilePath, MediaType: Ptr(musicXMLMIMEType)}}
 	}
 	metadataBytes := int64(0)
 	for _, r := range roots {
 		if err = packageEvidenceTextLimit("current rootfile full-path", r.FullPath); err != nil {
 			return err
 		}
-		if err = packageEvidenceTextLimit("current rootfile media-type", r.MediaType); err != nil {
+		if err = packageEvidenceTextLimit("current rootfile media-type", mediaTypeText(r.MediaType)); err != nil {
 			return err
 		}
-		n := int64(len(r.FullPath)) + int64(len(r.MediaType))
+		n := int64(len(r.FullPath)) + int64(len(mediaTypeText(r.MediaType)))
 		if n > limits.metadataSize-metadataBytes {
 			return ErrMXLTooLarge
 		}
@@ -107,13 +108,13 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 		if !validXMLText(r.FullPath) {
 			return &mxlAssessmentZIPPolicyError{reason: "current rootfile path is not representable XML text", cause: ErrMXLInvalidPath}
 		}
-		if !validXMLText(r.MediaType) {
+		if !validXMLText(mediaTypeText(r.MediaType)) {
 			return &mxlAssessmentZIPPolicyError{reason: "current rootfile media type is not representable XML text", cause: ErrMXLInvalidContainer}
 		}
 		if err = g.options.account.Check(validation.BudgetScalarBytes, int64(len(r.FullPath))); err != nil {
 			return err
 		}
-		if err = g.options.account.Check(validation.BudgetScalarBytes, int64(len(r.MediaType))); err != nil {
+		if err = g.options.account.Check(validation.BudgetScalarBytes, int64(len(mediaTypeText(r.MediaType)))); err != nil {
 			return err
 		}
 	}
@@ -123,7 +124,7 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 	normalized := make([]MXLRootFile, count)
 	seenRoots := make(map[string]bool, count)
 	for i, r := range roots {
-		normalized[i] = MXLRootFile{FullPath: collapseValidationWhitespace(r.FullPath), MediaType: collapseValidationWhitespace(r.MediaType)}
+		normalized[i] = MXLRootFile{FullPath: collapseValidationWhitespace(r.FullPath), MediaType: collapsedMediaType(r.MediaType)}
 		if !validMXLRootFilePath(normalized[i].FullPath) {
 			return &mxlAssessmentZIPPolicyError{reason: "unsafe current rootfile path", cause: ErrMXLInvalidPath}
 		}
@@ -189,11 +190,11 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 		return errors.Join(intrinsic.Err, err)
 	}
 	for i, r := range normalized {
-		media := packageKnown(r.MediaType)
-		// The current encoder omits empty media-type fields; this is a current-state
-		// rule, not a reconstruction of their original lexical presence.
-		if r.MediaType == "" {
-			media = validation.Evidence[string]{State: validation.EvidenceAbsent}
+		// An absent media type means the MusicXML default; a present one,
+		// even empty, is decided as written, as the encoder writes it.
+		media := validation.Evidence[string]{State: validation.EvidenceAbsent}
+		if r.MediaType != nil {
+			media = packageKnown(*r.MediaType)
 		}
 		root := validation.PackageRootfileObservation{ID: g.packageFact(), Package: p.id, Location: g.packageLocation(p, "", "RootFiles["+strconv.Itoa(i)+"]"), Ordinal: uint64(i + 1), FullPath: packageKnown(r.FullPath), MediaType: media, Entry: packageUnknown[validation.PackageFactID]("current-entry-unavailable"), Resource: packageUnknown[validation.ResourceAssessmentID]("current-resource-unavailable"), Indirection: packageKnown(false)}
 		if i == 0 {

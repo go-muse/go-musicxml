@@ -28,7 +28,7 @@ func TestRecoveryPackageLongInputIsProcessingRefusal(t *testing.T) {
 		{name: "raw-root-token", raw: assessmentZIPBytes([]assessmentZIPFixture{{name: mxlContainerPath, body: `<container><rootfiles><rootfile full-path="` + long + `"/></rootfiles></container>`}}, nil, "")},
 		{name: "raw-media-token", raw: packageGraphBytes(`<opus/>`, "main.opus", long)},
 		{name: "current-root", current: &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: long}}}},
-		{name: "current-media", current: &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus", MediaType: long}}}},
+		{name: "current-media", current: &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus", MediaType: Ptr(long)}}}},
 		{name: "current-resource", current: &MXLPackage{Document: doc, Resources: []MXLResource{{Path: long, Data: []byte("x")}}}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -83,7 +83,7 @@ func TestRecoveryPackageLaterMediaControlsParsing(t *testing.T) {
 			if (err != nil) != knownXML || b.ResourceCount() != 2 {
 				t.Fatalf("raw error=%v resources=%d", err, b.ResourceCount())
 			}
-			b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "alt.bin", MediaType: media}}, Resources: []MXLResource{{Path: "alt.bin", Data: []byte("\x00binary")}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+			b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "alt.bin", MediaType: Ptr(media)}}, Resources: []MXLResource{{Path: "alt.bin", Data: []byte("\x00binary")}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
 			if (err != nil) != knownXML || b.ResourceCount() != 1 {
 				t.Fatalf("current error=%v resources=%d", err, b.ResourceCount())
 			}
@@ -273,7 +273,7 @@ func TestRecoveryPackageExactEvidenceTextBound(t *testing.T) {
 			if surface == "raw" {
 				_, e = InspectMXL(context.Background(), bytes.NewReader(packageGraphBytes(`<opus/>`, exact, exact)), packageGraphOptions())
 			} else {
-				_, e = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: exact, MediaType: exact}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+				_, e = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: exact, MediaType: Ptr(exact)}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
 			}
 			if e != nil {
 				t.Fatalf("exact 4096-byte bound refused: %v", e)

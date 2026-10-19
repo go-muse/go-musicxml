@@ -280,7 +280,7 @@ func TestLineProfilesExactIdentity(t *testing.T) {
 	profiles := publicProfiles(t)
 	for id, want := range map[validation.ProfileID][2]string{
 		ProfileSourceLine:    {"7be7564fac3908064f43eeda11d0b93023311db358110234baf8adb8467f1408", "04fb11d56a41d043451031b6133aff7afce75e187612a7330ae365bbeb484b23"},
-		ProfileMXLSourceLine: {"0bd27f2c2e49941f1311d624bd0ca4d0e65f5891c72513f854c523f811d89893", "8c9b33ac1c9118dbe18dc97990858d8c9077eb9cfc7818f193fdf21754db595c"},
+		ProfileMXLSourceLine: {"180ad038e9a989fcc9b35918732acb04ebb79c7610d232ebfe60baf05499197f", "ef9df24aece789802884c65bc20820c45561172d92ecdd4f2da8f0f25567a28b"},
 	} {
 		p := profiles[id]
 		raw, err := json.Marshal(p)
@@ -468,5 +468,131 @@ func TestStrictMXLLoadingDictionaryFailureReachesLineThree(t *testing.T) {
 		if calls != len(required) {
 			t.Errorf("lenient=%v: %d provider calls, want one per selected component in line 3", lenient, calls)
 		}
+	}
+}
+
+// Strict loading decides the first rootfile's media type as the original
+// container wrote it: absent, empty, whitespace-only or DTD-defaulted.
+func TestStrictMXLLoadingDecidesTheOriginalMediaType(t *testing.T) {
+	score := representabilityScore("", representabilityNote("1", ""))
+	archive := func(container string) []byte {
+		return assessmentZIPBytes([]assessmentZIPFixture{
+			{name: mxlMIMETypePath, body: mxlMIMEType},
+			{name: mxlContainerPath, body: container},
+			{name: "main.xml", body: score},
+		}, nil, "")
+	}
+	for _, tc := range []struct {
+		name, container string
+		want            error
+	}{
+		{"absent", `<container><rootfiles><rootfile full-path="main.xml"/></rootfiles></container>`, nil},
+		{"empty", `<container><rootfiles><rootfile full-path="main.xml" media-type=""/></rootfiles></container>`, ErrIncompleteAssessment},
+		{"whitespace", `<container><rootfiles><rootfile full-path="main.xml" media-type="  "/></rootfiles></container>`, ErrIncompleteAssessment},
+		{"dtd-default", `<!DOCTYPE container [<!ATTLIST rootfile media-type CDATA "application/pdf">]><container><rootfiles><rootfile full-path="main.xml"/></rootfiles></container>`, ErrInvalidDocument},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(archive(tc.container)), DecodeMXLAssessmentOptions{})
+			if tc.want == nil {
+				if err != nil || !result.Accepted {
+					t.Fatalf("accepted=%v error=%v", result.Accepted, err)
+				}
+				return
+			}
+			if !errors.Is(err, tc.want) || result.Package != nil || result.Accepted || result.SourceLine.Satisfied() || result.ModelLine.PackageReport().Requested {
+				t.Fatalf("line 2 must reject the original media type: error=%v source=%+v", err, result.SourceLine.Failures())
+			}
+		})
+	}
+}
+
+// Line 2 asks the caller's resolver for nothing, whatever dependencies the
+// caller selects for line 3.
+func TestStrictMXLLineTwoAsksNoResolver(t *testing.T) {
+	var calls int
+	resolver := validation.ResourceResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
+		calls++
+		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceUnknown, Reason: "not-supplied"}, nil
+	})
+	archive := rawMXL(t, `<opus xmlns:xlink="http://www.w3.org/1999/xlink" version="4.0"><title>T</title><score xlink:href="https://external.test/score.musicxml"/></opus>`)
+	options := MXLAssessmentOptions{Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments, ResourceImages, ResourceAssociations, ResourceRoles}}
+	line := options
+	line.Graph = AssessmentOptions{Profile: ProfileMXLSourceLine}
+	if _, err := InspectMXL(context.Background(), bytes.NewReader(archive), line); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 0 {
+		t.Fatalf("InspectMXL(ProfileMXLSourceLine) asked the resolver %d times", calls)
+	}
+	converted := false
+	decodeMXLStageHook = func(stage string, _ *validation.Account) {
+		if stage == "conversion" {
+			converted = true
+			if calls != 0 {
+				t.Errorf("line 2 of DecodeMXLAssessed asked the resolver %d times", calls)
+			}
+		}
+	}
+	t.Cleanup(func() { decodeMXLStageHook = nil })
+	if _, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(archive), DecodeMXLAssessmentOptions{Assessment: options, Lenient: true}); err != nil || !converted {
+		t.Fatalf("converted=%v error=%v", converted, err)
+	}
+	if calls == 0 {
+		t.Error("line 3 must still ask the resolver")
+	}
+}
+
+// The converted package keeps a later rootfile's media type as the original
+// container wrote it, so that line 3 decides it as the source did: an empty
+// or whitespace-only value stays present and unresolved, and a DTD default
+// reaches RootFiles.
+func TestStrictMXLLoadingKeepsLaterRootfileMediaTypes(t *testing.T) {
+	score := representabilityScore("", representabilityNote("1", ""))
+	const first = `<rootfile full-path="a.musicxml" media-type="application/vnd.recordare.musicxml+xml"/>`
+	for _, tc := range []struct {
+		name, container string
+		want            *string
+		unresolved      bool
+	}{
+		{"absent", `<container><rootfiles>` + first + `<rootfile full-path="b.musicxml"/></rootfiles></container>`, nil, false},
+		{"empty", `<container><rootfiles>` + first + `<rootfile full-path="b.musicxml" media-type=""/></rootfiles></container>`, Ptr(""), true},
+		{"whitespace", `<container><rootfiles>` + first + `<rootfile full-path="b.musicxml" media-type="   "/></rootfiles></container>`, Ptr(""), true},
+		{"dtd-default", `<!DOCTYPE container [<!ATTLIST rootfile media-type CDATA "application/pdf">]><container><rootfiles>` + first + `<rootfile full-path="b.musicxml"/></rootfiles></container>`, Ptr("application/pdf"), false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			archive := assessmentZIPBytes([]assessmentZIPFixture{
+				{name: mxlMIMETypePath, body: mxlMIMEType},
+				{name: mxlContainerPath, body: tc.container},
+				{name: "a.musicxml", body: score},
+				{name: "b.musicxml", body: score},
+			}, nil, "")
+			result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(archive), DecodeMXLAssessmentOptions{Lenient: true})
+			if err != nil || result.Package == nil || len(result.Package.RootFiles) != 2 {
+				t.Fatalf("error=%v package=%v", err, result.Package != nil)
+			}
+			if got := result.Package.RootFiles[1].MediaType; (got == nil) != (tc.want == nil) || got != nil && *got != *tc.want {
+				t.Fatalf("converted media type %v, want %v", got, tc.want)
+			}
+			unresolved := false
+			for _, f := range result.ModelLine.Failures().Findings {
+				unresolved = unresolved || f.Reason == "media-type-syntax-unresolved"
+			}
+			for _, f := range result.ModelLine.PackageReport().Findings {
+				unresolved = unresolved || f.Reason == "media-type-syntax-unresolved"
+			}
+			if unresolved != tc.unresolved {
+				t.Errorf("line 3 unresolved media type=%v, want %v", unresolved, tc.unresolved)
+			}
+			// Without a roles resolver every second rootfile keeps line 3
+			// incomplete, so the strict outcome must name the media type.
+			strict, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(archive), DecodeMXLAssessmentOptions{})
+			strictUnresolved := false
+			for _, f := range strict.ModelLine.PackageReport().Findings {
+				strictUnresolved = strictUnresolved || f.Reason == "media-type-syntax-unresolved"
+			}
+			if tc.unresolved && (!errors.Is(err, ErrIncompleteAssessment) || strict.Package != nil || !strictUnresolved) {
+				t.Errorf("strict loading did not reject the unresolved media type: unresolved=%v error=%v", strictUnresolved, err)
+			}
+		})
 	}
 }

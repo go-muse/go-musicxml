@@ -30,8 +30,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   set still lets line 3 run and report the unavailable evidence; the document
   is still rejected.
 - Line 2 of `DecodeMXLAssessed` assesses only what conversion consumes, the
-  container and the first rootfile; it follows no resource links, asks no
-  resolver and imports no dictionaries. Line 3 assesses the later rootfiles
+  container, the first rootfile and its original media type; it follows no
+  resource links, asks the caller's resolver for nothing and imports no
+  dictionaries. Line 3 assesses the later rootfiles
   and linked files the package keeps as bytes, which both stages used to
   assess.
 - The representability rule `MX40-SOURCE-REPRESENTABLE-*` belongs to
@@ -42,6 +43,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   keeps as bytes for it.
 - `ProfileModelSemantics` no longer requires the schema-hint provider, which
   finds no `xsi` attributes in a model.
+- `MXLRootFile.MediaType` is a `*string`: nil when the `media-type` attribute
+  is absent, a present attribute kept even when it is empty and encoded as
+  written. Strict MXL loading decodes `META-INF/container.xml` from its DTD
+  infoset, so DTD attribute defaults reach `RootFiles` and internal entities
+  expand, as line 2 assessed them. Line 3 therefore
+  decides every rootfile's media type as the original container wrote it;
+  line 2 also decides the first one before conversion, which refuses a
+  non-MusicXML first rootfile, so strict loading reports it as a violation.
 - The identities of the changed profiles and of the catalogs that hold them
   change (source and model semantics, the internal-DTD source composition and
   the DTD-dictionary and semantic package catalogs).

@@ -110,11 +110,11 @@ func TestAssessMXLPackageCurrentStateMatchesEncodedArchive(t *testing.T) {
 		{name: "timewise primary", satisfied: expect(true), edit: func(p *MXLPackage) { p.Document = timewise }},
 		{name: "no rootfiles", satisfied: expect(true), edit: func(p *MXLPackage) { p.RootFiles = nil }},
 		{name: "PDF rootfile", satisfied: unchecked, edit: func(p *MXLPackage) {
-			p.RootFiles = append(p.RootFiles, MXLRootFile{FullPath: "score.pdf", MediaType: "application/pdf"})
+			p.RootFiles = append(p.RootFiles, MXLRootFile{FullPath: "score.pdf", MediaType: Ptr("application/pdf")})
 			p.Resources = append(p.Resources, MXLResource{Path: "score.pdf", Data: []byte("%PDF-1.4\n")})
 		}},
 		{name: "nested MXL rootfile", satisfied: unchecked, edit: func(p *MXLPackage) {
-			p.RootFiles = append(p.RootFiles, MXLRootFile{FullPath: "inner.mxl", MediaType: "application/vnd.recordare.musicxml"})
+			p.RootFiles = append(p.RootFiles, MXLRootFile{FullPath: "inner.mxl", MediaType: Ptr("application/vnd.recordare.musicxml")})
 			p.Resources = append(p.Resources, MXLResource{Path: "inner.mxl", Data: inner})
 		}},
 		{name: "unreferenced resource with an odd schemaLocation", satisfied: unchecked, edit: func(p *MXLPackage) {
@@ -128,7 +128,7 @@ func TestAssessMXLPackageCurrentStateMatchesEncodedArchive(t *testing.T) {
 		}},
 		{name: "primary violation", satisfied: expect(false), edit: func(p *MXLPackage) { p.Document = violated }},
 		{name: "retained raw rootfile with an odd schemaLocation", satisfied: expect(false), edit: func(p *MXLPackage) {
-			p.RootFiles = append(p.RootFiles, MXLRootFile{FullPath: "alternate.musicxml", MediaType: "application/vnd.recordare.musicxml+xml"})
+			p.RootFiles = append(p.RootFiles, MXLRootFile{FullPath: "alternate.musicxml", MediaType: Ptr("application/vnd.recordare.musicxml+xml")})
 			p.Resources = append(p.Resources, MXLResource{Path: "alternate.musicxml", Data: []byte(oddAlternate)})
 		}},
 	} {
@@ -166,7 +166,7 @@ func TestAssessMXLPackageCurrentStateMatchesEncodedArchive(t *testing.T) {
 	// The retained raw rootfile is assessed from its bytes with the source
 	// profile, not as a model without hints.
 	pkg := decodedPackage(t, scenarioMXL(t, scenarioValid))
-	pkg.RootFiles = append(pkg.RootFiles, MXLRootFile{FullPath: "alternate.musicxml", MediaType: "application/vnd.recordare.musicxml+xml"})
+	pkg.RootFiles = append(pkg.RootFiles, MXLRootFile{FullPath: "alternate.musicxml", MediaType: Ptr("application/vnd.recordare.musicxml+xml")})
 	pkg.Resources = append(pkg.Resources, MXLResource{Path: "alternate.musicxml", Data: []byte(oddAlternate)})
 	b, err = AssessMXLPackage(ctx, pkg, MXLAssessmentOptions{})
 	require.NoError(t, err)

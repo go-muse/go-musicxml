@@ -94,8 +94,9 @@ var ruleLineGroups = []ruleLineGroup{
 		{ID: "MX40-CONTEXT-container-metadata", Revision: 1},
 		{ID: "MX40-CONTEXT-container-metadata", Revision: 2},
 	}},
-	{LineSource, "Original MXL archive bytes (container path, mimetype entry, entry names, compression) and original schema hints, which a converted MXLPackage does not keep. ProfileMXLModelSemantics keeps them only for the files it retains as bytes (the accepted overlap).", []validation.RuleKey{
+	{LineSource, "Original MXL archive bytes (container path, mimetype entry, entry names, compression), the first rootfile's media type, which conversion refuses when it is not MusicXML, and original schema hints, which a converted MXLPackage does not keep. ProfileMXLModelSemantics keeps them for the files it retains as bytes, and checks the media type of its current RootFiles (the accepted overlap).", []validation.RuleKey{
 		{ID: "MX40-PACKAGE-compression-observation", Revision: 1},
+		{ID: "MX40-PACKAGE-first-media-type", Revision: 1},
 		{ID: "MX40-PACKAGE-container-path", Revision: 1},
 		{ID: "MX40-PACKAGE-entry-name-advice", Revision: 1},
 		{ID: "MX40-PACKAGE-mimetype-advice", Revision: 1},
@@ -194,7 +195,6 @@ var ruleLineGroups = []ruleLineGroup{
 	}},
 	{LineModel, "Package structure derived from the MXLPackage: roots, media types, links, roles and advice.", []validation.RuleKey{
 		{ID: "MX40-PACKAGE-file-metadata-advice", Revision: 1},
-		{ID: "MX40-PACKAGE-first-media-type", Revision: 1},
 		{ID: "MX40-PACKAGE-first-root-musicxml", Revision: 1},
 		{ID: "MX40-PACKAGE-group-match", Revision: 1},
 		{ID: "MX40-PACKAGE-image-scaling", Revision: 1},

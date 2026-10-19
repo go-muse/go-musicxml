@@ -75,7 +75,9 @@ func (g *resourceGraphRun) ownArchive(a *mxlAssessmentArchive) error {
 }
 
 // InspectMXL is a diagnostic tool outside the three scenarios; with
-// ProfileMXLSourceLine it gives the line-2 bundle of DecodeMXLAssessed.
+// ProfileMXLSourceLine it gives the line-2 bundle of DecodeMXLAssessed, and
+// then validates a selected resolver and dependencies but dispatches no
+// resolver request.
 //
 // InspectMXL assesses original ZIP headers, its original container source and
 // selected archive-local resources using one bounded account. The reader stays

@@ -89,9 +89,10 @@ var ruleLineIndex = sync.OnceValue(func() map[validation.RuleKey]ruleLineEntry {
 })
 
 const (
-	overlapXSD      = "The six XSD operations run whole on line 2, on the original bytes. Cutting out the subchecks that the converted structure shows with the same result would need the core to know which XSD particles the generator keeps in Contents slices, for a small saving."
-	overlapArchive  = "ProfileMXLModelSemantics evaluates the archive-byte and schema-hint checks only on the files a converted MXLPackage retains as bytes, such as a nested raw MXL; for its current-model resources they do not apply."
-	overlapRetained = "Line 3 assesses the files a converted MXLPackage keeps as bytes, and the container of a nested raw MXL, with source profiles, because for those files the bytes are the structure. Line 2 assesses only what conversion consumes, the container and the first rootfile document of the original archive, so no file gets these checks on both lines."
+	overlapXSD       = "The six XSD operations run whole on line 2, on the original bytes. Cutting out the subchecks that the converted structure shows with the same result would need the core to know which XSD particles the generator keeps in Contents slices, for a small saving."
+	overlapArchive   = "ProfileMXLModelSemantics evaluates the archive-byte and schema-hint checks only on the files a converted MXLPackage retains as bytes, such as a nested raw MXL; for its current-model resources they do not apply."
+	overlapMediaType = "Conversion refuses an archive whose first rootfile has an established non-MusicXML media type. Line 2 decides that media type before conversion, so strict loading reports the violation with its finding instead of a conversion error; line 3 decides it from the current RootFiles, which keep it as written, as for a package built in Go. In the lenient mode an unresolved first media type is therefore reported by both lines."
+	overlapRetained  = "Line 3 assesses the files a converted MXLPackage keeps as bytes, and the container of a nested raw MXL, with source profiles, because for those files the bytes are the structure. Line 2 assesses only what conversion consumes, the container and the first rootfile document of the original archive, so no file gets these checks on both lines."
 )
 
 var allowedLineOverlap = map[validation.RuleID]string{
@@ -102,7 +103,8 @@ var allowedLineOverlap = map[validation.RuleID]string{
 	"MX40-PACKAGE-container-path": overlapArchive, "MX40-PACKAGE-mimetype-stored": overlapArchive, "MX40-PACKAGE-mimetype-no-extra": overlapArchive,
 	"MX40-PACKAGE-mimetype-no-prefix": overlapArchive, "MX40-PACKAGE-mimetype-advice": overlapArchive, "MX40-PACKAGE-entry-name-advice": overlapArchive,
 	"MX40-PACKAGE-compression-observation": overlapArchive, "MX40-PACKAGE-schema-hint-pairs": overlapArchive,
-	"MX40-SOURCE-ORIGIN-musicxml": overlapRetained, "MX40-SOURCE-ORIGIN-opus": overlapRetained, "MX40-SOURCE-ORIGIN-container": overlapRetained,
+	"MX40-PACKAGE-first-media-type": overlapMediaType,
+	"MX40-SOURCE-ORIGIN-musicxml":   overlapRetained, "MX40-SOURCE-ORIGIN-opus": overlapRetained, "MX40-SOURCE-ORIGIN-container": overlapRetained,
 	"MX40-RESOURCE-schema-hints/musicxml": overlapRetained, "MX40-RESOURCE-schema-hints/opus": overlapRetained, "MX40-RESOURCE-schema-hints/container": overlapRetained,
 	"MX40-CONTEXT-container-metadata":   overlapRetained,
 	"MX40-SOURCE-XSD-container-binding": overlapRetained, "MX40-SOURCE-XSD-container-declaration": overlapRetained, "MX40-SOURCE-XSD-container-attributes": overlapRetained,
