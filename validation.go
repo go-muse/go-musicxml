@@ -17,7 +17,7 @@ import (
 // For DecodeAssessed, Issues contains only stored normative/model failure details,
 // bounded by the assessment diagnostic count and byte budgets. It may be empty
 // if every detail was omitted. The returned operation error explains truncation;
-// consult DecodeResult.Source and Model for independent results and rule-evaluation
+// consult DecodeResult.SourceLine and ModelLine for independent results and rule-evaluation
 // counts, which do not count individual issue details.
 type ValidationError struct {
 	Issues []ValidationIssue
@@ -45,6 +45,10 @@ func (e *ValidationError) Unwrap() error {
 	return ErrInvalidDocument
 }
 
+// Validate is the fast XSD-only check of a model, outside the three
+// scenarios: it is not scenario 3, which also checks the MusicXML semantic
+// rules.
+//
 // Validate checks the current generated Go document against the bounded
 // MusicXML 4.0 XSD model profile. It walks current fields directly; it does not
 // encode the document, invoke XML marshal methods, or assess historical XML.

@@ -533,7 +533,7 @@ func TestAssessedLoadingCorpusMeasurement(t *testing.T) {
 		}
 		assert.NotErrorIs(t, err, ErrUnsupportedXMLFeature, file)
 		assert.NotErrorIs(t, err, ErrDTDUnavailable, file)
-		for _, f := range result.Source.Findings {
+		for _, f := range result.SourceLine.Findings {
 			assert.NotContains(t, string(f.Reason), "dtd-infoset-unavailable", file)
 		}
 	}

@@ -44,7 +44,7 @@ func TestSourceAssessmentPreflightDoesNotRead(t *testing.T) {
 		{"narrow-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}}, validation.ErrInvalidConfiguration},
 		{"unknown-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: "unknown"}}, validation.ErrInvalidConfiguration},
 		{"model-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: "musicxml-4.0/model"}}, validation.ErrInvalidConfiguration},
-		{"negative-budget", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: validation.Budgets{MaxNodes: -1}}}, validation.ErrInvalidConfiguration},
+		{"negative-budget", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxNodes: -1}}}, validation.ErrInvalidConfiguration},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -75,7 +75,7 @@ func TestDecodeAssessedMandatoryAndOrdinaryDecodeAreSeparate(t *testing.T) {
 	}
 	for _, options := range []DecodeAssessmentOptions{{}, {Assessment: &AssessmentOptions{}}, strictSourceOptions()} {
 		result, err := DecodeAssessed(context.Background(), strings.NewReader(input), options)
-		if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.Source.Requested || result.Source.Profile.ID != ProfileSourceSemantics || result.Source.Conformance != validation.ConformanceViolated || result.Model.Requested {
+		if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.Requested || result.SourceLine.Profile.ID != ProfileSourceLine || result.SourceLine.Conformance != validation.ConformanceViolated || result.ModelLine.Requested {
 			t.Fatalf("mandatory result=%+v error=%v", result, err)
 		}
 	}
@@ -119,13 +119,13 @@ func TestSourceAssessmentDTDCompletenessAxes(t *testing.T) {
 			wantIncomplete := !semantic.AssessmentComplete || !semantic.InputComplete || semantic.Syntax != validation.SyntaxWellFormed || semantic.BlockingProblems != 0 || semantic.Terminal != nil
 			for _, explicit := range []bool{false, true} {
 				result, loadErr := mandatoryDecode(explicit, context.Background(), strings.NewReader(tt.prefix+valid), nil)
-				if (result.Document != nil) != semantic.Satisfied() || (loadErr == nil) != semantic.Satisfied() || result.Conversion.State != validation.ConversionConverted || result.Source.Satisfied() != semantic.Satisfied() || result.Model.Requested != semantic.Satisfied() {
-					t.Fatalf("%s DTD acceptance differs from semantic control: document=%T source-satisfied=%v model-requested=%v conversion=%s want-satisfied=%v error=%v", mandatoryLoaderName(explicit), result.Document, result.Source.Satisfied(), result.Model.Requested, result.Conversion.State, semantic.Satisfied(), loadErr)
+				if (result.Document != nil) != semantic.Satisfied() || (loadErr == nil) != semantic.Satisfied() || result.Conversion.State != validation.ConversionConverted || result.SourceLine.Satisfied() != semantic.Satisfied() || result.ModelLine.Requested != semantic.Satisfied() {
+					t.Fatalf("%s DTD acceptance differs from semantic control: document=%T source-satisfied=%v model-requested=%v conversion=%s want-satisfied=%v error=%v", mandatoryLoaderName(explicit), result.Document, result.SourceLine.Satisfied(), result.ModelLine.Requested, result.Conversion.State, semantic.Satisfied(), loadErr)
 				}
 				if errors.Is(loadErr, ErrInvalidDocument) != wantInvalid || errors.Is(loadErr, ErrIncompleteAssessment) != wantIncomplete || errors.Is(loadErr, validation.ErrResourceLimit) {
 					t.Errorf("%s DTD error classes differ from source control: want-invalid=%v want-incomplete=%v error=%v", mandatoryLoaderName(explicit), wantInvalid, wantIncomplete, loadErr)
 				}
-				if semantic.Satisfied() && !result.Model.Satisfied() {
+				if semantic.Satisfied() && !result.ModelLine.Satisfied() {
 					t.Fatalf("%s accepted source without a satisfied model", mandatoryLoaderName(explicit))
 				}
 			}
@@ -177,7 +177,7 @@ func TestSourceAssessmentSyntaxUnderSkippedContent(t *testing.T) {
 	}
 	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{})
 	var syntax *xml.SyntaxError
-	if errors.As(err, &syntax) || !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Source.Syntax != validation.SyntaxWellFormed {
+	if errors.As(err, &syntax) || !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.SourceLine.Syntax != validation.SyntaxWellFormed {
 		t.Errorf("well-formed skipped name lost its independent source violation: %+v %v", result, err)
 	}
 }

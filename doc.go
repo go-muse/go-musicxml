@@ -19,20 +19,36 @@
 // WithOptions variants set resource limits; zero option values select the
 // package defaults.
 //
-// # Validation and assessment
+// # Scenarios and validation lines
+//
+// Three scenarios cover loading and checking MusicXML:
+//
+//  1. Loading without validation: Decode, DecodeMXL, DecodeMXLPackage and the
+//     typed decoders. Only the XML decoder checks the input.
+//  2. Strict loading: DecodeAssessed and DecodeMXLAssessed return a valid
+//     MusicXML 4.0 structure or an error.
+//  3. Checking a structure built or edited in Go: AssessModel and
+//     AssessMXLPackage.
+//
+// They share three validation lines, named by ValidationLine. Line 1
+// (LineDecoder) is XML and document correctness inside the decoder. Line 2
+// (LineSource, ProfileSourceLine and ProfileMXLSourceLine) checks the
+// MusicXML 4.0 and XSD requirements that the loaded structure cannot show,
+// because decoding and conversion lose or change the data they read; strict
+// loading runs it while it reads. Line 3 (LineModel, ProfileModelSemantics
+// and ProfileMXLModelSemantics) checks the loaded structure; strict loading
+// runs it after conversion, and scenario 3 runs only it. Lines 2 and 3 do not
+// check the same thing, except for the overlap AllowedLineOverlap lists;
+// RuleLine reports the line of each rule.
 //
 // Validation is explicit. Decode and Encode preserve transport semantics and
-// do not call Validate automatically. Validate checks a model against the
-// bundled MusicXML 4.0 XSD and reports failures as a *ValidationError.
-//
-// InspectXML assesses original document bytes and AssessModel assesses a
-// current model against an explicitly selected validation profile, one of the
-// Profile constants, and return a validation.Report. DecodeAssessed returns a
-// document only after both its source and its model assessment succeed. The
-// WithDictionaries variants add pinned dictionary evidence, for example from
-// BundledDictionarySource, and InspectXMLWithResources, InspectMXL,
-// AssessMXLPackage and their variants also assess linked resources and MXL
-// packages, returning a validation.AssessmentBundle.
+// do not call Validate automatically. Validate, the fast XSD-only check of a
+// model, and the Inspect functions are diagnostic tools outside the
+// scenarios: InspectXML and InspectMXL assess original bytes against an
+// explicitly selected profile, one of the Profile constants, and
+// InspectXMLWithResources and AssessModelWithResources assess graphs of
+// linked documents. Reports are validation.Report values; resource graphs and
+// MXL packages return a validation.AssessmentBundle.
 //
 // # Constructing documents
 //

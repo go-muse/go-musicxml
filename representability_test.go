@@ -37,7 +37,7 @@ func TestSourceRepresentabilityRule(t *testing.T) {
 		{"integer beyond uint64", representabilityScore("<staves>18446744073709551616</staves>", representabilityNote("1", "")), []string{"/score-partwise/part/measure/attributes/staves"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			report, err := InspectXML(context.Background(), strings.NewReader(tc.score), AssessmentOptions{Profile: ProfileSourceSemantics})
+			report, err := InspectXML(context.Background(), strings.NewReader(tc.score), AssessmentOptions{Profile: ProfileSourceLine})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -129,12 +129,12 @@ func TestRepresentabilityRejectionSurvivesDiagnosticTruncation(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			result, err := DecodeAssessed(context.Background(), strings.NewReader(two), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Budgets: budgets}})
-			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || result.Source.ModelFailures != 2 || result.Document != nil {
-				t.Fatalf("truncated rejection: model failures=%d error=%v", result.Source.ModelFailures, err)
+			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || result.SourceLine.ModelFailures != 2 || result.Document != nil {
+				t.Fatalf("truncated rejection: model failures=%d error=%v", result.SourceLine.ModelFailures, err)
 			}
 			mxl, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(rawMXL(t, two)), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: budgets}}})
-			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || !mxl.Source.Failures().Violated || mxl.Source.Failures().Failed != 2 {
-				t.Fatalf("truncated MXL rejection: failures=%+v error=%v", mxl.Source.Failures(), err)
+			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || !mxl.SourceLine.Failures().Violated || mxl.SourceLine.Failures().Failed != 2 {
+				t.Fatalf("truncated MXL rejection: failures=%+v error=%v", mxl.SourceLine.Failures(), err)
 			}
 			if !strings.Contains(err.Error(), "failed rule evaluations: 2; diagnostic details were truncated") {
 				t.Errorf("truncation summary miscounts failures: %v", err)
@@ -154,7 +154,7 @@ func TestEncodedModelValuesAreRepresentable(t *testing.T) {
 		if err := Encode(&encoded, document); err != nil {
 			t.Fatal(err)
 		}
-		report, err := InspectXML(context.Background(), bytes.NewReader(encoded.Bytes()), AssessmentOptions{Profile: ProfileSourceSemantics})
+		report, err := InspectXML(context.Background(), bytes.NewReader(encoded.Bytes()), AssessmentOptions{Profile: ProfileSourceLine})
 		if err != nil || hasRepresentabilityFailure(report) {
 			t.Errorf("%g: encoded model value rejected as unrepresentable: %v", value, err)
 		}

@@ -9,6 +9,10 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
+// AssessMXLPackage is scenario 3 for a whole MXL package: validation line 3
+// only, the same ProfileMXLModelSemantics assessment that DecodeMXLAssessed
+// runs after conversion.
+//
 // AssessMXLPackage assesses the current primary model directly and selected
 // retained resource bytes without encoding the package. Empty RootFiles uses
 // the encoder's current-state score.musicxml default; it proves no original

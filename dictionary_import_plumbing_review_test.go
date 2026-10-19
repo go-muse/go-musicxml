@@ -58,7 +58,7 @@ func TestDictionarySingleValidationStillRejectsBeforeProviderAndInput(t *testing
 			return err
 		},
 		func() error {
-			_, err := decodeAssessedWithDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: dictionaries}})
+			_, err := decodeAssessedWithDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceLine}, Dictionaries: dictionaries}})
 			return err
 		},
 		func() error {

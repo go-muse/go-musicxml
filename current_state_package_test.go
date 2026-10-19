@@ -232,12 +232,24 @@ func TestDecodeMXLAssessedModelStageUsesLoaderOptions(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, loaded.Package)
 	assert.False(t, loaded.Accepted, "the unresolved score keeps both bundles incomplete")
-	assert.Equal(t, 2*perStage[0], resolved.Swap(0), "both stages ask the caller's resolver")
-	assert.Equal(t, 2*perStage[1], opened.Swap(0), "both stages open the caller's dictionaries")
+	assert.Equal(t, perStage[0], resolved.Swap(0), "only line 3 follows resource links and asks the caller's resolver")
+	assert.Equal(t, perStage[1], opened.Swap(0), "only line 3 opens the caller's dictionaries")
+
+	// Line 2 alone asks neither the resolver nor a dictionary source.
+	line := options
+	line.Graph = AssessmentOptions{Profile: ProfileMXLSourceLine}
+	inspected, err := InspectMXL(ctx, bytes.NewReader(archive), line)
+	require.NoError(t, err)
+	assert.Equal(t, ProfileMXLSourceLine, inspected.PackageReport().Profile.ID)
+	assert.Zero(t, resolved.Load(), "line 2 follows no resource links")
+	line.Graph.Dictionaries = options.Graph.Dictionaries
+	_, err = InspectMXL(ctx, bytes.NewReader(archive), line)
+	assert.ErrorIs(t, err, validation.ErrInvalidConfiguration, "line 2 takes no dictionaries")
+	assert.Zero(t, opened.Load())
 
 	current, err := AssessMXLPackage(ctx, loaded.Package, options)
 	require.NoError(t, err)
-	assert.Equal(t, summarizeBundle(current), summarizeBundle(loaded.Model), "AssessMXLPackage with the same options repeats the model stage")
+	assert.Equal(t, summarizeBundle(current), summarizeBundle(loaded.ModelLine), "AssessMXLPackage with the same options repeats the model stage")
 	assert.Equal(t, perStage[0], resolved.Load())
 }
 
@@ -275,7 +287,7 @@ func TestDecodeMXLAssessedModelStageSharesAccount(t *testing.T) {
 		assert.Equal(t, validation.BudgetRuleSteps, resource.Kind)
 		assert.ErrorIs(t, err, ErrIncompleteAssessment, "lenient=%v", lenient)
 		assert.Equal(t, validation.ConversionConverted, result.Conversion.State, "lenient=%v: the archive was accepted and converted", lenient)
-		assert.True(t, result.Model.PackageReport().Requested, "lenient=%v: the model stage ran", lenient)
+		assert.True(t, result.ModelLine.PackageReport().Requested, "lenient=%v: the model stage ran", lenient)
 		assert.Nil(t, result.Package, "lenient=%v", lenient)
 		assert.False(t, result.Accepted, "lenient=%v", lenient)
 		used, err := account.Usage(validation.BudgetBufferedBytes)
@@ -362,8 +374,8 @@ func TestAssessMXLPackageCurrentStateAfterLossyConversion(t *testing.T) {
 	// default supplies the id there too and the package is accepted.
 	result, err := DecodeMXLAssessed(ctx, bytes.NewReader(archive), DecodeMXLAssessmentOptions{})
 	require.NoError(t, err)
-	assert.True(t, result.Source.Satisfied())
-	assert.True(t, result.Model.Satisfied())
+	assert.True(t, result.SourceLine.Satisfied())
+	assert.True(t, result.ModelLine.Satisfied())
 	assert.Equal(t, validation.ConversionConverted, result.Conversion.State)
 	require.NotNil(t, result.Package)
 	part := result.Package.Document.(*ScorePartwise).Part[0]

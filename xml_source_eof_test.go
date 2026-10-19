@@ -94,7 +94,7 @@ func TestSourceTruncatedMarkupPublic(t *testing.T) {
 			profile validation.ProfileID
 		}{
 			{"decode", ""}, {"decode-assessed-default", ""},
-			{"inspect-preview", ProfileSourceXSDPreview}, {"decode-semantics", ProfileSourceSemantics},
+			{"inspect-preview", ProfileSourceXSDPreview}, {"decode-source-line", ProfileSourceLine}, {"inspect-semantics", ProfileSourceSemantics},
 			{"inspect-internal-dtd", ProfileSourceInternalDTD},
 		} {
 			t.Run(api.name+"/"+source, func(t *testing.T) {
@@ -115,7 +115,7 @@ func TestSourceTruncatedMarkupPublic(t *testing.T) {
 						options.Assessment = &AssessmentOptions{Profile: api.profile}
 					}
 					result, decodeErr := DecodeAssessed(context.Background(), input, options)
-					report, err = result.Source, decodeErr
+					report, err = result.SourceLine, decodeErr
 					if result.Document != nil {
 						t.Error("truncated source exposed a document")
 					}
@@ -150,9 +150,9 @@ func TestSourceTruncatedMarkupNonEOFCause(t *testing.T) {
 		{"joined-canceled", errors.Join(io.EOF, context.Canceled), validation.CategoryResource, "canceled"},
 		{"joined-resource", errors.Join(io.EOF, &validation.ResourceError{Kind: validation.BudgetInputBytes, Limit: 3, Used: 3, Requested: 1}), validation.CategoryResource, "resource-limit"},
 	} {
-		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceInternalDTD, ProfileSourceSemantics} {
+		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceInternalDTD, ProfileSourceSemantics, ProfileSourceLine} {
 			for _, decode := range []bool{false, true} {
-				if decode && profile != ProfileSourceSemantics {
+				if decode && profile != ProfileSourceLine {
 					continue // Narrow profiles remain inspection-only contracts.
 				}
 				name := tc.name + "/" + string(profile) + "/inspect"
@@ -166,7 +166,7 @@ func TestSourceTruncatedMarkupNonEOFCause(t *testing.T) {
 					var err error
 					if decode {
 						result, decodeErr := DecodeAssessed(context.Background(), input, DecodeAssessmentOptions{Assessment: &options})
-						report, err = result.Source, decodeErr
+						report, err = result.SourceLine, decodeErr
 						if result.Document != nil || result.Conversion.State != validation.ConversionIncomplete {
 							t.Errorf("failed source conversion: document=%T state=%s", result.Document, result.Conversion.State)
 						}

@@ -30,6 +30,9 @@ const (
 	maxMXLResourcesSize int64 = 512 << 20
 )
 
+// DecodeMXL is scenario 1 for MXL archives: loading without MusicXML
+// validation.
+//
 // DecodeMXL reads a compressed MusicXML document.
 //
 // Archives without the optional legacy-compatible mimetype entry are accepted.

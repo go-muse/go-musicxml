@@ -38,6 +38,9 @@ type MXLResource struct {
 	Data []byte
 }
 
+// DecodeMXLPackage is scenario 1 for a whole MXL package: loading without
+// MusicXML validation.
+//
 // DecodeMXLPackage reads a compressed MusicXML document together with all
 // related files stored in its ZIP archive.
 func DecodeMXLPackage(reader io.Reader) (*MXLPackage, error) {

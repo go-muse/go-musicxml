@@ -43,8 +43,8 @@ func TestSourceInternalDTDPublicExternalIdentifiersStayUnread(t *testing.T) {
 				var err error
 				if decode {
 					var result DecodeResult
-					result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})
-					report = result.Source
+					result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+					report = result.SourceLine
 				} else {
 					report, err = InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
 				}
@@ -94,8 +94,8 @@ func TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD(t *testing.T) {
 			} else {
 				result, err = decodeOfficialWithDeclaredCapacityControl(t, input, name)
 			}
-			if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() || result.Conversion.State != validation.ConversionConverted {
-				t.Fatalf("strict loading with the bundled external DTD: document=%T source=%t model=%t conversion=%s error=%v", result.Document, result.Source.Satisfied(), result.Model.Satisfied(), result.Conversion.State, err)
+			if err != nil || result.Document == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() || result.Conversion.State != validation.ConversionConverted {
+				t.Fatalf("strict loading with the bundled external DTD: document=%T source=%t model=%t conversion=%s error=%v", result.Document, result.SourceLine.Satisfied(), result.ModelLine.Satisfied(), result.Conversion.State, err)
 			}
 		})
 	}
@@ -108,15 +108,18 @@ func TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD(t *testing.T) {
 func decodeOfficialWithDeclaredCapacityControl(t *testing.T, input []byte, name string) (DecodeResult, error) {
 	t.Helper()
 	if runtime.GOARCH == "amd64" {
+		// The source line fits the defaults; line 3 reaches the default
+		// rule-step limit. Until the lines were split, the full source
+		// semantics exhausted the default buffer first.
 		result, err := DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
 		var resource *validation.ResourceError
-		if !errors.As(err, &resource) || resource.Kind != validation.BudgetBufferedBytes || resource.Limit != validation.DefaultBudgets().MaxBufferedBytes || resource.Used > resource.Limit || resource.Requested <= resource.Limit-resource.Used || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) {
+		if !errors.As(err, &resource) || resource.Kind != validation.BudgetRuleSteps || resource.Limit != validation.DefaultBudgets().MaxRuleSteps || resource.Used > resource.Limit || resource.Requested <= resource.Limit-resource.Used || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) {
 			t.Fatalf("original %s default capacity changed: resource=%+v error=%v", name, resource, err)
 		}
-		if result.Document != nil || result.Source.AssessmentComplete || result.Source.Terminal == nil || result.Source.Terminal.Category != validation.CategoryResource {
-			t.Fatalf("default capacity refusal leaked acceptance: document=%T assessmentComplete=%t", result.Document, result.Source.AssessmentComplete)
+		if result.Document != nil || !result.SourceLine.Satisfied() || result.ModelLine.AssessmentComplete || result.ModelLine.Terminal == nil || result.ModelLine.Terminal.Category != validation.CategoryResource {
+			t.Fatalf("default capacity refusal leaked acceptance: document=%T source=%t model complete=%t", result.Document, result.SourceLine.Satisfied(), result.ModelLine.AssessmentComplete)
 		}
-		t.Logf("original %s default buffered-byte checkpoint: used=%d requested=%d limit=%d inputComplete=%v conversion=%s", name, resource.Used, resource.Requested, resource.Limit, result.Source.InputComplete, result.Conversion.State)
+		t.Logf("original %s default rule-step checkpoint: used=%d requested=%d limit=%d conversion=%s", name, resource.Used, resource.Requested, resource.Limit, result.Conversion.State)
 	}
 	options := strictSourceOptions()
 	options.Assessment.Budgets = officialDTDCapacity

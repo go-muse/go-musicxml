@@ -87,7 +87,7 @@ func TestReviewCatalogSourceLocators(t *testing.T) {
 			// profiles are separately checked by the eight-profile frozen controls.
 			want := "85518be7283021faf6b5080788c5efa0eebee1429d310f94d82fbdc5cbb232b2"
 			if tc.profile == ProfileSourceLinks {
-				want = migrateDecimalContractCatalog("5fb200a688a054add8a551d288486d2724ff7d1530b42a3e0fbed40f3df46cb3")
+				want = migrateValidationLinesCatalog(migrateDecimalContractCatalog("5fb200a688a054add8a551d288486d2724ff7d1530b42a3e0fbed40f3df46cb3"))
 			}
 			if report.Profile.CatalogDigest != want {
 				t.Errorf("corrected source metadata digest=%s want %s", report.Profile.CatalogDigest, want)

@@ -1,6 +1,7 @@
 package musicxml
 
 import (
+	"context"
 	"strings"
 	"sync"
 
@@ -19,6 +20,15 @@ const ProfileMXLSourceSemantics validation.ProfileID = "musicxml-4.0/mxl-source-
 // without reconstructing original ZIP, container or discarded source history.
 const ProfileMXLModelSemantics validation.ProfileID = "musicxml-4.0/mxl-model-semantics"
 
+// ProfileMXLSourceLine is validation line 2 of strict MXL loading: the
+// original archive bytes that the converted MXLPackage does not keep (the
+// container path, the mimetype entry, entry names and compression) and the
+// original schema hints, with the first rootfile document, the one conversion
+// decodes, assessed by ProfileSourceLine. DecodeMXLAssessed runs it on the archive it reads; line
+// 3, ProfileMXLModelSemantics, checks the converted package, including the
+// files it retains as bytes.
+const ProfileMXLSourceLine validation.ProfileID = "musicxml-4.0/mxl-source-line"
+
 func isSemanticPackageProfile(id validation.ProfileID) bool {
 	switch id {
 	case ProfileResourceGraphSemantics, ProfileMXLSourceSemantics, ProfileMXLModelSemantics:
@@ -28,6 +38,43 @@ func isSemanticPackageProfile(id validation.ProfileID) bool {
 }
 func semanticResourceIntrinsicProfiles() resourceIntrinsicProfiles {
 	return resourceIntrinsicProfiles{source: ProfileSourceSemantics, model: ProfileModelSemantics, container: ProfileSourceInternalDTDContainer, sounds: ProfileSourceInternalDTDSoundsDictionaries}
+}
+
+// semanticPackageIntrinsicProfiles returns the intrinsic profiles of a
+// semantic package profile: line 2 assesses its documents with
+// ProfileSourceLine.
+func semanticPackageIntrinsicProfiles(id validation.ProfileID) resourceIntrinsicProfiles {
+	bundle := semanticResourceIntrinsicProfiles()
+	if id == ProfileMXLSourceLine {
+		bundle.source = ProfileSourceLine
+	}
+	return bundle
+}
+
+// startSourceLineResourceGraph starts validation line 2 of strict MXL
+// loading. ProfileMXLSourceLine reads no dictionaries, so the graph imports
+// none; account may be nil.
+func startSourceLineResourceGraph(ctx context.Context, resources LinkedAssessmentOptions, account *validation.Account) (*resourceGraphRun, error) {
+	cfg, err := validateLinkedAssessmentOptionsAccount(ctx, resources, ProfileMXLSourceLine, account)
+	if err != nil {
+		return nil, err
+	}
+	catalog, err := semanticPackageAssessmentCatalog()
+	if err != nil {
+		return nil, err
+	}
+	return startConfiguredResourceGraph(ctx, cfg, ProfileMXLSourceLine, catalog, semanticPackageIntrinsicProfiles(ProfileMXLSourceLine))
+}
+
+// sourceLinePackageCheck reports whether a package check reads original
+// archive bytes or original schema hints, which only line 2 sees.
+func sourceLinePackageCheck(id validation.RuleID) bool {
+	for _, check := range []validation.PackageCheck{validation.PackageCheckContainerPath, validation.PackageCheckMimetypeStored, validation.PackageCheckMimetypeNoExtra, validation.PackageCheckMimetypeNoPrefix, validation.PackageCheckMimetypeAdvice, validation.PackageCheckEntryNameAdvice, validation.PackageCheckCompressionObservation, validation.PackageCheckSchemaHintPairs} {
+		if id == validation.RuleID("MX40-PACKAGE-"+string(check)) {
+			return true
+		}
+	}
+	return false
 }
 
 var semanticPackageAssessmentCatalog = sync.OnceValues(buildSemanticPackageAssessmentCatalog)
@@ -60,12 +107,30 @@ func semanticPackageAssessmentDefinitions() ([]validation.PackageRuleBinding, []
 		}
 		r.Sources = append(r.Sources, validation.SourceRef{IDs: []string{"XPointer-element"}, URL: "https://www.w3.org/TR/2003/REC-xptr-element-20030325/", Locator: "Section 3: selected element-child addressing from exact intrinsic snapshot capability"})
 	}
-	bundle := semanticResourceIntrinsicProfiles()
+	for i := range profiles {
+		if profiles[i].Profile.ID == ProfileMXLSource {
+			line := profiles[i]
+			line.Profile = compositionProfileCopy(line.Profile)
+			line.Profile.ID = ProfileMXLSourceLine
+			// Line 2 follows no resource links, so it reaches no Sounds
+			// document; the Sounds row would bind a dictionary profile.
+			line.Intrinsic = nil
+			for _, row := range profiles[i].Intrinsic {
+				if row.Assembly != validation.AssemblySounds {
+					line.Intrinsic = append(line.Intrinsic, row)
+				}
+			}
+			profiles = append(profiles, line)
+			break
+		}
+	}
 	for i := range profiles {
 		p := &profiles[i]
+		bundle := semanticPackageIntrinsicProfiles(p.Profile.ID)
 		switch p.Profile.ID {
 		case ProfileResourceGraph:
 			p.Profile.ID = ProfileResourceGraphSemantics
+		case ProfileMXLSourceLine:
 		case ProfileMXLSource:
 			p.Profile.ID = ProfileMXLSourceSemantics
 		case ProfileMXLModel:
@@ -75,6 +140,22 @@ func semanticPackageAssessmentDefinitions() ([]validation.PackageRuleBinding, []
 		}
 		p.Profile.NormativeClosure = strings.Replace(p.Profile.NormativeClosure, "renderer, dictionary, automatic", "renderer, automatic", 1)
 		p.Profile.NormativeClosure += " Exact intrinsic composition selects bounded encoded MusicXML semantics, local and timeline checks, barline and graphical-repeat proofs, caller-supplied canonical and IPA evidence, and the registered XML Framework/shorthand/element fragment interpretation. Source children use actually read internal declarations, a DOCTYPE external subset read from the bundled official MusicXML DTDs or a caller DTD source and owned source origins; current models retain only current-state authority. Source Container metadata distinguishes physical and effective values. No auxiliary discovery, dictionary auto-loading, external declaration fetch, renderer or desired-score authority is introduced. Missing capabilities, incomplete identity domains, compressed-target indirection and other original package limits remain explicit. No universal conformance claim is made."
+		if p.Profile.ID == ProfileMXLSourceLine {
+			p.Profile.NormativeClosure = "Validation line 2 of strict MXL loading: the bounded original raw-MXL archive facts that a converted MXLPackage does not keep. Original local/central headers, mimetype storage, extra fields, leading bytes and content advice, UTF-8 entry names, the container path and observed compression remain source evidence, and original schema hints are paired. The first rootfile document, which conversion decodes, is assessed with the source line, and the original container with its bounded DTD/effective metadata. Later rootfiles and resource links are not followed and no dictionary is read: line 3 assesses the converted package, including the files it keeps as bytes. Complete ZIP/JAR/DEFLATE normative closure and other original package limits remain unresolved when reached. No universal conformance claim is made."
+			required := p.Profile.Required[:0]
+			for _, key := range p.Profile.Required {
+				if sourceLinePackageCheck(key.ID) {
+					required = append(required, key)
+				}
+			}
+			support := p.Profile.Support[:0]
+			for _, s := range p.Profile.Support {
+				if sourceLinePackageCheck(s.Rule.ID) {
+					support = append(support, s)
+				}
+			}
+			p.Profile.Required, p.Profile.Support = required, support
+		}
 		for j := range p.Intrinsic {
 			row := &p.Intrinsic[j]
 			switch row.Assembly {

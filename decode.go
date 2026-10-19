@@ -9,6 +9,10 @@ import (
 	"io"
 )
 
+// Decode is scenario 1, loading without validation: only the XML decoder
+// (validation line 1) checks the input. The typed decoders and the Context
+// and WithOptions variants belong to the same scenario.
+//
 // Decode reads one uncompressed MusicXML root document.
 //
 // Supported roots are score-partwise, score-timewise, and opus from the

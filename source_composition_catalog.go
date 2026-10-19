@@ -32,7 +32,7 @@ func sourceDTDPolicy(id validation.ProfileID) (internal, declarations, lexical b
 		return true, false, false
 	case ProfileSourceInternalDTDLocal:
 		return true, true, false
-	case ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries, ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries, ProfileSourceSemantics:
+	case ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries, ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries, ProfileSourceSemantics, ProfileSourceLine:
 		return true, true, true
 	default:
 		return false, false, false
@@ -104,9 +104,6 @@ func buildSourceCompositionDefinitions() (*assessmentDefinitions, error) {
 	if err := appendSourceOriginDefinitions(d); err != nil {
 		return nil, err
 	}
-	if err := appendSourceRepresentabilityDefinitions(d); err != nil {
-		return nil, err
-	}
 	if err := specializeSourceComposition(d); err != nil {
 		return nil, err
 	}
@@ -161,14 +158,15 @@ func appendSourceRepresentabilityDefinitions(d *assessmentDefinitions) error {
 	return nil
 }
 
-func specializeSourceComposition(d *assessmentDefinitions) error {
+// requiredRuleClosure returns the rules the profiles require, with their
+// explicit rule dependencies.
+func requiredRuleClosure(d *assessmentDefinitions) map[validation.RuleKey]bool {
 	selected := make(map[validation.RuleKey]bool)
 	for _, p := range d.profiles {
 		for _, key := range p.Required {
 			selected[key] = true
 		}
 	}
-	// Include explicit dependencies before pruning model-only definitions.
 	for changed := true; changed; {
 		changed = false
 		for _, r := range d.rules {
@@ -182,6 +180,12 @@ func specializeSourceComposition(d *assessmentDefinitions) error {
 			}
 		}
 	}
+	return selected
+}
+
+func specializeSourceComposition(d *assessmentDefinitions) error {
+	// Include explicit dependencies before pruning model-only definitions.
+	selected := requiredRuleClosure(d)
 	plans := make(map[string]validation.Plan, len(d.plans))
 	for _, p := range d.plans {
 		plans[p.ID] = p.Plan

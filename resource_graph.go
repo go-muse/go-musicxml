@@ -160,6 +160,8 @@ func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error
 	return b, joinResourceErrors(joinResourceErrors(err, e), g.dictionaryErr)
 }
 
+// InspectXMLWithResources is a diagnostic tool outside the three scenarios.
+//
 // InspectXMLWithResources assesses original MusicXML/Opus bytes and explicitly
 // selected resource dependencies in one finite account. The caller reader stays
 // open. Ordinary normative findings have nil operation error; inspect Satisfied.
@@ -198,6 +200,8 @@ func (g *resourceGraphRun) inspectPrimarySource(reader io.Reader) (validation.As
 	return g.finishPrimary(result, pin, id)
 }
 
+// AssessModelWithResources is a diagnostic tool outside the three scenarios.
+//
 // AssessModelWithResources walks the current model directly and never encodes it
 // to recover source history. Its opaque representation identity is fresh each
 // run. Lost xsi discovery metadata remains explicitly unavailable.

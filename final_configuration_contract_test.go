@@ -88,7 +88,7 @@ func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing
 			result, err := musicxml.DecodeAssessed(ctx, p, musicxml.DecodeAssessmentOptions{
 				Assessment: &musicxml.AssessmentOptions{Profile: profile, Dictionaries: &dictionaries},
 			})
-			if result.Document != nil || result.Source.Requested || result.Model.Requested || result.Conversion.State != validation.ConversionIncomplete {
+			if result.Document != nil || result.SourceLine.Requested || result.ModelLine.Requested || result.Conversion.State != validation.ConversionIncomplete {
 				t.Fatalf("invalid configuration exposed a converted or assessed document: %+v", result)
 			}
 			return err
@@ -185,12 +185,12 @@ func TestFinalConfigurationSelectedNilDictionaryPublicReports(t *testing.T) {
 			finalConfigurationRequireUnavailableDictionary(t, report)
 			decodeDictionaries := dictionaries
 			decodeDictionaries.Selections = assessedDecodeDictionarySelections()
-			decodeOptions := musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceSemantics, Dictionaries: &decodeDictionaries}
+			decodeOptions := musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceLine, Dictionaries: &decodeDictionaries}
 			result, err := musicxml.DecodeAssessed(ctx, strings.NewReader(finalConfigurationSMuFLScore), musicxml.DecodeAssessmentOptions{Assessment: &decodeOptions})
-			if !errors.Is(err, musicxml.ErrIncompleteAssessment) || errors.Is(err, musicxml.ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || result.Model.Requested {
+			if !errors.Is(err, musicxml.ErrIncompleteAssessment) || errors.Is(err, musicxml.ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.Satisfied() || !result.ModelLine.Requested {
 				t.Fatalf("strict incomplete result=%+v error=%v", result, err)
 			}
-			finalConfigurationRequireUnavailableDictionary(t, result.Source)
+			finalConfigurationRequireUnavailableDictionary(t, result.ModelLine)
 			options.Profile = musicxml.ProfileModelDictionaries
 			report, err = musicxml.AssessModel(ctx, document, options)
 			if err != nil || report.Target != validation.TargetModel || report.Syntax != validation.SyntaxNotAssessed {

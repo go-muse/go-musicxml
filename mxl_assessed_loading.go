@@ -12,10 +12,10 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// DecodeMXLAssessmentOptions configures strict loading of an MXL archive.
-// Assessment selects resources, opus links, dictionaries, budgets, DTDs and
-// the MXL limits. Its Graph.Profile must be empty or ProfileMXLSourceSemantics:
-// the stages are fixed. Nil Graph.Dictionaries selects the bundled required
+// DecodeMXLAssessmentOptions configures strict loading of an MXL archive
+// (scenario 2). Assessment selects resources, opus links, dictionaries,
+// budgets, DTDs and the MXL limits. Its Graph.Profile must be empty or
+// ProfileMXLSourceLine: the validation lines are fixed. Nil Graph.Dictionaries selects the bundled required
 // data; explicit dictionaries must include canonical SMuFL and IPA
 // representation relations, as for DecodeAssessed.
 type DecodeMXLAssessmentOptions struct {
@@ -26,15 +26,16 @@ type DecodeMXLAssessmentOptions struct {
 	Lenient bool
 }
 
-// DecodeMXLResult preserves the original-archive bundle and the converted
-// package's bundle separately. Package is non-nil only after conversion and,
-// in the default strict mode, only when Accepted.
+// DecodeMXLResult preserves the bundles of validation line 2 (SourceLine, the
+// original archive) and line 3 (ModelLine, the converted package) separately.
+// Package is non-nil only after conversion and, in the default strict mode,
+// only when Accepted.
 type DecodeMXLResult struct {
-	Package *MXLPackage
-	Source  validation.AssessmentBundle
-	// Model is the bundle of the converted package's current state, as
+	Package    *MXLPackage
+	SourceLine validation.AssessmentBundle
+	// ModelLine is the bundle of the converted package's current state, as
 	// AssessMXLPackage reports it with ProfileMXLModelSemantics.
-	Model validation.AssessmentBundle
+	ModelLine validation.AssessmentBundle
 	// Conversion carries the conversion state only; a conversion failure is
 	// also the returned *ConversionError.
 	Conversion validation.ConversionResult
@@ -43,34 +44,41 @@ type DecodeMXLResult struct {
 	Accepted bool
 }
 
-// DecodeMXLAssessed reads an MXL archive once, assesses the original archive
-// as InspectMXL does with ProfileMXLSourceSemantics, converts it as
-// DecodeMXLPackageContext does and assesses the current state of the whole
-// converted package as AssessMXLPackage does with ProfileMXLModelSemantics.
-// AssessMXLPackage on result.Package with the same Assessment options and an
-// empty Graph.Profile repeats the model stage.
+// DecodeMXLAssessed is scenario 2, strict loading of an MXL archive. It reads
+// the archive once and runs validation line 2 on it, as InspectMXL does with
+// ProfileMXLSourceLine: the original archive bytes and schema hints that the
+// converted package does not keep, with the first rootfile document, which
+// conversion decodes, assessed by ProfileSourceLine. Line 2 follows no
+// resource links and leaves later rootfiles, which the package keeps as
+// bytes, to line 3. It then converts the
+// archive as DecodeMXLPackageContext does and runs line 3 on the current
+// state of the whole converted package, as AssessMXLPackage does with
+// ProfileMXLModelSemantics, including the linked files the package retains as
+// bytes. AssessMXLPackage on result.Package with the same Assessment options
+// and an empty Graph.Profile repeats the model stage.
 //
 // Every option is checked before the reader is touched. The archive is read
-// once into a buffer and indexed for the source stage, both metered as in
-// InspectMXL. Both stages use the same resources, resolver and dependencies,
-// so the model stage asks the caller's resolver again; they share one account
-// bounded by Assessment.Graph.Budgets and each import their dictionaries. The
-// archive bytes stay charged to that account until conversion finishes, and
-// the source bundle until the call returns. Conversion parses the same bytes
+// once into a buffer and indexed for line 2, both metered as in InspectMXL.
+// Both lines use the same resources, resolver and dependencies; only line 3
+// follows resource links and asks the caller's resolver for them. The lines
+// share one account bounded by Assessment.Graph.Budgets; only line 3 imports
+// the dictionaries, and an import that fails but returns a set still lets it
+// report the unavailable evidence, while the package is withheld. The archive bytes stay charged to
+// that account until conversion finishes, and the line-2 bundle until the
+// call returns. Conversion parses the same bytes
 // again as DecodeMXLPackageContext does, so the converted package is bounded
 // by the MXL limits, as for DecodeMXLPackage. A reader failure or a corrupt
-// archive matches ErrInvalidMXL and leaves Source the zero bundle; an archive
-// layout the assessment does not process, such as one with a preamble, is
-// reported in Source, as by InspectMXL, and its terminated assessment returns
+// archive matches ErrInvalidMXL and leaves SourceLine the zero bundle; an
+// archive layout the assessment does not process, such as one with a preamble,
+// is reported in SourceLine, as by InspectMXL, and its terminated assessment returns
 // an error that matches ErrIncompleteAssessment.
 //
-// In the default strict mode the archive is converted and the package
-// assessed only after the source bundle is accepted, and Package is returned
-// only when both bundles are accepted; a rejection returns an error that
-// matches ErrInvalidDocument for violations or ErrIncompleteAssessment
-// otherwise. In the lenient mode the archive is converted, the package
-// assessed and Package returned after any source stage without an
-// operational failure. In both
+// In the default strict mode the archive is converted and line 3 runs only
+// after line 2 accepts the archive, and Package is returned only when both
+// bundles are accepted; a rejection returns an error that matches
+// ErrInvalidDocument for violations or ErrIncompleteAssessment otherwise. In
+// the lenient mode the archive is converted, line 3 runs and Package is
+// returned after any line-2 stage without an operational failure. In both
 // modes an operational failure returns its error and no package: invalid
 // options, cancellation, an unreadable or unsafe archive, resource limits, a
 // terminated assessment, a dictionary import failure or a conversion failure.
@@ -88,8 +96,8 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 		return result, err
 	}
 	graph := options.Assessment.Graph
-	if graph.Profile != "" && graph.Profile != ProfileMXLSourceSemantics {
-		return result, &validation.ConfigurationError{Field: "assessed loading profile", Reason: "requires mxl-source-semantics; use InspectMXL for individually selected profiles"}
+	if graph.Profile != "" && graph.Profile != ProfileMXLSourceLine {
+		return result, &validation.ConfigurationError{Field: "assessed loading profile", Reason: "requires mxl-source-line; use InspectMXL for individually selected profiles"}
 	}
 	dictionaries := requiredDictionaryOptions()
 	// As for DecodeAssessed, a nil Source with no selections asks for the
@@ -111,11 +119,11 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	}
 	// Every option is checked before the reader is touched. The model stage
 	// uses the same options under its own fixed profile.
-	if _, err := validateLinkedAssessmentOptionsAccount(ctx, stage(ProfileMXLSourceSemantics), ProfileMXLSourceSemantics, account); err != nil {
+	if _, err := validateLinkedAssessmentOptionsAccount(ctx, stage(ProfileMXLSourceLine), ProfileMXLSourceLine, account); err != nil {
 		return result, err
 	}
 	// Conversion resolves DTDs as the source stage does: Graph.DTD first.
-	limits.dtd = stage(ProfileMXLSourceSemantics).Graph.DTD
+	limits.dtd = stage(ProfileMXLSourceLine).Graph.DTD
 	// The archive is read and indexed on the shared account, metered as in
 	// InspectMXL: reads, buffer growth and the ZIP inventory are admitted
 	// before they happen.
@@ -137,7 +145,8 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	defer releaseData()
 
 	var sourceErr error
-	source, err := startDictionaryResourceGraphAccount(ctx, stage(ProfileMXLSourceSemantics), dictionaries, ProfileMXLSourceDictionaries, account)
+	// Line 2 reads no dictionaries; only line 3 imports them.
+	source, err := startSourceLineResourceGraph(ctx, stage(ProfileMXLSourceLine), account)
 	if source == nil {
 		archive.Close()
 		return result, err
@@ -147,23 +156,23 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	source.retainBundle = true
 	if err != nil {
 		archive.Close()
-		result.Source, sourceErr = source.finish(err)
+		result.SourceLine, sourceErr = source.finish(err)
 	} else {
 		source.mxlOptions = options.Assessment.MXL
 		// An archive the assessment cannot process, such as one with a
 		// preamble, is reported in the bundle, as by InspectMXL.
-		result.Source, sourceErr = source.inspectOpenedRawPackage(archive, openErr)
+		result.SourceLine, sourceErr = source.inspectOpenedRawPackage(archive, openErr)
 	}
 	defer func() { err = errors.Join(err, source.bundleLease.Close()) }()
-	sourceAccepted := result.Source.Satisfied()
+	sourceAccepted := result.SourceLine.Satisfied()
 	if sourceErr != nil {
 		if options.Lenient || sourceAccepted {
 			return result, sourceErr
 		}
-		return result, errors.Join(sourceErr, bundleAcceptanceError("mxl-source", result.Source))
+		return result, errors.Join(sourceErr, bundleAcceptanceError("mxl-source", result.SourceLine))
 	}
 	if !sourceAccepted && !options.Lenient {
-		return result, bundleAcceptanceError("mxl-source", result.Source)
+		return result, bundleAcceptanceError("mxl-source", result.SourceLine)
 	}
 
 	if decodeMXLStageHook != nil {
@@ -196,20 +205,20 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	}
 	var modelErr error
 	if err != nil {
-		result.Model, modelErr = model.finish(err)
+		result.ModelLine, modelErr = model.finish(err)
 	} else {
 		model.mxlOptions = options.Assessment.MXL
-		result.Model, modelErr = model.assessCurrentPackage(pkg)
+		result.ModelLine, modelErr = model.assessCurrentPackage(pkg)
 	}
-	modelAccepted := result.Model.Satisfied()
+	modelAccepted := result.ModelLine.Satisfied()
 	if modelErr != nil {
 		if options.Lenient || modelAccepted {
 			return result, modelErr
 		}
-		return result, errors.Join(modelErr, bundleAcceptanceError("mxl-model", result.Model))
+		return result, errors.Join(modelErr, bundleAcceptanceError("mxl-model", result.ModelLine))
 	}
 	if !modelAccepted && !options.Lenient {
-		return result, bundleAcceptanceError("mxl-model", result.Model)
+		return result, bundleAcceptanceError("mxl-model", result.ModelLine)
 	}
 	result.Package = pkg
 	result.Accepted = sourceAccepted && modelAccepted

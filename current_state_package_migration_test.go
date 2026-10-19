@@ -80,7 +80,7 @@ func TestCurrentStatePackageMigrationAndRuleRevision(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		after := migrateDecimalContractCatalog(migrateCurrentStatePackageCatalog(t, tc.before))
+		after := migrateValidationLinesCatalog(migrateDecimalContractCatalog(migrateCurrentStatePackageCatalog(t, tc.before)))
 		if after == tc.before {
 			t.Fatalf("missing intentional migration of %s", tc.before)
 		}
@@ -94,7 +94,7 @@ func TestCurrentStatePackageMigrationAndRuleRevision(t *testing.T) {
 				t.Fatal(err)
 			}
 			sum := sha256.Sum256(raw)
-			if got, want := hex.EncodeToString(sum[:]), migrateDecimalContractProfileHash(t, id, currentStatePackageProfileHashes[id][1]); got != want {
+			if got, want := hex.EncodeToString(sum[:]), migrateValidationLinesProfileHash(t, id, migrateDecimalContractProfileHash(t, id, currentStatePackageProfileHashes[id][1])); got != want {
 				t.Fatalf("complete Profile JSON %s: %s, want %s", id, got, want)
 			}
 			revised := 0

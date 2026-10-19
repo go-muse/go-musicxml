@@ -31,16 +31,17 @@ func TestSemanticIPARepresentationPublicSourceModelAndAssessedReader(t *testing.
 					options.Assessment.Profile = ProfileModelSemantics
 					report, err = assessModelWithDictionaries(ctx, doc, options)
 				case "assessed-reader":
-					options.Assessment.Profile = ProfileSourceSemantics
+					options.Assessment.Profile = ProfileSourceLine
 					options.Dictionaries = assessedRepresentationDictionaries(t, &calls)
 					result, e := decodeAssessedWithDictionaries(ctx, strings.NewReader(text), decodeDictionaryTestOptions{Assessment: &options})
-					report, err = result.Source, e
+					// Dictionaries are line-3 evidence.
+					report, err = result.ModelLine, e
 					if value == "a\u0327" {
-						if result.Document != nil || !errors.Is(err, ErrIncompleteAssessment) || result.Model.Requested {
+						if result.Document != nil || !errors.Is(err, ErrIncompleteAssessment) || !result.SourceLine.Satisfied() || result.ModelLine.Satisfied() {
 							t.Fatalf("unproved witness acceptance: %v %v", result.Document, err)
 						}
 						err = nil
-					} else if result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
+					} else if result.Document == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() {
 						t.Fatalf("accepted representation source/model assessment lost: %+v %v", result, err)
 					}
 				}
