@@ -32,6 +32,7 @@ func init() {
 	validationlink.Register("NewTimelinePlan", newTimelinePlan)
 	validationlink.Register("NewXMLFragmentLinkContextPlan", newXMLFragmentLinkContextPlan)
 	validationlink.Register("NewXSDPlanWithSourceDeclarations", newXSDPlanWithSourceDeclarations)
+	validationlink.Register("NewXSDRepresentabilityPlan", newXSDRepresentabilityPlan)
 	validationlink.Register("Engine.SourceAttributeLexicalProvider", (*Engine).sourceAttributeLexicalProvider)
 	validationlink.Register("Engine.SourceDTDIDsSelected", (*Engine).sourceDTDIDsSelected)
 	validationlink.Register("Engine.SourceOriginProvider", (*Engine).sourceOriginProvider)

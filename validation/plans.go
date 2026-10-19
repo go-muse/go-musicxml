@@ -176,7 +176,7 @@ func (p Plan) valid() error {
 	case planTypedReference:
 		return p.reference.valid()
 	case planXSD:
-		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) || p.xsdMode > xsdSourceDeclarationsV1 {
+		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) && p.xsdCheck != xsdCheckRepresentable || p.xsdMode > xsdSourceDeclarationsV1 {
 			return contract("XSD plan", "compiled schema and supported operation required")
 		}
 	case planChildren:
@@ -299,12 +299,21 @@ func (p Plan) validateFor(r RuleDefinition) error {
 		}
 	}
 	if p.kind == planXSD {
-		if r.Selector.Assembly == nil || p.schema == nil || *r.Selector.Assembly != p.schema.assembly || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate {
+		category := CategoryNormative
+		if p.xsdCheck == xsdCheckRepresentable {
+			category = CategoryModel
+		}
+		if r.Selector.Assembly == nil || p.schema == nil || *r.Selector.Assembly != p.schema.assembly || r.Category != category || r.Class != ClassMandatory || r.Role != RolePredicate {
 			return contract("XSD plan", "matching assembly selector and required normative predicate role required")
 		}
 		for _, target := range r.Targets {
 			if target != TargetSource && target != TargetModel || p.xsdMode == xsdSourceDeclarationsV1 && target != TargetSource {
 				return contract("XSD plan", "only source or current-model evidence is implemented")
+			}
+		}
+		for _, target := range r.Targets {
+			if p.xsdCheck == xsdCheckRepresentable && target != TargetSource {
+				return contract("XSD plan", "representability is a source-line check")
 			}
 		}
 		if (p.xsdCheck == XSDCheckIdentity) != (r.Scope == ScopeDocument) {

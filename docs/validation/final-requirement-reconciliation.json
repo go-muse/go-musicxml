@@ -17858,12 +17858,12 @@
       "file": "assessed_decode_test.go",
       "function": "TestDecodeAssessedSourceAndConversionDomains",
       "input": "Valid staves=2^64 versus uint64 maximum and negative/non-integer source forms",
-      "expected": "Source-domain validity stays separate from conversion; overflow withholds model without false normative invalidity.",
+      "expected": "Source-domain validity stays separate from conversion; overflow withholds the model and fails the source-line representability rule without a false normative violation.",
       "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
       "anchors": [
         {
           "file": "assessed_decode_test.go",
-          "text": "\tfor _, tt := range []struct {\n\t\tvalue      string\n\t\tsource     validation.ConformanceState\n\t\tconversion validation.ConversionState\n\t\tinvalid    bool\n\t}{\n\t\t{\"18446744073709551615\", validation.ConformanceConformant, validation.ConversionConverted, false},\n\t\t{\"18446744073709551616\", validation.ConformanceConformant, validation.ConversionUnrepresentable, false},\n\t\t{\"-1\", validation.ConformanceViolated, validation.ConversionUnrepresentable, true},\n\t\t{\"1.5\", validation.ConformanceViolated, validation.ConversionFailed, true},\n\t} {"
+          "text": "\tfor _, tt := range []struct {\n\t\tvalue      string\n\t\tsource     validation.ConformanceState\n\t\tconversion validation.ConversionState\n\t\tinvalid    bool\n\t}{\n\t\t{\"18446744073709551615\", validation.ConformanceConformant, validation.ConversionConverted, false},\n\t\t// Conformant, but the source line rejects a value the model cannot hold.\n\t\t{\"18446744073709551616\", validation.ConformanceConformant, validation.ConversionUnrepresentable, true},\n\t\t{\"-1\", validation.ConformanceViolated, validation.ConversionUnrepresentable, true},\n\t\t{\"1.5\", validation.ConformanceViolated, validation.ConversionFailed, true},"
         },
         {
           "file": "assessed_decode_test.go",
@@ -17883,7 +17883,7 @@
       "anchors": [
         {
           "file": "assessed_decode_test.go",
-          "text": "\tfor _, tt := range []struct {\n\t\tname, extra, tail string\n\t\tinvalid           bool\n\t}{\n\t\t{\"valid-tail\", `<instruments>1</instruments>`, \"\", false},\n\t\t{\"later-attribute-violation\", `<instruments rubbish=\"bad\">1</instruments>`, \"\", true},\n\t\t{\"malformed-tail\", `<instruments>1</instruments>`, `<`, false},\n\t\t{\"violation-then-malformed-tail\", `<instruments rubbish=\"bad\">1</instruments>`, `<`, true},\n\t} {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(assessedScore(\"18446744073709551616\", tt.extra)+tt.tail), strictSourceOptions())"
+          "text": "\tfor _, tt := range []struct {\n\t\tname, extra, tail string\n\t\tinvalid           bool\n\t}{\n\t\t// The overflowing staves value is itself a source-line failure.\n\t\t{\"valid-tail\", `<instruments>1</instruments>`, \"\", true},\n\t\t{\"later-attribute-violation\", `<instruments rubbish=\"bad\">1</instruments>`, \"\", true},\n\t\t{\"malformed-tail\", `<instruments>1</instruments>`, `<`, true},\n\t\t{\"violation-then-malformed-tail\", `<instruments rubbish=\"bad\">1</instruments>`, `<`, true},\n\t} {\n\t\tt.Run(tt.name, func(t *testing.T) {"
         },
         {
           "file": "assessed_decode_test.go",
@@ -17936,13 +17936,13 @@
       "id": "TestDirectModelScalarExactCurrentValues",
       "file": "model_scalar_test.go",
       "function": "TestDirectModelScalarExactCurrentValues",
-      "input": "Current Go integer/float/string fields and exact binary-rational scalar representation",
-      "expected": "Current values are exact in their own lane; no original decimal lexeme is synthesized.",
+      "input": "Current Go integer/float/string fields and shortest round-trip decimal representation of float fields",
+      "expected": "Current values are exact in their own lane, float fields as the shortest decimal that reads back to the same binary64; no original decimal lexeme is synthesized.",
       "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
       "anchors": [
         {
           "file": "model_scalar_test.go",
-          "text": "\ttests := []struct {\n\t\tname  string\n\t\tvalue any\n\t\tkind  modelScalarKind\n\t\twant  string\n\t}{\n\t\t{\"signed-min\", int64(math.MinInt64), modelSigned, \"-9223372036854775808\"},\n\t\t{\"unsigned-max\", uint64(math.MaxUint64), modelUnsigned, \"18446744073709551615\"},\n\t\t{\"half\", float64(.5), modelDecimal, \"1/2\"},\n\t\t{\"tenth\", float64(.1), modelDecimal, \"3602879701896397/36028797018963968\"},\n\t\t{\"negative-zero\", math.Copysign(0, -1), modelDecimal, \"0\"},"
+          "text": "\ttests := []struct {\n\t\tname  string\n\t\tvalue any\n\t\tkind  modelScalarKind\n\t\twant  string\n\t}{\n\t\t{\"signed-min\", int64(math.MinInt64), modelSigned, \"-9223372036854775808\"},\n\t\t{\"unsigned-max\", uint64(math.MaxUint64), modelUnsigned, \"18446744073709551615\"},\n\t\t{\"half\", float64(.5), modelDecimal, \"1/2\"},\n\t\t{\"tenth\", float64(.1), modelDecimal, \"1/10\"},\n\t\t{\"sum\", tenth + fifth, modelDecimal, \"7500000000000001/25000000000000000\"},"
         },
         {
           "file": "model_scalar_test.go",

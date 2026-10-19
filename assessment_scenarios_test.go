@@ -455,15 +455,22 @@ func TestAssessedLoadingOperationalFailures(t *testing.T) {
 		}
 	}
 
-	// An MXL conversion failure after an accepted archive.
+	// A value the model cannot hold: the source line rejects the archive, and
+	// the lenient mode still meets the conversion failure.
 	unrepresentable := rawMXL(t, `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>`+
 		`<part id="P1"><measure number="1"><attributes><divisions>1</divisions><staves>99999999999999999999</staves></attributes><note><rest/><duration>1</duration></note></measure></part></score-partwise>`)
 	for _, lenient := range []bool{false, true} {
 		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(unrepresentable), DecodeMXLAssessmentOptions{Lenient: lenient})
-		var conversion *ConversionError
-		assert.ErrorAs(t, err, &conversion)
-		assert.True(t, result.Source.Satisfied(), "the archive itself is accepted")
-		assert.Equal(t, validation.ConversionUnrepresentable, result.Conversion.State)
+		assert.False(t, result.Source.Satisfied(), "the source line reports the unrepresentable value")
+		assert.NotEmpty(t, result.Source.Failures().Findings)
+		assert.True(t, result.Source.Failures().Violated)
+		if lenient {
+			var conversion *ConversionError
+			assert.ErrorAs(t, err, &conversion)
+			assert.Equal(t, validation.ConversionUnrepresentable, result.Conversion.State)
+		} else {
+			assert.ErrorIs(t, err, ErrInvalidDocument)
+		}
 		assert.Nil(t, result.Package)
 	}
 }

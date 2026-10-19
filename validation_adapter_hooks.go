@@ -37,6 +37,7 @@ var (
 	validationNewTimelinePlan                        = validationlink.Hook[func(validation.TimelinePlanSpec) (validation.Plan, error)]("NewTimelinePlan")
 	validationNewXMLFragmentLinkContextPlan          = validationlink.Hook[func(*validation.CompiledSchema, bool) (validation.Plan, error)]("NewXMLFragmentLinkContextPlan")
 	validationNewXSDPlanWithSourceDeclarations       = validationlink.Hook[func(*validation.CompiledSchema, validation.XSDCheck) (validation.Plan, error)]("NewXSDPlanWithSourceDeclarations")
+	validationNewXSDRepresentabilityPlan             = validationlink.Hook[func(*validation.CompiledSchema, bool) (validation.Plan, error)]("NewXSDRepresentabilityPlan")
 	validationEngineSourceAttributeLexicalProvider   = validationlink.Hook[func(*validation.Engine, validation.ProfileID, validation.Assembly) (validation.RuleKey, bool)]("Engine.SourceAttributeLexicalProvider")
 	validationEngineSourceDTDIDsSelected             = validationlink.Hook[func(*validation.Engine, validation.ProfileID) bool]("Engine.SourceDTDIDsSelected")
 	validationEngineSourceOriginProvider             = validationlink.Hook[func(*validation.Engine, validation.ProfileID, validation.Assembly) (validation.RuleKey, bool)]("Engine.SourceOriginProvider")

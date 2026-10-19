@@ -317,6 +317,9 @@ func validXSDCheck(check XSDCheck) bool {
 // facts. Current values never reconstruct unavailable original source evidence.
 // Its selector must be the exact Assembly branch matching the compiled schema.
 func NewXSDPlan(schema *CompiledSchema, check XSDCheck) (Plan, error) {
+	if !validXSDCheck(check) {
+		return Plan{}, contract("XSD plan", "compiled schema and supported operation required")
+	}
 	return checkedPlan(Plan{kind: planXSD, schema: schema, xsdCheck: check})
 }
 

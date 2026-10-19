@@ -118,6 +118,9 @@ func buildSemanticAssessmentDefinitions(target validation.Target) (*assessmentDe
 		if err := appendSourceOriginDefinitions(d); err != nil {
 			return nil, err
 		}
+		if err := appendSourceRepresentabilityDefinitions(d); err != nil {
+			return nil, err
+		}
 		if err := specializeSourceComposition(d); err != nil {
 			return nil, err
 		}

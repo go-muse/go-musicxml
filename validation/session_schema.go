@@ -44,6 +44,11 @@ type schemaNode struct {
 	skipped   bool
 	reason    Code
 	cause     *DecisionRef
+	// representable is set once the completed node's numeric values have been
+	// checked against the model representation; unrepresentable lists the
+	// values that fail.
+	representable   bool
+	unrepresentable []xsd.Detail
 }
 type schemaMeter struct{ session *Session }
 
@@ -301,6 +306,9 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 			continue
 		}
 		completion, completeErr := state.run.Complete(ctx, f.binding, f.children)
+		if err := s.checkRepresentable(ctx, f.node); err != nil {
+			return err
+		}
 		if err := s.recordXSDProvedFailures(ctx, f.node); err != nil {
 			return err
 		}
@@ -595,6 +603,11 @@ func (s *Session) schemaResult(n *factNode, check XSDCheck) xsd.Result {
 		return results.Attributes
 	case XSDCheckScalar:
 		return results.Scalar
+	case xsdCheckRepresentable:
+		if !bound.representable {
+			return xsd.Result{Applicable: true, Valid: true, Complete: false, Limitations: []xsd.Limitation{{Reason: "representability-pending"}}}
+		}
+		return xsd.Result{Applicable: true, Valid: len(bound.unrepresentable) == 0, Complete: true, Issues: bound.unrepresentable}
 	case XSDCheckContent:
 		if s.profile.Target == TargetSource && n.closed && (n.end.Order.State != EvidenceKnown || n.end.Order.Value != OrderSource) {
 			results.Content.Complete = false
@@ -608,7 +621,7 @@ func (s *Session) recordXSDProvedFailures(ctx context.Context, n *factNode) erro
 	// These bounded, dependency-free rule lists were admitted and charged at
 	// Begin. Looking up an already proved result must precede a new cancellation
 	// or exhausted-work check; diagnostic/cache work remains checked afterwards.
-	for _, check := range []XSDCheck{XSDCheckBinding, XSDCheckDeclaration, XSDCheckAttributes, XSDCheckScalar, XSDCheckContent} {
+	for _, check := range []XSDCheck{XSDCheckBinding, XSDCheckDeclaration, XSDCheckAttributes, XSDCheckScalar, XSDCheckContent, xsdCheckRepresentable} {
 		result := s.schemaResult(n, check)
 		if !result.Applicable || result.Valid {
 			continue
