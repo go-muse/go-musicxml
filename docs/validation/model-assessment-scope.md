@@ -100,9 +100,12 @@ empty profile, which failed here when this scope was recorded, now selects
 `ProfileModelSemantics` or `ProfileSourceSemantics` (see
 [Scenarios](../../API.md#scenarios)).
 The [later assessed-loading migration](assessed-loading-pipeline.md) instead fixes
-`ProfileSourceSemantics` then direct `ProfileModelSemantics` in both assessed
-loaders. Nil/empty assessment options select that pipeline; narrower source-local
-options are rejected. A present empty accordion registration is XSD-valid but
+validation line 2, `ProfileSourceLine` (`ProfileMXLSourceLine` for MXL), then
+line 3, direct `ProfileModelSemantics` (`ProfileMXLModelSemantics`), in the
+assessed loaders. Nil/empty assessment options
+select that pipeline; narrower source-local options are rejected. Line 3 is
+this scope: the model checks of strict loading are exactly `AssessModel` with
+`ProfileModelSemantics`. A present empty accordion registration is XSD-valid but
 locally invalid: `Validate` and the preview retain the XSD result, while the
 mandatory assessed loader withholds the model and model-local reports the added
 violation. See `TestBoundedLocalStrictAccordionIntegration` and the runnable

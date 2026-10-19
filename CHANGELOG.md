@@ -7,6 +7,53 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Strict loading runs two validation lines that no longer overlap. Line 2,
+  the new `ProfileSourceLine` (`ProfileMXLSourceLine` for MXL), runs while
+  `DecodeAssessed` and `DecodeMXLAssessed` read the input and checks only what
+  the converted structure cannot show: XSD on the original bytes and their DTD
+  infoset, source provenance, schema hints, the numeric values the model
+  cannot hold and, for MXL, the original archive bytes. Line 3,
+  `ProfileModelSemantics` (`ProfileMXLModelSemantics`), checks the converted
+  structure as before. The source stage used to run the full
+  `ProfileSourceSemantics`, which repeated 62 of the model stage's 64 rules.
+  `DecodeAssessed` needs about 37% fewer rule steps and 36% fewer buffer bytes
+  on the test-suite scores, which now load within the default budgets.
+- The two loaders accept only an empty profile or their line-2 profile;
+  `ProfileSourceSemantics` and `ProfileMXLSourceSemantics` remain diagnostic
+  profiles of `InspectXML` and `InspectMXL`.
+- `DecodeResult.Source`/`Model` and `DecodeMXLResult.Source`/`Model` are
+  renamed `SourceLine`/`ModelLine`.
+- Only line 3 reads dictionaries, so dictionary evidence and dictionary
+  failures appear in `ModelLine`. A dictionary import that fails but returns a
+  set still lets line 3 run and report the unavailable evidence; the document
+  is still rejected.
+- Line 2 of `DecodeMXLAssessed` assesses only what conversion consumes, the
+  container and the first rootfile; it follows no resource links, asks no
+  resolver and imports no dictionaries. Line 3 assesses the later rootfiles
+  and linked files the package keeps as bytes, which both stages used to
+  assess.
+- The representability rule `MX40-SOURCE-REPRESENTABLE-*` belongs to
+  `ProfileSourceLine` only: it describes a limit of the converted model, so the
+  diagnostic source profiles (`ProfileSourceSemantics`, the internal-DTD
+  local, links and dictionaries profiles) no longer carry it, and strict MXL
+  loading no longer rejects a later rootfile or linked file that the package
+  keeps as bytes for it.
+- `ProfileModelSemantics` no longer requires the schema-hint provider, which
+  finds no `xsi` attributes in a model.
+- The identities of the changed profiles and of the catalogs that hold them
+  change (source and model semantics, the internal-DTD source composition and
+  the DTD-dictionary and semantic package catalogs).
+
+### Added
+
+- `ValidationLine` (`LineDecoder`, `LineSource`, `LineModel`), `RuleLine` and
+  `AllowedLineOverlap` name the validation line of every rule revision of a
+  public profile and the only accepted overlap of lines 2 and 3; tests keep
+  every rule classified and the overlap explicit.
+- Doc comments and `doc.go` name the scenario of each entry point.
+
 ### Fixed
 
 - Model assessment read each `float64` decimal field as its exact binary value,

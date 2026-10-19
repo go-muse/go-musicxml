@@ -417,6 +417,23 @@ CI rejects non-reproducible generated files.
 Use `require` only when continuing the test would be impossible or
 meaningless; otherwise prefer `assert` so one run can report more failures.
 
+## Validation rules and lines
+
+Every rule revision of a public profile belongs to one validation line (see
+[Validation lines](API.md#validation-lines)). A new rule or revision needs a
+row in `ruleLineGroups` (`validation_line_rules.go`) with its line and reason;
+`TestEveryRuleHasAValidationLine` fails without one.
+
+- A rule belongs to line 2 only if it reads data that the converted structure
+  does not keep: original bytes, lexical forms, physical presence, DTD
+  declarations, schema hints or archive bytes. Its row names that data.
+- Every other rule belongs to line 3, `ProfileModelSemantics` or
+  `ProfileMXLModelSemantics`, and must give the same result on the converted
+  model.
+- Do not add a rule to both lines. `TestLinesOverlapOnlyWhereAllowed` fails
+  unless `allowedLineOverlap` records the overlap and why it is necessary and
+  cheap.
+
 ## Public API changes
 
 Document every exported declaration. Explain compatibility consequences in the

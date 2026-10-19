@@ -83,17 +83,77 @@ work and memory of every assessment. The semantic profiles are costly, so
 larger scores can need larger `Budgets`; a refused budget is an operational
 error, even in the lenient mode.
 
-| Scenario | What it does | Functions |
-| --- | --- | --- |
-| 1. Load without validation | Reads well-formed XML into the Go model. XSD and MusicXML rules are not checked. | `Decode`, `DecodeMXL`, the typed decoders and their `WithOptions`/`Context` variants |
-| 2. Strict loading | Assesses the original source, converts it, and assesses the converted model. By default the document is returned only when everything is accepted; in the lenient mode it is always returned with the reports. | `DecodeAssessed` for XML, `DecodeMXLAssessed` for MXL |
-| 3. Check a model | Exactly the model assessment of scenario 2, with the bundled required dictionaries: `ProfileModelSemantics` for a document, `ProfileMXLModelSemantics` for the current state of a whole MXL package. | `AssessModel`; `AssessMXLPackage` for an MXL package |
+| Scenario | What it does | Functions | Validation lines |
+| --- | --- | --- | --- |
+| 1. Load without validation | Reads well-formed XML into the Go model. XSD and MusicXML rules are not checked. | `Decode`, `DecodeMXL`, `DecodeMXLPackage`, the typed decoders and their `WithOptions`/`Context` variants | 1 |
+| 2. Strict loading | Returns a valid MusicXML 4.0 structure or an error. By default the document is returned only when everything is accepted; in the lenient mode it is always returned with the reports. | `DecodeAssessed` for XML, `DecodeMXLAssessed` for MXL | 1, 2 while reading, 3 after conversion |
+| 3. Check a model | Checks a structure built or edited in Go: exactly the line-3 assessment of scenario 2, with the bundled required dictionaries. | `AssessModel`; `AssessMXLPackage` for an MXL package | 3 |
 
-Scenario 2 is the source assessment plus scenario 3: `AssessModel` on a
-document that `DecodeAssessed` returned gives the same report as
-`DecodeResult.Model`, and `AssessMXLPackage` on the package that
-`DecodeMXLAssessed` returned, with the same `Assessment` options and an empty
-`Graph.Profile`, gives the same outcomes as `DecodeMXLResult.Model`.
+### Validation lines
+
+The three scenarios share three validation lines, named by the
+`ValidationLine` type:
+
+1. **Decoder** (`LineDecoder`): XML and document correctness inside the
+   decoder, such as well-formedness, encoding, entities and the DOCTYPE. It
+   has no rules.
+2. **Source** (`LineSource`): the MusicXML 4.0 and XSD requirements that the
+   loaded structure cannot show, because decoding and conversion lose or
+   change the data they read. `ProfileSourceLine` checks XSD on the original
+   bytes and their DTD infoset (undeclared elements and attributes, lexical
+   forms, order, DTD-supplied values), source provenance, schema hints, and
+   the numeric values the Go model cannot hold (see
+   [Model representability](#model-representability)).
+   `ProfileMXLSourceLine` adds the original archive bytes (container path,
+   mimetype entry, entry names, compression) and schema-hint pairing, and
+   assesses the first rootfile document, the one conversion decodes, with
+   `ProfileSourceLine`; it follows no resource links and leaves later
+   rootfiles, which the package keeps as bytes, to line 3.
+3. **Model** (`LineModel`): the checks on the loaded structure, the bulk of
+   the MusicXML rules: `ProfileModelSemantics` for a document,
+   `ProfileMXLModelSemantics` for the current state of a whole MXL package,
+   including the linked files the package keeps as bytes.
+
+Lines 2 and 3 do not check the same thing. `RuleLine` reports the line that
+owns each rule revision of every public profile, and `AllowedLineOverlap`
+lists the only accepted overlap with its reasons:
+
+- the six XSD operations, which line 2 runs whole on the original bytes,
+  because cutting out the subchecks the structure shows would save little
+  (about 3% of `DecodeAssessed`, by the design estimate);
+- the archive-byte checks, which `ProfileMXLModelSemantics` applies only to
+  the files a converted package keeps as bytes, such as a nested raw MXL;
+- the source checks of those retained files: line 3 assesses them with source
+  profiles, because for them the bytes are the structure. Line 2 assesses only
+  what conversion consumes, the container and the first rootfile, so no file
+  gets these checks on both lines.
+
+Tests fail when a rule has no line, a line profile requires another line's
+rule, or the overlap changes.
+
+Only line 3 reads dictionaries. `DecodeAssessed` imports them once per call,
+before it reads the input, and passes them to line 3; `DecodeMXLAssessed`
+imports them once, when line 3 starts. When line 3 runs, a dictionary failure
+shows in `ModelLine`; in every case the document is withheld. Splitting the lines cut the cost of strict
+loading by about a third: `DecodeAssessed` needs about 13.7 million rule steps and 34 MiB of
+buffer for the 31 KB `01a-Pitches-Pitches.xml` and 15.6 million steps and 46.5
+MiB for the 42 KB `41c-StaffGroups.xml` of the MusicXML test suite, both within
+the default budgets (20 million steps, 64 MiB), where it needed 21.7 and 24.9
+million steps before.
+
+`InspectXML`, `InspectMXL`, `InspectXMLWithResources`,
+`AssessModelWithResources` and `Validate` are diagnostic tools outside the
+scenarios. With an empty profile `InspectXML` still runs
+`ProfileSourceSemantics`, every source rule, including the line-3 rules that
+strict loading checks on the model; `InspectXML` with `ProfileSourceLine` and
+`InspectMXL` with `ProfileMXLSourceLine` give the line-2 reports of strict
+loading.
+
+Scenario 2 is line 2 plus scenario 3: `AssessModel` on a document that
+`DecodeAssessed` returned gives the same report as `DecodeResult.ModelLine`,
+and `AssessMXLPackage` on the package that `DecodeMXLAssessed` returned, with
+the same `Assessment` options and an empty `Graph.Profile`, gives the same
+outcomes as `DecodeMXLResult.ModelLine`.
 This holds while the budgets are not exhausted: the loader's model stage shares
 its account with the source report, so a tight diagnostic or buffer budget can
 truncate or refuse the two differently.
@@ -142,7 +202,7 @@ if err != nil {
 	return err // operational failure only
 }
 if !result.Accepted {
-	fmt.Println(result.Source.String(), result.Model.String())
+	fmt.Println(result.SourceLine.String(), result.ModelLine.String())
 }
 
 // Scenario 3: check a model built or edited in Go.
@@ -152,8 +212,8 @@ report, err := musicxml.AssessModel(ctx, score, musicxml.AssessmentOptions{})
 **Lenient mode.** `DecodeAssessmentOptions.Lenient` and
 `DecodeMXLAssessmentOptions.Lenient` return the converted document even when
 an assessment finds violations or is incomplete. In that case `err` is nil,
-`Accepted` is false, and the model is assessed even after source findings, so
-that both reports are complete. Operational failures still return an error and
+`Accepted` is false, and line 3 runs even after line-2 findings, so that both
+reports are complete. Operational failures still return an error and
 no document: malformed XML, I/O, cancellation, resource limits, conversion
 failure, dictionary import failure and invalid configuration. In the default
 strict mode the document is returned exactly when `Accepted` is true.
@@ -172,6 +232,8 @@ strict mode the document is returned exactly when `Accepted` is true.
   These defaults use the bundled required dictionaries, also when
   `Dictionaries` has a nil `Source` and no selections. Before this release an
   empty profile was a configuration error for these functions.
+  `DecodeAssessed` and `DecodeMXLAssessed` accept only an empty profile or
+  their line-2 profile, `ProfileSourceLine` or `ProfileMXLSourceLine`.
 - `AssessmentOptions.Dictionaries` selects pinned dictionary capabilities. It
   replaces the bundled required data of an empty profile, and with an explicit
   profile it requires a dictionary or semantic one.
@@ -198,23 +260,26 @@ strict mode the document is returned exactly when `Accepted` is true.
    indexes it, metered as in `InspectMXL`: reads, buffer growth and the ZIP
    inventory are admitted on the shared account before they happen. A reader
    failure or a corrupt archive matches `ErrInvalidMXL`, as in `DecodeMXL`,
-   and `Source` is then the zero bundle. An archive layout the assessment does
-   not process, such as one with a preamble, is reported in `Source`, as by
+   and `SourceLine` is then the zero bundle. An archive layout the assessment
+   does not process, such as one with a preamble, is reported in `SourceLine`, as by
    `InspectMXL`; its terminated assessment returns an error that matches
    `ErrIncompleteAssessment`, in both modes.
-2. It assesses the original archive with `ProfileMXLSourceSemantics`, which
-   includes package rules, resources and opus links.
-3. In the default strict mode only after the archive is accepted, and in the
-   lenient mode after any source stage without an operational failure, it
+2. It runs validation line 2 on the original archive with
+   `ProfileMXLSourceLine`: the archive-byte checks and schema-hint pairing,
+   with the first rootfile document assessed by `ProfileSourceLine`. It
+   follows no resource links, so it does not ask the caller's resolver, and
+   leaves later rootfiles to line 3.
+3. In the default strict mode only after line 2 accepts the archive, and in
+   the lenient mode after any line-2 stage without an operational failure, it
    converts the buffered bytes as `DecodeMXLPackageContext` does, except that
-   the root document is decoded from the DTD infoset the source stage
-   assessed, as `DecodeAssessed` does: DTD defaults reach the model and
-   internal-subset entities expand. DTDs resolve from `Graph.DTD` first, as in
-   the source stage.
-4. It assesses the current state of the converted package as
+   the root document is decoded from the DTD infoset that line 2 assessed, as
+   `DecodeAssessed` does: DTD defaults reach the model and internal-subset
+   entities expand. DTDs resolve from `Graph.DTD` first, as in line 2.
+4. It runs validation line 3 on the current state of the converted package as
    `AssessMXLPackage` does with `ProfileMXLModelSemantics`, with the same
-   resources, resolver and dependencies, so the caller's resolver is asked
-   again, and returns that bundle as `DecodeMXLResult.Model`.
+   resources, resolver and dependencies, and returns that bundle as
+   `DecodeMXLResult.ModelLine`. Line 3 follows the resource links and assesses
+   the linked files the package keeps as bytes.
 
 Both assessments share one account bounded by
 `Assessment.Graph.Budgets`. The archive bytes stay charged to it until
@@ -521,8 +586,8 @@ It ignores identifiers longer than 4096 bytes. In these cases the previous
 behaviour remains. A caller source error is reported only when one of these
 features actually needs the DTD.
 
-Source profiles that read DTD declarations, including `ProfileSourceSemantics`
-used by `DecodeAssessed`, read the resolved external subset after the internal
+Source profiles that read DTD declarations, including `ProfileSourceLine`
+used by `DecodeAssessed` and `ProfileSourceSemantics`, read the resolved external subset after the internal
 subset with XML first-binding precedence. Parameter entities declared in the
 internal subset are in scope while the external subset is read, so they can
 select its conditional sections or replace its parameter entities. An external
@@ -621,7 +686,8 @@ source lexeme. No serialization fallback is retained.
 The generated model holds decimals as `float64` and integers in fixed-width Go
 types. Strict loading checks, in the source, that each numeric value the model
 holds survives conversion unchanged: rule `MX40-SOURCE-REPRESENTABLE-musicxml`
-(and `-opus`), a model-category rule of the source profiles. It fails for:
+(and `-opus`), a model-category rule of `ProfileSourceLine`, validation line 2.
+It fails for:
 
 - a decimal whose shortest `float64` form is a different number: more than 17
   significant digits, as in `1.00000000000000000001`, an underflow to zero or
@@ -1344,23 +1410,24 @@ with the best partial report.
 ### Mandatory assessed loading
 
 `DecodeAssessed(ctx, reader, DecodeAssessmentOptions{...})` returns a
-`DecodeResult` with independent `Source`, `Conversion`, `Model` and `Document`
-fields. This intentionally breaks the earlier unreleased optional-assessment
-contract; these APIs were not present in v0.1.0.
-Both assessed loaders always require the existing `ProfileSourceSemantics` and,
-after source acceptance and successful conversion, `ProfileModelSemantics`.
+`DecodeResult` with independent `SourceLine`, `Conversion`, `ModelLine` and
+`Document` fields. This intentionally breaks the earlier unreleased
+optional-assessment contract; these APIs were not present in v0.1.0.
+Both assessed loaders always require validation line 2, `ProfileSourceLine`
+(`ProfileMXLSourceLine` for MXL), and, after its acceptance and successful
+conversion, line 3, `ProfileModelSemantics` (`ProfileMXLModelSemantics`).
 Nil `Assessment`, empty options and an empty `Assessment.Profile` select these
-fixed defaults; explicit `ProfileSourceSemantics` is also accepted. Any other
+fixed defaults; the explicit line-2 profile is also accepted. Any other
 profile, including narrower source profiles, wrong-target profiles or unknown
 IDs, is a configuration error before source reads or dictionary callbacks.
 `Assessment.Budgets` remains configurable and existing `DecodeOptions` safety
 limits are preserved. `InspectXML` and `AssessModel` keep their explicit-profile
 contracts. Ordinary `Decode` remains transport-only.
 
-The result includes `Model validation.Report`. An earlier operation failure,
+The result includes `ModelLine validation.Report`. An earlier operation failure,
 unsatisfied/incomplete source report or conversion failure leaves it unrequested.
 Model-session startup failure, including cancellation after source acceptance,
-can also leave `Model.Requested == false`; that field cannot distinguish the two
+can also leave `ModelLine.Requested == false`; that field cannot distinguish the two
 cases. Once initialized, model assessment walks the actual Go object directly and
 preserves its available report, including on failure. `Document` is
 returned only when both reports are satisfied, conversion succeeds and there is
@@ -1376,8 +1443,9 @@ There is no reader replay, second XML parse or model Encode→parse in this path
 The implementation retains a budgeted fact graph; single-pass input does not
 mean constant-memory processing. One finite budget account covers dictionary
 import, source assessment and direct model assessment, with the source report's
-retained context accounted for while the model stage runs. One imported dictionary
-set is shared across both stages. The caller retains ownership of the reader.
+retained context accounted for while the model stage runs. One imported
+dictionary set serves line 3; line 2 reads no dictionaries. The caller retains
+ownership of the reader.
 
 The set is fresh per invocation: the default path reopens, verifies and parses
 both required bundled components before reading input, without a cross-call
@@ -1386,7 +1454,7 @@ the reviewer reported about 3.08 ms, 1.55 MB allocated and 8,641 allocations for
 import alone. The reported logical import cost was 3,279,308 rule steps (16.4% of
 the default 20 million) and 360,428 `MaxExternalBytes`, even though the data is
 embedded and no network/file fetch occurs. Previously sufficient budgets may
-therefore refuse before source reads, leaving `Source.Requested == false`. These
+therefore refuse before source reads, leaving `SourceLine.Requested == false`. These
 are reviewer-reported, head-specific observations, not independently reproduced
 benchmarks or portable minima. See the [per-call cost and budget receipt][loading-cost]
 for the original review links, one-note comparison and scope limits.
@@ -1455,16 +1523,16 @@ defines its exact support, ownership, verification and remaining obligations.
 and retains all source-parser/XSD/DTD limits. Empty accordion registration, for
 example, passes the XSD-only preview and legacy `Validate`, but fails either local
 profile. The mandatory assessed loaders also withhold that otherwise converted
-document through their source semantic profile.
+document, through line 3.
 These existing profiles introduce no DTD stripping, fetching, trust or ignore-DTD option.
 
 ### Selected internal-DTD source profile
 
 `ProfileSourceInternalDTD` (`musicxml-4.0/source-internal-dtd`) is a separate
 developmental profile selected explicitly with `InspectXML`. The mandatory
-assessed loaders select the existing `ProfileSourceSemantics` composition, which
-includes bounded internal-declaration processing, rather than this narrower
-profile.
+assessed loaders select `ProfileSourceLine`, derived from the
+`ProfileSourceSemantics` composition, which includes bounded
+internal-declaration processing, rather than this narrower profile.
 It supports the three score/Opus roots and reuses the six sealed XSD operations
 after bounded processing of actually read internal declarations. It applies
 supported internal entity replacements, attribute defaults and declared
@@ -1472,7 +1540,8 @@ non-CDATA normalization before namespace expansion, assessment and conversion.
 It does not compose the local/timeline/context/package profiles. Existing
 inspection profiles, plain `Decode` and standalone current-model behavior are
 unchanged with respect to DTD processing. Nil-assessment `DecodeAssessed` now
-uses its mandatory source semantic profile. External subsets/entities are never
+uses its mandatory line-2 profile, `ProfileSourceLine`, which applies the same
+bounded DTD processing. External subsets/entities are never
 fetched; a subset that neither the bundled official MusicXML DTDs nor a caller
 DTD source provides remains incomplete evidence. This is not a validating DTD processor or general XML
 processor-conformance claim.
@@ -1637,10 +1706,10 @@ implicitly select or open the canonical-name component.
 | --- | --- | --- |
 | `InspectXML` | `ProfileSourceDictionaries`, `ProfileSourceSoundsDictionaries` or a semantic or internal-DTD dictionary profile | `validation.Report` |
 | `AssessModel` | `ProfileModelDictionaries` or `ProfileModelSemantics` | `validation.Report` |
-| `DecodeAssessed` (via `Assessment.Dictionaries`) | empty or `ProfileSourceSemantics`; explicit dictionaries must include both required relations | `DecodeResult` |
-| `DecodeMXLAssessed` (via `Assessment.Graph.Dictionaries`) | empty or `ProfileMXLSourceSemantics`; explicit dictionaries must include both required relations | `DecodeMXLResult` |
+| `DecodeAssessed` (via `Assessment.Dictionaries`) | empty or `ProfileSourceLine`; explicit dictionaries must include both required relations and serve line 3 | `DecodeResult` |
+| `DecodeMXLAssessed` (via `Assessment.Graph.Dictionaries`) | empty or `ProfileMXLSourceLine`; explicit dictionaries must include both required relations | `DecodeMXLResult` |
 | `InspectXMLWithResources`, `AssessModelWithResources` (via `Graph.Dictionaries`) | `ProfileResourceGraphDictionaries` or its internal-DTD or semantic composition | `validation.AssessmentBundle` |
-| `InspectMXL` (via `Graph.Dictionaries`) | `ProfileMXLSourceDictionaries` or its compositions | `validation.AssessmentBundle` |
+| `InspectMXL` (via `Graph.Dictionaries`) | `ProfileMXLSourceDictionaries` or its compositions; `ProfileMXLSourceLine` reads no dictionaries and rejects them | `validation.AssessmentBundle` |
 | `AssessMXLPackage` (via `Graph.Dictionaries`) | `ProfileMXLModelDictionaries` or its compositions | `validation.AssessmentBundle` |
 
 All entry points also return an operation error. `AssessmentOptions` carries
@@ -2770,15 +2839,19 @@ selection, while an independently observed encoding recommendation remains visib
 
 `ProfileSourceSemantics` and `ProfileModelSemantics` select the bounded combined
 encoded MusicXML interpretation through existing `InspectXML`, `AssessModel` and
-corresponding dictionary entry points. They are also the fixed source/model
-profiles of both [mandatory assessed loaders](#mandatory-assessed-loading).
+corresponding dictionary entry points. `ProfileModelSemantics` is validation
+line 3 of both [mandatory assessed loaders](#mandatory-assessed-loading); their
+line 2, `ProfileSourceLine`, keeps the XSD, provenance and schema-hint rules of
+`ProfileSourceSemantics` and adds the representability rule, which the
+diagnostic source profiles no longer carry.
 Source selects actually read internal declarations and owned origins; model
 selects current-state facts. Inspection and standalone model/package assessment
 keep explicit dictionary selection through `DictionaryOptions`; the assessed
 loaders provide the required bundled defaults. Neither profile itself loads data
 automatically or selects standard-sound recognition and dictionary-backed
-rendering advice for score nodes. This orchestration change does not widen the
-profiles or alter their catalog identities.
+rendering advice for score nodes. The current model holds no `xsi`
+attributes, so `ProfileModelSemantics` no longer requires the schema-hint
+provider, which always found none there.
 
 For resources, use the existing dictionary graph/MXL entry points with the exact
 compatible `ProfileResourceGraphSemantics`, `ProfileMXLSourceSemantics` or

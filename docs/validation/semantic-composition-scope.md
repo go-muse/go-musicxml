@@ -6,25 +6,35 @@ claiming universal conformance or reconstructing a desired score. It uses the ex
 assessment and dictionary entry points; no new provider or options structure is
 introduced. Inspection and standalone model/package assessment require explicit
 selection. The later [assessed-loading migration](assessed-loading-pipeline.md)
-fixes these existing source/model profiles and required bundled evidence in both
-assessed decoders; it does not change these profile identities or enlarge their
-normative scope.
+fixed these source/model profiles and required bundled evidence in both
+assessed decoders. Since the validation lines were split, the decoders run
+`ProfileSourceLine` (`ProfileMXLSourceLine`) as line 2 and
+`ProfileModelSemantics` (`ProfileMXLModelSemantics`) as line 3; the identities
+of the semantic profiles changed with that split (see the CHANGELOG).
 
 ## Exact interpretations
 
 - `ProfileSourceSemantics` selects source XSD, local, exact timeline and contextual
   checks, actually read internal declarations, owned source origins, canonical
-  SMuFL membership and supported IPA evidence. Physical attributes and effective
+  SMuFL membership and supported IPA evidence. It is a diagnostic profile:
+  strict loading runs its XSD, provenance and schema-hint rules as validation
+  line 2, `ProfileSourceLine`, with the representability rule, and checks the
+  remaining rules on the converted model with `ProfileModelSemantics` (line 3). Physical attributes and effective
   defaulted/normalized values remain distinct. The
   [external-DOCTYPE source limit](../../API.md#original-source-inspection-and-assessed-loading)
   applies: an unread external subset leaves selected source checks unavailable.
 - `ProfileModelSemantics` selects current encoded model facts. It does not invent
-  discarded DTD, lexical, namespace, original-byte or source-hint information.
+  discarded DTD, lexical, namespace, original-byte or source-hint information,
+  and it does not require the schema-hint provider, which finds no `xsi`
+  attributes in a model.
 - `ProfileResourceGraphSemantics`, `ProfileMXLSourceSemantics` and
   `ProfileMXLModelSemantics` pin those exact intrinsic profiles and catalog digests
   for MusicXML/Opus source/model resources. Original MXL and current-package
   evidence retain their separate scope. Retained source children are assessed as
   source even when their primary package document is a current model.
+  `ProfileMXLSourceLine`, validation line 2 of strict MXL loading, selects only
+  the archive-byte checks and schema-hint pairing, binds `ProfileSourceLine`
+  for its documents and follows no resource links.
 
 The source-only Container interpretation retains bounded DTD/effective metadata
 and independently owned physical origins. The existing explicit Sounds auxiliary
