@@ -169,6 +169,8 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	if decodeMXLStageHook != nil {
 		decodeMXLStageHook("conversion", account)
 	}
+	// The model comes from the same DTD infoset the source stage assessed.
+	limits.infoset = account
 	pkg, convErr := decodeMXLPackageContext(ctx, bytes.NewReader(data), limits)
 	releaseData()
 	if convErr != nil {

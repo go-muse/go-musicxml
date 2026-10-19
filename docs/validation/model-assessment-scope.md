@@ -209,9 +209,10 @@ with occurrence IDs and no XML positions.
 String-backed scalar fields supply their actual current string to the shared
 schema domain machinery, keeping public Lexeme unavailable. Integer fields
 supply exact signed/unsigned values. Finite float64 decimal fields supply the
-exact binary rational via big.Rat.SetFloat64, as the agreed contract specifies;
-0.1 is not silently replaced by decimal 1/10. Numeric bounds, enumeration,
-fixed values and digit facets use that exact value. Numeric patterns cannot use
+shortest decimal that reads back to the same float64, the value a decoder read
+from that text: 0.1 is decimal 1/10. Numeric bounds, enumeration, fixed values
+and digit facets use that value. Strict loading rejects, in the source, any
+value whose shortest float64 form differs (MX40-SOURCE-REPRESENTABLE-*). Numeric patterns cannot use
 fabricated canonical source spellings and remain a reached capability limit.
 NaN, infinity and invalid text are model representation/value problems.
 
@@ -219,8 +220,10 @@ Known scalar absence on an element-only model is distinct from unknown scalar
 content. Numeric zero must never trigger empty-element defaulting. General
 empty-model element value-constraint interpretation not needed by the pinned
 MusicXML/opus metadata remains explicitly unsupported rather than silently
-choosing a new policy. Known absent attribute defaults remain separate effective
-facts and do not mutate the object.
+choosing a new policy. Known absent XSD attribute defaults remain separate
+effective facts and do not mutate the object. DTD attribute defaults differ:
+strict loading supplies them in the effective source infoset, so the converted
+object holds them like written values, and Encode writes them out.
 
 The core records real model-representation decisions before publishing causal
 invalid evidence. A bad attribute affects that slot, a bad scalar affects that
@@ -237,13 +240,13 @@ witnesses bind exact declaration uses, including repeated/group/anonymous cases.
 
 | Generated representation | Evidence available to selected obligations | Evidence not supplied |
 | --- | --- | --- |
-| Optional pointer | Current nil/present state; present zero/empty is preserved; absence may enable an attribute default | Historical source presence or spelling |
+| Optional pointer | Current nil/present state; present zero/empty is preserved; absence may enable an XSD attribute default | Historical source presence or spelling; whether strict loading supplied the value from a DTD default |
 | Required nonpointer scalar/struct | Current represented occurrence and value, including zero/empty | Whether the original source had a required child or repeated singleton |
 | Repeated slice | Current count and per-index occurrences | Discarded unknown source occurrences |
 | Valid ordered `Content` | Current selected branch and interleaving | Historical order after lossy decoding |
 | Fixed generated fields | Current generated field order | Original cross-field XML order |
-| Signed/unsigned numeric field | Exact current Go integer and XSD value-space checks | Unrepresentable source integers that never entered the model |
-| Finite `float64` decimal field | Exact current binary rational for bounds, equality, fixed/enumeration and digits | Original decimal precision or numeric lexical pattern subject |
+| Signed/unsigned numeric field | Exact current Go integer and XSD value-space checks | Source integers beyond the Go type; strict loading rejects them in the source |
+| Finite `float64` decimal field | Shortest decimal reading of the current value for bounds, equality, fixed/enumeration and digits | Original lexical form; strict loading rejects source decimals the model cannot hold unchanged |
 | String-derived field (`YYYYMMDD`, `YesNoNumber`, etc.) | Current string assessed through the resolved shared whitespace/domain/union plan | Prior validation or original XML lexeme |
 | Root concrete type | Fixed root identity and assembly | Authority from `XMLName`; that field is ignored |
 | Noncyclic shared pointer | Distinct occurrence each time, charged again | Pointer identity as document identity |

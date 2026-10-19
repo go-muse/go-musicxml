@@ -57,11 +57,13 @@ The acceptance sequence is:
   model violation, incomplete required assessment, conversion failure, operation
   failure or close failure.
 
-The model stage matters even after satisfied source assessment. For example, an
-exact positive source decimal may underflow to zero in an existing `float64`
-field. Conversion can succeed while the resulting current model violates its
-selected contract. Model locations remain field/index locations; a model-stage
-failure does not rewrite the satisfied source report.
+A source value the model cannot hold unchanged, such as an exact positive
+decimal that would underflow to zero in a `float64` field, is rejected in the
+source by the representability rule (`MX40-SOURCE-REPRESENTABLE-*`), so the
+model stage sees the values the source assessed. The model stage remains the
+assessment of the converted structure, the same as `AssessModel`. Model
+locations remain field/index locations; a model-stage failure does not rewrite
+the satisfied source report.
 
 Reports and typed error causes remain independently useful. Normative violation
 can match `ErrInvalidDocument`; incomplete required assessment retains

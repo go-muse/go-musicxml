@@ -358,9 +358,14 @@ func TestAssessMXLPackageCurrentStateAfterLossyConversion(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, current.Satisfied(), "the converted part has no id")
 
+	// Strict loading decodes the model from the assessed DTD infoset, so the
+	// default supplies the id there too and the package is accepted.
 	result, err := DecodeMXLAssessed(ctx, bytes.NewReader(archive), DecodeMXLAssessmentOptions{})
-	assert.ErrorIs(t, err, ErrInvalidDocument)
+	require.NoError(t, err)
 	assert.True(t, result.Source.Satisfied())
+	assert.True(t, result.Model.Satisfied())
 	assert.Equal(t, validation.ConversionConverted, result.Conversion.State)
-	assert.Nil(t, result.Package)
+	require.NotNil(t, result.Package)
+	part := result.Package.Document.(*ScorePartwise).Part[0]
+	assert.Equal(t, "P1", part.ID)
 }

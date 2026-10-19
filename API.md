@@ -206,8 +206,11 @@ strict mode the document is returned exactly when `Accepted` is true.
    includes package rules, resources and opus links.
 3. In the default strict mode only after the archive is accepted, and in the
    lenient mode after any source stage without an operational failure, it
-   converts the buffered bytes as `DecodeMXLPackageContext` does, resolving
-   DTDs from `Graph.DTD` first, as the source stage does.
+   converts the buffered bytes as `DecodeMXLPackageContext` does, except that
+   the root document is decoded from the DTD infoset the source stage
+   assessed, as `DecodeAssessed` does: DTD defaults reach the model and
+   internal-subset entities expand. DTDs resolve from `Graph.DTD` first, as in
+   the source stage.
 4. It assesses the current state of the converted package as
    `AssessMXLPackage` does with `ProfileMXLModelSemantics`, with the same
    resources, resolver and dependencies, so the caller's resolver is asked
@@ -299,7 +302,10 @@ groups and attribute groups is not repeated at every use.
 Numeric field types are unchanged by XML lexical normalization. Finite decimals
 are written without exponent notation, but the model still uses `float64`
 precision. Integers must fit their generated Go type. Exact arbitrary-precision
-XSD numbers are outside the model's representational range.
+XSD numbers are outside the model's representational range: strict loading
+rejects a value the model cannot hold unchanged (see
+[Model representability](#model-representability)). Ordinary decoding reads an
+empty decimal element or attribute as 0.
 
 A field whose schema type is the built-in `xs:positiveInteger`,
 `xs:nonNegativeInteger` or `xs:integer` has the generated type
@@ -538,7 +544,8 @@ be neither external nor unparsed. A defect in an external declaration is a
 `*DTDError`; one in the internal subset remains an `*xml.SyntaxError`. Its
 attribute defaults and entities form the effective source infoset
 and, as for internal-subset declarations, reach the model converted by assessed
-loading. Source origins locate a declaration from an external entity by that
+loading. There they become ordinary field values: the model cannot tell a DTD
+default from a written value, and `Encode` writes it out. Source origins locate a declaration from an external entity by that
 entity's system identifier in `validation.Location.Entry`, with
 `validation.CoordinateSpaceExternalDTD` line, column and byte coordinates in its
 text after the byte order mark is removed and line ends are normalized, any text
@@ -601,12 +608,33 @@ work grow with the model. Use `AssessModel` with explicit finite budgets for
 untrusted models and independent normative, model and resource outcomes; its
 finite defaults are unchanged.
 
-This is an intentional value-contract change from validating serialized text:
-finite decimal fields mean their exact current binary rational, including at
-bounds, enumeration, fixed and digit facets. For example, current `float64(0.1)`
-is not decimal `1/10`; large finite values are no longer assessed through an
-encoder's spelling. Unsupported numeric lexical patterns remain incomplete,
-without inventing a source lexeme. No serialization fallback is retained.
+A finite decimal field means the shortest decimal that reads back to the same
+`float64`, the value a decoder read from that text, including at bounds,
+enumeration, fixed and digit facets. For example, current `float64(0.1)` is
+decimal `1/10`, and `0.1 + 0.2` computed in Go is `0.30000000000000004`.
+Large finite values are not assessed through an encoder's spelling.
+Unsupported numeric lexical patterns remain incomplete, without inventing a
+source lexeme. No serialization fallback is retained.
+
+### Model representability
+
+The generated model holds decimals as `float64` and integers in fixed-width Go
+types. Strict loading checks, in the source, that each numeric value the model
+holds survives conversion unchanged: rule `MX40-SOURCE-REPRESENTABLE-musicxml`
+(and `-opus`), a model-category rule of the source profiles. It fails for:
+
+- a decimal whose shortest `float64` form is a different number: more than 17
+  significant digits, as in `1.00000000000000000001`, an underflow to zero or
+  an overflow;
+- an integer outside its Go type, such as a `xs:positiveInteger` beyond
+  `uint64`.
+
+This is a limit of the model, not of MusicXML: the source stays conformant,
+and the report names the value's path. The failure rejects the document like
+a violation, with a `*ValidationError` cause (`ErrInvalidDocument`). An integer
+beyond its Go type also makes conversion fail, so `DecodeResult.Conversion`
+reports it as unrepresentable. Union and list values are held as strings and
+are not checked.
 
 `ErrIncompleteAssessment` identifies technical incompleteness, including its presence in a joined invalid/incomplete
 result. It is the identical sentinel exported by the `validation` subpackage.
@@ -692,9 +720,9 @@ Current evidence has precise limits:
   transport metadata, including inconsistent or invalid text in that field.
 - Strings supply their current text to shared schema-domain/whitespace/union
   checks. Integers supply exact current signed/unsigned values. Every finite
-  `float64` decimal supplies the exact `big.Rat.SetFloat64` value. In particular,
-  `0.1` means `3602879701896397/36028797018963968`, not decimal `1/10`. NaN,
-  infinity and invalid XML text are model representation problems.
+  `float64` decimal supplies the shortest decimal that reads back to the same
+  `float64`. In particular, `0.1` means decimal `1/10`. NaN, infinity and
+  invalid XML text are model representation problems.
 - Scalar source lexemes remain unavailable. Numeric lexical patterns and other
   reached unsupported value/default/identity capabilities remain incomplete.
   Numeric zero does not trigger an empty-element default; absent attribute

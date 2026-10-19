@@ -11,6 +11,8 @@ import (
 	"math"
 	"path"
 	"strings"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 const (
@@ -167,6 +169,10 @@ type mxlLimits struct {
 	resourcesSize int64
 	xmlDepth      int
 	dtd           *DTDOptions
+	// infoset, when set, decodes the root document from the full DTD
+	// infoset on this account, as DecodeAssessed does: DTD defaults reach the
+	// model and internal-subset entities expand. Ordinary decoding leaves it nil.
+	infoset *validation.Account
 }
 
 type mxlContainer struct {

@@ -186,28 +186,7 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 	// the existing allowlisted expanded attributes. Its namespace table is empty.
 	projected := &namespaceXMLTokenReader{source: run.source, allowQualifiedAttribute: musicXMLQualifiedAttribute}
 	modelTokens := &assessedModelTokenReader{source: projected, account: run.account, ctx: ctx, observer: run.source.observer}
-	decoder := xml.NewTokenDecoder(modelTokens)
-	start, mapErr := readRoot(decoder)
-	var document Document
-	if mapErr == nil {
-		if start.Name.Space != "" {
-			mapErr = &UnsupportedRootError{Name: start.Name}
-		} else {
-			switch start.Name.Local {
-			case "score-partwise":
-				document = &ScorePartwise{}
-			case "score-timewise":
-				document = &ScoreTimewise{}
-			case "opus":
-				document = &OpusDocument{}
-			default:
-				mapErr = &UnsupportedRootError{Name: start.Name}
-			}
-		}
-	}
-	if mapErr == nil {
-		mapErr = decoder.DecodeElement(document, &start)
-	}
+	document, mapErr := decodeProjectedDocument(xml.NewTokenDecoder(modelTokens))
 	var conversionErr error
 	conversionLocation := validation.Location{Target: validation.TargetSource, DocumentID: run.documentID, Entry: run.entry}
 	var conversionNode validation.NodeID
@@ -600,4 +579,30 @@ func (r *assessedModelTokenReader) close() error {
 	r.scopes = nil
 	r.last = assessedModelScope{}
 	return nil
+}
+
+// decodeProjectedDocument maps the document element of a namespace-projected
+// token stream into the model type its root names.
+func decodeProjectedDocument(decoder *xml.Decoder) (Document, error) {
+	start, err := readRoot(decoder)
+	if err != nil {
+		return nil, err
+	}
+	var document Document
+	switch {
+	case start.Name.Space != "":
+		return nil, &UnsupportedRootError{Name: start.Name}
+	case start.Name.Local == "score-partwise":
+		document = &ScorePartwise{}
+	case start.Name.Local == "score-timewise":
+		document = &ScoreTimewise{}
+	case start.Name.Local == "opus":
+		document = &OpusDocument{}
+	default:
+		return nil, &UnsupportedRootError{Name: start.Name}
+	}
+	if err := decoder.DecodeElement(document, &start); err != nil {
+		return document, err
+	}
+	return document, nil
 }
