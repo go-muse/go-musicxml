@@ -277,7 +277,7 @@ completes; "now, complete projection" sets `SourceOptions.Context` to
 | `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 27.1 MiB | 8.68 million, 8.8 MiB | 9.73 million, 23.8 MiB |
 | `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 34.7 MiB | 10.13 million, 11.2 MiB | 11.40 million, 30.6 MiB |
 | `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 75.6 MiB | 23.92 million, 25.4 MiB | 26.74 million, 66.8 MiB |
-| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.23 million, 27.5 MiB | 32.24 million, 73.2 MiB |
+| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.23 million, 27.5 MiB | 32.24 million, 73.0 MiB |
 
 The first two load within the default budgets (20 million rule steps, 64 MiB);
 `TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores now

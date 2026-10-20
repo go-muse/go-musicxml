@@ -192,7 +192,7 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 		// score/part role wording adds 59 live bytes. Accounting the context
 		// projection by its real layout moves the boundary to 613/614.
 		// Releasing the work and subject charges of completed XSD subjects
-		// and interning the engine's own strings move it to 801/802.
+		// and interning the engine's own strings move it to 794/795.
 		{568, 76155, false, 0, 0},
 		{569, 76289, false, 0, 0},
 		{571, 76557, false, 0, 0},
@@ -201,8 +201,8 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 		{577, 77361, false, 0, 0},
 		{613, 82185, false, 0, 0},
 		{614, 82319, false, 0, 0},
-		{801, 107377, false, 0, 0},
-		{802, 107511, true, 32320740, 34810675},
+		{794, 106439, false, 0, 0},
+		{795, 106573, true, 32640336, 34507463},
 	} {
 		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
 			source := reviewBudgetScore(tc.measures)
@@ -238,8 +238,8 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	// until it moved to the strict-loading source line. The structural
 	// score/part role wording adds 59 live bytes. Real-layout projection
 	// accounting lowers the live side to 48,656,055, and releasing the work
-	// and subject charges of completed XSD subjects to 41,209,119.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 41209119, 34741296)
+	// and subject charges of completed XSD subjects to 41,640,021.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 41640021, 34741296)
 	t.Logf("source bytes=%d err=%v", len(source), err)
 }
 
@@ -247,15 +247,15 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 	if runtime.GOARCH != "amd64" {
 		t.Skip("documented amd64 capacity witness")
 	}
-	// Retain the historical 569-measure fixture and the current 802-measure
+	// Retain the historical 569-measure fixture and the current 795-measure
 	// default refusal. Their measured final-snapshot overlaps establish exact
 	// and one-short admission controls, without changing production defaults.
 	for _, tc := range []struct {
 		measures, bytes int
 		used, requested int64
 	}{
-		{569, 76289, 23882957, 24718047},
-		{802, 107511, 32320740, 34810675},
+		{569, 76289, 24284024, 24718047},
+		{795, 106573, 32640336, 34507463},
 	} {
 		for _, short := range []int64{0, 1} {
 			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {
