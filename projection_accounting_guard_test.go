@@ -27,6 +27,31 @@ func goSizeClass(n int64) int64 {
 	return (n + 8191) &^ 8191
 }
 
+// goAlloc is the heap of an n-byte allocation of type typ: objects with
+// pointers above 512 bytes carry an 8-byte malloc header before rounding.
+func goAlloc(n int64, typ reflect.Type) int64 {
+	if n > 512 && goHasPointers(typ) {
+		n += 8
+	}
+	return goSizeClass(n)
+}
+
+func goHasPointers(typ reflect.Type) bool {
+	switch typ.Kind() {
+	case reflect.Pointer, reflect.Slice, reflect.String, reflect.Map, reflect.Interface, reflect.Chan, reflect.Func, reflect.UnsafePointer:
+		return true
+	case reflect.Array:
+		return typ.Len() > 0 && goHasPointers(typ.Elem())
+	case reflect.Struct:
+		for i := 0; i < typ.NumField(); i++ {
+			if goHasPointers(typ.Field(i).Type) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // heapWalk sums the size classes of the distinct heap objects a value
 // references: string data, slice backing arrays, pointer targets and boxed
 // interface values. It reads unexported fields and counts shared storage once.
@@ -49,20 +74,20 @@ func (w *heapWalk) external(v reflect.Value) int64 {
 		}
 	case reflect.Slice:
 		if v.Cap() != 0 && w.object(v.Pointer(), int64(v.Cap())*int64(v.Type().Elem().Size())) {
-			n += goSizeClass(int64(v.Cap()) * int64(v.Type().Elem().Size()))
+			n += goAlloc(int64(v.Cap())*int64(v.Type().Elem().Size()), v.Type().Elem())
 			for i := 0; i < v.Len(); i++ {
 				n += w.external(v.Index(i))
 			}
 		}
 	case reflect.Pointer:
 		if !v.IsNil() && w.object(v.Pointer(), int64(v.Type().Elem().Size())) {
-			n += goSizeClass(int64(v.Type().Elem().Size())) + w.external(v.Elem())
+			n += goAlloc(int64(v.Type().Elem().Size()), v.Type().Elem()) + w.external(v.Elem())
 		}
 	case reflect.Interface:
 		if !v.IsNil() {
 			elem := v.Elem()
 			if elem.Kind() != reflect.Pointer && elem.Type().Size() > 0 {
-				n += goSizeClass(int64(elem.Type().Size()))
+				n += goAlloc(int64(elem.Type().Size()), elem.Type())
 			}
 			n += w.external(elem)
 		}

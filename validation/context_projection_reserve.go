@@ -47,13 +47,16 @@ type retainedLayoutWalk struct {
 	visited int64
 }
 
-// allocationSlack bounds the size class the Go allocator rounds an n-byte
-// object up to: classes waste at most 12.5%, and the smallest is 8 bytes.
+// allocationSlack bounds the heap an n-byte allocation occupies. Small objects
+// round up to a size class, at most about 16% larger; objects with pointers
+// above 512 bytes also carry an 8-byte malloc header; objects above 32 KiB
+// round up to whole 8 KiB pages, which adds at most a quarter at that size and
+// less beyond. n/4 + 24 covers all three, for every n.
 func allocationSlack(n int64) int64 {
 	if n <= 0 {
 		return 0
 	}
-	return n + n/8 + 16
+	return n + n/4 + 24
 }
 
 func (w *retainedLayoutWalk) external(v reflect.Value) (int64, error) {

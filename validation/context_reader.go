@@ -412,6 +412,9 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 	if r.err = r.s.retain(retained); r.err != nil {
 		return nil
 	}
+	if shared {
+		r.s.contextSharedTableBytes += retained
+	}
 	if fresh {
 		table = &contextAttributeTable{selectors: make(map[contextRole]AttributeSelector, len(selected)), roles: make([]contextRole, len(selected))}
 		for i, v := range selected {

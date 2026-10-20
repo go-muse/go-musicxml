@@ -39,11 +39,14 @@ type AssessmentOptions struct {
 	// those profiles require; with an explicit profile, nil keeps the
 	// profile's dictionary-free behaviour.
 	Dictionaries *DictionaryOptions
-	// OmitContext leaves Report.Context empty in every report the call
-	// returns, including both reports of DecodeAssessed. Every decision,
-	// count and finding is the same as with the projection; the call only
-	// keeps no copy of it, which lowers the buffered storage it needs (see
-	// validation.RunOptions.OmitContext).
+	// OmitContext leaves Report.Context empty in every report of InspectXML,
+	// AssessModel and DecodeAssessed (both lines). Every decision, count and
+	// finding is the same as with the projection; the call only keeps no copy
+	// of it, which lowers the buffered storage it needs (see
+	// validation.RunOptions.OmitContext). Graph and package assessment read
+	// the projection, so their entry points reject it as the Graph options of
+	// LinkedAssessmentOptions or MXLAssessmentOptions with a configuration
+	// error, before any input is read.
 	OmitContext bool
 }
 
@@ -159,8 +162,8 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // source violations remain visible. Line 3 runs only after line 2 and
 // conversion accept the document. Both lines share one finite budget account;
 // the bundled pinned canonical SMuFL and IPA representation data serve line 3,
-// which obtains them when it starts, so a document line 2 rejects never opens
-// a dictionary source. A dictionary import that fails but still returns a set keeps line 3
+// which obtains them when it starts, so in the strict mode a document line 2
+// rejects never opens a dictionary source. A dictionary import that fails but still returns a set keeps line 3
 // running, so that its report shows the unavailable evidence; the failure
 // still rejects the document.
 //

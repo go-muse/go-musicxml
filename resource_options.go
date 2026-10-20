@@ -88,6 +88,11 @@ func validateLinkedAssessmentOptionsAccount(ctx context.Context, o LinkedAssessm
 	if expected == "" || o.Graph.Profile != expected {
 		return invalid("graph profile", "explicit entry-point compatible graph profile required")
 	}
+	if o.Graph.OmitContext {
+		// Resource snapshots, from which graphs and packages are built, read
+		// the context projection.
+		return invalid("Graph.OmitContext", "graph and package assessment keep the context projection")
+	}
 	if len(o.Dependencies) > 4 {
 		return invalid("resource dependencies", "bounded closed selection required")
 	}

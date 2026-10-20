@@ -60,16 +60,20 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   exactly them (the defaults of both loaders, `InspectXML` and `AssessModel`)
   read the shared verified set, which is charged to their buffer while they
   hold it, and no longer pay the import's 3.3 million rule steps and
-  `MaxExternalBytes`. Other sources and selections import on every call as
-  before.
+  `MaxExternalBytes`; a few steps remain. Other sources and selections import
+  on every call as before.
 - `DecodeAssessed` imports the line-3 dictionaries only when line 3 starts, as
-  `DecodeMXLAssessed` already did, so a document rejected by line 2 never
-  opens a dictionary source and an import refusal keeps the line-2 report.
+  `DecodeMXLAssessed` already did, so in the strict mode a document rejected
+  by line 2 never opens a dictionary source, and an import refusal keeps the
+  line-2 report.
 - The context projection is accounted for at the heap it occupies instead of
   fixed reserves of about three times that size, and final context readers
-  share attribute tables. `DecodeAssessed` needs 27–29% fewer rule steps
-  and buffer bytes on the test-suite scores; every report within the
-  budgets is unchanged.
+  share attribute tables. Copies of typed context payloads and timeline state
+  charge every string byte but one rule step per 64 reflected items instead
+  of one per item. With the shared dictionary set, `DecodeAssessed` needs 27–29%
+  fewer rule steps and 22–24% fewer buffer bytes on the test-suite scores
+  (about 3.3 million of the saved steps come from the dictionary set); every
+  report within the budgets is unchanged.
 
 ### Added
 

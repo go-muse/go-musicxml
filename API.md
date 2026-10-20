@@ -141,9 +141,9 @@ Only line 3 reads dictionaries. Both loaders obtain them when line 3 starts;
 the default bundled set is imported once per process and shared. When line 3
 runs, a dictionary failure shows in `ModelLine`; in every case the document is
 withheld. Splitting the lines cut the cost of strict loading by about a third,
-and the shared dictionary set and real-layout context accounting by more than
-another quarter: `DecodeAssessed` needs about 9.7 million rule steps and 25 MiB of
-buffer for the 31 KB `01a-Pitches-Pitches.xml` and 11.4 million steps and 33
+and the shared dictionary set and real-layout context accounting by another
+fifth to a quarter: `DecodeAssessed` needs about 9.7 million rule steps and 27 MiB of
+buffer for the 31 KB `01a-Pitches-Pitches.xml` and 11.4 million steps and 35
 MiB for the 42 KB `41c-StaffGroups.xml` of the MusicXML test suite, both within
 the default budgets (20 million steps, 64 MiB), where it needed 21.7 and 24.9
 million steps before the split ([measurements][loading-budgets]).
@@ -1435,9 +1435,11 @@ contracts. Ordinary `Decode` remains transport-only.
 
 The result includes `ModelLine validation.Report`. An earlier operation failure,
 unsatisfied/incomplete source report or conversion failure leaves it unrequested.
-Model-session startup failure, including cancellation after source acceptance,
-can also leave `ModelLine.Requested == false`; that field cannot distinguish the two
-cases. Once initialized, model assessment walks the actual Go object directly and
+A dictionary import that refuses after line 2 (cancellation, resource limit,
+invalid dictionary data) or a model-session startup failure, including
+cancellation after source acceptance, can also leave `ModelLine.Requested ==
+false` while `SourceLine` and `Conversion` are complete; that field cannot
+distinguish these cases. Once initialized, model assessment walks the actual Go object directly and
 preserves its available report, including on failure. `Document` is
 returned only when both reports are satisfied, conversion succeeds and there is
 no operation or close error. All other outcomes retain the available reports and
@@ -1460,7 +1462,7 @@ source. The caller retains ownership of the reader.
 The default dictionaries, the required selections of `BundledDictionarySource()`,
 are imported and verified once per process. Each call reads that verified set
 and is charged its retained storage on `MaxBufferedBytes` while holding it, but
-no import work: no rule steps and no `MaxExternalBytes`. Any other source or
+no import work: a few rule steps and no `MaxExternalBytes`. Any other source or
 selection is imported on every call, at the caller's expense (about 3.3 million
 rule steps for the required bundled pair at an earlier head). See the [dictionary
 import cost][loading-cost] for details and the measured budgets.
@@ -2279,11 +2281,11 @@ Default-buffer capacity is limited for source-origin graph compositions: every
 selected origin row has two independently owned snapshot copies while session
 storage still overlaps. On Go 1.27.2 linux/amd64, the single-note-per-measure
 `reviewBudgetScore` fixture with `ProfileResourceGraphInternalDTDDictionaries`
-now admits 615 measures (82,453 source bytes) with defaults; 616 measures
-(82,587 bytes) refuse the 64 MiB live-buffer allowance. The earlier published
+now admits 610 measures (81,783 source bytes) with defaults; 611 measures
+(81,917 bytes) refuse the 64 MiB live-buffer allowance. The earlier published
 531/532, PR 43 568/569 and 576/577 boundaries are historical; all of these
-cases now complete. Exact/one-short snapshot controls pin 62,109,311 bytes for
-569 measures and 67,168,924 bytes for 616 measures.
+cases now complete. Exact/one-short snapshot controls pin 62,617,598 bytes for
+569 measures and 67,175,452 bytes for 611 measures.
 The review reported the
 500-measure case at approximately 62.9 MB of the 67.1 MB allowance, a
 previous boundary of 494 measures (about 66 KB), and comparison boundaries of

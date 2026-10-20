@@ -36,11 +36,15 @@ func TestContextAttributeTablesSharedAcrossFinalReaders(t *testing.T) {
 	s, b = finalAttributeFixture(t)
 	steps := func() int64 { return rationalUsage(t, s, BudgetRuleSteps) }
 	first := &contextReader{ctx: context.Background(), s: s, b: b}
-	before := steps()
+	before, retained := steps(), s.retained
 	if _, ok := first.attributeSelector(s.nodes[2], "required"); !ok || first.err != nil {
 		t.Fatal(first.err)
 	}
 	built := steps() - before
+	// A span rollback keeps exactly this charge of the shared tables.
+	if s.contextSharedTableBytes == 0 || s.contextSharedTableBytes != s.retained-retained {
+		t.Fatalf("shared table charge %d, retained %d", s.contextSharedTableBytes, s.retained-retained)
+	}
 	second := &contextReader{ctx: context.Background(), s: s, b: b}
 	before = steps()
 	if _, ok := second.attributeSelector(s.nodes[2], "required"); !ok || second.err != nil {
@@ -59,7 +63,7 @@ func TestContextAttributeTablesSharedAcrossFinalReaders(t *testing.T) {
 		t.Fatalf("other bindings shared a table: %v entries=%d", third.err, len(s.contextAttributeTables))
 	}
 	s.cleanup()
-	if s.contextAttributeTables != nil || s.contextAttributeIntern != nil || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+	if s.contextAttributeTables != nil || s.contextAttributeIntern != nil || s.contextSharedTableBytes != 0 || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
 		t.Fatal("shared attribute tables survived cleanup")
 	}
 }

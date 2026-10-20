@@ -21,7 +21,10 @@ var bundledDictionaryCache struct {
 // account with the default budgets and without the caller's context: the
 // caller pays neither its work nor its cancellation. A failed import is not
 // cached and returns nil, so that the caller imports on its own account as
-// before; the embedded data makes that unreachable in practice.
+// before; the embedded data makes that unreachable in practice. The import
+// runs under the cache mutex, so concurrent first callers wait for it (about
+// 3 ms) whatever their contexts; while it kept failing, every call would
+// repeat it before importing on its own account.
 func cachedBundledDictionarySet() *validation.DictionarySet {
 	bundledDictionaryCache.mu.Lock()
 	defer bundledDictionaryCache.mu.Unlock()

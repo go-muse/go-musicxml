@@ -258,11 +258,41 @@ func (s *Session) growContextResults() error {
 	copy(next, s.contextResults)
 	// The old array is not cleared: a span rollback may restore its header.
 	s.contextResults = next
-	if released := contextBackingBytes(old); released != 0 {
+	released := contextBackingBytes(old)
+	if s.contextBackingHold {
+		// A rollback snapshot still references the old array; it stays
+		// charged until releaseHeldContextBacking or the rollback.
+		s.contextBackingHeld += released
+		return nil
+	}
+	if released != 0 {
 		_ = s.account.Release(BudgetBufferedBytes, released)
 		s.retained -= released
 	}
 	return nil
+}
+
+// holdContextBacking keeps the charge of every backing array that growth
+// replaces until releaseHeldContextBacking, for a caller whose rollback may
+// restore an earlier slice header. It returns the previous hold state.
+func (s *Session) holdContextBacking() bool {
+	previous := s.contextBackingHold
+	s.contextBackingHold = true
+	return previous
+}
+
+// releaseHeldContextBacking ends a hold. On commit it releases the held
+// charges of replaced arrays, which the projection subtotal also counts; a
+// rollback restores the earlier header and its charge itself, so it only
+// forgets them.
+func (s *Session) releaseHeldContextBacking(previous, commit bool) {
+	held := s.contextBackingHeld
+	s.contextBackingHold, s.contextBackingHeld = previous, 0
+	if commit && held != 0 {
+		_ = s.account.Release(BudgetBufferedBytes, held)
+		s.retained -= held
+		s.contextReportRetained -= held
+	}
 }
 
 func contextBackingBytes(capacity int) int64 {

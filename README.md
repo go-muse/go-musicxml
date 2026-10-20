@@ -140,8 +140,8 @@ as the official catalog does, or from a caller `DTDSource`; nothing is fetched.
 An unrecognized external subset still cannot be accepted, and raising budgets does
 not close that gap.
 Use ordinary `Decode` for transport-only loading, without a validation guarantee.
-See the [migration guide][assessed-loading] for compatibility, per-call import
-costs and bundled-data distribution requirements.
+See the [migration guide][assessed-loading] for compatibility, dictionary
+import and budget costs and bundled-data distribution requirements.
 
 XML decoding supports UTF-8 (with or without a BOM), UTF-16BE/LE (with a BOM,
 or without one when the XML declaration names the byte order), and

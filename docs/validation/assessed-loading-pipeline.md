@@ -64,8 +64,9 @@ The acceptance sequence is:
 - `Conversion`: mapping state and bounded findings. `ConversionConverted` is not
   an exact lexical or numeric round-trip guarantee.
 - `ModelLine`: the independent line-3 report of the converted model, when
-  initialized. `ModelLine.Requested` can be false after an earlier failure or a failure to start
-  the model session, including cancellation after satisfied source assessment and
+  initialized. `ModelLine.Requested` can be false after an earlier failure, a
+  dictionary import that refuses after line 2, or a failure to start the model
+  session, including cancellation after satisfied source assessment and
   successful conversion. It cannot distinguish those cases and is never a pass.
   Once a model report exists, it is retained even if model assessment fails.
 - `Document`: nonnil only on complete successful loading. It is nil for source or
@@ -269,18 +270,19 @@ import, real-layout projection accounting and shared attribute tables;
 
 | File | Before the split | Lines | Now | Without context |
 | --- | --- | --- | --- | --- |
-| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 25.0 MiB | 8.69 million, 12.1 MiB |
-| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 32.8 MiB | 10.13 million, 15.4 MiB |
-| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 69.6 MiB | 23.91 million, 33.9 MiB |
-| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 77.8 MiB | 29.13 million, 38.4 MiB |
+| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 26.7 MiB | 8.69 million, 12.3 MiB |
+| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 35.2 MiB | 10.13 million, 15.7 MiB |
+| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 74.4 MiB | 23.91 million, 34.6 MiB |
+| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 82.9 MiB | 29.13 million, 39.1 MiB |
 
 The first two load within the default budgets (20 million rule steps, 64 MiB);
 `TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores still
 need explicit budgets. These are logical account figures for these files, not
-heap measurements or general capacity. The reports themselves did not change:
-on every corpus and official file that loads within the default budgets, the
-reports of `DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`, `InspectMXL` and
-`AssessModel` were compared with those of `59d4536` and are identical.
+heap measurements or general capacity. A one-off comparison when these changes
+were made, not a test, found the reports unchanged: on every corpus and
+official file that loads within the default budgets, the reports of
+`DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`, `InspectMXL` and
+`AssessModel` were identical to those of `59d4536`.
 
 ### Dictionary import cost
 
@@ -291,7 +293,7 @@ defaults of both loaders and of `InspectXML` and `AssessModel` with an empty
 profile, reads the same verified set: its fingerprint and every report are those
 of a fresh import. Each call is charged the set's retained storage on its
 `MaxBufferedBytes` for as long as it holds the set, but none of the import
-work: no rule steps and no `MaxExternalBytes`. A failed process-wide import is
+work: a few rule steps and no `MaxExternalBytes`. A failed process-wide import is
 not cached; the call then imports on its own account as before.
 
 Any other source, including a caller source that serves the same bundled

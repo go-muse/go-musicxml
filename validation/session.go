@@ -136,8 +136,14 @@ type Session struct {
 	contextElementRoles     map[contextBoundElementKey][]contextRole
 	contextAttributeTables  map[contextAttributeTableKey]*contextAttributeTable
 	contextAttributeIntern  map[contextSharedInternKey]*contextAttributeTable
+	// contextSharedTableBytes sums the charges of the shared attribute tables.
+	contextSharedTableBytes int64
 	contextResults          []ContextResult
 	omitContext             bool
+	// contextBackingHold keeps replaced Report.Context arrays charged while
+	// a rollback snapshot may restore one; contextBackingHeld sums them.
+	contextBackingHold      bool
+	contextBackingHeld      int64
 	contextReportRetained   int64
 	timeline                map[RuleKey]*timelineService
 	localDocuments          map[*localPlan]localDocumentResult
@@ -746,6 +752,7 @@ func (s *Session) cleanup() {
 	s.contextElementRoles = nil
 	s.contextAttributeTables = nil
 	s.contextAttributeIntern = nil
+	s.contextSharedTableBytes = 0
 	if s.schema != nil && s.schema.run != nil {
 		_ = s.schema.run.Close()
 	}

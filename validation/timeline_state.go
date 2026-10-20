@@ -228,8 +228,9 @@ func stateValidScope(v stateScope) bool {
 // State-record reflection is restricted to a closed private value graph. The
 // only admitted non-nil pointers are *DecisionRef (an owned causal witness),
 // *Evidence[string] (an optional sound time-only condition), and
-// *musicalPosition (an optional exact gap/placement witness). stateMeasure
-// checks that allow-list before any stateCopy/stateClone retention path; copies
+// *musicalPosition (an optional exact gap/placement witness). stateMeasure and
+// retainedLayoutBytes, which measures the retention paths (stateReserve,
+// stateRetainCopy), check that allow-list before any stateCopy/stateClone; copies
 // recursively own those records and their strings/slices. Nil pointers retain
 // no payload. Integer, Decimal and Rational are terminal immutable wrappers:
 // their private numeric storage is shared safely and measured directly, never
@@ -239,7 +240,9 @@ func stateValidScope(v stateScope) bool {
 // stateMeasure walks only the closed, shallow set of private typed state records.
 // Numeric wrappers stop recursion: their immutable magnitude/text is accounted
 // directly. This is neither a scalar parser nor a composite serialization path.
-// Every visited item and string byte is charged before copying or comparison.
+// Every visited item and string byte is charged before comparison. Retention
+// paths measure with retainedLayoutBytes instead, which charges every string
+// byte but one step per 64 visited items.
 func stateMeasure(ctx context.Context, s *Session, v reflect.Value) (int64, error) {
 	if e := s.step(ctx, 1); e != nil {
 		return 0, e

@@ -300,9 +300,9 @@ func TestOmitContextKeepsEveryVerdict(t *testing.T) {
 	}
 }
 
-// Omitting the projection lowers the buffered storage strict loading needs:
-// the smallest buffer that accepts 01a with the projection exceeds the one
-// without it by at least a third.
+// Omitting the projection roughly halves the buffered storage strict loading
+// needs: the smallest buffer that accepts 01a without the projection is at
+// most 55% of the one with it.
 func TestOmitContextLowersTheBufferedStorage(t *testing.T) {
 	if raceEnabled {
 		t.Skip("binary search is slow under the race detector")
@@ -326,7 +326,7 @@ func TestOmitContextLowersTheBufferedStorage(t *testing.T) {
 	}
 	with, without := minimal(false), minimal(true)
 	t.Logf("minimal buffer: %d with the projection, %d without", with, without)
-	if without*3 > with*2 {
+	if without*100 > with*55 {
 		t.Fatalf("omitting the projection saved too little: %d with, %d without", with, without)
 	}
 }
@@ -343,10 +343,12 @@ func TestBundledDictionaryCacheDoesNotCacheFailure(t *testing.T) {
 		// The set built here is left open: a view may still read it.
 		bundledDictionaryCache.mu.Lock()
 		bundledDictionaryCache.set = saved
-		bundledDictionaryCache.mu.Unlock()
 		bundledDictionaryImport = importDictionarySet
+		bundledDictionaryCache.mu.Unlock()
 	})
+	// The hook runs under the cache mutex, which also guards failures.
 	failures := 0
+	bundledDictionaryCache.mu.Lock()
 	bundledDictionaryImport = func(ctx context.Context, a *validation.Account, o DictionaryOptions) (*validation.DictionarySet, error) {
 		if failures == 0 {
 			failures++
@@ -354,14 +356,66 @@ func TestBundledDictionaryCacheDoesNotCacheFailure(t *testing.T) {
 		}
 		return importDictionarySet(ctx, a, o)
 	}
+	bundledDictionaryCache.mu.Unlock()
+	cached := func() bool {
+		bundledDictionaryCache.mu.Lock()
+		defer bundledDictionaryCache.mu.Unlock()
+		return bundledDictionaryCache.set != nil
+	}
 	set, _, steps, _, _ := dictionaryLoadUsage(t, requiredDictionaryOptions())
-	if steps < 1_000_000 || bundledDictionaryCache.set != nil {
-		t.Fatalf("failed shared import: caller steps=%d cached=%v", steps, bundledDictionaryCache.set != nil)
+	if steps < 1_000_000 || cached() {
+		t.Fatalf("failed shared import: caller steps=%d cached=%v", steps, cached())
 	}
 	_ = set.Close()
 	set, _, steps, _, _ = dictionaryLoadUsage(t, requiredDictionaryOptions())
-	if steps >= 100 || bundledDictionaryCache.set == nil {
-		t.Fatalf("retried shared import: caller steps=%d cached=%v", steps, bundledDictionaryCache.set != nil)
+	if steps >= 100 || !cached() {
+		t.Fatalf("retried shared import: caller steps=%d cached=%v", steps, cached())
 	}
 	_ = set.Close()
+}
+
+// Graph and package assessment read the context projection, so every graph
+// and package entry point rejects Graph.OmitContext before reading input.
+func TestGraphEntryPointsRejectOmitContext(t *testing.T) {
+	document, err := Decode(strings.NewReader(mandatoryDictionaryScore()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	archive := rawMXL(t, mandatoryDictionaryScore())
+	pkg, err := DecodeMXLPackage(bytes.NewReader(archive))
+	if err != nil {
+		t.Fatal(err)
+	}
+	graph := AssessmentOptions{OmitContext: true}
+	for _, profile := range []validation.ProfileID{"", ProfileResourceGraphInternalDTDDictionaries} {
+		graph.Profile = profile
+		reader := &assessmentCountingReader{source: bytes.NewReader(archive)}
+		calls := map[string]func() error{
+			"InspectXMLWithResources": func() error {
+				_, err := InspectXMLWithResources(context.Background(), reader, LinkedAssessmentOptions{Graph: graph})
+				return err
+			},
+			"AssessModelWithResources": func() error {
+				_, err := AssessModelWithResources(context.Background(), document, LinkedAssessmentOptions{Graph: graph})
+				return err
+			},
+			"InspectMXL": func() error {
+				_, err := InspectMXL(context.Background(), reader, MXLAssessmentOptions{Graph: graph})
+				return err
+			},
+			"AssessMXLPackage": func() error {
+				_, err := AssessMXLPackage(context.Background(), pkg, MXLAssessmentOptions{Graph: graph})
+				return err
+			},
+			"DecodeMXLAssessed": func() error {
+				_, err := DecodeMXLAssessed(context.Background(), reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: graph}})
+				return err
+			},
+		}
+		for name, call := range calls {
+			if err := call(); !errors.Is(err, validation.ErrInvalidConfiguration) || reader.reads != 0 {
+				t.Errorf("%s profile %q: reads=%d error=%v", name, profile, reader.reads, err)
+			}
+		}
+	}
 }

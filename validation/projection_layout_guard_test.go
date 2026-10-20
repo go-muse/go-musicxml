@@ -25,6 +25,46 @@ func layoutGuardClass(n int64) int64 {
 	return (n + 8191) &^ 8191
 }
 
+// layoutGuardAlloc is the heap an allocation of n bytes of type typ occupies:
+// objects with pointers above 512 bytes carry an 8-byte malloc header before
+// rounding (Go 1.22 and later).
+func layoutGuardAlloc(n int64, typ reflect.Type) int64 {
+	if n > 512 && layoutGuardHasPointers(typ) {
+		n += 8
+	}
+	return layoutGuardClass(n)
+}
+
+func layoutGuardHasPointers(typ reflect.Type) bool {
+	switch typ.Kind() {
+	case reflect.Pointer, reflect.Slice, reflect.String, reflect.Map, reflect.Interface, reflect.Chan, reflect.Func, reflect.UnsafePointer:
+		return true
+	case reflect.Array:
+		return typ.Len() > 0 && layoutGuardHasPointers(typ.Elem())
+	case reflect.Struct:
+		for i := 0; i < typ.NumField(); i++ {
+			if layoutGuardHasPointers(typ.Field(i).Type) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// allocationSlack bounds the heap of every allocation size, with and without
+// the malloc header, through the small size classes and the page-rounded
+// large objects.
+func TestAllocationSlackBoundsEveryAllocationSize(t *testing.T) {
+	pointers, scalars := reflect.TypeFor[*int](), reflect.TypeFor[byte]()
+	for n := int64(1); n <= 160<<10; n++ {
+		for _, typ := range []reflect.Type{pointers, scalars} {
+			if heap := layoutGuardAlloc(n, typ); allocationSlack(n) < heap {
+				t.Fatalf("%d bytes of %s: slack %d, heap %d", n, typ, allocationSlack(n), heap)
+			}
+		}
+	}
+}
+
 // layoutGuardHeap sums the size classes of the distinct heap objects that v
 // references, reading unexported fields and counting shared storage once.
 func layoutGuardHeap(v reflect.Value, seen map[uintptr]bool) int64 {
@@ -43,19 +83,19 @@ func layoutGuardHeap(v reflect.Value, seen map[uintptr]bool) int64 {
 		}
 	case reflect.Slice:
 		if v.Cap() != 0 && object(v.Pointer()) {
-			n += layoutGuardClass(int64(v.Cap()) * int64(v.Type().Elem().Size()))
+			n += layoutGuardAlloc(int64(v.Cap())*int64(v.Type().Elem().Size()), v.Type().Elem())
 			for i := 0; i < v.Len(); i++ {
 				n += layoutGuardHeap(v.Index(i), seen)
 			}
 		}
 	case reflect.Pointer:
 		if !v.IsNil() && object(v.Pointer()) {
-			n += layoutGuardClass(int64(v.Type().Elem().Size())) + layoutGuardHeap(v.Elem(), seen)
+			n += layoutGuardAlloc(int64(v.Type().Elem().Size()), v.Type().Elem()) + layoutGuardHeap(v.Elem(), seen)
 		}
 	case reflect.Interface:
 		if !v.IsNil() {
 			if elem := v.Elem(); elem.Kind() != reflect.Pointer && elem.Type().Size() > 0 {
-				n += layoutGuardClass(int64(elem.Type().Size()))
+				n += layoutGuardAlloc(int64(elem.Type().Size()), elem.Type())
 			}
 			n += layoutGuardHeap(v.Elem(), seen)
 		}
@@ -116,8 +156,14 @@ func layoutGuardFill(t *testing.T, v reflect.Value, width, elems int, depth int)
 			layoutGuardFill(t, v.Field(i), width, elems, depth+1)
 		}
 	case reflect.Slice:
-		v.Set(reflect.MakeSlice(v.Type(), elems, elems))
-		for i := 0; i < elems; i++ {
+		// Only the outermost slices take the requested length; nested ones
+		// stay short, so that the filled graph stays small.
+		n := elems
+		if depth > 1 {
+			n = min(elems, 3)
+		}
+		v.Set(reflect.MakeSlice(v.Type(), n, n))
+		for i := 0; i < n; i++ {
 			layoutGuardFill(t, v.Index(i), width, elems, depth+1)
 		}
 	case reflect.Pointer:
@@ -134,7 +180,9 @@ func layoutGuardFill(t *testing.T, v reflect.Value, width, elems int, depth int)
 // at no less than the heap its owned copy occupies, for short and long
 // strings alike; so is the layout payload measured by layoutContextSize.
 func TestRetainedLayoutBytesCoverTheCopyHeap(t *testing.T) {
-	for _, shape := range []struct{ width, elems int }{{1, 3}, {7, 3}, {40, 3}, {1000, 3}, {0, 64}} {
+	// 2100 elements put slices of 16-byte and larger elements past 32 KiB,
+	// where the page rounding applies.
+	for _, shape := range []struct{ width, elems int }{{1, 3}, {7, 3}, {40, 3}, {1000, 3}, {0, 64}, {0, 2100}} {
 		width := shape.width
 		for _, typ := range []reflect.Type{
 			reflect.TypeFor[SpanContextResult](),
@@ -192,7 +240,7 @@ func TestContextResultsBackingIsChargedForItsCapacity(t *testing.T) {
 		t.Fatal(err)
 	}
 	record := s.retained - before
-	for len(s.contextResults) < 64 {
+	for len(s.contextResults) < 1024 {
 		capacity, before := cap(s.contextResults), s.retained
 		if err := s.publishContextResult(ctx, row); err != nil {
 			t.Fatal(err)
@@ -207,7 +255,7 @@ func TestContextResultsBackingIsChargedForItsCapacity(t *testing.T) {
 		if got := s.retained - before; got != want {
 			t.Fatalf("publication %d charged %d, want %d", len(s.contextResults), got, want)
 		}
-		if heap := layoutGuardClass(int64(cap(s.contextResults)) * int64(unsafe.Sizeof(ContextResult{}))); contextBackingBytes(cap(s.contextResults)) < heap {
+		if heap := layoutGuardAlloc(int64(cap(s.contextResults))*int64(unsafe.Sizeof(ContextResult{})), reflect.TypeFor[ContextResult]()); contextBackingBytes(cap(s.contextResults)) < heap {
 			t.Fatalf("capacity %d charged %d, occupies %d", cap(s.contextResults), contextBackingBytes(cap(s.contextResults)), heap)
 		}
 	}
@@ -240,6 +288,114 @@ func TestContextResultsBackingIsChargedForItsCapacity(t *testing.T) {
 		s.cleanup()
 		if used := rationalUsage(t, s, BudgetBufferedBytes); used != 0 {
 			t.Fatalf("cleanup left %d", used)
+		}
+	}
+}
+
+// While a rollback snapshot may restore an earlier header, growth keeps the
+// replaced array charged; a commit releases it from the session and the
+// projection subtotal, a rollback leaves the restored array's charge.
+func TestContextBackingHeldUntilCommit(t *testing.T) {
+	row := ContextResult{Provider: RuleKey{"backing", 1}, Subject: NodeRef{"source", 1}, Property: ContextPropertySpanNormalDots, Value: Evidence[Atomic]{State: EvidenceAbsent}}
+	ctx := context.Background()
+	for _, commit := range []bool{true, false} {
+		s := rationalSession(t, Budgets{})
+		for range 8 {
+			if err := s.publishContextResult(ctx, row); err != nil {
+				t.Fatal(err)
+			}
+		}
+		record := contextBackingBytes(8)
+		before := s.retained
+		previous := s.holdContextBacking()
+		if err := s.publishContextResult(ctx, row); err != nil {
+			t.Fatal(err)
+		}
+		grown := s.retained - before
+		if cap(s.contextResults) != 16 || s.contextBackingHeld != record || grown <= contextBackingBytes(16) {
+			t.Fatalf("held growth: cap=%d held=%d grown=%d", cap(s.contextResults), s.contextBackingHeld, grown)
+		}
+		s.releaseHeldContextBacking(previous, commit)
+		want := grown
+		if commit {
+			want -= record
+		}
+		if got := s.retained - before; got != want || s.contextBackingHold || s.contextBackingHeld != 0 || s.contextReportRetained != s.retained || rationalUsage(t, s, BudgetBufferedBytes) != s.retained {
+			t.Fatalf("commit=%v: retained delta %d, want %d; subtotal %d of %d", commit, got, want, s.contextReportRetained, s.retained)
+		}
+		s.cleanup()
+	}
+}
+
+// A span evaluation that grows Report.Context and then fails restores the
+// earlier header with exactly its charge; only the context service, created
+// before the evaluation's snapshot, stays charged.
+func TestSpanRollbackAfterGrowthRestoresAccounting(t *testing.T) {
+	control, _ := spanRollbackFixture(t)
+	before := control.s.retained
+	if _, err := control.s.newContextService(context.Background(), RuleKey{"spans", 1}); err != nil {
+		t.Fatal(err)
+	}
+	service := control.s.retained - before
+	r, note := spanRollbackFixture(t)
+	retained, subtotal, results := r.s.retained, r.s.contextReportRetained, r.s.contextResults
+	_, _, err := evaluateContextSpans(context.Background(), r.s, note, RuleKey{"spans", 1}, &contextPlan{Bindings: r.b}, true)
+	if !errors.Is(err, ErrResourceLimit) || cap(r.s.contextResults) != 8 || &r.s.contextResults[0] != &results[0] || r.s.retained != retained+service || r.s.contextReportRetained != subtotal || r.s.contextBackingHeld != 0 || r.s.contextBackingHold {
+		t.Fatalf("rollback: err=%v cap=%d retained=%d/%d+%d subtotal=%d/%d", err, cap(r.s.contextResults), r.s.retained, retained, service, r.s.contextReportRetained, subtotal)
+	}
+	if used, _ := r.s.account.Usage(BudgetContextFacts); used != 9 {
+		t.Fatalf("fixture did not grow before rollback: context facts=%d", used)
+	}
+	if used, _ := r.s.account.Usage(BudgetBufferedBytes); used != r.s.retained {
+		t.Fatalf("account %d, session %d", used, r.s.retained)
+	}
+}
+
+// spanRollbackFixture holds a slur span whose publication grows a full
+// eight-record Report.Context and then exhausts MaxContextFacts.
+func spanRollbackFixture(t *testing.T) (*contextReader, *factNode) {
+	t.Helper()
+	return spanGrowthFixture(t, Budgets{MaxContextFacts: 9})
+}
+
+// spanGrowthFixture holds a slur span whose publication grows a full
+// eight-record Report.Context, under limits.
+func spanGrowthFixture(t *testing.T, limits Budgets) (*contextReader, *factNode) {
+	t.Helper()
+	r := spanUnitReader(t)
+	account, err := NewBudgetAccount(limits)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.s.account = account
+	note := spanUnitNode(r, spanRole_note, nil)
+	for _, role := range []string{"start", "stop"} {
+		node := spanUnitNode(r, spanRole_slur, note)
+		spanUnitAttribute(r, node, spanRole_slur_type, spanString(role))
+	}
+	row := ContextResult{Provider: RuleKey{"retained-report", 1}, Subject: NodeRef{r.s.documentID, note.header.ID}, Property: ContextPropertySpanNormalDots, Value: Evidence[Atomic]{State: EvidenceAbsent}}
+	for range 8 {
+		if err := r.s.publishContextResult(context.Background(), row); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return r, note
+}
+
+// A successful span evaluation that grows Report.Context keeps the replaced
+// array charged until it commits: its peak includes that array on top of what
+// remains charged afterwards, so a buffer one byte short of both refuses it.
+func TestSpanEvaluationHoldsReplacedBacking(t *testing.T) {
+	r, note := spanGrowthFixture(t, Budgets{})
+	if _, _, err := evaluateContextSpans(context.Background(), r.s, note, RuleKey{"spans", 1}, &contextPlan{Bindings: r.b}, true); err != nil || cap(r.s.contextResults) != 16 {
+		t.Fatalf("control: err=%v cap=%d", err, cap(r.s.contextResults))
+	}
+	peak := r.s.retained + contextBackingBytes(8)
+	for _, spare := range []int64{-1, 0} {
+		r, note := spanGrowthFixture(t, Budgets{MaxBufferedBytes: peak + spare})
+		_, _, err := evaluateContextSpans(context.Background(), r.s, note, RuleKey{"spans", 1}, &contextPlan{Bindings: r.b}, true)
+		if spare < 0 && !errors.Is(err, ErrResourceLimit) || spare == 0 && err != nil {
+			t.Fatalf("buffer %d: err=%v", peak+spare, err)
 		}
 	}
 }
