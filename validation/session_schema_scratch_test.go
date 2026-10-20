@@ -109,8 +109,9 @@ func TestSchemaBindingScratchReleasesCompletedTraversal(t *testing.T) {
 				t.Errorf("completed traversal retained scratch: got %d, want %d", s.retained, want)
 			}
 			root := s.schema.nodes[1]
-			if witnesses := s.schema.run.Witnesses(root.binding); len(witnesses) != children {
-				t.Fatalf("lost retained witnesses: %d, want %d", len(witnesses), children)
+			// Witnesses are completion scratch: Run releases them at Complete.
+			if witnesses := s.schema.run.Witnesses(root.binding); witnesses != nil {
+				t.Fatalf("completed witnesses retained: %d", len(witnesses))
 			}
 			if result := s.schema.run.Results(root.binding).Content; !result.Valid || !result.Complete {
 				t.Fatalf("lost content result: %+v", result)

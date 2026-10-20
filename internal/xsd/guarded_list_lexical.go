@@ -232,10 +232,10 @@ func (c *Context) rejectUnionCandidates(union, restriction *SimpleSchema, value,
 // No mutable cache or technical epoch is shared with a hypothetical trial.
 // Schema definitions and the execution meter remain shared and immutable.
 func (c *Context) rejectionTrial() *Context {
-	c.scratch(int64(unsafe.Sizeof(Context{})) + int64(unsafe.Sizeof(boundState{})))
+	c.scratch(int64(unsafe.Sizeof(Context{})) + int64(unsafe.Sizeof(legacyBoundState{})))
 	trial := &Context{Schema: c.Schema, run: c.run}
 	if c.run != nil {
-		trial.local = &boundState{run: c.run}
+		trial.local = &boundState{bindWork: &bindWork{}, run: c.run}
 	}
 	return trial
 }

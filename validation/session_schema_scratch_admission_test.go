@@ -343,9 +343,8 @@ func TestSchemaBindingScratchSkippedWitnessUsesCompletionCapacity(t *testing.T) 
 	if err := s.bindSourceSchema(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	witnesses := s.schema.run.Witnesses(s.schema.nodes[1].binding)
-	if len(witnesses) != 2 || witnesses[0].Mode != xsd.WitnessDeclared || witnesses[1].Mode != xsd.WitnessSkip || !s.schema.nodes[3].skipped {
-		t.Fatalf("mixed witnesses lost: %+v", witnesses)
+	if s.schema.run.Witnesses(s.schema.nodes[1].binding) != nil || !s.schema.nodes[2].available || !s.schema.nodes[3].skipped {
+		t.Fatalf("mixed witnesses lost: %+v", s.schema.nodes)
 	}
 	// Map for three nodes, subject projections for root+declared child,
 	// root's two child views, and the declared child's retained scalar.

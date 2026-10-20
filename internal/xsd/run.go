@@ -5,6 +5,7 @@ import (
 	"errors"
 	"iter"
 	"math"
+	"strings"
 	"unsafe"
 )
 
@@ -110,7 +111,55 @@ type Meter interface {
 	Identity(int64) error
 }
 
+// boundState is the per-subject record a Run keeps until Close. Only the
+// fields read through Binding after completion (results, scalar, attributes,
+// actual type) live here directly; operation scratch lives in bindWork, which
+// Complete releases.
 type boundState struct {
+	*bindWork
+	run        *Run
+	id         SubjectID
+	actual     *TypeRef
+	attributes []*AttributeResult
+	// After completion: nil final means all five results are fresh (applicable,
+	// valid, complete, no details); nil finalScalar means the zero scalar.
+	final       *NodeResults
+	finalScalar *ScalarResult
+	done        bool
+}
+
+func (s *boundState) nodeResults() NodeResults {
+	if s.bindWork != nil {
+		return s.results
+	}
+	if s.final == nil {
+		return freshResults()
+	}
+	return *s.final
+}
+
+func (s *boundState) scalarResult() ScalarResult {
+	if s.bindWork != nil {
+		return s.scalar
+	}
+	if s.finalScalar == nil {
+		return ScalarResult{}
+	}
+	return *s.finalScalar
+}
+
+func isFreshResult(r *Result) bool {
+	return r.Applicable && r.Valid && r.Complete && r.Issues == nil && r.Limitations == nil
+}
+
+func isZeroScalar(v *ScalarResult) bool {
+	return !v.Known && !v.Complete && !v.Defaulted && !v.Atomic && v.Lexeme == "" && v.EffectiveLexeme == "" && v.Builtin == "" &&
+		v.Value.Domain == 0 && v.Value.Primitive == "" && !v.Value.Boolean && v.Value.Text == "" && v.Value.Number == (Decimal{}) && v.Value.Items == nil
+}
+
+// legacyBoundState mirrors the former single-struct layout. Retention is still
+// charged by its size so that budget outcomes do not change with the split.
+type legacyBoundState struct {
 	currentAttribute                             CurrentScalar
 	currentAttributeSet                          bool
 	attributeEpoch                               uint64
@@ -137,6 +186,31 @@ type boundState struct {
 	scalarAssessed                               bool
 	done                                         bool
 	completion                                   Completion
+}
+
+// bindWork is scratch needed only between Bind and Complete of one subject.
+type bindWork struct {
+	results                                      NodeResults
+	scalar                                       ScalarResult
+	currentAttribute                             CurrentScalar
+	currentAttributeSet                          bool
+	attributeEpoch                               uint64
+	attributeKnown                               bool
+	attributeLimited                             bool
+	attributeInvalid                             bool
+	defaulted                                    bool
+	subject                                      Subject
+	node                                         *Node
+	declared                                     *TypeRef
+	matches                                      []ElementMatch
+	witnesses                                    []Witness
+	typeValid, declarationValid, identityAllowed bool
+	effectiveText                                string
+	family                                       string
+	attribute                                    QName
+	issueSubject                                 SubjectID
+	scalarAssessment                             SimpleAssessment
+	scalarAssessed                               bool
 }
 
 // Run contains only run-local state. Compiled schema handles remain immutable.
@@ -310,7 +384,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		subject.Current = r.context.checkCurrent(subject.Current)
 	}
 	r.scalar(int64(len(subject.Text)))
-	r.reserve(int64(unsafe.Sizeof(boundState{})) + int64(unsafe.Sizeof(Node{})) + 192)
+	r.reserve(int64(unsafe.Sizeof(legacyBoundState{})) + int64(unsafe.Sizeof(Node{})) + 192)
 	r.reserve(r.context.builderAllowance(int64(len(subject.Text))))
 	r.reserve(r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
 	node := r.nodes[subject.ID]
@@ -340,7 +414,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 		node.Children[i] = n
 	}
-	s := &boundState{run: r, subject: subject, node: node, use: use, results: freshResults(), family: "binding"}
+	s := &boundState{bindWork: &bindWork{subject: subject, node: node, family: "binding", results: freshResults()}, run: r, id: subject.ID}
 	r.states[subject.ID] = s
 	bound = Binding{r, s}
 	r.context.local = s
@@ -400,16 +474,16 @@ func (r *Run) ActualType(b Binding) (TypeID, bool) {
 func (r *Run) typeID(ref *TypeRef) (TypeID, bool) { return r.schema.typeID(ref) }
 
 func (r *Run) owns(b Binding) bool {
-	return r != nil && b.run == r && b.state != nil && r.states[b.state.subject.ID] == b.state
+	return r != nil && b.run == r && b.state != nil && r.states[b.state.id] == b.state
 }
 func (r *Run) Results(b Binding) NodeResults {
 	if !r.owns(b) {
 		return NodeResults{}
 	}
-	return b.state.results
+	return b.state.nodeResults()
 }
 func (r *Run) Witnesses(b Binding) []Witness {
-	if !r.owns(b) {
+	if !r.owns(b) || b.state.bindWork == nil {
 		return nil
 	}
 	return b.state.witnesses
@@ -418,7 +492,7 @@ func (r *Run) Scalar(b Binding) ScalarResult {
 	if !r.owns(b) {
 		return ScalarResult{}
 	}
-	return b.state.scalar
+	return b.state.scalarResult()
 }
 
 // Attributes yields assessed attribute facts in input order, then schema order
@@ -513,6 +587,10 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 			b.state.abort()
 			b.state.done = true
 		}
+		// Completed subjects keep only their published results.
+		if b.state.done {
+			r.releaseWork(b.state)
+		}
 	}()
 	defer recoverRun(&err)
 	defer r.releaseScratch()
@@ -545,8 +623,38 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 		r.context.RecordElementIdentity(s.declared, s.actual, s.effectiveText, s.subject.Path, r.nodes[s.subject.Parent], declarationValid)
 	}
 	s.done = true
-	s.completion = Completion{TypeValid: typeValid, DeclarationValid: declarationValid, Complete: complete, IdentityClosed: complete && !r.context.IdentityIncomplete, run: r, subject: s.subject.ID}
-	return s.completion, nil
+	return Completion{TypeValid: typeValid, DeclarationValid: declarationValid, Complete: complete, IdentityClosed: complete && !r.context.IdentityIncomplete, run: r, subject: s.id}, nil
+}
+
+// releaseWork drops a completed subject's scratch and the borrowed facts of
+// its input node. Its children are complete (or never bound), and no later
+// operation reads them: only a child's Complete reads its parent's node, as
+// the identity owner. The subject's own node entry stays until its parent
+// completes.
+func (r *Run) releaseWork(s *boundState) {
+	w := s.bindWork
+	if w == nil {
+		return
+	}
+	s.bindWork = nil
+	res := &w.results
+	if !isFreshResult(&res.Binding) || !isFreshResult(&res.Declaration) || !isFreshResult(&res.Attributes) || !isFreshResult(&res.Scalar) || !isFreshResult(&res.Content) {
+		final := w.results
+		s.final = &final
+	}
+	if !isZeroScalar(&w.scalar) {
+		scalar := w.scalar
+		s.finalScalar = &scalar
+	}
+	if n := w.node; n != nil {
+		for _, ch := range n.Children {
+			if ch != nil {
+				delete(r.nodes, ch.ID)
+			}
+		}
+		n.Children, n.Attrs, n.Namespaces = nil, nil, nil
+		n.Text = strings.Builder{}
+	}
 }
 
 // Identity reports currently proved identity facts; false completeness suppresses
@@ -779,7 +887,17 @@ func (c *Context) proveIdentityFailure() {
 // A stopped local operation cannot publish its untouched pass defaults as
 // completed evidence. Proved failures and exact scalar facts remain available.
 func (s *boundState) abort() {
-	for _, result := range []*Result{&s.results.Binding, &s.results.Declaration, &s.results.Attributes, &s.results.Scalar, &s.results.Content} {
+	var results *NodeResults
+	if s.bindWork != nil {
+		results = &s.results
+	} else {
+		if s.final == nil {
+			fresh := freshResults()
+			s.final = &fresh
+		}
+		results = s.final
+	}
+	for _, result := range []*Result{&results.Binding, &results.Declaration, &results.Attributes, &results.Scalar, &results.Content} {
 		result.Complete = false
 	}
 }

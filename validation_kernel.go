@@ -218,19 +218,41 @@ func compileValidationSchema(assembly validation.Assembly, data validationSchema
 	}
 	key := reflect.ValueOf(data.Types).Pointer()
 	if generated {
-		if public, cached := publicSchemas.Load(key); cached {
-			return validation.CompileSchema(assembly, public.(validation.SchemaData))
+		// A compiled graph is immutable; engines built from the same generated
+		// assembly share it, each with its own binding memos.
+		compiledKey := compiledSchemaKey{assembly, key}
+		if compiled, cached := compiledSchemas.Load(compiledKey); cached {
+			return validationCompiledSchemaShare(compiled.(*validation.CompiledSchema)), nil
 		}
+		var public validation.SchemaData
+		if cached, ok := publicSchemas.Load(key); ok {
+			public = cached.(validation.SchemaData)
+		} else {
+			if err := xsd.ConvertGraph(&public, data); err != nil {
+				return nil, err
+			}
+			publicSchemas.Store(key, public)
+		}
+		compiled, err := validation.CompileSchema(assembly, public)
+		if err != nil {
+			return nil, err
+		}
+		actual, _ := compiledSchemas.LoadOrStore(compiledKey, validationCompiledSchemaShare(compiled))
+		return validationCompiledSchemaShare(actual.(*validation.CompiledSchema)), nil
 	}
 	var public validation.SchemaData
 	if err := xsd.ConvertGraph(&public, data); err != nil {
 		return nil, err
 	}
-	if generated {
-		publicSchemas.Store(key, public)
-	}
 	return validation.CompileSchema(assembly, public)
 }
+
+type compiledSchemaKey struct {
+	assembly validation.Assembly
+	types    uintptr
+}
+
+var compiledSchemas sync.Map // compiledSchemaKey -> *validation.CompiledSchema
 
 // sameSchemaMaps reports whether a and b hold the same maps, not merely equal
 // contents.

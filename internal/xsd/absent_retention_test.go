@@ -380,7 +380,7 @@ func TestRunAbsentAttributeIteratorLifecycle(t *testing.T) {
 		{"nil-run", nilRun, binding},
 		{"zero-binding", run, Binding{}},
 		{"foreign-binding", foreign, binding},
-		{"stale-state", run, Binding{run: run, state: &boundState{subject: binding.state.subject}}},
+		{"stale-state", run, Binding{run: run, state: &boundState{bindWork: &bindWork{subject: binding.state.subject}, id: binding.state.id}}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			for range test.run.Attributes(test.binding) {
@@ -442,7 +442,7 @@ func TestRunAbsentAttributeCacheAdmission(t *testing.T) {
 			if !ok {
 				t.Fatal("effective type unavailable")
 			}
-			state := &boundState{run: run, actual: &use.original.Type}
+			state := &boundState{bindWork: &bindWork{}, run: run, actual: &use.original.Type}
 			run.context.local = state
 			switch stage {
 			case "cache":

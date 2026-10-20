@@ -241,7 +241,7 @@ func TestCurrentProvedBoundSurvivesDiagnosticAllocationStop(t *testing.T) {
 	cause := errors.New("diagnostic memory stop")
 	meter := &scalarMeter{reserveFailure: cause}
 	run := &Run{meter: meter, current: context.Background()}
-	state := &boundState{run: run, subject: Subject{CurrentModel: true}, results: freshResults(), family: "scalar"}
+	state := &boundState{bindWork: &bindWork{results: freshResults(), subject: Subject{CurrentModel: true}, family: "scalar"}, run: run}
 	c := &Context{run: run, local: state}
 	scalarAbort(t, cause, func() {
 		validateNumberBounds(&SimpleSchema{HasMaxInclusive: true, MaxInclusive: "3"}, Decimal{Whole: "4"}, "integer", c)

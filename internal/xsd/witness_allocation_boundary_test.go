@@ -87,7 +87,7 @@ func TestWitnessAllocationInheritedPassWorkBoundaries(t *testing.T) {
 			t.Fatal(err)
 		}
 		r.current = context.Background()
-		s := &boundState{run: r, actual: &TypeRef{Name: QName{Local: "DerivedA"}}, results: freshResults(), family: "content"}
+		s := &boundState{bindWork: &bindWork{results: freshResults(), family: "content"}, run: r, actual: &TypeRef{Name: QName{Local: "DerivedA"}}}
 		for i := 0; i < 9; i++ {
 			particle := inherited
 			if i%3 == 1 {
@@ -208,7 +208,7 @@ func TestWitnessAllocationBorrowedViewSurvivesDescendantBinding(t *testing.T) {
 		completions = append(completions, completion)
 	}
 	completion, err := r.Complete(context.Background(), b, completions)
-	if err != nil || !completion.Complete || !completion.TypeValid || !completion.DeclarationValid || !reflect.DeepEqual(view, want) || !reflect.DeepEqual(r.Witnesses(b), want) {
+	if err != nil || !completion.Complete || !completion.TypeValid || !completion.DeclarationValid || !reflect.DeepEqual(view, want) || r.Witnesses(b) != nil {
 		t.Fatalf("retained witness view/results changed: %+v %v", completion, err)
 	}
 }
@@ -336,7 +336,7 @@ func TestWitnessAllocationSuccessfulOutputMatchesPriorEmitter(t *testing.T) {
 				t.Fatal(err)
 			}
 			old.current = context.Background()
-			prior := &boundState{run: old, actual: s.actual, subject: s.subject, matches: s.matches, results: freshResults(), family: "content"}
+			prior := &boundState{bindWork: &bindWork{results: freshResults(), subject: s.subject, matches: s.matches, family: "content"}, run: old, actual: s.actual}
 			old.context.local = prior
 			witnessAllocationLegacyOutput(old, prior)
 			if err := witnessAllocationBuild(r, s); err != nil {

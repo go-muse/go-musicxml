@@ -149,8 +149,8 @@ func TestInheritedParticleLookupRetainsAmbiguity(t *testing.T) {
 	}
 	// An exact owner lookup still wins even when that pointer has another owner.
 	ownedBase := c.namedTypes[QName{Local: "Base"}]
-	s := &boundState{run: r, subject: Subject{Children: []Child{{ID: 4}}}, actual: &TypeRef{Name: QName{Local: "Base"}}, results: freshResults(),
-		matches: []ElementMatch{{Particle: ownedBase.complex.Particle, Index: 0}}}
+	s := &boundState{bindWork: &bindWork{results: freshResults(), subject: Subject{Children: []Child{{ID: 4}}}, matches: []ElementMatch{{Particle: ownedBase.complex.Particle, Index: 0}}},
+		run: r, actual: &TypeRef{Name: QName{Local: "Base"}}}
 	r.buildWitnesses(s)
 	if len(s.witnesses) != 1 || s.witnesses[0].Use.OwnerOccurrence() != ownedBase.Occurrence() {
 		t.Fatalf("unambiguous owner use was lost: %+v", s.witnesses)
@@ -227,8 +227,8 @@ func TestInheritedParticleLookupChecksCancellationBeforeFallback(t *testing.T) {
 	defer r.Close()
 	r.current = ctx
 	p := c.namedTypes[QName{Local: "Base"}].complex.Particle
-	s := &boundState{run: r, subject: Subject{Children: []Child{{ID: 2}}}, actual: &TypeRef{Name: QName{Local: "DerivedA"}}, results: freshResults(),
-		matches: []ElementMatch{{Particle: p, Index: 0}}}
+	s := &boundState{bindWork: &bindWork{results: freshResults(), subject: Subject{Children: []Child{{ID: 2}}}, matches: []ElementMatch{{Particle: p, Index: 0}}},
+		run: r, actual: &TypeRef{Name: QName{Local: "DerivedA"}}}
 	func() { defer recoverRun(&err); r.buildWitnesses(s) }()
 	if !errors.Is(err, context.Canceled) || m.calls != 2 || len(s.witnesses) != 0 || r.scratchRetained != 0 {
 		t.Fatalf("fallback bypassed cancellation: err=%v calls=%d witnesses=%+v scratch=%d", err, m.calls, s.witnesses, r.scratchRetained)

@@ -65,7 +65,7 @@ func TestTruthfulnessCapabilityAbortKeepsOriginalCause(t *testing.T) {
 		cause := errors.New("guard resource stopped")
 		m := &scalarMeter{limit: 1, cause: cause}
 		c := scalarTestContext(m, context.Background())
-		c.local = &boundState{}
+		c.local = &boundState{bindWork: &bindWork{}}
 		scalarAbort(t, cause, func() { validateBoundsValue(s, "1", builtin, "1", c) })
 		if c.AssessmentErr != nil || c.AssessmentVersion != 0 {
 			t.Fatalf("%s interruption became capability outcome: %v", builtin, c.AssessmentErr)

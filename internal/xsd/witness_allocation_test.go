@@ -15,7 +15,7 @@ func witnessAllocationFixture(t *testing.T, count int, meter Meter) (*Run, *boun
 	}
 	r.current = context.Background()
 	u, _ := r.Root(QName{Local: "root"})
-	s := &boundState{run: r, actual: &u.original.Type, results: freshResults(), family: "content"}
+	s := &boundState{bindWork: &bindWork{results: freshResults(), family: "content"}, run: r, actual: &u.original.Type}
 	owner, _ := r.typeID(s.actual)
 	for i := 0; i < count; i++ {
 		s.subject.Children = append(s.subject.Children, Child{ID: SubjectID(i + 2), Name: QName{Local: "child"}})

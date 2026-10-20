@@ -775,10 +775,14 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 		}
 		return err
 	}
-	if s.schema.recorded == nil {
-		s.schema.recorded = make(map[decisionID]schemaRecord)
+	// Only a cached failure is ever revisited (see the done branch above), so
+	// other outcomes need no record; the logical charge above is unchanged.
+	if d.Outcome == OutcomeFail {
+		if s.schema.recorded == nil {
+			s.schema.recorded = make(map[decisionID]schemaRecord)
+		}
+		s.schema.recorded[id] = schemaRecord{details: len(result.Issues), complete: result.Complete && (!done || previous.complete)}
 	}
-	s.schema.recorded[id] = schemaRecord{details: len(result.Issues), complete: result.Complete && (!done || previous.complete)}
 	if done {
 		return nil
 	}
