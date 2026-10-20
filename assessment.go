@@ -226,7 +226,13 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, loadModel 
 	// operational failure, which no mode tolerates. The lenient mode still
 	// assesses the model after source findings, so that both reports exist.
 	acceptanceErr := sourceAcceptanceError(report)
-	operationErr := errors.Join(conversionErr, sourceErr, finishErr)
+	// A conversion error that already wraps the source failure carries its
+	// text; joining the failure again would only repeat it.
+	joinedSourceErr := sourceErr
+	if conversionErr != nil && sourceErr != nil && errors.Is(conversionErr, sourceErr) {
+		joinedSourceErr = nil
+	}
+	operationErr := errors.Join(conversionErr, joinedSourceErr, finishErr)
 	modelAssessed := false
 	if operationErr == nil && (acceptanceErr == nil || lenient) {
 		// Line 3 imports its dictionaries only now. An import failure that

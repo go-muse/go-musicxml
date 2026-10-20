@@ -106,8 +106,9 @@ func TestSourceInternalDTDModePreflightAndLegacyIsolation(t *testing.T) {
 	if _, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview}); !errors.Is(err, validation.ErrIncompleteAssessment) {
 		t.Fatalf("legacy entity expansion unexpectedly elected: %v", err)
 	}
-	// A source profile cannot reach AssessModel: ModelOptions.Profile is a
-	// ModelProfile (TestProfileKindsAreDistinctTypes).
+	// A source profile no longer compiles as ModelOptions.Profile
+	// (TestProfileKindsAreDistinctTypes); a converted one is still rejected
+	// (TestAssessModelPreflight).
 	oldEngine, err := newSourceAssessmentEngine()
 	if err != nil {
 		t.Fatal(err)

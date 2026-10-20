@@ -240,7 +240,7 @@ func TestDecodeMXLAssessedModelStageUsesLoaderOptions(t *testing.T) {
 	line.Graph = MXLGraphOptions{Profile: ProfileMXLSourceLine}
 	inspected, err := InspectMXL(ctx, bytes.NewReader(archive), line)
 	require.NoError(t, err)
-	assert.Equal(t, ProfileMXLSourceLine, inspected.PackageReport().Profile.ID)
+	assert.Equal(t, ProfileMXLSourceLine.ID(), inspected.PackageReport().Profile.ID)
 	assert.Zero(t, resolved.Load(), "line 2 follows no resource links")
 	line.Graph.Dictionaries = options.Graph.Dictionaries
 	_, err = InspectMXL(ctx, bytes.NewReader(archive), line)

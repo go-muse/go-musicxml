@@ -58,10 +58,18 @@ func TestProfileKindsAreDistinctTypes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Only a type mismatch or a missing field counts: an unknown identifier
+	// would fail for the wrong reason.
 	failed := map[int]bool{}
 	config := types.Config{Importer: importer.ForCompiler(fset, "source", nil), Error: func(err error) {
-		if e, ok := err.(types.Error); ok && e.Fset.Position(e.Pos).Filename == "probe.go" {
+		e, ok := err.(types.Error)
+		if !ok || e.Fset.Position(e.Pos).Filename != "probe.go" {
+			return
+		}
+		if strings.Contains(e.Msg, "cannot use") || strings.Contains(e.Msg, "unknown field") {
 			failed[e.Fset.Position(e.Pos).Line] = true
+		} else {
+			t.Errorf("unexpected type error: %v", e)
 		}
 	}}
 	_, _ = config.Check("probe", fset, []*ast.File{file}, nil)

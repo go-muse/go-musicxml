@@ -28,9 +28,9 @@ type GraphProfile validation.ProfileID
 func (p GraphProfile) ID() validation.ProfileID { return validation.ProfileID(p) }
 
 // MXLProfile names a built-in MXL package profile: the ProfileMXL* constants.
-// InspectMXL and DecodeMXLAssessed accept the source ones and
-// AssessMXLPackage the model ones; that distinction is checked when the call
-// runs.
+// InspectMXL accepts the source ones, AssessMXLPackage the model ones, and
+// DecodeMXLAssessed only ProfileMXLSourceLine; these distinctions are checked
+// when the call runs.
 type MXLProfile validation.ProfileID
 
 // ID returns the profile's engine identity, as reported in the package report.

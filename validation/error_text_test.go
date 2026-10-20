@@ -20,6 +20,7 @@ func TestErrorTextsIncludeCausesWithoutEmptyParts(t *testing.T) {
 		{&SessionError{Operation: "Finish", Reason: "already finished"}, "validation: invalid session: Finish: already finished"},
 		{&SessionError{Operation: "Finish", Reason: "terminated", Cause: cause}, "validation: invalid session: Finish: terminated: reader failed"},
 		{&SessionError{Cause: cause}, "validation: invalid session: reader failed"},
+		{&SessionError{Operation: "Finish", Reason: "terminated", Cause: &SessionError{Operation: "OpenNode", Reason: "late"}}, "validation: invalid session: Finish: terminated: OpenNode: late"},
 	} {
 		if got := tc.err.Error(); got != tc.want {
 			t.Errorf("%#v: %q, want %q", tc.err, got, tc.want)

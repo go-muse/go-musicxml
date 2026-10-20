@@ -239,8 +239,9 @@ point has its own options type, whose `Profile` field has its own profile type:
 Passing a profile of another kind, such as `SourceOptions{Profile:
 ProfileModelXSD}`, does not compile. Within a kind the entry point still checks
 the rest when it runs: an MXL source profile for `AssessMXLPackage`, a
-dictionary-free profile with `Dictionaries`, a profile other than the line-2
-profile for the loaders. `ModelOptions` has no `DTD`, which model assessment
+dictionary-free profile with `Dictionaries`, a dictionary or semantic graph or
+MXL profile without `Dictionaries`, a profile other than the line-2 profile for
+the loaders. `ModelOptions` has no `DTD`, which model assessment
 never read, and the graph options have no `OmitContext`, since a graph's
 resource snapshots read the projection. Every profile type has
 `ID() validation.ProfileID`, the identity a report carries:
@@ -324,7 +325,9 @@ so the converted package is bounded by the MXL limits, as for
 `DictionaryAssessmentOptions`, `DecodeDictionaryAssessmentOptions`,
 `LinkedDictionaryAssessmentOptions` and `MXLDictionaryAssessmentOptions` were
 removed: they duplicated the entry points above. The replacement gives the same
-result for every profile the removed function accepted.
+result for every profile the removed function accepted. In the table `a` is
+now a `SourceOptions` for the source functions and a `ModelOptions` for
+`AssessModel`.
 
 | Removed | Replacement |
 | --- | --- |

@@ -50,8 +50,9 @@ func publicProfiles(t *testing.T) map[validation.ProfileID]validation.Profile {
 			}
 			for _, spec := range gen.Specs {
 				value := spec.(*ast.ValueSpec)
-				selector, typed := value.Type.(*ast.SelectorExpr)
-				typed = typed && selector.Sel.Name == "ProfileID"
+				// Public profile constants have one of the four profile kinds.
+				kind, typed := value.Type.(*ast.Ident)
+				typed = typed && (kind.Name == "SourceProfile" || kind.Name == "ModelProfile" || kind.Name == "GraphProfile" || kind.Name == "MXLProfile")
 				for i, ident := range value.Names {
 					if !typed && !strings.HasPrefix(ident.Name, "Profile") {
 						continue
@@ -62,7 +63,7 @@ func publicProfiles(t *testing.T) map[validation.ProfileID]validation.Profile {
 						literal, _ = value.Values[i].(*ast.BasicLit)
 					}
 					if !typed || !ident.IsExported() || literal == nil || literal.Kind != token.STRING {
-						t.Fatalf("%s: %s must be an exported validation.ProfileID string constant", name, ident.Name)
+						t.Fatalf("%s: %s must be an exported string constant of a profile kind", name, ident.Name)
 					}
 					text, err := strconv.Unquote(literal.Value)
 					if err != nil {

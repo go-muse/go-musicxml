@@ -1,8 +1,10 @@
 package musicxml
 
 import (
+	"context"
 	"errors"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -20,5 +22,22 @@ func TestConversionErrorTextIncludesCause(t *testing.T) {
 	}
 	if !errors.Is(err, strconv.ErrSyntax) {
 		t.Fatal("cause no longer matches")
+	}
+}
+
+// A conversion that fails on the source's own syntax error does not repeat
+// that error beside the conversion error that already wraps it: the text
+// names it once for the conversion and once as the assessment's cause.
+func TestDecodeAssessedDoesNotRepeatTheSourceFailure(t *testing.T) {
+	_, err := DecodeAssessed(context.Background(), strings.NewReader(`<score-partwise version="4.0"><part-list>`), DecodeAssessmentOptions{})
+	if err == nil {
+		t.Fatal("truncated source accepted")
+	}
+	var conversion *ConversionError
+	if !errors.As(err, &conversion) || !errors.Is(err, ErrIncompleteAssessment) {
+		t.Fatalf("error classes changed: %v", err)
+	}
+	if n := strings.Count(err.Error(), "unexpected EOF"); n != 2 {
+		t.Fatalf("source failure named %d times: %q", n, err.Error())
 	}
 }

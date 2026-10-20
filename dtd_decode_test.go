@@ -499,7 +499,7 @@ func TestAssessmentOptionsDTDIsHonoured(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, report.Satisfied())
 
-	// DecodeOptions.DTD takes precedence over AssessmentOptions.DTD.
+	// DecodeOptions.DTD takes precedence over SourceOptions.DTD.
 	decline := &DTDOptions{Source: DTDSourceFunc(func(context.Context, DTDRequest) ([]byte, error) { return nil, os.ErrPermission })}
 	_, err = DecodeAssessed(context.Background(), read(), DecodeAssessmentOptions{Decode: DecodeOptions{DTD: decline}, Assessment: &SourceOptions{DTD: source}})
 	assert.ErrorIs(t, err, os.ErrPermission)

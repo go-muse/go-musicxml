@@ -49,7 +49,9 @@ func (e *SessionError) Error() string {
 	if e == nil {
 		return "validation: nil session error"
 	}
-	return joinErrorText(ErrInvalidSession.Error(), e.Operation, e.Reason, causeText(e.Cause))
+	// A nested session error would repeat the sentinel's text.
+	cause := strings.TrimPrefix(causeText(e.Cause), ErrInvalidSession.Error()+": ")
+	return joinErrorText(ErrInvalidSession.Error(), e.Operation, e.Reason, cause)
 }
 
 // Unwrap preserves the lifecycle sentinel and the original cause.

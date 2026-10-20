@@ -77,38 +77,38 @@ func TestEmptyProfileSelectsSemanticProfile(t *testing.T) {
 	ctx := context.Background()
 	report, err := InspectXML(ctx, strings.NewReader(scenarioValid), SourceOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, ProfileSourceSemantics, report.Profile.ID)
+	assert.Equal(t, ProfileSourceSemantics.ID(), report.Profile.ID)
 	assert.True(t, report.Satisfied())
 
 	document, err := Decode(strings.NewReader(scenarioValid))
 	require.NoError(t, err)
 	report, err = AssessModel(ctx, document, ModelOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, ProfileModelSemantics, report.Profile.ID)
+	assert.Equal(t, ProfileModelSemantics.ID(), report.Profile.ID)
 	assert.True(t, report.Satisfied())
 
 	bundle, err := InspectXMLWithResources(ctx, strings.NewReader(scenarioValid), LinkedAssessmentOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, ProfileResourceGraphSemantics, bundle.PackageReport().Profile.ID)
+	assert.Equal(t, ProfileResourceGraphSemantics.ID(), bundle.PackageReport().Profile.ID)
 	bundle, err = AssessModelWithResources(ctx, document, LinkedAssessmentOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, ProfileResourceGraphSemantics, bundle.PackageReport().Profile.ID)
+	assert.Equal(t, ProfileResourceGraphSemantics.ID(), bundle.PackageReport().Profile.ID)
 
 	archive := scenarioMXL(t, scenarioValid)
 	bundle, err = InspectMXL(ctx, bytes.NewReader(archive), MXLAssessmentOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, ProfileMXLSourceSemantics, bundle.PackageReport().Profile.ID)
+	assert.Equal(t, ProfileMXLSourceSemantics.ID(), bundle.PackageReport().Profile.ID)
 	assert.True(t, bundle.Satisfied())
 	pkg, err := DecodeMXLPackage(bytes.NewReader(archive))
 	require.NoError(t, err)
 	bundle, err = AssessMXLPackage(ctx, pkg, MXLAssessmentOptions{})
 	require.NoError(t, err)
-	assert.Equal(t, ProfileMXLModelSemantics, bundle.PackageReport().Profile.ID)
+	assert.Equal(t, ProfileMXLModelSemantics.ID(), bundle.PackageReport().Profile.ID)
 
 	// An explicit profile without dictionaries keeps its old behaviour.
 	report, err = InspectXML(ctx, strings.NewReader(scenarioValid), SourceOptions{Profile: ProfileSourceLocal})
 	require.NoError(t, err)
-	assert.Equal(t, ProfileSourceLocal, report.Profile.ID)
+	assert.Equal(t, ProfileSourceLocal.ID(), report.Profile.ID)
 }
 
 func TestScenarioThreeMatchesStrictLoadingModel(t *testing.T) {
@@ -207,8 +207,8 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	assert.Equal(t, validation.ConversionConverted, result.Conversion.State)
 	assert.True(t, result.SourceLine.Satisfied())
 	assert.True(t, result.ModelLine.Satisfied())
-	assert.Equal(t, ProfileMXLSourceLine, result.SourceLine.PackageReport().Profile.ID)
-	assert.Equal(t, ProfileMXLModelSemantics, result.ModelLine.PackageReport().Profile.ID)
+	assert.Equal(t, ProfileMXLSourceLine.ID(), result.SourceLine.PackageReport().Profile.ID)
+	assert.Equal(t, ProfileMXLModelSemantics.ID(), result.ModelLine.PackageReport().Profile.ID)
 
 	explicit, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSourceLine}}})
 	require.NoError(t, err)
