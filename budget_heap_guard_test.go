@@ -150,3 +150,24 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 		t.Fatalf("measured %d runs", measured)
 	}
 }
+
+// The official scores load within the default buffer: the default empty
+// context selection and the released XSD work charges bring MozartTrio and
+// MozaChloSample, which needed about 75 and 84 MiB with the complete
+// projection, under 64 MiB. They still need more than the default 20 million
+// rule steps.
+func TestStrictLoadingOfficialScoresFitTheDefaultBuffer(t *testing.T) {
+	if raceEnabled {
+		t.Skip("slow under the race detector")
+	}
+	for _, name := range []string{"MozartTrio.musicxml", "MozaChloSample.musicxml"} {
+		data, err := os.ReadFile(filepath.Join("testdata", "official", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &SourceOptions{Budgets: validation.Budgets{MaxRuleSteps: 40_000_000}}})
+		if err != nil || !result.Accepted {
+			t.Errorf("%s: accepted=%v error=%v", name, result.Accepted, err)
+		}
+	}
+}

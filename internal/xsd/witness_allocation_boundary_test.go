@@ -353,63 +353,70 @@ func TestWitnessAllocationSuccessfulOutputMatchesPriorEmitter(t *testing.T) {
 
 // Complete releases the charge of the subject's work, the node's text and
 // child slice, the witnesses and the child nodes, less the copies of
-// nondefault results; Close releases the rest.
+// nondefault results; Close releases the rest. A root without its required
+// attribute keeps a copy of its failed results.
 func TestCompleteReleasesTheWorkCharge(t *testing.T) {
-	c, subject := witnessAllocationSchema(t, 9, false)
-	m := &releaseRecordingMeter{}
-	r, err := NewRun(c, m)
-	if err != nil {
-		t.Fatal(err)
-	}
-	finals := func(s *boundState) int64 {
-		n := int64(0)
-		if s.final != nil {
-			n += finalBytes
-		}
-		if s.finalScalar != nil {
-			n += finalScalarSize
-		}
-		return n
-	}
-	complete := func(b Binding, children []Completion) Completion {
-		t.Helper()
-		charged := b.state.charged
-		m.releases = nil
-		completion, err := r.Complete(context.Background(), b, children)
+	for _, required := range []bool{false, true} {
+		c, subject := witnessAllocationSchema(t, 9, required)
+		m := &releaseRecordingMeter{}
+		r, err := NewRun(c, m)
 		if err != nil {
 			t.Fatal(err)
 		}
-		// Operation scratch is released separately.
-		if b.state.bindWork != nil || !slices.Contains(m.releases, charged-finals(b.state)) {
-			t.Fatalf("completion released %v of %d charged (finals %d)", m.releases, charged, finals(b.state))
+		finals := func(s *boundState) int64 {
+			n := int64(0)
+			if s.final != nil {
+				n += finalBytes
+			}
+			if s.finalScalar != nil {
+				n += finalScalarSize
+			}
+			return n
 		}
-		return completion
-	}
-	u, _ := r.Root(subject.Name)
-	b, err := r.Bind(context.Background(), u, subject)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b.state.charged < bindWorkBytes+9*nodeBytes {
-		t.Fatalf("root work charged %d", b.state.charged)
-	}
-	var completions []Completion
-	for _, w := range r.Witnesses(b) {
-		child, err := r.Bind(context.Background(), w.Use, Subject{ID: w.Child, Parent: 1, Name: QName{Local: "child"}, Path: "/root/child", Text: "ok", TextKnown: true, AttributesComplete: true, ChildrenComplete: true})
+		complete := func(b Binding, children []Completion, charged int64) (Completion, *boundState) {
+			t.Helper()
+			if b.state.charged != charged {
+				t.Fatalf("work charged %d, want %d", b.state.charged, charged)
+			}
+			results, scalar := r.Results(b), r.Scalar(b)
+			m.releases = nil
+			completion, err := r.Complete(context.Background(), b, children)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// The kept copies read back as the work's results did.
+			if !reflect.DeepEqual(r.Results(b), results) || !reflect.DeepEqual(r.Scalar(b), scalar) {
+				t.Fatalf("completed results changed: %+v %+v", r.Results(b), r.Scalar(b))
+			}
+			// Operation scratch is released separately.
+			if b.state.bindWork != nil || !slices.Contains(m.releases, charged-finals(b.state)) {
+				t.Fatalf("completion released %v of %d charged (finals %d)", m.releases, charged, finals(b.state))
+			}
+			return completion, b.state
+		}
+		u, _ := r.Root(subject.Name)
+		b, err := r.Bind(context.Background(), u, subject)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if child.state.charged < bindWorkBytes {
-			t.Fatalf("child work charged %d", child.state.charged)
+		pointer := int64(unsafe.Sizeof((*Node)(nil)))
+		rootWork := bindWorkBytes + 9*pointer + 9*nodeBytes + 9*int64(unsafe.Sizeof(Witness{}))
+		var completions []Completion
+		for _, w := range r.Witnesses(b) {
+			child, err := r.Bind(context.Background(), w.Use, Subject{ID: w.Child, Parent: 1, Name: QName{Local: "child"}, Path: "/root/child", Text: "ok", TextKnown: true, AttributesComplete: true, ChildrenComplete: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			completion, _ := complete(child, nil, bindWorkBytes+r.context.builderAllowance(2))
+			completions = append(completions, completion)
 		}
-		completions = append(completions, complete(child, nil))
-	}
-	complete(b, completions)
-	if len(r.nodes) != 1 {
-		t.Fatalf("child nodes kept: %d", len(r.nodes))
-	}
-	if err := r.Close(); err != nil || m.buffer != 0 {
-		t.Fatalf("close left %d: %v", m.buffer, err)
+		_, root := complete(b, completions, rootWork)
+		if (root.final != nil) != required || len(r.nodes) != 1 {
+			t.Fatalf("required=%v: final kept %v, nodes %d", required, root.final != nil, len(r.nodes))
+		}
+		if err := r.Close(); err != nil || m.buffer != 0 {
+			t.Fatalf("close left %d: %v", m.buffer, err)
+		}
 	}
 }
 
