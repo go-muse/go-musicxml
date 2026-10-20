@@ -156,10 +156,18 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	if err = s.account.Check(BudgetScalarBytes, atomicLogicalBytes(in.Value.Value)); err != nil {
 		return err
 	}
+	work := int64(16+len(in.Provider.ID)+len(in.Subject.DocumentID)+len(in.Property)) + atomicLogicalBytes(in.Value.Value) + evidenceLogicalBytes(in.Value)
+	if err = s.step(ctx, work); err != nil {
+		return err
+	}
+	if s.omitContext {
+		// The result is counted and checked, but the report keeps no copy.
+		return nil
+	}
 	// The record itself lives in the backing array. Its cloned strings, the
 	// value's strings, cause and numbers, and the origins' backing array,
 	// strings and positions are separate allocations, each rounded up as the
-	// allocator does. The walks below copy nothing; work is charged next.
+	// allocator does. The walks copy nothing; their work was charged above.
 	value, err := measureRetained(reflect.ValueOf(in.Value), true)
 	if err != nil {
 		return err
@@ -169,14 +177,6 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 		return err
 	}
 	cost := ownedStringBytes(string(in.Provider.ID)) + ownedStringBytes(in.Subject.DocumentID) + ownedStringBytes(string(in.Property)) + value.bytes + origins.bytes
-	work := int64(16+len(in.Provider.ID)+len(in.Subject.DocumentID)+len(in.Property)) + atomicLogicalBytes(in.Value.Value) + evidenceLogicalBytes(in.Value)
-	if err = s.step(ctx, work); err != nil {
-		return err
-	}
-	if s.omitContext {
-		// The result is counted and checked, but the report keeps no copy.
-		return nil
-	}
 	if err = s.retain(cost); err != nil {
 		return err
 	}

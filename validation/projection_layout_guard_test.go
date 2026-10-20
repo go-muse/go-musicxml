@@ -190,8 +190,9 @@ func layoutGuardFill(t *testing.T, v reflect.Value, shape layoutGuardShape, dept
 // Every payload copy is charged at no less than the heap the copy occupies:
 // the projections copied through contextRetainProjection, the timeline state
 // records and repeat/navigation results measured by retainedLayoutBytes, the
-// resource, dictionary and source-origin results measured by
-// retainedProjectionBytes, and the layout payload measured by
+// resource and dictionary results, record values and origins measured by
+// retainedProjectionBytes (source origins have their own measure, guarded by
+// TestProjectionClonesChargeTheirCopies), and the layout payload measured by
 // layoutContextSize. Shapes cover short and long strings, slices past 32 KiB
 // and exact numbers of about 32,768 bits, whose limb arrays and text dominate.
 func TestRetainedLayoutBytesCoverTheCopyHeap(t *testing.T) {
@@ -210,7 +211,6 @@ func TestRetainedLayoutBytesCoverTheCopyHeap(t *testing.T) {
 	projectionTypes := []reflect.Type{
 		reflect.TypeFor[ResourceContextResult](),
 		reflect.TypeFor[DictionaryContextResult](),
-		reflect.TypeFor[SourceOriginContextResult](),
 		reflect.TypeFor[Evidence[Atomic]](),
 		reflect.TypeFor[Location](),
 	}
@@ -260,19 +260,31 @@ func TestRetainedLayoutBytesCoverTheCopyHeap(t *testing.T) {
 // measured heap of Report.Context.
 func TestContextRecordValueAndOriginsCoverTheirHeap(t *testing.T) {
 	long := strings.Repeat("x", 8193)
-	huge, err := NewInteger(new(big.Int).Lsh(big.NewInt(1), 32768))
-	if err != nil {
-		t.Fatal(err)
+	// Each record holds its own number: a number shared by all eight would
+	// be charged eight times but occupy the heap once.
+	huge := func(i int) Integer {
+		n, err := NewInteger(new(big.Int).Add(new(big.Int).Lsh(big.NewInt(1), 32768), big.NewInt(int64(i))))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return n
 	}
-	for name, row := range map[string]ContextResult{
-		"long scalar": {Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: long}}, Origins: []Location{{Target: TargetSource, DocumentID: "source"}}},
-		"long origin": {Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "x"}}, Origins: []Location{{Target: TargetSource, DocumentID: "source", Path: long}}},
-		"long number": {Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: huge}}, Origins: []Location{{Target: TargetSource, DocumentID: "source"}}},
+	for name, row := range map[string]func(int) ContextResult{
+		"long scalar": func(int) ContextResult {
+			return ContextResult{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: long}}, Origins: []Location{{Target: TargetSource, DocumentID: "source"}}}
+		},
+		"long origin": func(int) ContextResult {
+			return ContextResult{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "x"}}, Origins: []Location{{Target: TargetSource, DocumentID: "source", Path: long}}}
+		},
+		"long number": func(i int) ContextResult {
+			return ContextResult{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: huge(i)}}, Origins: []Location{{Target: TargetSource, DocumentID: "source"}}}
+		},
 	} {
-		row.Provider, row.Subject, row.Property = RuleKey{"record", 1}, NodeRef{"source", 1}, ContextPropertySpanHammerMarking
 		s := rationalSession(t, Budgets{})
-		for range 8 {
-			if err := s.publishContextResult(context.Background(), row); err != nil {
+		for i := range 8 {
+			record := row(i)
+			record.Provider, record.Subject, record.Property = RuleKey{"record", 1}, NodeRef{"source", 1}, ContextPropertySpanHammerMarking
+			if err := s.publishContextResult(context.Background(), record); err != nil {
 				t.Fatalf("%s: %v", name, err)
 			}
 		}

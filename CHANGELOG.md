@@ -71,7 +71,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   share attribute tables. Copies of typed context payloads and timeline state
   charge every string byte but one rule step per 64 reflected items instead
   of one per item. With the shared dictionary set, `DecodeAssessed` needs 27–29%
-  fewer rule steps and 22–24% fewer buffer bytes on the test-suite scores
+  fewer rule steps and 21–25% fewer buffer bytes on the test-suite scores
   (about 3.3 million of the saved steps come from the dictionary set); every
   report within the budgets is unchanged.
 

@@ -270,10 +270,10 @@ import, real-layout projection accounting and shared attribute tables;
 
 | File | Before the split | Lines | Now | Without context |
 | --- | --- | --- | --- | --- |
-| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 26.7 MiB | 8.69 million, 12.3 MiB |
-| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 35.2 MiB | 10.13 million, 15.7 MiB |
-| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 74.4 MiB | 23.91 million, 34.6 MiB |
-| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 82.9 MiB | 29.13 million, 39.1 MiB |
+| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 27.1 MiB | 8.69 million, 12.3 MiB |
+| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 34.7 MiB | 10.13 million, 15.5 MiB |
+| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 75.6 MiB | 23.91 million, 34.7 MiB |
+| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.13 million, 39.2 MiB |
 
 The first two load within the default budgets (20 million rule steps, 64 MiB);
 `TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores still
