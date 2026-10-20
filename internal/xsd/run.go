@@ -157,36 +157,21 @@ func isZeroScalar(v *ScalarResult) bool {
 		v.Value.Domain == 0 && v.Value.Primitive == "" && !v.Value.Boolean && v.Value.Text == "" && v.Value.Number == (Decimal{}) && v.Value.Items == nil
 }
 
-// legacyBoundState mirrors the former single-struct layout. Retention is still
-// charged by its size so that budget outcomes do not change with the split.
-type legacyBoundState struct {
-	currentAttribute                             CurrentScalar
-	currentAttributeSet                          bool
-	attributeEpoch                               uint64
-	attributeKnown                               bool
-	attributeLimited                             bool
-	attributeInvalid                             bool
-	defaulted                                    bool
-	run                                          *Run
-	subject                                      Subject
-	node                                         *Node
-	use                                          Use
-	actual, declared                             *TypeRef
-	results                                      NodeResults
-	scalar                                       ScalarResult
-	attributes                                   []*AttributeResult
-	matches                                      []ElementMatch
-	witnesses                                    []Witness
-	typeValid, declarationValid, identityAllowed bool
-	effectiveText                                string
-	family                                       string
-	attribute                                    QName
-	issueSubject                                 SubjectID
-	scalarAssessment                             SimpleAssessment
-	scalarAssessed                               bool
-	done                                         bool
-	completion                                   Completion
-}
+// Retention charges of one subject. A bound state and its Run.states entry
+// live until Close; a node and its Run.nodes entry live until the parent
+// completes; the work and everything Bind charges to it live until the
+// subject completes.
+var (
+	boundStateBytes = int64(unsafe.Sizeof(boundState{})) + runMapEntryBytes
+	nodeBytes       = int64(unsafe.Sizeof(Node{})) + runMapEntryBytes
+	bindWorkBytes   = int64(unsafe.Sizeof(bindWork{}))
+	finalBytes      = int64(unsafe.Sizeof(NodeResults{}))
+	finalScalarSize = int64(unsafe.Sizeof(ScalarResult{}))
+)
+
+// runMapEntryBytes covers one key, one pointer and the map's per-entry
+// overhead, rounded up.
+const runMapEntryBytes = 64
 
 // bindWork is scratch needed only between Bind and Complete of one subject.
 type bindWork struct {
@@ -211,6 +196,10 @@ type bindWork struct {
 	issueSubject                                 SubjectID
 	scalarAssessment                             SimpleAssessment
 	scalarAssessed                               bool
+	// charged is what Complete releases: the work itself, the node's text
+	// and child slice, the witnesses, and the nodes Bind created for
+	// children, which Complete deletes.
+	charged int64
 }
 
 // Run contains only run-local state. Compiled schema handles remain immutable.
@@ -384,11 +373,12 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		subject.Current = r.context.checkCurrent(subject.Current)
 	}
 	r.scalar(int64(len(subject.Text)))
-	r.reserve(int64(unsafe.Sizeof(legacyBoundState{})) + int64(unsafe.Sizeof(Node{})) + 192)
-	r.reserve(r.context.builderAllowance(int64(len(subject.Text))))
-	r.reserve(r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
+	r.reserve(boundStateBytes)
+	work := r.context.sum(bindWorkBytes, r.context.builderAllowance(int64(len(subject.Text))), r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
+	r.reserve(work)
 	node := r.nodes[subject.ID]
 	if node == nil {
+		r.reserve(nodeBytes)
 		node = &Node{}
 		r.nodes[subject.ID] = node
 	}
@@ -406,7 +396,8 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 		n := r.nodes[ch.ID]
 		if n == nil {
-			r.reserve(256)
+			r.reserve(nodeBytes)
+			work += nodeBytes
 			n = &Node{ID: ch.ID, Name: ch.Name}
 			r.nodes[ch.ID] = n
 		} else if n.Name != ch.Name {
@@ -414,7 +405,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 		node.Children[i] = n
 	}
-	s := &boundState{bindWork: &bindWork{subject: subject, node: node, family: "binding", results: freshResults()}, run: r, id: subject.ID}
+	s := &boundState{bindWork: &bindWork{subject: subject, node: node, family: "binding", results: freshResults(), charged: work}, run: r, id: subject.ID}
 	r.states[subject.ID] = s
 	bound = Binding{r, s}
 	r.context.local = s
@@ -525,7 +516,9 @@ func (r *Run) buildWitnesses(s *boundState) {
 		}
 	}
 	if count != 0 {
-		r.reserve(r.context.size(int64(count), int64(unsafe.Sizeof(Witness{}))))
+		n := r.context.size(int64(count), int64(unsafe.Sizeof(Witness{})))
+		r.reserve(n)
+		s.charged += n
 		s.witnesses = make([]Witness, 0, count)
 	}
 	for _, m := range s.matches {
@@ -589,7 +582,9 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 		}
 		// Completed subjects keep only their published results.
 		if b.state.done {
-			r.releaseWork(b.state)
+			if releaseErr := r.releaseWork(b.state); err == nil {
+				err = releaseErr
+			}
 		}
 	}()
 	defer recoverRun(&err)
@@ -630,21 +625,25 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 // its input node. Its children are complete (or never bound), and no later
 // operation reads them: only a child's Complete reads its parent's node, as
 // the identity owner. The subject's own node entry stays until its parent
-// completes.
-func (r *Run) releaseWork(s *boundState) {
+// completes. The work's charge is released less the copies of nondefault
+// results, which the work's own results and scalar always exceed.
+func (r *Run) releaseWork(s *boundState) error {
 	w := s.bindWork
 	if w == nil {
-		return
+		return nil
 	}
 	s.bindWork = nil
+	release := w.charged
 	res := &w.results
 	if !isFreshResult(&res.Binding) || !isFreshResult(&res.Declaration) || !isFreshResult(&res.Attributes) || !isFreshResult(&res.Scalar) || !isFreshResult(&res.Content) {
 		final := w.results
 		s.final = &final
+		release -= finalBytes
 	}
 	if !isZeroScalar(&w.scalar) {
 		scalar := w.scalar
 		s.finalScalar = &scalar
+		release -= finalScalarSize
 	}
 	if n := w.node; n != nil {
 		for _, ch := range n.Children {
@@ -655,6 +654,11 @@ func (r *Run) releaseWork(s *boundState) {
 		n.Children, n.Attrs, n.Namespaces = nil, nil, nil
 		n.Text = strings.Builder{}
 	}
+	if release <= 0 {
+		return nil
+	}
+	r.retained -= release
+	return r.meter.Release(release)
 }
 
 // Identity reports currently proved identity facts; false completeness suppresses

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
 	"testing"
 	"unsafe"
 )
@@ -348,4 +349,77 @@ func TestWitnessAllocationSuccessfulOutputMatchesPriorEmitter(t *testing.T) {
 			_ = old.Close()
 		}
 	}
+}
+
+// Complete releases the charge of the subject's work, the node's text and
+// child slice, the witnesses and the child nodes, less the copies of
+// nondefault results; Close releases the rest.
+func TestCompleteReleasesTheWorkCharge(t *testing.T) {
+	c, subject := witnessAllocationSchema(t, 9, false)
+	m := &releaseRecordingMeter{}
+	r, err := NewRun(c, m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	finals := func(s *boundState) int64 {
+		n := int64(0)
+		if s.final != nil {
+			n += finalBytes
+		}
+		if s.finalScalar != nil {
+			n += finalScalarSize
+		}
+		return n
+	}
+	complete := func(b Binding, children []Completion) Completion {
+		t.Helper()
+		charged := b.state.charged
+		m.releases = nil
+		completion, err := r.Complete(context.Background(), b, children)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Operation scratch is released separately.
+		if b.state.bindWork != nil || !slices.Contains(m.releases, charged-finals(b.state)) {
+			t.Fatalf("completion released %v of %d charged (finals %d)", m.releases, charged, finals(b.state))
+		}
+		return completion
+	}
+	u, _ := r.Root(subject.Name)
+	b, err := r.Bind(context.Background(), u, subject)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.state.charged < bindWorkBytes+9*nodeBytes {
+		t.Fatalf("root work charged %d", b.state.charged)
+	}
+	var completions []Completion
+	for _, w := range r.Witnesses(b) {
+		child, err := r.Bind(context.Background(), w.Use, Subject{ID: w.Child, Parent: 1, Name: QName{Local: "child"}, Path: "/root/child", Text: "ok", TextKnown: true, AttributesComplete: true, ChildrenComplete: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if child.state.charged < bindWorkBytes {
+			t.Fatalf("child work charged %d", child.state.charged)
+		}
+		completions = append(completions, complete(child, nil))
+	}
+	complete(b, completions)
+	if len(r.nodes) != 1 {
+		t.Fatalf("child nodes kept: %d", len(r.nodes))
+	}
+	if err := r.Close(); err != nil || m.buffer != 0 {
+		t.Fatalf("close left %d: %v", m.buffer, err)
+	}
+}
+
+// releaseRecordingMeter records the releases since the caller last reset them.
+type releaseRecordingMeter struct {
+	boundaryMeter
+	releases []int64
+}
+
+func (m *releaseRecordingMeter) Release(n int64) error {
+	m.releases = append(m.releases, n)
+	return m.boundaryMeter.Release(n)
 }

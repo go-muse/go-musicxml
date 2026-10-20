@@ -16,7 +16,7 @@ func TestSourceOriginReviewOfficialCapacity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, limit := range []int64{0, 16000000} {
+	for _, limit := range []int64{0, 12000000} {
 		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview.ID(), ProfileSourceInternalDTD.ID()} {
 			limits := validation.Budgets{MaxBufferedBytes: limit}
 			run, err := newSourceAssessmentRun(context.Background(), bytes.NewReader(data), DecodeOptions{}, &assessmentOptions{Profile: profile, Budgets: limits}, false)

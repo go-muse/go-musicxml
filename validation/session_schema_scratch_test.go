@@ -101,10 +101,10 @@ func TestSchemaBindingScratchReleasesCompletedTraversal(t *testing.T) {
 			if err := s.bindSourceSchema(context.Background()); err != nil {
 				t.Fatal(err)
 			}
-			// Persistent map + subject projections + owned scalar strings.
-			// Borrowed witnesses remain charged by Run; consumed completion
-			// arrays and the depth-bounded DFS stack must not outlive traversal.
-			want := before + 128 + int64(children+1)*(128+256) + int64(children)*(64+129) + testSchemaScratchRetainedFacts(children)
+			// Persistent map + owned scalar strings. Subject projections,
+			// consumed completion arrays and the depth-bounded DFS stack must
+			// not outlive traversal.
+			want := before + 128 + int64(children+1)*128 + int64(children)*129 + testSchemaScratchRetainedFacts(children)
 			if s.retained != want {
 				t.Errorf("completed traversal retained scratch: got %d, want %d", s.retained, want)
 			}
