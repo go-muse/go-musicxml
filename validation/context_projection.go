@@ -167,12 +167,14 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	// The record itself lives in the backing array. Its cloned strings, the
 	// value's strings, cause and numbers, and the origins' backing array,
 	// strings and positions are separate allocations, each rounded up as the
-	// allocator does. The walks copy nothing; their work was charged above.
-	value, err := measureRetained(reflect.ValueOf(in.Value), true)
+	// allocator does. The walks copy nothing. The value's strings are in the
+	// work charged above; the variable-length origins are charged as they are
+	// walked, which also checks the context every 64 items.
+	value, err := measureRetainedMetered(ctx, s, reflect.ValueOf(in.Value), true, false)
 	if err != nil {
 		return err
 	}
-	origins, err := measureRetained(reflect.ValueOf(in.Origins), true)
+	origins, err := measureRetainedMetered(ctx, s, reflect.ValueOf(in.Origins), true, true)
 	if err != nil {
 		return err
 	}
@@ -186,11 +188,6 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	out.Property = ContextProperty(strings.Clone(string(in.Property)))
 	out.Value = cloneEvidence(in.Value)
 	out.Value.Value = cloneAtomic(in.Value.Value)
-	for _, origin := range in.Origins {
-		if err = s.step(ctx, locationLogicalBytes(origin)); err != nil {
-			return err
-		}
-	}
 	if len(in.Origins) != 0 {
 		out.Origins = make([]Location, len(in.Origins))
 		for i, origin := range in.Origins {

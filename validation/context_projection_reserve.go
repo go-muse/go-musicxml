@@ -41,14 +41,11 @@ func retainedProjectionBytes(ctx context.Context, s *Session, v reflect.Value) (
 }
 
 func retainedBytes(ctx context.Context, s *Session, v reflect.Value, anyPointer bool) (int64, error) {
-	if !v.IsValid() {
-		return 0, s.step(ctx, 16)
-	}
-	shape, err := measureRetained(v, anyPointer)
-	if err != nil {
+	if err := s.step(ctx, 16); err != nil || !v.IsValid() {
 		return 0, err
 	}
-	if err = shape.charge(ctx, s); err != nil {
+	shape, err := measureRetainedMetered(ctx, s, v, anyPointer, true)
+	if err != nil {
 		return 0, err
 	}
 	return rationalCheckedAdd(BudgetBufferedBytes, allocationSlack(int64(v.Type().Size())), shape.bytes)
@@ -61,12 +58,6 @@ func retainedBytes(ctx context.Context, s *Session, v reflect.Value, anyPointer 
 // duplicates and visited the items walked.
 type retainedShape struct {
 	bytes, text, visited int64
-}
-
-// charge admits the work of measuring and copying: every string byte the copy
-// duplicates, one step per 64 visited items and 16 for the call.
-func (r retainedShape) charge(ctx context.Context, s *Session) error {
-	return s.step(ctx, 16+r.text+r.visited/64)
 }
 
 // allocationSlack bounds the heap an n-byte allocation occupies. Small objects
@@ -119,19 +110,43 @@ func numericRetainedBytes(v any) (int64, bool) {
 	return 0, false
 }
 
+// measureRetained measures a value of fixed, small shape without charging
+// work, for callers that charge it themselves. Variable-length values must use
+// measureRetainedMetered.
 func measureRetained(v reflect.Value, anyPointer bool) (retainedShape, error) {
-	w := retainedLayoutWalk{anyPointer: anyPointer}
+	return measureRetainedMetered(nil, nil, v, anyPointer, false)
+}
+
+// measureRetainedMetered measures v while charging s as it walks, so that a
+// depleted allowance or a canceled context stops it early: one rule step per
+// 64 visited items and, when chargeText is set, every string byte a copy
+// would duplicate, before that string is measured. A nil s charges nothing.
+func measureRetainedMetered(ctx context.Context, s *Session, v reflect.Value, anyPointer, chargeText bool) (retainedShape, error) {
+	w := retainedLayoutWalk{ctx: ctx, s: s, anyPointer: anyPointer, chargeText: chargeText}
 	bytes, err := w.external(v)
 	return retainedShape{bytes: bytes, text: w.text, visited: w.visited}, err
 }
 
 type retainedLayoutWalk struct {
-	anyPointer    bool
-	text, visited int64
+	ctx                    context.Context
+	s                      *Session
+	anyPointer, chargeText bool
+	text, visited          int64
+}
+
+func (w *retainedLayoutWalk) step(n int64) error {
+	if w.s == nil {
+		return nil
+	}
+	return w.s.step(w.ctx, n)
 }
 
 func (w *retainedLayoutWalk) external(v reflect.Value) (int64, error) {
-	w.visited++
+	if w.visited++; w.visited%64 == 0 {
+		if err := w.step(1); err != nil {
+			return 0, err
+		}
+	}
 	if v.CanInterface() && v.Kind() == reflect.Struct {
 		if n, ok := numericRetainedBytes(v.Interface()); ok {
 			return n, nil
@@ -183,6 +198,11 @@ func (w *retainedLayoutWalk) external(v reflect.Value) (int64, error) {
 		}
 	case reflect.String:
 		w.text += int64(v.Len())
+		if w.chargeText {
+			if e := w.step(int64(v.Len())); e != nil {
+				return 0, e
+			}
+		}
 		if e := add(allocationSlack(int64(v.Len())), nil); e != nil {
 			return 0, e
 		}

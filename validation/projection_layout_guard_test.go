@@ -542,3 +542,70 @@ func TestProjectionClonesChargeTheirCopies(t *testing.T) {
 		}
 	}
 }
+
+// The retained-storage walk checks the context and charges work as it goes:
+// on a 128-member span a context that cancels at its second check stops the
+// measurement, and a work allowance too small for the walk refuses it before
+// the walk ends; each check is one rule step per 64 visited items.
+func TestRetainedMeasurementStopsDuringTheWalk(t *testing.T) {
+	span := SpanContextResult{Members: make([]NodeRef, 128), Included: make([]NodeRef, 128)}
+	for i := range span.Members {
+		span.Members[i] = NodeRef{"d", NodeID(i + 1)}
+		span.Included[i] = span.Members[i]
+	}
+	value := reflect.ValueOf(span)
+	probe := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
+	s := rationalSession(t, Budgets{})
+	if _, err := retainedLayoutBytes(probe, s, value); err != nil {
+		t.Fatal(err)
+	}
+	steps := rationalUsage(t, s, BudgetRuleSteps)
+	if probe.calls < 4 {
+		t.Fatalf("a %d-step walk checked the context %d times", steps, probe.calls)
+	}
+	s = rationalSession(t, Budgets{})
+	if _, err := retainedLayoutBytes(&rationalCancelContext{Context: context.Background(), at: 2}, s, value); !errors.Is(err, context.Canceled) || s.retained != 0 {
+		t.Fatalf("cancellation at the second check: err=%v retained=%d", err, s.retained)
+	}
+	s = rationalSession(t, Budgets{MaxRuleSteps: steps - 1})
+	if _, err := retainedLayoutBytes(context.Background(), s, value); !errors.Is(err, ErrResourceLimit) {
+		t.Fatalf("walk beyond the work allowance: %v", err)
+	}
+	var resource ResourceContextResult
+	layoutGuardFill(t, reflect.ValueOf(&resource).Elem(), layoutGuardShape{width: 1, elems: 200, bits: 64, anyPointer: true}, 0)
+	s = rationalSession(t, Budgets{})
+	if _, err := resourceContextSize(&rationalCancelContext{Context: context.Background(), at: 2}, s, &resource); !errors.Is(err, context.Canceled) {
+		t.Fatalf("resource measurement ignored cancellation: %v", err)
+	}
+}
+
+// A record's origins are measured with checkpoints too: more origins mean
+// more context checks, and canceling at the last of them publishes nothing.
+func TestContextRecordOriginsMeasuredWithCheckpoints(t *testing.T) {
+	record := func(origins int) ContextResult {
+		r := ContextResult{Provider: RuleKey{"origins", 1}, Subject: NodeRef{"source", 1}, Property: ContextPropertySpanHammerMarking, Value: Evidence[Atomic]{State: EvidenceAbsent}}
+		for i := range origins {
+			r.Origins = append(r.Origins, Location{Target: TargetSource, DocumentID: "source", Path: "/p/" + strings.Repeat("x", i%7)})
+		}
+		return r
+	}
+	checks := func(origins int) int {
+		probe := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
+		s := rationalSession(t, Budgets{})
+		defer s.cleanup()
+		if err := s.publishContextResult(probe, record(origins)); err != nil {
+			t.Fatal(err)
+		}
+		return probe.calls
+	}
+	few, many := checks(1), checks(256)
+	if many < few+4 {
+		t.Fatalf("256 origins checked the context %d times, one origin %d", many, few)
+	}
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	err := s.publishContextResult(&rationalCancelContext{Context: context.Background(), at: many - 1}, record(256))
+	if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != 0 {
+		t.Fatalf("cancellation during the origins walk: err=%v records=%d retained=%d", err, len(s.contextResults), s.retained)
+	}
+}
