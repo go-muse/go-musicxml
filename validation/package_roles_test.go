@@ -17,7 +17,7 @@ func roleMemberUnsealedFixture(t *testing.T) (*PackageSession, ResourceRoleReque
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := c.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: a})
+	s, err := c.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}

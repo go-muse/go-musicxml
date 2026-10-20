@@ -22,7 +22,7 @@ func TestResourceGraphCoreReviewRawMXLDiscoveryPairing(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			data := packageGraphBytes(`<opus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" `+tc.hint+`/>`, "main.opus", "")
-			b, err := InspectMXL(context.Background(), bytes.NewReader(data), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}})
+			b, err := InspectMXL(context.Background(), bytes.NewReader(data), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource}})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -68,7 +68,7 @@ func TestResourceGraphCoreReviewRawMXLDiscoveryPairing(t *testing.T) {
 }
 
 func TestResourceGraphCoreReviewMalformedFailureIdentity(t *testing.T) {
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus><title>x</opus>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus><title>x</opus>`), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}})
 	if err == nil {
 		t.Fatal("malformed primary accepted")
 	}
@@ -88,7 +88,7 @@ func TestResourceGraphCoreReviewCurrentModelHasNoSchemaHints(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		b, err := AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
+		b, err := AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -107,7 +107,7 @@ func TestResourceGraphCoreReviewCurrentModelHasNoSchemaHints(t *testing.T) {
 }
 
 func TestResourceGraphCoreReviewUnknownAssemblyUsesFailureChannel(t *testing.T) {
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<unexpected-root/>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<unexpected-root/>`), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}})
 	if err == nil || b.Satisfied() || b.ResourceCount() != 0 {
 		t.Errorf("unestablished assembly admitted as canonical: error=%v resources=%d", err, b.ResourceCount())
 	}

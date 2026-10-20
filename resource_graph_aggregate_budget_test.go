@@ -46,7 +46,7 @@ func runAggregateBudgetGraph(t *testing.T, model, measured bool, kind validation
 			t.Fatalf("unsupported test budget %s", kind)
 		}
 	}
-	opts := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: budgets}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}}
+	opts := LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph, Budgets: budgets}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}}
 	opts.Resolver = graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
 		if q.Document == nil || len(out.bodies) >= 2 {
 			t.Fatalf("unexpected resolver request: %+v", q)
@@ -93,7 +93,7 @@ func runAggregateBudgetGraph(t *testing.T, model, measured bool, kind validation
 		}
 		id := g.next("model")
 		pin := g.primaryPin(validation.ResourceCurrentModel, "")
-		result := assessResourceModel(ctx, doc, assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileModelLinks.ID(), Engine: engine})
+		result := assessResourceModel(ctx, doc, assessmentRunConfig{Context: validation.ContextFamilyAll, Account: g.options.account, DocumentID: id, Profile: ProfileModelLinks.ID(), Engine: engine})
 		out.bundle, out.err = g.finishPrimary(result, pin, id)
 	} else {
 		engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
@@ -101,7 +101,7 @@ func runAggregateBudgetGraph(t *testing.T, model, measured bool, kind validation
 			t.Fatal(err)
 		}
 		id := g.next("source")
-		result := assessResourceSource(ctx, strings.NewReader(aggregateBudgetOpus), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
+		result := assessResourceSource(ctx, strings.NewReader(aggregateBudgetOpus), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Context: validation.ContextFamilyAll, Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 		digest := ""
 		if result.DigestComplete {
 			digest = hex.EncodeToString(result.Digest[:])

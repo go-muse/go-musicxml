@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 )
 
@@ -96,19 +97,31 @@ func TestContextAttributeTablesSharedOnlyWhenBuilt(t *testing.T) {
 	}
 }
 
-// A session that omits the projection publishes no context records, keeps
-// the source-origin index its verdicts read, and refuses a resource snapshot,
-// which needs the projection; the refusal releases everything.
-func TestOmitContextSessionPublishesNoRecords(t *testing.T) {
+// A session keeps only the records of its selected families; an unselected
+// record is counted and checked but costs no storage. A resource snapshot
+// refuses a session that lacks the families it copies unless the run was
+// prepared for a snapshot; the refusal releases everything.
+func TestUnselectedContextIsNotKept(t *testing.T) {
 	row := ContextResult{Provider: RuleKey{"omit", 1}, Subject: NodeRef{"source", 1}, Property: ContextPropertySpanNormalDots, Value: Evidence[Atomic]{State: EvidenceAbsent}}
+	for _, families := range []ContextFamilies{0, ContextFamilyAll &^ ContextFamilySpans} {
+		s := rationalSession(t, Budgets{})
+		s.contextFamilies = families
+		facts := rationalUsage(t, s, BudgetContextFacts)
+		if err := s.publishContextResult(context.Background(), row); err != nil {
+			t.Fatal(err)
+		}
+		if len(s.contextResults) != 0 || len(s.hiddenContexts) != 0 || s.retained != 0 || s.contextReportRetained != 0 || rationalUsage(t, s, BudgetContextFacts) != facts+1 {
+			t.Fatalf("context=%b: unselected record kept: records=%d retained=%d facts=%d", families, len(s.contextResults), s.retained, rationalUsage(t, s, BudgetContextFacts)-facts)
+		}
+		s.cleanup()
+	}
 	s := rationalSession(t, Budgets{})
-	s.omitContext = true
-	facts := rationalUsage(t, s, BudgetContextFacts)
+	s.contextFamilies = ContextFamilySpans
 	if err := s.publishContextResult(context.Background(), row); err != nil {
 		t.Fatal(err)
 	}
-	if len(s.contextResults) != 0 || s.retained != 0 || s.contextReportRetained != 0 || rationalUsage(t, s, BudgetContextFacts) != facts+1 {
-		t.Fatalf("omitted record kept: records=%d retained=%d facts=%d", len(s.contextResults), s.retained, rationalUsage(t, s, BudgetContextFacts)-facts)
+	if len(s.contextResults) != 1 || s.contextReportRetained == 0 {
+		t.Fatalf("selected record not kept: records=%d", len(s.contextResults))
 	}
 	s.cleanup()
 
@@ -116,7 +129,7 @@ func TestOmitContextSessionPublishesNoRecords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	session, err := sourceSchemaEngineFor(t, schema, XSDCheckContent).Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test", OmitContext: true})
+	session, err := sourceSchemaEngineFor(t, schema, XSDCheckContent).Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test", Context: ContextFamilyAll &^ ContextFamilyDictionaries})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,9 +141,51 @@ func TestOmitContextSessionPublishesNoRecords(t *testing.T) {
 	}
 	_, snapshot, err := session.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
 	if snapshot != nil || !errors.Is(err, ErrInvalidConfiguration) {
-		t.Fatalf("snapshot of an omitted projection: snapshot=%v err=%v", snapshot != nil, err)
+		t.Fatalf("snapshot without its families: snapshot=%v err=%v", snapshot != nil, err)
 	}
 	if used := rationalUsage(t, session, BudgetBufferedBytes); used != 0 {
 		t.Fatalf("refused snapshot left %d bytes", used)
+	}
+	if _, err = sourceSchemaEngineFor(t, schema, XSDCheckContent).Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test", Context: ContextFamilyAll + 1}); !errors.Is(err, ErrInvalidConfiguration) {
+		t.Fatalf("unknown family accepted: %v", err)
+	}
+}
+
+// A run prepared for a snapshot keeps the unselected records the snapshot
+// copies outside Report.Context, and the snapshot sees every copied record in
+// the order of the complete projection.
+func TestResourceSnapshotKeepsHiddenRecordsInOrder(t *testing.T) {
+	resource := func(node NodeID) ContextResult {
+		return ContextResult{Provider: RuleKey{"hidden", 1}, Subject: NodeRef{"source", node}, Property: ContextResourceLink, Value: Evidence[Atomic]{State: EvidenceAbsent}, Resource: &ResourceContextResult{}}
+	}
+	sounds := func(node NodeID) ContextResult {
+		return ContextResult{Provider: RuleKey{"hidden", 1}, Subject: NodeRef{"source", node}, Property: ContextPropertySoundMapping, Value: Evidence[Atomic]{State: EvidenceAbsent}, SoundMapping: &SoundMappingContextResult{}}
+	}
+	span := func(node NodeID) ContextResult {
+		return ContextResult{Provider: RuleKey{"hidden", 1}, Subject: NodeRef{"source", node}, Property: ContextPropertySpanNormalDots, Value: Evidence[Atomic]{State: EvidenceAbsent}}
+	}
+	// Resources and spans are selected; sound mappings are kept only for the
+	// snapshot, and spans not at all by it.
+	s := rationalSession(t, Budgets{})
+	s.contextFamilies, s.resourceSnapshot = ContextFamilyResources|ContextFamilySpans, true
+	for i, row := range []ContextResult{sounds(1), resource(2), span(3), sounds(4), sounds(5), resource(6), sounds(7)} {
+		if err := s.publishValidatedContextResult(context.Background(), row); err != nil {
+			t.Fatalf("row %d: %v", i, err)
+		}
+	}
+	if len(s.contextResults) != 3 || len(s.hiddenContexts) != 4 {
+		t.Fatalf("records=%d hidden=%d", len(s.contextResults), len(s.hiddenContexts))
+	}
+	var order []NodeID
+	if err := s.snapshotContexts(context.Background(), func(r *ContextResult) error { order = append(order, r.Subject.Node); return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(order, []NodeID{1, 2, 4, 5, 6, 7}) {
+		t.Fatalf("snapshot order %v", order)
+	}
+	retained := s.retained
+	s.cleanup()
+	if retained <= 0 || s.hiddenContexts != nil || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+		t.Fatalf("hidden records not released: retained=%d", retained)
 	}
 }

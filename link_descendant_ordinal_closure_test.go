@@ -28,10 +28,10 @@ func TestLinkDescendantOrdinalAcrossValidParents(t *testing.T) {
 						var doc Document
 						doc, err = Decode(strings.NewReader(source))
 						if err == nil {
-							report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLinks})
+							report, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelLinks})
 						}
 					} else {
-						report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLinks})
+						report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLinks})
 					}
 					if err != nil {
 						t.Fatal(err)

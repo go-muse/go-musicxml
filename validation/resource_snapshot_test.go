@@ -8,7 +8,7 @@ import (
 
 func snapshotTestSession(t *testing.T, text string, budgets ...Budgets) *Session {
 	t.Helper()
-	opts := RunOptions{DocumentID: "source", Profile: "source-schema-test"}
+	opts := RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "source-schema-test"}
 	if len(budgets) > 0 {
 		opts.Budgets = budgets[0]
 	}
@@ -135,7 +135,7 @@ func TestResourceSnapshotRetainsActualTypeElementIDs(t *testing.T) {
 		t.Fatal(err)
 	}
 	e := sourceSchemaEngineFor(t, schema, XSDCheckBinding, XSDCheckDeclaration, XSDCheckAttributes, XSDCheckScalar, XSDCheckContent, XSDCheckIdentity)
-	s, err := e.Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	s, err := e.Begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "source-schema-test"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +188,7 @@ func snapshotElementIDs(t *testing.T, values []string, complete bool) (*Session,
 		t.Fatal(err)
 	}
 	e := sourceSchemaEngineFor(t, schema, XSDCheckBinding, XSDCheckDeclaration, XSDCheckAttributes, XSDCheckScalar, XSDCheckContent, XSDCheckIdentity)
-	s, err := e.Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	s, err := e.Begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "source-schema-test"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,7 +295,7 @@ func TestResourceSnapshotLiveCopyAdmissionAndWork(t *testing.T) {
 }
 
 func TestResourceSnapshotRetainsRejectedRootNameWithoutSchemaIdentity(t *testing.T) {
-	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "source-schema-test"})
 	if err != nil {
 		t.Fatal(err)
 	}

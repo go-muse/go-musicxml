@@ -27,12 +27,18 @@ type assessmentRunConfig struct {
 	// DTD supplies caller DTD bytes to source profiles that read DTD
 	// declarations when the run's DecodeOptions.DTD is nil.
 	DTD *DTDOptions
-	// OmitContext leaves the run's Report.Context empty.
-	OmitContext bool
+	// Context selects the context families of the run's Report.Context.
+	Context validation.ContextFamilies
+	// ResourceSnapshot prepares a run that finishes with a resource snapshot,
+	// which needs records the selection may leave out.
+	ResourceSnapshot bool
 }
 
 func (c assessmentRunConfig) begin(ctx context.Context) (*validation.Session, error) {
-	opts := validation.RunOptions{DocumentID: c.DocumentID, Profile: c.Profile, Account: c.Account, OmitContext: c.OmitContext}
+	opts := validation.RunOptions{DocumentID: c.DocumentID, Profile: c.Profile, Account: c.Account, Context: c.Context}
+	if c.ResourceSnapshot {
+		opts = validationResourceSnapshotRun(opts)
+	}
 	if c.Dictionaries != nil {
 		return c.Engine.BeginWithDictionaries(ctx, opts, c.Dictionaries)
 	}

@@ -18,8 +18,14 @@ func TestMandatoryAssessedDictionariesDefaultAndExplicitShareEvidence(t *testing
 			calls := make(map[validation.DictionaryManifestID]int)
 			var bodies []*mandatoryDictionaryBody
 			var options *dictionaryAssessmentOptions
+			// Both loads keep the projection, whose dictionary evidence the test
+			// reads; the default one selects no dictionaries.
+			selection := validation.ContextFamilyAll
+			if !explicit {
+				options = &dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: selection}}
+			}
 			if explicit {
-				options = &dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
+				options = &dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll}, Dictionaries: DictionaryOptions{
 					Selections: mandatoryDictionarySelections(),
 					Source: dictionaryImportSourceFunc(func(ctx context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
 						calls[request.Manifest]++
@@ -39,10 +45,10 @@ func TestMandatoryAssessedDictionariesDefaultAndExplicitShareEvidence(t *testing
 			}
 			mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine.ID(), validation.TargetSource)
 			mandatorySatisfiedReport(t, result.ModelLine, ProfileModelSemantics.ID(), validation.TargetModel)
-			controlOptions := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileModelSemantics.ID()}, Dictionaries: DictionaryOptions{
+			controlOptions := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: selection, Profile: ProfileModelSemantics.ID()}, Dictionaries: DictionaryOptions{
 				Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
 			}}
-			sourceControl, err := InspectXML(context.Background(), strings.NewReader(mandatoryDictionaryScore()), SourceOptions{Profile: ProfileSourceLine})
+			sourceControl, err := InspectXML(context.Background(), strings.NewReader(mandatoryDictionaryScore()), SourceOptions{Context: selection, Profile: ProfileSourceLine})
 			if err != nil || !reflect.DeepEqual(sourceControl, result.SourceLine) {
 				t.Fatalf("complete source report differs from standalone assessment: error=%v", err)
 			}
@@ -115,7 +121,7 @@ func TestMandatoryAssessedDictionariesNeverRepairExplicitUnavailableOverride(t *
 					}
 				})
 			}
-			options := dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: source}}
+			options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll}, Dictionaries: DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: source}}
 			result, err := decodeAssessedWithDictionaries(context.Background(), strings.NewReader(mandatoryDictionaryScore()), decodeDictionaryTestOptions{Assessment: &options})
 			// Line 2 reads no dictionaries, so it accepts the source; line 3
 			// reports the unavailable evidence and rejects the document.
@@ -158,7 +164,7 @@ func TestMandatoryAssessedDictionariesRejectPartialSelectionBeforeIO(t *testing.
 	for _, selected := range [][]validation.DictionarySelection{nil, selections[:1], selections[1:]} {
 		calls := 0
 		reader := &assessmentCountingReader{source: strings.NewReader(mandatoryDictionaryScore())}
-		options := dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
+		options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll}, Dictionaries: DictionaryOptions{
 			Selections: selected,
 			Source: dictionaryImportSourceFunc(func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error) {
 				calls++
@@ -181,7 +187,7 @@ func TestMandatoryAssessedDictionariesRejectCorruptIPABeforeLineThree(t *testing
 			calls := 0
 			var bodies []*mandatoryDictionaryBody
 			reader := &assessmentCountingReader{source: strings.NewReader(mandatoryDictionaryScore())}
-			options := dictionaryAssessmentOptions{Dictionaries: DictionaryOptions{
+			options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll}, Dictionaries: DictionaryOptions{
 				Selections: mandatoryDictionarySelections(),
 				Source: dictionaryImportSourceFunc(func(ctx context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
 					calls++
@@ -230,7 +236,7 @@ func TestMandatoryAssessedLoadingSharesNodeBudgetAcrossStages(t *testing.T) {
 	for _, explicit := range []bool{false, true} {
 		for _, limit := range []int64{standaloneLimit, combined - 1, combined} {
 			t.Run(fmt.Sprintf("%s/nodes=%d", mandatoryLoaderName(explicit), limit), func(t *testing.T) {
-				result, err := mandatoryDecode(explicit, context.Background(), strings.NewReader(source), &SourceOptions{Budgets: validation.Budgets{MaxNodes: limit}})
+				result, err := mandatoryDecode(explicit, context.Background(), strings.NewReader(source), &SourceOptions{Context: validation.ContextFamilyAll, Budgets: validation.Budgets{MaxNodes: limit}})
 				mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine.ID(), validation.TargetSource)
 				if limit == combined {
 					if err != nil || result.Document == nil {
@@ -256,7 +262,7 @@ func TestMandatoryAssessedLoadingModelCancellationPreservesSourceAndReleasesOwne
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			observed := &mandatoryModelCancelContext{Context: ctx, cancel: cancel, sourceNodes: sourceNodes, enabled: cancelModel}
-			options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileModelSemantics.ID()}, Dictionaries: DictionaryOptions{
+			options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelSemantics.ID()}, Dictionaries: DictionaryOptions{
 				Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
 			}}
 			cfg, modelCfg, err := assessedLoadingLines(observed, options)
@@ -302,7 +308,7 @@ func TestMandatoryAssessedLoadingModelCancellationPreservesSourceAndReleasesOwne
 func mandatoryStandaloneNodeCounts(t *testing.T, source string, budgets validation.Budgets) (int64, int64) {
 	t.Helper()
 	ctx := context.Background()
-	run, err := newSourceAssessmentRun(ctx, strings.NewReader(source), DecodeOptions{}, &assessmentOptions{Profile: ProfileSourceLine.ID(), Budgets: budgets}, false)
+	run, err := newSourceAssessmentRun(ctx, strings.NewReader(source), DecodeOptions{}, &assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLine.ID(), Budgets: budgets}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -326,7 +332,7 @@ func mandatoryStandaloneNodeCounts(t *testing.T, source string, budgets validati
 	if err != nil {
 		t.Fatal(err)
 	}
-	report, _, err = assessModelWithConfig(ctx, document, assessmentRunConfig{Account: account, DocumentID: modelDocumentID, Profile: ProfileModelSemantics.ID(), Engine: engine}, modelWalkOptions{})
+	report, _, err = assessModelWithConfig(ctx, document, assessmentRunConfig{Context: validation.ContextFamilyAll, Account: account, DocumentID: modelDocumentID, Profile: ProfileModelSemantics.ID(), Engine: engine}, modelWalkOptions{})
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("standalone model fixture failed: error=%v", err)
 	}

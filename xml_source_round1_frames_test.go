@@ -64,7 +64,7 @@ func TestSourceRound1UnresolvedAttributeDeclaration(t *testing.T) {
 		{"known-despite-external", `<!DOCTYPE opus SYSTEM "opus.dtd" [<!ATTLIST opus version CDATA #IMPLIED>]><opus version="4.0"/>`, validation.EvidenceKnown},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			report, err := InspectXML(context.Background(), strings.NewReader(tc.input), SourceOptions{Profile: ProfileSourceInternalDTD})
+			report, err := InspectXML(context.Background(), strings.NewReader(tc.input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -93,7 +93,7 @@ func TestSourceRound1UnresolvedAttributeDeclaration(t *testing.T) {
 }
 
 func TestSourceRound1UnresolvedOriginEnumeration(t *testing.T) {
-	report, err := InspectXML(context.Background(), strings.NewReader(`<!DOCTYPE opus SYSTEM "opus.dtd"><opus version="4.0"/>`), SourceOptions{Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(`<!DOCTYPE opus SYSTEM "opus.dtd"><opus version="4.0"/>`), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -256,7 +256,7 @@ func TestSourceRound1OriginOccurrenceBoundaries(t *testing.T) {
 		{"physical-value-entity", `<!DOCTYPE opus [<!ENTITY version "4.0">]><opus version="&version;"/>`, validation.SourceOriginPhysical, true, 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			report, err := InspectXML(context.Background(), strings.NewReader(tc.input), SourceOptions{Profile: ProfileSourceInternalDTD})
+			report, err := InspectXML(context.Background(), strings.NewReader(tc.input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -386,7 +386,7 @@ func BenchmarkSourceRound1DefaultBudgetBomb(b *testing.B) {
 	b.ReportAllocs()
 	b.SetBytes(int64(len(input)))
 	for b.Loop() {
-		report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
+		report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 		var resource *validation.ResourceError
 		if !errors.As(err, &resource) || resource.Kind != validation.BudgetScalarBytes || report.InputComplete {
 			b.Fatalf("refusal=%v complete=%t", err, report.InputComplete)

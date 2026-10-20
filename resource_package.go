@@ -407,7 +407,7 @@ func (g *resourceGraphRun) assessVerifiedPackageSource(p *graphPackage, path str
 		return nil, "", err
 	}
 	doc := g.next("source")
-	result := assessResourceSource(g.ctx, bytes.NewReader(data), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: doc, Entry: path, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: profile, Engine: engine}, ByteOwner: sourceBytesAccounted})
+	result := assessResourceSource(g.ctx, bytes.NewReader(data), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, Context: g.options.context, ResourceSnapshot: true, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: doc, Entry: path, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: profile, Engine: engine}, ByteOwner: sourceBytesAccounted})
 	if result.Snapshot == nil || shouldRetainMalformedIntrinsicWithoutAssembly(result) {
 		return nil, doc, g.retainUntransferredIntrinsic(result, pin, nil)
 	}

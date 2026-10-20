@@ -81,8 +81,8 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}
-	if s.omitContext {
-		return nil, contract("resource snapshot", "requires the context projection that RunOptions.OmitContext omits")
+	if !s.resourceSnapshot && s.contextFamilies&resourceContextFamilies != resourceContextFamilies {
+		return nil, contract("resource snapshot", "requires the context families it copies or a run prepared for a snapshot")
 	}
 	h := ResourceSnapshotHeader{DocumentID: s.documentID, Root: NodeRef{DocumentID: s.documentID}, Profile: s.profile.ID, CatalogDigest: s.profile.CatalogDigest, Target: s.profile.Target, InputComplete: s.inputComplete, Syntax: report.Syntax, Name: Evidence[QName]{State: EvidenceUnknown, Reason: "resource-root-unavailable"}, Assembly: Evidence[Assembly]{State: EvidenceUnknown, Reason: "resource-assembly-unavailable"}, ScopeComplete: Evidence[bool]{State: EvidenceUnknown, Reason: "resource-scope-incomplete"}}
 	if s.rejectedRootName.Local != "" {
@@ -128,10 +128,8 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 		return nil, err
 	}
 	count := 0
-	for _, v := range report.Context {
-		if resourceSelectedContext(v.Property) {
-			count++
-		}
+	if err := s.snapshotContexts(ctx, func(*ContextResult) error { count++; return nil }); err != nil {
+		return nil, err
 	}
 	// Account the private canonical report, selected fact copies, and their
 	// exact-length backing arrays while session/output representations coexist.
@@ -179,18 +177,15 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	if e != nil {
 		return nil, e
 	}
-	for _, v := range report.Context {
-		if !resourceSelectedContext(v.Property) {
-			continue
-		}
-		n, e := resourceMeasure(ctx, s.account, reflect.ValueOf(v))
+	if err = s.snapshotContexts(ctx, func(v *ContextResult) error {
+		n, e := resourceMeasure(ctx, s.account, reflect.ValueOf(*v))
 		if e != nil {
-			return nil, e
+			return e
 		}
 		size, e = rationalCheckedAdd(BudgetBufferedBytes, size, n)
-		if e != nil {
-			return nil, e
-		}
+		return e
+	}); err != nil {
+		return nil, err
 	}
 	if _, err = allocationSize(size); err != nil {
 		return nil, err
@@ -227,13 +222,14 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	}
 	out.contexts = make([]ContextResult, count)
 	at := 0
-	for _, v := range report.Context {
-		if resourceSelectedContext(v.Property) {
-			if err = resourceCopyInto(ctx, reflect.ValueOf(&out.contexts[at]).Elem(), reflect.ValueOf(v), "", ""); err != nil {
-				return nil, err
-			}
-			at++
+	if err = s.snapshotContexts(ctx, func(v *ContextResult) error {
+		if e := resourceCopyInto(ctx, reflect.ValueOf(&out.contexts[at]).Elem(), reflect.ValueOf(*v), "", ""); e != nil {
+			return e
 		}
+		at++
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	if err = ctx.Err(); err != nil {
 		return nil, err

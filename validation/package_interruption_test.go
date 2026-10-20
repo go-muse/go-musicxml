@@ -10,7 +10,7 @@ import (
 
 func interruptionSnapshot(t *testing.T, a *Account, doc, text string) (*ResourceSnapshot, Report) {
 	t.Helper()
-	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{DocumentID: doc, Profile: "source-schema-test", Account: a})
+	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: doc, Profile: "source-schema-test", Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestPackageEstablishedRoleFailureSurvivesCancellation(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: a})
+				s, err := catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: a})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -134,7 +134,7 @@ func TestPackageEstablishedAdviceFailureSurvivesCancellation(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					s, err = catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
+					s, err = catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package"})
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -204,7 +204,7 @@ func TestPackageMimetypeAdviceRequiresKnownOrderForPass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := c.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
+	s, err := c.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package"})
 	if err != nil {
 		t.Fatal(err)
 	}

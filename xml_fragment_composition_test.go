@@ -64,7 +64,7 @@ type fragmentCompositionResource struct {
 func fragmentCompositionSource(t *testing.T, engine *validation.Engine, profile validation.ProfileID, account *validation.Account, documentID, source string, sourceInfoset bool) fragmentCompositionResource {
 	t.Helper()
 	ctx := context.Background()
-	session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: documentID, Profile: profile, Account: account})
+	session, err := engine.Begin(ctx, validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: documentID, Profile: profile, Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func fragmentCompositionSource(t *testing.T, engine *validation.Engine, profile 
 func fragmentCompositionModel(t *testing.T, engine *validation.Engine, account *validation.Account, documentID string, document Document) fragmentCompositionResource {
 	t.Helper()
 	ctx := context.Background()
-	session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: documentID, Profile: ProfileModelLinks.ID(), Account: account})
+	session, err := engine.Begin(ctx, validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: documentID, Profile: ProfileModelLinks.ID(), Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func newFragmentCompositionPackage(t *testing.T, account *validation.Account, re
 	if err != nil {
 		t.Fatal(err)
 	}
-	session, err := validationCompiledPackageCatalogBegin(catalog, context.Background(), validation.RunOptions{DocumentID: "fragment-package", Profile: profile.Profile.ID, Account: account})
+	session, err := validationCompiledPackageCatalogBegin(catalog, context.Background(), validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: "fragment-package", Profile: profile.Profile.ID, Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}

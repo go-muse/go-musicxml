@@ -49,7 +49,7 @@ func TestBundledDictionaryGraphAndMXLParity(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			run := func(dictionaries DictionaryOptions, limit int64) (validation.AssessmentBundle, error) {
 				ctx := context.Background()
-				graph := GraphOptions{Profile: ProfileResourceGraphDictionaries, Budgets: validation.Budgets{MaxExternalBytes: limit}}
+				graph := GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphDictionaries, Budgets: validation.Budgets{MaxExternalBytes: limit}}
 				identity := ResourceIdentity{CanonicalID: "bundled-parity-root"}
 				switch mode {
 				case "graph source":
@@ -57,10 +57,10 @@ func TestBundledDictionaryGraphAndMXLParity(t *testing.T) {
 				case "graph model":
 					return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}.internal(), Dictionaries: dictionaries})
 				case "MXL source":
-					mxlGraph := MXLGraphOptions{Profile: ProfileMXLSourceDictionaries, Budgets: graph.Budgets}
+					mxlGraph := MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSourceDictionaries, Budgets: graph.Budgets}
 					return inspectMXLWithDictionaries(ctx, bytes.NewReader(archive), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: mxlGraph, Identity: identity}.internal(), Dictionaries: dictionaries})
 				default:
-					mxlGraph := MXLGraphOptions{Profile: ProfileMXLModelDictionaries, Budgets: graph.Budgets}
+					mxlGraph := MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModelDictionaries, Budgets: graph.Budgets}
 					return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: mxlGraph, Identity: identity}.internal(), Dictionaries: dictionaries})
 				}
 			}

@@ -205,7 +205,7 @@ func TestSourceAuxiliaryHintOnlyLexicalElection(t *testing.T) {
 					if ok || got != (RuleKey{}) {
 						t.Fatalf("unelected lexical input enabled: %+v", got)
 					}
-					s, err := engine.Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "auxiliary-hint-test"})
+					s, err := engine.Begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "auxiliary-hint-test"})
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -232,7 +232,7 @@ func TestSourceAuxiliaryHintOnlyEffectiveAndPhysicalValues(t *testing.T) {
 					t.Fatal(err)
 				}
 				ctx := context.Background()
-				s, err := engine.Begin(ctx, RunOptions{DocumentID: "source", Profile: "auxiliary-hint-test"})
+				s, err := engine.Begin(ctx, RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "auxiliary-hint-test"})
 				if err != nil {
 					t.Fatal(err)
 				}

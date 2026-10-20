@@ -31,7 +31,7 @@ func packageAdviceFixtureCheck(t *testing.T, check PackageCheck, budgets ...Budg
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := c.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: intrinsic.account})
+	s, err := c.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: intrinsic.account})
 	if err != nil {
 		t.Fatal(err)
 	}

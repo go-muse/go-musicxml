@@ -11,8 +11,8 @@ import (
 )
 
 // Each profile kind is its own type, so passing a profile to an entry point
-// of another kind, or OmitContext to a graph, fails to compile; the matching
-// kinds compile. An external package is type-checked against the public API,
+// of another kind fails to compile, as does the removed OmitContext; the
+// matching kinds and the Context selection compile. An external package is type-checked against the public API,
 // one statement per line.
 func TestProfileKindsAreDistinctTypes(t *testing.T) {
 	if testing.Short() {
@@ -24,8 +24,10 @@ func TestProfileKindsAreDistinctTypes(t *testing.T) {
 		`_ = m.GraphOptions{Profile: m.ProfileResourceGraph}`,
 		`_ = m.MXLGraphOptions{Profile: m.ProfileMXLSourceLine}`,
 		`_ = m.MXLGraphOptions{Profile: m.ProfileMXLModelSemantics}`,
-		`_ = m.SourceOptions{OmitContext: true}`,
-		`_ = m.ModelOptions{OmitContext: true}`,
+		`_ = m.SourceOptions{Context: 1}`,
+		`_ = m.ModelOptions{Context: 1}`,
+		`_ = m.GraphOptions{Context: 1}`,
+		`_ = m.MXLGraphOptions{Context: 1}`,
 		`_ = m.DecodeAssessmentOptions{Assessment: &m.SourceOptions{Profile: m.ProfileSourceLine}}`,
 		`_ = m.ProfileSourceLine.ID() == m.ProfileModelSemantics.ID()`,
 	}
@@ -42,6 +44,8 @@ func TestProfileKindsAreDistinctTypes(t *testing.T) {
 		`_ = m.MXLGraphOptions{Profile: m.ProfileResourceGraph}`,
 		`_ = m.MXLGraphOptions{Profile: m.ProfileSourceLine}`,
 		`_ = m.MXLGraphOptions{Profile: m.ProfileModelSemantics}`,
+		`_ = m.SourceOptions{OmitContext: true}`,
+		`_ = m.ModelOptions{OmitContext: true}`,
 		`_ = m.GraphOptions{OmitContext: true}`,
 		`_ = m.MXLGraphOptions{OmitContext: true}`,
 		`_ = m.ModelOptions{DTD: nil}`,

@@ -38,7 +38,7 @@ func sourceOriginFixture(t *testing.T, limits Budgets) (*Engine, *Session, RuleK
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := e.Begin(context.Background(), RunOptions{DocumentID: "source", Profile: profile.ID, Budgets: limits})
+	s, err := e.Begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: profile.ID, Budgets: limits})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1934,10 +1934,11 @@ type Grace struct, field StealTimePrevious *Percent `xml:"steal-time-previous,at
 type Grace struct, field order StealTimePrevious StealTimeFollowing MakeTime Slash
 type GraphOptions struct, comparable
 type GraphOptions struct, field Budgets validation.Budgets
+type GraphOptions struct, field Context validation.ContextFamilies
 type GraphOptions struct, field DTD *DTDOptions
 type GraphOptions struct, field Dictionaries *DictionaryOptions
 type GraphOptions struct, field Profile GraphProfile
-type GraphOptions struct, field order Profile Budgets DTD Dictionaries
+type GraphOptions struct, field order Profile Budgets DTD Dictionaries Context
 type GraphProfile string
 type GraphProfile, method (GraphProfile) ID() validation.ProfileID
 type GroupBarline struct, comparable
@@ -2499,10 +2500,11 @@ type MXLAssessmentOptions struct, field order Graph Identity Resolver Dependenci
 type MXLAssessmentOptions struct, not comparable
 type MXLGraphOptions struct, comparable
 type MXLGraphOptions struct, field Budgets validation.Budgets
+type MXLGraphOptions struct, field Context validation.ContextFamilies
 type MXLGraphOptions struct, field DTD *DTDOptions
 type MXLGraphOptions struct, field Dictionaries *DictionaryOptions
 type MXLGraphOptions struct, field Profile MXLProfile
-type MXLGraphOptions struct, field order Profile Budgets DTD Dictionaries
+type MXLGraphOptions struct, field order Profile Budgets DTD Dictionaries Context
 type MXLLinkError struct, comparable
 type MXLLinkError struct, field Err error
 type MXLLinkError struct, field Href string
@@ -2696,10 +2698,10 @@ type MiscellaneousField struct, field order Value Name
 type Mode string
 type ModelOptions struct, comparable
 type ModelOptions struct, field Budgets validation.Budgets
+type ModelOptions struct, field Context validation.ContextFamilies
 type ModelOptions struct, field Dictionaries *DictionaryOptions
-type ModelOptions struct, field OmitContext bool
 type ModelOptions struct, field Profile ModelProfile
-type ModelOptions struct, field order Profile Budgets Dictionaries OmitContext
+type ModelOptions struct, field order Profile Budgets Dictionaries Context
 type ModelProfile string
 type ModelProfile, method (ModelProfile) ID() validation.ProfileID
 type Mordent struct, comparable
@@ -3730,11 +3732,11 @@ type SoundContents []SoundContent
 type SoundContents, method (*SoundContents) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
 type SourceOptions struct, comparable
 type SourceOptions struct, field Budgets validation.Budgets
+type SourceOptions struct, field Context validation.ContextFamilies
 type SourceOptions struct, field DTD *DTDOptions
 type SourceOptions struct, field Dictionaries *DictionaryOptions
-type SourceOptions struct, field OmitContext bool
 type SourceOptions struct, field Profile SourceProfile
-type SourceOptions struct, field order Profile Budgets DTD Dictionaries OmitContext
+type SourceOptions struct, field order Profile Budgets DTD Dictionaries Context
 type SourceProfile string
 type SourceProfile, method (SourceProfile) ID() validation.ProfileID
 type StaffDetails struct, field Capo *NonNegativeInteger `xml:"capo,omitempty"`

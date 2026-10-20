@@ -68,7 +68,7 @@ func TestSourceAuxiliaryOriginExactRootRouting(t *testing.T) {
 				ctx := context.Background()
 				engine, key := auxiliaryOriginTestEngine(t, assembly)
 				account := dtdStoreAccount(t, validation.Budgets{})
-				session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: "source", Profile: "auxiliary-origin-test", Account: account})
+				session, err := engine.Begin(ctx, validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: "source", Profile: "auxiliary-origin-test", Account: account})
 				if err != nil {
 					t.Fatal(err)
 				}

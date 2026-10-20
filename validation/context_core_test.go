@@ -134,7 +134,7 @@ func TestContextProjectionEveryCancellationBoundary(t *testing.T) {
 }
 func TestContextReportSurvivesFinishAndOptionalGap(t *testing.T) {
 	ctx := context.Background()
-	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(ctx, RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(ctx, RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "source-schema-test"})
 	if err != nil {
 		t.Fatal(err)
 	}

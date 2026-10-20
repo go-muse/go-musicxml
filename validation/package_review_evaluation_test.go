@@ -80,7 +80,7 @@ func TestPackageReviewMinimalVacuityRequiresSelectedLinks(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: snapshot.account})
+			s, err := catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: snapshot.account})
 			if err != nil {
 				t.Fatal(err)
 			}

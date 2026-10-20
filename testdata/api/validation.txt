@@ -73,6 +73,18 @@ const ContextDistanceType ContextProperty = "local.distance-type"
 const ContextDocumentedDefault ContextProvenance = "documented-default"
 const ContextEnsembleSize ContextProperty = "local.ensemble-size"
 const ContextExplicit ContextProvenance = "explicit"
+const ContextFamilyAll ContextFamilies = 2047
+const ContextFamilyContainer ContextFamilies = 256
+const ContextFamilyDictionaries ContextFamilies = 1024
+const ContextFamilyLayout ContextFamilies = 2
+const ContextFamilyNavigation ContextFamilies = 16
+const ContextFamilyPerformance ContextFamilies = 32
+const ContextFamilyRepeats ContextFamilies = 8
+const ContextFamilyResources ContextFamilies = 128
+const ContextFamilySounds ContextFamilies = 64
+const ContextFamilySourceOrigins ContextFamilies = 512
+const ContextFamilySpans ContextFamilies = 4
+const ContextFamilyTiming ContextFamilies = 1
 const ContextFigureNumber ContextProperty = "local.figure-number-text"
 const ContextFontFamilyCategories ContextProperty = "local.font-family-categories"
 const ContextFontFamilyOrder ContextProperty = "local.font-family-order"
@@ -658,6 +670,7 @@ type ContextFact struct, field Providers []RuleKey
 type ContextFact struct, field Value Evidence[Atomic]
 type ContextFact struct, field order Value Origins Providers
 type ContextFact struct, not comparable
+type ContextFamilies uint16
 type ContextKey struct, comparable
 type ContextKey struct, field At NodeRef
 type ContextKey struct, field Name string
@@ -692,6 +705,7 @@ type ContextResult struct, field Timing *TimingContextResult
 type ContextResult struct, field Value Evidence[Atomic]
 type ContextResult struct, field order Provider Subject Property Value Origins Span Repeat Navigation Layout Timing SoundMapping Resource Container SourceOrigin Dictionary
 type ContextResult struct, not comparable
+type ContextResult, method (ContextResult) Family() ContextFamilies
 type ContextUnit string
 type ContextUpdate struct, field Fact ContextFact
 type ContextUpdate struct, field Key ContextKey
@@ -1515,10 +1529,10 @@ type RuleText struct, field order Title Explanation Message
 type RunOptions struct, comparable
 type RunOptions struct, field Account *Account
 type RunOptions struct, field Budgets Budgets
+type RunOptions struct, field Context ContextFamilies
 type RunOptions struct, field DocumentID string
-type RunOptions struct, field OmitContext bool
 type RunOptions struct, field Profile ProfileID
-type RunOptions struct, field order DocumentID Profile Budgets Account OmitContext
+type RunOptions struct, field order DocumentID Profile Budgets Account Context
 type SMuFLDictionaryData struct, field Glyphs []SMuFLGlyph
 type SMuFLDictionaryData struct, field Ranges []SMuFLRange
 type SMuFLDictionaryData struct, field order Glyphs Ranges

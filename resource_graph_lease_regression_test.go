@@ -73,7 +73,7 @@ func graphLeaseRun(t *testing.T, source, target string, deps []ResourceDependenc
 		}
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "target", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(target)))}, RetrievalURI: "https://e.test/target.xml", Body: &resourceTestBody{Reader: strings.NewReader(target)}}, nil
 	})
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.xml"}, Resolver: resolver, Dependencies: deps}.internal(), ProfileResourceGraph.ID())
+	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.xml"}, Resolver: resolver, Dependencies: deps}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func graphLeaseRun(t *testing.T, source, target string, deps []ResourceDependenc
 		t.Fatal(err)
 	}
 	id := g.next("source")
-	result := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
+	result := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Context: validation.ContextFamilyAll, Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 	if !result.DigestComplete {
 		t.Fatal("fixture must be complete", result.Err)
 	}

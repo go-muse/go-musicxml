@@ -151,7 +151,7 @@ func TestDTDAuditPublicBudgetAndCancellationCleanup(t *testing.T) {
 
 func TestDTDAuditPublicPartialProvenanceIsNotComplete(t *testing.T) {
 	source := `<!DOCTYPE opus [<!ENTITY % p "<!ATTLIST opus version CDATA '4.0'>">%p;]><opus/>`
-	report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 	if err != nil || report.Satisfied() || report.AssessmentComplete {
 		t.Fatalf("err=%v satisfied=%v complete=%v", err, report.Satisfied(), report.AssessmentComplete)
 	}

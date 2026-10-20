@@ -28,7 +28,7 @@ func TestSourceDeclarationCompositionDictionaryEffectiveValues(t *testing.T) {
 					attribute = ` smufl="&glyph;"`
 				}
 				input := `<!DOCTYPE score-partwise [` + declaration + `]>` + contextFixtureXML(`<note><rest/><duration>1</duration><accidental`+attribute+`>sharp</accidental></note>`, false)
-				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceInternalDTDDictionaries.ID()}}
+				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTDDictionaries.ID()}}
 				calls := 0
 				if tc.available {
 					options.Dictionaries.Selections = []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}
@@ -65,7 +65,7 @@ func TestSourceDeclarationCompositionDictionaryEffectiveValues(t *testing.T) {
 
 func TestSourceDeclarationCompositionDictionaryPreconditions(t *testing.T) {
 	calls := 0
-	options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceInternalDTDDictionaries.ID()}, Dictionaries: DictionaryOptions{
+	options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTDDictionaries.ID()}, Dictionaries: DictionaryOptions{
 		Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)},
 		Source: dictionaryImportSourceFunc(func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error) {
 			calls++
@@ -86,7 +86,7 @@ func TestSourceDeclarationCompositionDictionaryPreconditions(t *testing.T) {
 
 func TestSourceDeclarationCompositionStrictDecode(t *testing.T) {
 	input := `<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`
-	result, err := decodeAssessedWithDictionaries(context.Background(), strings.NewReader(input), decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceLine.ID()}}})
+	result, err := decodeAssessedWithDictionaries(context.Background(), strings.NewReader(input), decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLine.ID()}}})
 	if err != nil || result.Document == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() {
 		t.Fatalf("result=%+v error=%v", result, err)
 	}

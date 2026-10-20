@@ -25,7 +25,7 @@ func reviewBudgetScore(measures int) string {
 }
 func TestReviewDefaultBudgetOriginGraph(t *testing.T) {
 	input := reviewBudgetScore(500)
-	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}.internal()})
+	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries}}.internal()})
 	if err != nil {
 		t.Fatalf("%d source bytes: %v", len(input), err)
 	}
@@ -58,7 +58,7 @@ func TestReviewDefaultBudgetOfficialSourceComposition(t *testing.T) {
 	}
 	for _, profile := range []validation.ProfileID{ProfileSourceInternalDTDDictionaries.ID(), ProfileSourceSemantics.ID()} {
 		t.Run(string(profile), func(t *testing.T) {
-			r, err := InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Profile: SourceProfile(profile)})
+			r, err := InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile)})
 			if profile == ProfileSourceSemantics.ID() && err != nil {
 				// Historically this input reached the 20M work limit before layout
 				// publication; reduced repeated work then moved the refusal to the
@@ -92,7 +92,7 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Profile: ProfileSourceSemantics})
+	_, err = InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceSemantics})
 	if err != nil {
 		// The default buffer or work limit refuses, whichever comes first.
 		var limit *validation.ResourceError
@@ -103,7 +103,7 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 	}
 	// With configured capacity the original bytes complete: the external
 	// subset comes from the bundled official MusicXML DTD.
-	r, err := InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Profile: ProfileSourceSemantics, Budgets: officialDTDCapacity})
+	r, err := InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceSemantics, Budgets: officialDTDCapacity})
 	if err != nil || !r.InputComplete || !r.AssessmentComplete || !r.Satisfied() {
 		t.Fatalf("original external-DOCTYPE sample with configured capacity: complete=%v satisfied=%v err=%v", r.AssessmentComplete, r.Satisfied(), err)
 	}
@@ -132,7 +132,7 @@ func reviewBudgetFragmentScore() string {
 
 func reviewBudgetFragmentOptions(buffer int64) linkedDictionaryAssessmentOptions {
 	return linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{
-		Graph:        GraphOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: buffer}},
+		Graph:        GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: buffer}},
 		Identity:     ResourceIdentity{RetrievalURI: "https://budget.test/score.musicxml"},
 		Dependencies: []ResourceDependency{ResourceDocuments},
 	}.internal()}
@@ -205,7 +205,7 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 			if len(source) != tc.bytes {
 				t.Fatalf("fixture bytes=%d, want %d", len(source), tc.bytes)
 			}
-			bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}.internal()})
+			bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries}}.internal()})
 			if tc.refuses {
 				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, tc.used, tc.requested)
 			} else {
@@ -259,7 +259,7 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 					t.Fatalf("fixture bytes=%d, want %d", len(source), tc.bytes)
 				}
 				limit := tc.used + tc.requested - short
-				options := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}.internal()}
+				options := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}.internal()}
 				bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
 				if short == 0 {
 					reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)

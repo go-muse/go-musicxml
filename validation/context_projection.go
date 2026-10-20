@@ -138,9 +138,17 @@ func (s *Session) validateContextResult(ctx context.Context, in ContextResult) (
 // validateContextResult in the same call, with no intervening payload mutation.
 // Keep this private gate separate so SourceOrigin can check ownership before
 // appending without validating (and charging for) the payload a second time.
-func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextResult) (err error) {
+func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextResult) error {
+	_, err := s.keepValidatedContextResult(ctx, in)
+	return err
+}
+
+// keepValidatedContextResult publishes as publishValidatedContextResult does
+// and returns the session's owned copy: the record in Report.Context, a record
+// kept only for a resource snapshot, or nil when the session keeps no copy.
+func (s *Session) keepValidatedContextResult(ctx context.Context, in ContextResult) (kept *ContextResult, err error) {
 	if err = s.account.Charge(BudgetContextFacts, 1); err != nil {
-		return err
+		return nil, err
 	}
 	before := s.retained
 	defer func() {
@@ -153,15 +161,16 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 		}
 	}()
 	if err = s.account.Check(BudgetScalarBytes, atomicLogicalBytes(in.Value.Value)); err != nil {
-		return err
+		return nil, err
 	}
 	work := int64(16+len(in.Provider.ID)+len(in.Subject.DocumentID)+len(in.Property)) + atomicLogicalBytes(in.Value.Value) + evidenceLogicalBytes(in.Value)
 	if err = s.step(ctx, work); err != nil {
-		return err
+		return nil, err
 	}
-	if s.omitContext {
-		// The result is counted and checked, but the report keeps no copy.
-		return nil
+	selected := s.contextFamilies&contextFamilyOf(in.Property) != 0
+	if !selected && !(s.resourceSnapshot && resourceSelectedContext(in.Property)) {
+		// The result is counted and checked, but the session keeps no copy.
+		return nil, nil
 	}
 	// The record itself lives in the backing array. Its cloned strings, the
 	// value's strings, cause and numbers, and the origins' backing array,
@@ -172,7 +181,7 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	// strings, checking the context at every string and every 64 items.
 	value, err := measureRetainedMetered(ctx, s, reflect.ValueOf(in.Value), true, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, origin := range in.Origins {
 		fixed := int64(96)
@@ -180,16 +189,16 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 			fixed += 64
 		}
 		if err = s.step(ctx, fixed); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	origins, err := measureRetainedMetered(ctx, s, reflect.ValueOf(in.Origins), true, true)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cost := ownedStringBytes(string(in.Provider.ID)) + ownedStringBytes(in.Subject.DocumentID) + ownedStringBytes(string(in.Property)) + value.bytes + origins.bytes
 	if err = s.retain(cost); err != nil {
-		return err
+		return nil, err
 	}
 	out := in
 	out.Provider = s.ownKey(in.Provider)
@@ -204,41 +213,46 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 		}
 	}
 	if out.Span, err = cloneSpanContext(ctx, s, in.Span); err != nil {
-		return err
+		return nil, err
 	}
 	if out.Repeat, err = cloneRepeatContext(ctx, s, in.Repeat); err != nil {
-		return err
+		return nil, err
 	}
 	if out.Navigation, err = cloneNavigationContext(ctx, s, in.Navigation); err != nil {
-		return err
+		return nil, err
 	}
 	if out.Layout, err = cloneLayoutContext(ctx, s, in.Layout); err != nil {
-		return err
+		return nil, err
 	}
 	if out.Timing, err = cloneTimingContext(ctx, s, in.Timing); err != nil {
-		return err
+		return nil, err
 	}
 	if out.SoundMapping, err = cloneSoundMappingContext(ctx, s, in.SoundMapping); err != nil {
-		return err
+		return nil, err
 	}
 	if out.Resource, err = cloneResourceContext(ctx, s, in.Resource); err != nil {
-		return err
+		return nil, err
 	}
 	if out.Container, err = cloneContainerContext(ctx, s, in.Container); err != nil {
-		return err
+		return nil, err
 	}
 	if out.SourceOrigin, err = cloneSourceOriginContext(ctx, s, in.SourceOrigin); err != nil {
-		return err
+		return nil, err
 	}
 	if out.Dictionary, err = cloneDictionaryContext(ctx, s, in.Dictionary); err != nil {
-		return err
+		return nil, err
 	}
 	if err = s.step(ctx, 1); err != nil {
-		return err
+		return nil, err
+	}
+	if !selected {
+		// Kept for the snapshot only: the session releases it at cleanup,
+		// so it is no part of the projection subtotal.
+		return s.keepHiddenContext(out)
 	}
 	if len(s.contextResults) == cap(s.contextResults) {
 		if err = s.growContextResults(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	s.contextResults = append(s.contextResults, out)
@@ -246,7 +260,7 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	// provider scratch. A retained-report finalizer can transfer the admitted
 	// subtotal without copying or temporarily releasing the live projection.
 	s.contextReportRetained += s.retained - before
-	return nil
+	return &s.contextResults[len(s.contextResults)-1], nil
 }
 
 // growContextResults doubles the Report.Context backing array. The charge for

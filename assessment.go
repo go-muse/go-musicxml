@@ -19,7 +19,7 @@ type assessmentOptions struct {
 	Budgets      validation.Budgets
 	DTD          *DTDOptions
 	Dictionaries *DictionaryOptions
-	OmitContext  bool
+	Context      validation.ContextFamilies
 }
 
 // DecodeAssessmentOptions configures strict loading (scenario 2). Nil
@@ -308,7 +308,7 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	if err != nil {
 		return nil, err
 	}
-	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine, DTD: assessment.DTD, OmitContext: assessment.OmitContext}, ByteOwner: sourceBytesPrimary}
+	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine, DTD: assessment.DTD, Context: assessment.Context}, ByteOwner: sourceBytesPrimary}
 	return newSourceAssessmentRunWithConfig(ctx, reader, decode, config, converting)
 }
 

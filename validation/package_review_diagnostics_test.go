@@ -80,7 +80,7 @@ func TestPackageReviewChildDiagnosticsCannotHidePackageBlocker(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: account})
+	s, err := catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}

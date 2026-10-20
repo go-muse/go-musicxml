@@ -20,9 +20,9 @@ func TestContextOpusLocalPaginationAcrossTargets(t *testing.T) {
 		for _, model := range []bool{false, true} {
 			var r validation.Report
 			if model {
-				r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+				r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 			} else {
-				r, err = InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Profile: ProfileSourceContext})
+				r, err = InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 			}
 			if err != nil {
 				t.Fatal(err)
@@ -84,9 +84,9 @@ func TestContextOpusAssemblyContract(t *testing.T) {
 	for _, model := range []bool{false, true} {
 		var r validation.Report
 		if model {
-			r, err = AssessModel(context.Background(), NewOpusDocument(), ModelOptions{Profile: ProfileModelContext})
+			r, err = AssessModel(context.Background(), NewOpusDocument(), ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 		} else {
-			r, err = InspectXML(context.Background(), strings.NewReader(`<opus/>`), SourceOptions{Profile: ProfileSourceContext})
+			r, err = InspectXML(context.Background(), strings.NewReader(`<opus/>`), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 		}
 		if err != nil || !r.Satisfied() || len(r.Context) != 1 || r.Context[0].Property != "layout.opus-version" {
 			t.Fatalf("empty opus fabricated context: %v %+v", err, r)
@@ -97,7 +97,7 @@ func TestContextOpusAssemblyContract(t *testing.T) {
 func TestContextOpusProjectionOwnershipAndLimits(t *testing.T) {
 	xml := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="a"/><score xlink:href="b" new-page="no"/></opus>`
 	run := func(b validation.Budgets) (validation.Report, error) {
-		return InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Profile: ProfileSourceContext, Budgets: b})
+		return InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext, Budgets: b})
 	}
 	first, err := run(validation.Budgets{})
 	if err != nil {
@@ -126,7 +126,7 @@ func TestContextOpusProjectionOwnershipAndLimits(t *testing.T) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	if _, err = InspectXML(ctx, strings.NewReader(xml), SourceOptions{Profile: ProfileSourceContext}); !errors.Is(err, context.Canceled) {
+	if _, err = InspectXML(ctx, strings.NewReader(xml), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext}); !errors.Is(err, context.Canceled) {
 		t.Fatalf("cancellation lost: %v", err)
 	}
 }
@@ -141,9 +141,9 @@ func TestContextOpusVersionDefaultIsLocal(t *testing.T) {
 		for _, model := range []bool{false, true} {
 			var r validation.Report
 			if model {
-				r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+				r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 			} else {
-				r, err = InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Profile: ProfileSourceContext})
+				r, err = InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 			}
 			if err != nil {
 				t.Fatal(err)

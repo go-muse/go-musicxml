@@ -24,7 +24,8 @@ func rationalSession(t *testing.T, budgets Budgets) *Session {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &Session{account: a}
+	// White-box tests read the records they publish.
+	return &Session{account: a, contextFamilies: ContextFamilyAll}
 }
 func rationalUsage(t *testing.T, s *Session, kind BudgetKind) int64 {
 	t.Helper()

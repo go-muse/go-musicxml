@@ -16,11 +16,21 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `SourceOptions` (`InspectXML`, `DecodeAssessmentOptions.Assessment`),
   `ModelOptions` (`AssessModel`, without the unused `DTD`), and, as the `Graph`
   field of `LinkedAssessmentOptions` and `MXLAssessmentOptions`,
-  `GraphOptions` and `MXLGraphOptions` (without `OmitContext`). Passing a
+  `GraphOptions` and `MXLGraphOptions`. Passing a
   profile of another kind, such as `SourceOptions{Profile: ProfileModelXSD}`,
   no longer compiles. Migration: replace `AssessmentOptions` by the options
   type of the entry point, and compare reports with `ProfileX.ID()`, such as
   `report.Profile.ID == ProfileSourceLine.ID()`.
+- **Context projection by selection.** `Report.Context` is empty unless the
+  caller selects context families with the new `Context` field of
+  `SourceOptions`, `ModelOptions`, `GraphOptions`, `MXLGraphOptions` and
+  `validation.RunOptions` (`validation.ContextFamilies`, such as
+  `ContextFamilyTiming | ContextFamilySpans`). Every decision, count and
+  finding is the same whatever the selection, and a selection keeps exactly
+  the records of the complete projection in its families, in order. The
+  default saves the storage of the projection, more than half of what
+  assessment held. Migration: set `Context: validation.ContextFamilyAll` to
+  keep the previous report.
 
 ### Changed
 
@@ -97,10 +107,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `AssessmentBundle.Resources`, `Adoptions` and `AdoptionContexts` and
   `ResourceSnapshot.Contexts` and `IDs` return `iter.Seq`/`iter.Seq2`
   sequences over what the indexed accessors return.
-- `SourceOptions.OmitContext`, `ModelOptions.OmitContext` and `validation.RunOptions.OmitContext`
-  leave `Report.Context` empty with every decision, count and finding
-  unchanged, which roughly halves the buffer strict loading needs. A session
-  that omits the projection refuses `FinishWithResourceSnapshot`.
+- `validation.ContextFamilies` names the context families
+  (`ContextFamilyTiming` … `ContextFamilyDictionaries`, `ContextFamilyAll`),
+  and `ContextResult.Family` returns the family of a record.
 
 - `ValidationLine` (`LineDecoder`, `LineSource`, `LineModel`), `RuleLine` and
   `AllowedLineOverlap` name the validation line of every rule revision of a

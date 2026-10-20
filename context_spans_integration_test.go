@@ -164,7 +164,7 @@ func spanBothWithEngine(t *testing.T, engine *validation.Engine, profiles []vali
 			if profile.Target == validation.TargetModel {
 				documentID = modelDocumentID
 			}
-			session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: documentID, Profile: profile.ID, Account: account})
+			session, err := engine.Begin(ctx, validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: documentID, Profile: profile.ID, Account: account})
 			if err != nil {
 				t.Fatal(err)
 			}

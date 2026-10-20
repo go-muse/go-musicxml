@@ -131,7 +131,7 @@ func TestContextProjectionAccountingCoversItsHeap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: true, Assessment: &SourceOptions{Budgets: validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}}})
+		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: true, Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Budgets: validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}}})
 		if err != nil || result.Document == nil {
 			continue
 		}
@@ -175,6 +175,7 @@ func projectionLeases(t *testing.T, data []byte, document Document) (source, mod
 		t.Fatal(err)
 	}
 	normalized.Assessment.Budgets = validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}
+	normalized.Assessment.Context = validation.ContextFamilyAll
 	sourceConfig, modelConfig, err := assessedLoadingLines(context.Background(), normalized)
 	if err != nil {
 		t.Fatal(err)

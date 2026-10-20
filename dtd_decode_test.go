@@ -189,7 +189,7 @@ func TestAssessedLoadingCallerDTDSource(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, "H é", *score.Work.WorkTitle)
 
-	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceSemantics, DTD: &DTDOptions{Source: source}})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceSemantics, DTD: &DTDOptions{Source: source}})
 	require.NoError(t, err)
 	assert.True(t, report.Satisfied())
 
@@ -207,7 +207,7 @@ func TestExternalDTDDeclarationOrigins(t *testing.T) {
 	t.Parallel()
 
 	input := dtdTestScore(partwiseDOCTYPE, "Title", `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>eighth</type><beam>begin</beam></note>`)
-	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 	require.NoError(t, err)
 	require.True(t, report.Satisfied())
 
@@ -301,7 +301,7 @@ func TestMXLAssessmentDTDOptions(t *testing.T) {
 
 	// Graph.DTD configures every assessed child; MXL.DTD is the fallback.
 	for name, o := range map[string]MXLAssessmentOptions{
-		"Graph.DTD": {Graph: MXLGraphOptions{DTD: house}},
+		"Graph.DTD": {Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, DTD: house}},
 		"MXL.DTD":   {MXL: MXLOptions{DTD: house}},
 	} {
 		bundle, err := inspect(o)
@@ -309,14 +309,14 @@ func TestMXLAssessmentDTDOptions(t *testing.T) {
 		assert.True(t, bundle.Satisfied(), name)
 	}
 
-	_, err = inspect(MXLAssessmentOptions{Graph: MXLGraphOptions{DTD: failing}, MXL: MXLOptions{DTD: house}})
+	_, err = inspect(MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, DTD: failing}, MXL: MXLOptions{DTD: house}})
 	assert.ErrorIs(t, err, ErrDTDUnavailable, "Graph.DTD takes precedence over MXL.DTD")
 	assert.ErrorIs(t, err, os.ErrPermission)
 	assert.NotErrorIs(t, err, validation.ErrInvalidConfiguration, "a DTD source failure is not a resource transfer contract failure")
 
 	// Profiles that do not read DTD declarations leave the external subset
 	// unread whatever the options say.
-	_, err = InspectMXL(context.Background(), bytes.NewReader(archive), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, DTD: house}})
+	_, err = InspectMXL(context.Background(), bytes.NewReader(archive), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource, DTD: house}})
 	assert.ErrorIs(t, err, ErrIncompleteAssessment)
 }
 
@@ -362,7 +362,7 @@ func TestExternalDTDHonoursInternalParameterEntities(t *testing.T) {
 	score, ok := AsScorePartwise(result.Document)
 	require.True(t, ok)
 	assert.Nil(t, score.Version, "the overridden sections declare no partwise default")
-	report, err := InspectXML(context.Background(), strings.NewReader(dtdTestScore(doctype, "Title", "")), SourceOptions{Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(dtdTestScore(doctype, "Title", "")), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 	require.NoError(t, err)
 	for _, row := range report.Context {
 		origin := row.SourceOrigin
@@ -375,7 +375,7 @@ func TestExternalDTDHonoursInternalParameterEntities(t *testing.T) {
 	// or without internal parameter entities.
 	for _, d := range []string{partwiseDOCTYPE, doctype} {
 		_, err = InspectXML(context.Background(), strings.NewReader(dtdTestScore(d, "Title", "")),
-			SourceOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxBufferedBytes: 1 << 20}})
+			SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxBufferedBytes: 1 << 20}})
 		var resource *validation.ResourceError
 		require.ErrorAs(t, err, &resource, d)
 		assert.Equal(t, validation.BudgetBufferedBytes, resource.Kind, d)
@@ -478,7 +478,7 @@ func TestAssessmentOptionsDTDIsHonoured(t *testing.T) {
 	read := func() io.Reader { return strings.NewReader(input) }
 	dictionaries := DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource()}
 
-	result, err := DecodeAssessed(context.Background(), read(), DecodeAssessmentOptions{Assessment: &SourceOptions{DTD: source}})
+	result, err := DecodeAssessed(context.Background(), read(), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll, DTD: source}})
 	require.NoError(t, err)
 	score, ok := AsScorePartwise(result.Document)
 	require.True(t, ok)
@@ -501,7 +501,7 @@ func TestAssessmentOptionsDTDIsHonoured(t *testing.T) {
 
 	// DecodeOptions.DTD takes precedence over SourceOptions.DTD.
 	decline := &DTDOptions{Source: DTDSourceFunc(func(context.Context, DTDRequest) ([]byte, error) { return nil, os.ErrPermission })}
-	_, err = DecodeAssessed(context.Background(), read(), DecodeAssessmentOptions{Decode: DecodeOptions{DTD: decline}, Assessment: &SourceOptions{DTD: source}})
+	_, err = DecodeAssessed(context.Background(), read(), DecodeAssessmentOptions{Decode: DecodeOptions{DTD: decline}, Assessment: &SourceOptions{Context: validation.ContextFamilyAll, DTD: source}})
 	assert.ErrorIs(t, err, os.ErrPermission)
 }
 

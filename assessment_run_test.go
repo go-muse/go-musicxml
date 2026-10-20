@@ -29,7 +29,7 @@ func adapterSourceConfig(t *testing.T, a *validation.Account, id, entry string, 
 	if err != nil {
 		t.Fatal(err)
 	}
-	return sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: a, DocumentID: id, Entry: entry, Profile: profile, Engine: engine}, ByteOwner: owner}
+	return sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Context: validation.ContextFamilyAll, Account: a, DocumentID: id, Entry: entry, Profile: profile, Engine: engine}, ByteOwner: owner}
 }
 func adapterModelConfig(t *testing.T, a *validation.Account, id, entry string, profile validation.ProfileID) assessmentRunConfig {
 	t.Helper()
@@ -37,7 +37,7 @@ func adapterModelConfig(t *testing.T, a *validation.Account, id, entry string, p
 	if err != nil {
 		t.Fatal(err)
 	}
-	return assessmentRunConfig{Account: a, DocumentID: id, Entry: entry, Profile: profile, Engine: engine}
+	return assessmentRunConfig{Context: validation.ContextFamilyAll, Account: a, DocumentID: id, Entry: entry, Profile: profile, Engine: engine}
 }
 func adapterInspect(t *testing.T, input io.Reader, config sourceAssessmentConfig) (validation.Report, error) {
 	t.Helper()
@@ -367,7 +367,7 @@ func TestAssessmentRunStartupAndTerminalCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 	a := adapterAccount(t, validation.Budgets{})
-	session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: "resource", Profile: ProfileSourceXSDPreview.ID(), Account: a})
+	session, err := engine.Begin(context.Background(), validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: "resource", Profile: ProfileSourceXSDPreview.ID(), Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}

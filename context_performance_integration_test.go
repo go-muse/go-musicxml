@@ -27,9 +27,9 @@ func performanceReports(t *testing.T, body string, check func(*testing.T, valida
 				var r validation.Report
 				var err error
 				if model {
-					r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+					r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 				} else {
-					r, err = InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Profile: ProfileSourceContext})
+					r, err = InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -214,7 +214,7 @@ func TestPerformanceBendConditionalNegativePredicate(t *testing.T) {
 }
 func TestPerformanceExactSourceVersusCurrentModel(t *testing.T) {
 	src := contextFixtureXML(`<direction><direction-type><words>Dynamics</words></direction-type><sound dynamics="100.00000000000000001"/></direction>`, false)
-	source, err := InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Profile: ProfileSourceContext})
+	source, err := InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -222,7 +222,7 @@ func TestPerformanceExactSourceVersusCurrentModel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	model, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+	model, err := AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -415,9 +415,9 @@ func TestPerformanceTwoPartIsolationAndSparseStaff(t *testing.T) {
 		for _, model := range []bool{false, true} {
 			var r validation.Report
 			if model {
-				r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+				r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 			} else {
-				r, err = InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Profile: ProfileSourceContext})
+				r, err = InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 			}
 			if err != nil {
 				t.Fatal(err)
@@ -453,9 +453,9 @@ func TestPerformanceSameSoundSpatialPlayAndPizzicato(t *testing.T) {
 		for _, model := range []bool{false, true} {
 			var r validation.Report
 			if model {
-				r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+				r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 			} else {
-				r, err = InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Profile: ProfileSourceContext})
+				r, err = InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 			}
 			if err != nil {
 				t.Fatal(err)
@@ -508,7 +508,7 @@ func TestPerformanceInvalidLocalContextMatrix(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			src := contextFixtureXML(tc.body, false)
-			r, err := InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Profile: ProfileSourceContext})
+			r, err := InspectXML(context.Background(), strings.NewReader(src), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -521,7 +521,7 @@ func TestPerformanceInvalidLocalContextMatrix(t *testing.T) {
 				t.Logf("Source-only invalid lexical case: decoder cannot construct this current-model numeric domain: %v", e)
 				return
 			}
-			r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+			r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 			if err != nil {
 				t.Fatal(err)
 			}

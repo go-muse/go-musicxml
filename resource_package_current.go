@@ -172,7 +172,7 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 	}
 	doc := g.next("model")
 	pin := g.entryPin(p, primaryPath, "", validation.ResourceCurrentModel)
-	intrinsic := assessResourceModel(g.ctx, value.Document, assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: doc, Entry: primaryPath, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: g.profiles.model, Engine: engine})
+	intrinsic := assessResourceModel(g.ctx, value.Document, assessmentRunConfig{Account: g.options.account, Context: g.options.context, ResourceSnapshot: true, Dictionaries: g.dictionaries, DocumentID: doc, Entry: primaryPath, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: g.profiles.model, Engine: engine})
 	if intrinsic.Snapshot == nil {
 		return g.retainUntransferredIntrinsic(intrinsic, pin, nil)
 	}

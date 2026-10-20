@@ -21,7 +21,7 @@ func reviewUnadoptedResource(t *testing.T) (*PackageSession, ResourceAssessmentI
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: child.account})
+	s, err := catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: child.account})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestPackageReviewUnknownAssemblyIsConsistentlyRefused(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: child.account})
+			s, err := catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: child.account})
 			if err != nil {
 				t.Fatal(err)
 			}

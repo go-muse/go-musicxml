@@ -18,7 +18,7 @@ func retainedBundleFixture(t *testing.T, a *Account) *PackageSession {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: a})
+	s, err := catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}

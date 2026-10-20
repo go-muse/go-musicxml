@@ -245,18 +245,19 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 	if err = s.retain(cost); err != nil {
 		return err
 	}
-	if err = s.publishValidatedContextResult(ctx, publication); err != nil {
+	kept, err := s.keepValidatedContextResult(ctx, publication)
+	if err != nil {
 		return err
 	}
 	var owned *SourceOriginContextResult
-	if s.omitContext {
-		// Without a projection the index owns its own copy.
+	if kept == nil {
+		// Without a kept record the index owns its own copy.
 		if owned, err = cloneSourceOriginContext(ctx, s, &in); err != nil {
 			return err
 		}
 	} else {
-		// Borrow only from the newly owned projection, never from the adapter.
-		owned = s.contextResults[len(s.contextResults)-1].SourceOrigin
+		// Borrow only from the newly owned record, never from the adapter.
+		owned = kept.SourceOrigin
 	}
 	if s.sourceOriginSeen == nil {
 		s.sourceOriginSeen = make(map[sourceOriginSubject]*SourceOriginContextResult)

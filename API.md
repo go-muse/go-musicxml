@@ -242,8 +242,7 @@ the rest when it runs: an MXL source profile for `AssessMXLPackage`, a
 dictionary-free profile with `Dictionaries`, a dictionary or semantic graph or
 MXL profile without `Dictionaries`, a profile other than the line-2 profile for
 the loaders. `ModelOptions` has no `DTD`, which model assessment
-never read, and the graph options have no `OmitContext`, since a graph's
-resource snapshots read the projection. Every profile type has
+never read. Every profile type has
 `ID() validation.ProfileID`, the identity a report carries:
 `report.Profile.ID == musicxml.ProfileSourceLine.ID()`.
 
@@ -775,7 +774,7 @@ func AssessModel(ctx context.Context, document Document, options ModelOptions) (
 
 The name is deliberately `AssessModel`: `Assess` is already an exported generated
 MusicXML model type and remains unchanged. `ModelOptions` carries its
-`Profile`, `Budgets`, `Dictionaries` and `OmitContext` fields. `AssessModel` accepts `*ScorePartwise`,
+`Profile`, `Budgets`, `Dictionaries` and `Context` fields. `AssessModel` accepts `*ScorePartwise`,
 `*ScoreTimewise` and `*OpusDocument`; it rejects nil/typed-nil documents and
 unsupported concrete implementations. A nonnil context is required; an empty
 profile selects `ProfileModelSemantics` (see [Scenarios](#scenarios)). Unknown
@@ -1107,6 +1106,34 @@ obligation.
 sealed families: local defaults/applicability, type-specific spans, graphical
 repeats, bounded navigation, layout and encoded performance/timing. Earlier
 profile IDs, selected rules, digests and ordinary validation remain unchanged.
+
+### Context projection
+
+`validation.Report.Context` is empty unless the caller selects context
+families with the `Context` field of `SourceOptions`, `ModelOptions`,
+`GraphOptions`, `MXLGraphOptions` or `validation.RunOptions`:
+
+| Family | Properties |
+| --- | --- |
+| `ContextFamilyTiming` | `timing` |
+| `ContextFamilyLayout` | `print-*`, `layout.*`, `local.*` and the other properties with a `Layout` payload |
+| `ContextFamilySpans` | `span` and `span.*` |
+| `ContextFamilyRepeats` | `graphical-repeat` |
+| `ContextFamilyNavigation` | `navigation`, `navigation-traversal` |
+| `ContextFamilyPerformance` | `performance-*` |
+| `ContextFamilySounds` | `sounds.mapping` |
+| `ContextFamilyResources` | `resource.*` |
+| `ContextFamilyContainer` | `container.metadata` |
+| `ContextFamilySourceOrigins` | `source-origin` |
+| `ContextFamilyDictionaries` | `dictionary.*` |
+
+`ContextFamilyAll` keeps the complete projection, and
+`ContextResult.Family` returns a record's family. Providers compute and check
+every context whatever the selection, so every decision, count and finding is
+the same; a selection keeps exactly the records of the complete projection in
+its families, in the same order. An unselected record costs no storage. A
+graph's resource snapshots keep the records their package rules read whatever
+the selection.
 
 `validation.Report.Context` exposes independently owned `ContextResult` values.
 A closed `ContextProperty` identifies a scalar evidence value or a typed
@@ -1489,9 +1516,10 @@ selection is imported on every call, at the caller's expense (about 3.3 million
 rule steps for the required bundled pair at an earlier head). See the [dictionary
 import cost][loading-cost] for details and the measured budgets.
 
-`SourceOptions.OmitContext` leaves `Report.Context` empty in both reports
-and keeps every decision, count and finding, which roughly halves the buffer
-strict loading needs.
+`Report.Context` is empty unless `SourceOptions.Context` selects context
+families (see [Context projection](#context-projection)); the default keeps
+every decision, count and finding and roughly halves the buffer strict
+loading needs.
 
 The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
 64 MiB file or one million nodes can be assessed. The historical `d336f089`

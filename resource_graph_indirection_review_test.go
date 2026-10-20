@@ -43,10 +43,10 @@ func TestResourceGraphArchivePrimaryIndirectionPublic(t *testing.T) {
 						var doc Document
 						doc, err = Decode(strings.NewReader(source))
 						if err == nil {
-							bundle, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}}, Resources: []MXLResource{{Path: "inner.mxl", Data: archive}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
+							bundle, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}}, Resources: []MXLResource{{Path: "inner.mxl", Data: archive}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel}})
 						}
 					default:
-						options := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/main.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}
+						options := LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/main.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}
 						if mode == "external-source" {
 							bundle, err = InspectXMLWithResources(context.Background(), strings.NewReader(source), options)
 						} else {
@@ -108,7 +108,7 @@ func TestResourceGraphIndirectionResourceCleanup(t *testing.T) {
 				bodies = append(bodies, body)
 				return validation.ResourceResult{RequestID: request.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "inner", Representation: validation.ResourceRawMXL, Digest: fmt.Sprintf("%x", sha256.Sum256(archive))}, RetrievalURI: "https://e.test/inner.mxl", Body: body}, nil
 			})
-			g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), ProfileResourceGraph.ID())
+			g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), ProfileResourceGraph.ID())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -118,7 +118,7 @@ func TestResourceGraphIndirectionResourceCleanup(t *testing.T) {
 			}
 			id := g.next("source")
 			source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="inner.mxl"/><opus-link xlink:href="inner.mxl"/></opus>`
-			result := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
+			result := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Context: validation.ContextFamilyAll, Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 			if result.Err != nil || result.Snapshot == nil {
 				t.Fatalf("root fixture: %v", result.Err)
 			}
@@ -174,7 +174,7 @@ func TestResourceGraphIndirectionEdgeAdmissionPreservesInnerFailure(t *testing.T
 		body = &resourceTestBody{Reader: bytes.NewReader(archive)}
 		return validation.ResourceResult{RequestID: request.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "inner", Representation: validation.ResourceRawMXL, Digest: fmt.Sprintf("%x", sha256.Sum256(archive))}, RetrievalURI: "https://e.test/inner.mxl", Body: body}, nil
 	})
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), ProfileResourceGraph.ID())
+	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func TestResourceGraphIndirectionEdgeAdmissionPreservesInnerFailure(t *testing.T
 	}
 	id := g.next("source")
 	source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="inner.mxl#missing"/><opus-link xlink:href="later.mxl"/></opus>`
-	result := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
+	result := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Context: validation.ContextFamilyAll, Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 	if result.Err != nil || result.Snapshot == nil {
 		t.Fatalf("root fixture: %v", result.Err)
 	}
