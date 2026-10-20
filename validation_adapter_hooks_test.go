@@ -4,9 +4,12 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"reflect"
 	"slices"
 	"strconv"
 	"testing"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 // Every hook that package validation registers is looked up here, and every
@@ -45,4 +48,23 @@ func hookNames(t *testing.T, path, function string) []string {
 	})
 	slices.Sort(names)
 	return names
+}
+
+// Engines built from one generated assembly get separate handles, each with
+// its own binding memos, on one cached compiled graph.
+func TestGeneratedSchemasAreCompiledOnceAndHandedOutSeparately(t *testing.T) {
+	first, err := compileValidationSchema(validation.AssemblyMusicXML, scoreValidationSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := compileValidationSchema(validation.AssemblyMusicXML, scoreValidationSchema)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first == second || first.Digest() != second.Digest() {
+		t.Fatalf("handles %p %p digests %s %s", first, second, first.Digest(), second.Digest())
+	}
+	if _, cached := compiledSchemas.Load(compiledSchemaKey{validation.AssemblyMusicXML, reflect.ValueOf(scoreValidationSchema.Types).Pointer()}); !cached {
+		t.Fatal("generated schema not cached")
+	}
 }

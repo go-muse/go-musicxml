@@ -77,13 +77,10 @@ func (s *Session) sourceEntityDeclarations(ctx context.Context, facts SourceEnti
 	if sizeErr != nil {
 		return s.fail(sizeErr)
 	}
-	before := s.retained
+	mark := s.markRetained()
 	defer func() {
 		if err != nil {
-			if delta := s.retained - before; delta > 0 {
-				_ = s.account.Release(BudgetBufferedBytes, delta)
-				s.retained = before
-			}
+			s.rollbackRetained(mark)
 			s.fail(err)
 		}
 	}()

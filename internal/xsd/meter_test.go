@@ -120,7 +120,7 @@ func TestMeterDiagnosticFailurePrecedesRetention(t *testing.T) {
 		t.Fatal(e)
 	}
 	defer r.Close()
-	s := &boundState{run: r, results: freshResults(), family: "scalar"}
+	s := &boundState{bindWork: &bindWork{results: freshResults(), family: "scalar"}, run: r}
 	m.bufferLimit = m.buffer + 1
 	var stop error
 	func() { defer recoverRun(&stop); s.detail("/n", "datatype", "invalid integer") }()

@@ -110,9 +110,9 @@ func TestIndependentContextConcurrentReportsAndProfiles(t *testing.T) {
 			}
 		}
 		if model {
-			return AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(p)})
+			return AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ModelProfile(p)})
 		}
-		return InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p)})
+		return InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(p)})
 	}
 	baselines := map[[2]bool][]byte{}
 	for _, model := range []bool{false, true} {
@@ -178,9 +178,9 @@ func TestIndependentContextOpusDoesNotFetch(t *testing.T) {
 	for _, model := range []bool{false, true} {
 		var r validation.Report
 		if model {
-			r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+			r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 		} else {
-			r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+			r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 		}
 		if err != nil || !r.Satisfied() {
 			t.Fatalf("model=%t err=%v", model, err)
@@ -210,7 +210,7 @@ func TestIndependentContextOpusDoesNotFetch(t *testing.T) {
 func TestIndependentContextHugeSparseSourceValues(t *testing.T) {
 	const huge = "18446744073709551616"
 	source := contextFixtureXML(`<attributes><divisions>10</divisions><staves>`+huge+`</staves></attributes><barline location="left"><repeat direction="forward" times="`+huge+`"/></barline><note time-only="18446744073709551616,18446744073709551617" dynamics="125"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><staff>`+huge+`</staff></note>`, false)
-	r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext, Budgets: validation.Budgets{MaxContextFacts: 1000}})
+	r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext, Budgets: validation.Budgets{MaxContextFacts: 1000}})
 	if err != nil || !r.Satisfied() {
 		t.Fatalf("symbolic huge values required expansion or host int: %v %s", err, localFindings(r))
 	}

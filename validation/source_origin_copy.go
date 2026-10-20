@@ -163,7 +163,7 @@ func cloneSourceOriginContext(ctx context.Context, s *Session, in *SourceOriginC
 	// Fill a single owned root after admission. The shared copier checks context
 	// throughout all nested sites, causes and bounded string-copy blocks.
 	out := new(SourceOriginContextResult)
-	if err = resourceCopyInto(ctx, reflect.ValueOf(out).Elem(), reflect.ValueOf(in).Elem(), "", ""); err != nil {
+	if err = resourceCopyIntoOwned(ctx, reflect.ValueOf(out).Elem(), reflect.ValueOf(in).Elem(), "", "", s); err != nil {
 		return nil, err
 	}
 	return out, nil

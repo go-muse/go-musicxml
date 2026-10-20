@@ -25,9 +25,9 @@ func TestFigureNumberUnrestrictedTextConformance(t *testing.T) {
 				t.Run(fmt.Sprintf("timewise=%t/model=%t/text=%q", timewise, model, value), func(t *testing.T) {
 					var report validation.Report
 					if model {
-						report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+						report, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 					} else {
-						report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+						report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 					}
 					if err != nil || !report.Satisfied() || !report.AssessmentComplete || report.Counts.Unsupported != 0 {
 						t.Fatalf("unrestricted style-text incurred a conformance penalty: %v; %s", err, localFindings(report))

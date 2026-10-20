@@ -159,7 +159,7 @@ func TestLayoutRound5IndependentExplicitAdmissionAndCancellation(t *testing.T) {
 				if err != nil || len(l.r.s.contextResults) != 1 {
 					t.Fatalf("exact admission failed: %v", err)
 				}
-			} else if !errors.Is(err, ErrResourceLimit) || len(l.r.s.contextResults) != 0 || l.r.s.retained != 0 || rationalUsage(t, l.r.s, BudgetBufferedBytes) != 0 {
+			} else if !errors.Is(err, ErrResourceLimit) || len(l.r.s.contextResults) != 0 || l.r.s.retained != internCharge(l.r.s) || rationalUsage(t, l.r.s, BudgetBufferedBytes) != internCharge(l.r.s) {
 				t.Fatalf("failed admission leaked: err=%v rows=%d bytes=%d", err, len(l.r.s.contextResults), l.r.s.retained)
 			}
 		})
@@ -168,7 +168,7 @@ func TestLayoutRound5IndependentExplicitAdmissionAndCancellation(t *testing.T) {
 		t.Run(fmt.Sprintf("cancel-poll=%d", at), func(t *testing.T) {
 			l, n := layoutRound5IndependentPublisher(t, Budgets{})
 			l.r.ctx = &rationalCancelContext{Context: context.Background(), at: at}
-			if err := layoutRound5IndependentPublishConflict(l, n); !errors.Is(err, context.Canceled) || len(l.r.s.contextResults) != 0 || l.r.s.retained != 0 || rationalUsage(t, l.r.s, BudgetBufferedBytes) != 0 {
+			if err := layoutRound5IndependentPublishConflict(l, n); !errors.Is(err, context.Canceled) || len(l.r.s.contextResults) != 0 || l.r.s.retained != internCharge(l.r.s) || rationalUsage(t, l.r.s, BudgetBufferedBytes) != internCharge(l.r.s) {
 				t.Fatalf("canceled publication leaked: err=%v rows=%d bytes=%d", err, len(l.r.s.contextResults), l.r.s.retained)
 			}
 		})
@@ -176,7 +176,7 @@ func TestLayoutRound5IndependentExplicitAdmissionAndCancellation(t *testing.T) {
 	for _, sticky := range []error{context.Canceled, ErrResourceLimit} {
 		l, n := layoutRound5IndependentPublisher(t, Budgets{})
 		l.r.err = sticky
-		if err := layoutRound5IndependentPublishConflict(l, n); err != sticky || len(l.r.s.contextResults) != 0 || l.r.s.retained != 0 || rationalUsage(t, l.r.s, BudgetContextFacts) != 0 || rationalUsage(t, l.r.s, BudgetRuleSteps) != 0 {
+		if err := layoutRound5IndependentPublishConflict(l, n); err != sticky || len(l.r.s.contextResults) != 0 || l.r.s.retained != internCharge(l.r.s) || rationalUsage(t, l.r.s, BudgetContextFacts) != 0 || rationalUsage(t, l.r.s, BudgetRuleSteps) != 0 {
 			t.Fatalf("sticky error changed or charged work: %v", err)
 		}
 	}

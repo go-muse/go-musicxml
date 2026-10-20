@@ -65,7 +65,7 @@ func dictionaryRepresentationDirect(t *testing.T, text string, model, legacy, se
 	if model {
 		profile = ProfileModelDictionaries.ID()
 	}
-	s, err := engine.BeginWithDictionaries(ctx, validation.RunOptions{DocumentID: "representation", Profile: profile, Account: a}, set)
+	s, err := engine.BeginWithDictionaries(ctx, validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: "representation", Profile: profile, Account: a}, set)
 	if err != nil {
 		t.Fatal(err)
 	}

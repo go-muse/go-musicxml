@@ -59,7 +59,7 @@ func assessModel(ctx context.Context, document Document, options assessmentOptio
 	if err != nil {
 		return validation.Report{}, modelWalkStatus{}, err
 	}
-	config := assessmentRunConfig{Account: account, DocumentID: modelDocumentID, Profile: options.Profile, Engine: engine, OmitContext: options.OmitContext}
+	config := assessmentRunConfig{Account: account, DocumentID: modelDocumentID, Profile: options.Profile, Engine: engine, Context: options.Context}
 	return assessModelWithConfig(ctx, document, config, walkOptions)
 }
 

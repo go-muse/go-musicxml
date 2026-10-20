@@ -61,9 +61,9 @@ func layoutRound1Reports(t *testing.T, header string, parts [][]string, widths [
 					if e != nil {
 						t.Fatal(e)
 					}
-					report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+					report, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 				} else {
-					report, err = InspectXML(context.Background(), strings.NewReader(xml.String()), SourceOptions{Profile: ProfileSourceContext})
+					report, err = InspectXML(context.Background(), strings.NewReader(xml.String()), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)

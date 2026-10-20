@@ -177,7 +177,7 @@ func TestFinalConfigurationSelectedNilDictionaryPublicReports(t *testing.T) {
 	}{{"nil", nil}, {"typed-nil", (*finalConfigurationNilSource)(nil)}} {
 		t.Run(provider.name, func(t *testing.T) {
 			dictionaries := finalConfigurationDictionaries(provider.source)
-			options := musicxml.SourceOptions{Profile: musicxml.ProfileSourceDictionaries, Dictionaries: &dictionaries}
+			options := musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileSourceDictionaries, Dictionaries: &dictionaries}
 			report, err := musicxml.InspectXML(ctx, strings.NewReader(finalConfigurationSMuFLScore), options)
 			if err != nil {
 				t.Fatal(err)
@@ -185,13 +185,13 @@ func TestFinalConfigurationSelectedNilDictionaryPublicReports(t *testing.T) {
 			finalConfigurationRequireUnavailableDictionary(t, report)
 			decodeDictionaries := dictionaries
 			decodeDictionaries.Selections = assessedDecodeDictionarySelections()
-			decodeOptions := musicxml.SourceOptions{Profile: musicxml.ProfileSourceLine, Dictionaries: &decodeDictionaries}
+			decodeOptions := musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileSourceLine, Dictionaries: &decodeDictionaries}
 			result, err := musicxml.DecodeAssessed(ctx, strings.NewReader(finalConfigurationSMuFLScore), musicxml.DecodeAssessmentOptions{Assessment: &decodeOptions})
 			if !errors.Is(err, musicxml.ErrIncompleteAssessment) || errors.Is(err, musicxml.ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.Satisfied() || !result.ModelLine.Requested {
 				t.Fatalf("strict incomplete result=%+v error=%v", result, err)
 			}
 			finalConfigurationRequireUnavailableDictionary(t, result.ModelLine)
-			report, err = musicxml.AssessModel(ctx, document, musicxml.ModelOptions{Profile: musicxml.ProfileModelDictionaries, Budgets: options.Budgets, Dictionaries: options.Dictionaries, OmitContext: options.OmitContext})
+			report, err = musicxml.AssessModel(ctx, document, musicxml.ModelOptions{Profile: musicxml.ProfileModelDictionaries, Budgets: options.Budgets, Dictionaries: options.Dictionaries, Context: options.Context})
 			if err != nil || report.Target != validation.TargetModel || report.Syntax != validation.SyntaxNotAssessed {
 				t.Fatalf("current model report=%+v error=%v", report, err)
 			}

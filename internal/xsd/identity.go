@@ -150,7 +150,9 @@ func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, 
 	}
 	// Admit the actual owner entry before publishing bounded owner evidence.
 	// A resource stop must not expose an owner that was never registered.
-	c.reserve(32)
+	// The entry keeps the owner's node object alive after its parent
+	// completes and releases the object's charge.
+	c.reserve(32 + nodeObjectBytes)
 	if bindings == nil {
 		c.reserve(c.sum(272, int64(len(path))))
 		bindings = &IdentityBindings{Owners: make(map[*Node]struct{}), FirstPath: path, firstOrigin: origin, firstOwner: owner.ID}

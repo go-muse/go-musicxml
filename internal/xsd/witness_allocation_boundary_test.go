@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
 	"testing"
 	"unsafe"
 )
@@ -87,7 +88,7 @@ func TestWitnessAllocationInheritedPassWorkBoundaries(t *testing.T) {
 			t.Fatal(err)
 		}
 		r.current = context.Background()
-		s := &boundState{run: r, actual: &TypeRef{Name: QName{Local: "DerivedA"}}, results: freshResults(), family: "content"}
+		s := &boundState{bindWork: &bindWork{results: freshResults(), family: "content"}, run: r, actual: &TypeRef{Name: QName{Local: "DerivedA"}}}
 		for i := 0; i < 9; i++ {
 			particle := inherited
 			if i%3 == 1 {
@@ -208,7 +209,7 @@ func TestWitnessAllocationBorrowedViewSurvivesDescendantBinding(t *testing.T) {
 		completions = append(completions, completion)
 	}
 	completion, err := r.Complete(context.Background(), b, completions)
-	if err != nil || !completion.Complete || !completion.TypeValid || !completion.DeclarationValid || !reflect.DeepEqual(view, want) || !reflect.DeepEqual(r.Witnesses(b), want) {
+	if err != nil || !completion.Complete || !completion.TypeValid || !completion.DeclarationValid || !reflect.DeepEqual(view, want) || r.Witnesses(b) != nil {
 		t.Fatalf("retained witness view/results changed: %+v %v", completion, err)
 	}
 }
@@ -336,7 +337,7 @@ func TestWitnessAllocationSuccessfulOutputMatchesPriorEmitter(t *testing.T) {
 				t.Fatal(err)
 			}
 			old.current = context.Background()
-			prior := &boundState{run: old, actual: s.actual, subject: s.subject, matches: s.matches, results: freshResults(), family: "content"}
+			prior := &boundState{bindWork: &bindWork{results: freshResults(), subject: s.subject, matches: s.matches, family: "content"}, run: old, actual: s.actual}
 			old.context.local = prior
 			witnessAllocationLegacyOutput(old, prior)
 			if err := witnessAllocationBuild(r, s); err != nil {
@@ -348,4 +349,86 @@ func TestWitnessAllocationSuccessfulOutputMatchesPriorEmitter(t *testing.T) {
 			_ = old.Close()
 		}
 	}
+}
+
+// Complete releases the charge of the subject's work, the node's text and
+// child slice, the witnesses and the child nodes, less the copies of
+// nondefault results; Close releases the rest. A root without its required
+// attribute keeps a copy of its failed results.
+func TestCompleteReleasesTheWorkCharge(t *testing.T) {
+	for _, required := range []bool{false, true} {
+		c, subject := witnessAllocationSchema(t, 9, required)
+		m := &releaseRecordingMeter{}
+		r, err := NewRun(c, m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// A kept scalar keeps the node text's charge: its lexemes may share
+		// the text buffer.
+		finals := func(s *boundState, text int64) int64 {
+			n := int64(0)
+			if s.final != nil {
+				n += finalBytes
+			}
+			if s.finalScalar != nil {
+				n += finalScalarSize + text
+			}
+			return n
+		}
+		complete := func(b Binding, children []Completion, charged int64) (Completion, *boundState) {
+			t.Helper()
+			if b.state.charged != charged {
+				t.Fatalf("work charged %d, want %d", b.state.charged, charged)
+			}
+			results, scalar, text := r.Results(b), r.Scalar(b), b.state.text
+			m.releases = nil
+			completion, err := r.Complete(context.Background(), b, children)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// The kept copies read back as the work's results did.
+			if !reflect.DeepEqual(r.Results(b), results) || !reflect.DeepEqual(r.Scalar(b), scalar) {
+				t.Fatalf("completed results changed: %+v %+v", r.Results(b), r.Scalar(b))
+			}
+			// Operation scratch is released separately.
+			if b.state.bindWork != nil || !slices.Contains(m.releases, charged-finals(b.state, text)) {
+				t.Fatalf("completion released %v of %d charged (finals %d)", m.releases, charged, finals(b.state, text))
+			}
+			return completion, b.state
+		}
+		u, _ := r.Root(subject.Name)
+		b, err := r.Bind(context.Background(), u, subject)
+		if err != nil {
+			t.Fatal(err)
+		}
+		pointer := int64(unsafe.Sizeof((*Node)(nil)))
+		rootWork := bindWorkBytes + 9*pointer + 9*nodeObjectBytes + 9*int64(unsafe.Sizeof(Witness{}))
+		var completions []Completion
+		for _, w := range r.Witnesses(b) {
+			child, err := r.Bind(context.Background(), w.Use, Subject{ID: w.Child, Parent: 1, Name: QName{Local: "child"}, Path: "/root/child", Text: "ok", TextKnown: true, AttributesComplete: true, ChildrenComplete: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			completion, _ := complete(child, nil, bindWorkBytes+r.context.builderAllowance(2))
+			completions = append(completions, completion)
+		}
+		_, root := complete(b, completions, rootWork)
+		if (root.final != nil) != required || len(r.nodes) != 1 {
+			t.Fatalf("required=%v: final kept %v, nodes %d", required, root.final != nil, len(r.nodes))
+		}
+		if err := r.Close(); err != nil || m.buffer != 0 {
+			t.Fatalf("close left %d: %v", m.buffer, err)
+		}
+	}
+}
+
+// releaseRecordingMeter records the releases since the caller last reset them.
+type releaseRecordingMeter struct {
+	boundaryMeter
+	releases []int64
+}
+
+func (m *releaseRecordingMeter) Release(n int64) error {
+	m.releases = append(m.releases, n)
+	return m.boundaryMeter.Release(n)
 }

@@ -28,7 +28,7 @@ func TestSourceDeclarationCompositionDictionaryEffectiveValues(t *testing.T) {
 					attribute = ` smufl="&glyph;"`
 				}
 				input := `<!DOCTYPE score-partwise [` + declaration + `]>` + contextFixtureXML(`<note><rest/><duration>1</duration><accidental`+attribute+`>sharp</accidental></note>`, false)
-				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceInternalDTDDictionaries.ID()}}
+				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTDDictionaries.ID()}}
 				calls := 0
 				if tc.available {
 					options.Dictionaries.Selections = []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}

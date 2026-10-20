@@ -558,7 +558,8 @@ func TestDecodeMXLAssessedRetainsSourceBundle(t *testing.T) {
 	}
 	t.Cleanup(func() { decodeMXLStageHook = nil })
 
-	result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(valid), DecodeMXLAssessmentOptions{})
+	// The source bundle keeps the projection the test measures.
+	result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
 	require.NoError(t, err)
 	require.True(t, result.Accepted)
 	contexts := 0

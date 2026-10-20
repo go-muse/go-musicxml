@@ -242,8 +242,7 @@ the rest when it runs: an MXL source profile for `AssessMXLPackage`, a
 dictionary-free profile with `Dictionaries`, a dictionary or semantic graph or
 MXL profile without `Dictionaries`, a profile other than the line-2 profile for
 the loaders. `ModelOptions` has no `DTD`, which model assessment
-never read, and the graph options have no `OmitContext`, since a graph's
-resource snapshots read the projection. Every profile type has
+never read. Every profile type has
 `ID() validation.ProfileID`, the identity a report carries:
 `report.Profile.ID == musicxml.ProfileSourceLine.ID()`.
 
@@ -775,7 +774,7 @@ func AssessModel(ctx context.Context, document Document, options ModelOptions) (
 
 The name is deliberately `AssessModel`: `Assess` is already an exported generated
 MusicXML model type and remains unchanged. `ModelOptions` carries its
-`Profile`, `Budgets`, `Dictionaries` and `OmitContext` fields. `AssessModel` accepts `*ScorePartwise`,
+`Profile`, `Budgets`, `Dictionaries` and `Context` fields. `AssessModel` accepts `*ScorePartwise`,
 `*ScoreTimewise` and `*OpusDocument`; it rejects nil/typed-nil documents and
 unsupported concrete implementations. A nonnil context is required; an empty
 profile selects `ProfileModelSemantics` (see [Scenarios](#scenarios)). Unknown
@@ -1108,6 +1107,36 @@ sealed families: local defaults/applicability, type-specific spans, graphical
 repeats, bounded navigation, layout and encoded performance/timing. Earlier
 profile IDs, selected rules, digests and ordinary validation remain unchanged.
 
+### Context projection
+
+`validation.Report.Context` is empty unless the caller selects context
+families with the `Context` field of `SourceOptions`, `ModelOptions`,
+`GraphOptions`, `MXLGraphOptions` or `validation.RunOptions`:
+
+| Family | Properties |
+| --- | --- |
+| `ContextFamilyTiming` | `timing` |
+| `ContextFamilyLayout` | `print-*`, `layout.*`, `local.*` and the other properties with a `Layout` payload |
+| `ContextFamilySpans` | `span` and `span.*` |
+| `ContextFamilyRepeats` | `graphical-repeat` |
+| `ContextFamilyNavigation` | `navigation`, `navigation-traversal` |
+| `ContextFamilyPerformance` | `performance-*` |
+| `ContextFamilySounds` | `sounds.mapping` |
+| `ContextFamilyResources` | `resource.*` |
+| `ContextFamilyContainer` | `container.metadata` |
+| `ContextFamilySourceOrigins` | `source-origin` |
+| `ContextFamilyDictionaries` | `dictionary.*` |
+
+`ContextFamilyAll` keeps the complete projection, and
+`ContextResult.Family` returns a record's family. Providers compute and check
+every context whatever the selection, so within budgets that admit both runs
+every decision, count and finding is the same; a selection keeps exactly the
+records of the complete projection in its families, in the same order. An
+unselected record costs no storage, so a smaller selection can complete where
+a larger one exceeds `MaxBufferedBytes`. A
+graph's resource snapshots keep the records their package rules read whatever
+the selection.
+
 `validation.Report.Context` exposes independently owned `ContextResult` values.
 A closed `ContextProperty` identifies a scalar evidence value or a typed
 `SpanContextResult`, `RepeatContextResult`, `NavigationContextResult`,
@@ -1173,10 +1202,11 @@ and context profiles with documented larger finite budgets; it does not close
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
 and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
-profile under the default budgets. Both stop at the 20,000,000-step limit;
-raising work alone still reaches the default 64 MiB buffered-byte limit.
-Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
-complete the measured source/current-model cases. Source measurements remove
+profile under the default budgets. Both stop at the 20,000,000-step limit.
+Raising only the work, to `MaxRuleSteps: 1 << 34`, completes both profiles on
+both samples within the default 64 MiB buffer when no context family is
+selected (the default); with `validation.ContextFamilyAll` the MozaChlo source
+still exceeds it, and `MaxBufferedBytes: 512 << 20` completes every case. Source measurements remove
 only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
 are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
 source assessment contract.
@@ -1489,9 +1519,10 @@ selection is imported on every call, at the caller's expense (about 3.3 million
 rule steps for the required bundled pair at an earlier head). See the [dictionary
 import cost][loading-cost] for details and the measured budgets.
 
-`SourceOptions.OmitContext` leaves `Report.Context` empty in both reports
-and keeps every decision, count and finding, which roughly halves the buffer
-strict loading needs.
+`Report.Context` is empty unless `SourceOptions.Context` selects context
+families (see [Context projection](#context-projection)); the default keeps
+every decision, count and finding and needs about a third of the buffer of the
+complete projection for strict loading.
 
 The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
 64 MiB file or one million nodes can be assessed. The historical `d336f089`

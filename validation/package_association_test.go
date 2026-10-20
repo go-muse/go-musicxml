@@ -17,7 +17,7 @@ func packageAssociationFixture(t *testing.T, indirection ...Evidence[bool]) (*Pa
 	}
 	sourceSnapshot.ids = []ResourceIDFact{id("P1", part, "score-part", part), id("I1", instrument, "score-instrument", part)}
 	sourceSnapshot.contexts = []ContextResult{{Subject: NodeRef{"source", 3}, Resource: &ResourceContextResult{Part: Evidence[NodeRef]{State: EvidenceKnown, Value: part}, Link: &ResourceLinkContext{Kind: ResourcePartLink, Href: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "part.xml"}}}}}}, {Subject: NodeRef{"source", 4}, Resource: &ResourceContextResult{Owner: NodeRef{"source", 3}, Part: Evidence[NodeRef]{State: EvidenceKnown, Value: part}, Instrument: &ResourceInstrumentContext{Target: Evidence[NodeRef]{State: EvidenceKnown, Value: instrument}}}}}
-	child, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{DocumentID: "target", Profile: "source-schema-test", Account: s.account})
+	child, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "target", Profile: "source-schema-test", Account: s.account})
 	if err != nil {
 		t.Fatal(err)
 	}

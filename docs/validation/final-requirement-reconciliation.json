@@ -18341,7 +18341,7 @@
       "anchors": [
         {
           "file": "internal/xsd/identity_resolve_test.go",
-          "text": "\trun, _ := newIdentityResolverRun(t)\n\towner := &Node{ID: 42}\n\t// The ID-valued element has occurrence 99, but its actual-ID owner is its\n\t// containing element. Display paths and scalar origins are not owner IDs.\n\trun.context.local = &boundState{subject: Subject{ID: 99}}\n\tregisterResolverOwner(run, \" \\ttarget\\n \", owner)\n\tregisterResolverOwner(run, \"target\", owner)\n\trun.context.local = nil\n\tif _, err := run.Identity(context.Background(), true); err != nil {\n\t\tt.Fatal(err)\n\t}"
+          "text": "run, _ := newIdentityResolverRun(t)\n\towner := &Node{ID: 42}\n\t// The ID-valued element has occurrence 99, but its actual-ID owner is its\n\t// containing element. Display paths and scalar origins are not owner IDs.\n\trun.context.local = &boundState{bindWork: &bindWork{subject: Subject{ID: 99}}, id: 99}\n\tregisterResolverOwner(run, \" \\ttarget\\n \", owner)\n\tregisterResolverOwner(run, \"target\", owner)\n\trun.context.local = nil\n\tif _, err := run.Identity(context.Background(), true); err != nil {\n\t\tt.Fatal(err)\n\t}"
         },
         {
           "file": "internal/xsd/identity_resolve_test.go",

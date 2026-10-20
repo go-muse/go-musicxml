@@ -250,7 +250,7 @@ func mandatoryIndependentLeaseCheckpoint(t *testing.T, source string, sourceNode
 
 func mandatoryLeaseFixture(t *testing.T, observed *mandatoryLeaseCheckpointContext, source string) (*sourceAssessmentRun, assessmentRunConfig) {
 	t.Helper()
-	options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileModelSemantics.ID()}, Dictionaries: DictionaryOptions{
+	options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelSemantics.ID()}, Dictionaries: DictionaryOptions{
 		Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
 	}}
 	config, modelConfig, err := assessedLoadingLines(observed, options)
@@ -364,8 +364,8 @@ func mandatoryAssessmentOptions() []struct {
 		value *SourceOptions
 	}{
 		{name: "nil-assessment"},
-		{name: "empty-assessment", value: &SourceOptions{}},
-		{name: "explicit-source-line", value: &SourceOptions{Profile: ProfileSourceLine}},
+		{name: "empty-assessment", value: &SourceOptions{Context: validation.ContextFamilyAll}},
+		{name: "explicit-source-line", value: &SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLine}},
 	}
 }
 

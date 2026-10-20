@@ -82,7 +82,7 @@ func TestDTDPackageCompositionPreflightBeforeIO(t *testing.T) {
 func dtdCompositionRunEntry(ctx context.Context, entry string, r *dictionaryGraphReader, doc Document, resources LinkedAssessmentOptions, d DictionaryOptions, mxl MXLOptions) error {
 	var err error
 	linked := linkedDictionaryAssessmentOptions{Resources: resources.internal(), Dictionaries: d}
-	packaged := mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(resources.Graph.Profile), Budgets: resources.Graph.Budgets, DTD: resources.Graph.DTD, Dictionaries: resources.Graph.Dictionaries}, Identity: resources.Identity, Resolver: resources.Resolver, Dependencies: resources.Dependencies, MXL: mxl}.internal(), Dictionaries: d}
+	packaged := mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(resources.Graph.Profile), Budgets: resources.Graph.Budgets, DTD: resources.Graph.DTD, Dictionaries: resources.Graph.Dictionaries}, Identity: resources.Identity, Resolver: resources.Resolver, Dependencies: resources.Dependencies, MXL: mxl}.internal(), Dictionaries: d}
 	switch entry {
 	case "source":
 		_, err = inspectXMLWithResourcesAndDictionaries(ctx, r, linked)
@@ -149,7 +149,7 @@ func TestDTDPackageCompositionEffectiveContainerAndRetainedChildren(t *testing.T
 	root := `<!DOCTYPE opus [<!ATTLIST opus-link xlink:href CDATA "child.opus">]><opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link/><opus-link/></opus>`
 	child := `<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`
 	wire := assessmentZIPBytes([]assessmentZIPFixture{{name: mxlMIMETypePath, body: mxlMIMEType}, {name: mxlContainerPath, body: container}, {name: "main.opus", body: root}, {name: "child.opus", body: child}}, nil, "")
-	b, err := inspectMXLWithDictionaries(context.Background(), bytes.NewReader(wire), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(dtdMXLSourceProfile)}}.internal()})
+	b, err := inspectMXLWithDictionaries(context.Background(), bytes.NewReader(wire), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(dtdMXLSourceProfile)}}.internal()})
 	if err != nil || b.PackageReport().Conformance == validation.ConformanceViolated || b.ResourceCount() != 3 || b.AdoptionCount() != 4 || !b.EnumerationComplete() {
 		t.Fatalf("err=%v resources=%d adoptions=%d package=%+v", err, b.ResourceCount(), b.AdoptionCount(), b.PackageReport())
 	}
@@ -190,7 +190,7 @@ func TestDTDPackageCompositionGraphDefaultLinksAndNoFetch(t *testing.T) {
 		}
 		return fixture.Resolve(ctx, q)
 	})
-	options := LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}, Identity: ResourceIdentity{RetrievalURI: "https://dtd.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}
+	options := LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}, Identity: ResourceIdentity{RetrievalURI: "https://dtd.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}
 	g, err := startDictionaryResourceGraph(context.Background(), options.internal(), DictionaryOptions{Source: source, Selections: dictionaryGraphSelection()}, ProfileResourceGraphDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
@@ -214,7 +214,7 @@ func TestDTDPackageCompositionGraphDefaultLinksAndNoFetch(t *testing.T) {
 	}
 	for _, dependencies := range [][]ResourceDependency{nil, {ResourceDocuments}} {
 		calls := 0
-		opts := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}, Dependencies: dependencies, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {
+		opts := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}, Dependencies: dependencies, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {
 			calls++
 			panic("DTD/schema hint fetched")
 		})}.internal()}
@@ -239,14 +239,14 @@ func TestDTDPackageCompositionModelPrimaryAndRetainedSourceHonesty(t *testing.T)
 					t.Fatal(e)
 				}
 				resolver := &graphFixtureResolver{resources: map[string]string{"https://dtd.test/child.opus": child}, pins: map[string]string{"https://dtd.test/child.opus": "child"}}
-				b, err = assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal()})
+				b, err = assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal()})
 			} else {
 				doc, e := Decode(strings.NewReader(`<opus/>`))
 				if e != nil {
 					t.Fatal(e)
 				}
 				value := &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "child.opus"}}, Resources: []MXLResource{{Path: "child.opus", Data: []byte(child)}}}
-				b, err = assessMXLPackageWithDictionaries(ctx, value, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(dtdMXLModelProfile)}}.internal()})
+				b, err = assessMXLPackageWithDictionaries(ctx, value, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(dtdMXLModelProfile)}}.internal()})
 				if string(value.Resources[0].Data) != child || len(value.RootFiles) != 2 {
 					t.Fatal("current input mutated")
 				}
@@ -301,7 +301,7 @@ func TestDTDPackageCompositionNestedAliasesPreserveBoundariesAndOrigins(t *testi
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="https://dtd.test/a.mxl"/><score xlink:href="https://dtd.test/b.mxl"/></opus>`
 	resolver := &packageResolverFixture{data: map[string][]byte{"https://dtd.test/a.mxl": archive, "https://dtd.test/b.mxl": archive}, canonical: map[string]string{"https://dtd.test/a.mxl": "same-archive", "https://dtd.test/b.mxl": "same-archive"}}
 	source, calls, bodies := dictionaryGraphKnownSource(t)
-	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), Dictionaries: DictionaryOptions{Source: source, Selections: dictionaryGraphSelection()}})
+	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), Dictionaries: DictionaryOptions{Source: source, Selections: dictionaryGraphSelection()}})
 	if err != nil || *calls != 1 || resolver.calls != 2 || b.ResourceCount() != 3 || !b.EnumerationComplete() {
 		t.Fatal("nested traversal", err, *calls, resolver.calls, b.ResourceCount())
 	}
@@ -361,13 +361,13 @@ func TestDTDPackageCompositionUnavailableDictionaryKeepsIndependentFailures(t *t
 			var e error
 			switch mode {
 			case "source":
-				b, e = inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal(), Dictionaries: d})
+				b, e = inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}}.internal(), Dictionaries: d})
 			case "model":
-				b, e = assessModelWithResourcesAndDictionaries(context.Background(), doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal(), Dictionaries: d})
+				b, e = assessModelWithResourcesAndDictionaries(context.Background(), doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}}.internal(), Dictionaries: d})
 			case "raw":
-				b, e = inspectMXLWithDictionaries(context.Background(), bytes.NewReader(packageGraphBytes(input, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(dtdMXLSourceProfile)}}.internal(), Dictionaries: d})
+				b, e = inspectMXLWithDictionaries(context.Background(), bytes.NewReader(packageGraphBytes(input, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(dtdMXLSourceProfile)}}.internal(), Dictionaries: d})
 			case "current":
-				b, e = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(dtdMXLModelProfile)}}.internal(), Dictionaries: d})
+				b, e = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(dtdMXLModelProfile)}}.internal(), Dictionaries: d})
 			}
 			if !errors.Is(e, boom) || calls != 1 || body.closed != 1 || !b.EnumerationComplete() {
 				t.Fatalf("err=%v calls=%d closes=%d enumeration=%t", e, calls, body.closed, b.EnumerationComplete())

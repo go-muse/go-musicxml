@@ -3,7 +3,6 @@ package validation
 import (
 	"context"
 	"reflect"
-	"strings"
 	"unsafe"
 )
 
@@ -76,7 +75,7 @@ func cloneLayoutContext(ctx context.Context, s *Session, p *LayoutContextResult)
 	if err = s.retain(size); err != nil {
 		return nil, err
 	}
-	q := cloneLayoutContextValue(value)
+	q := cloneLayoutContextValue(s, value)
 	return &q, nil
 }
 
@@ -120,24 +119,24 @@ func layoutEvidenceBytes[T any](v Evidence[T]) int64 {
 
 // Numeric wrappers are immutable and may be shared; all editable causes and
 // every string, including values carried by unavailable evidence, are owned.
-func cloneLayoutContextValue(p LayoutContextResult) LayoutContextResult {
+func cloneLayoutContextValue(s *Session, p LayoutContextResult) LayoutContextResult {
 	q := p
-	q.Scope.DocumentID = strings.Clone(p.Scope.DocumentID)
-	q.Origin.DocumentID = strings.Clone(p.Origin.DocumentID)
-	q.Part = cloneEvidence(p.Part)
-	q.Part.Value.DocumentID = strings.Clone(p.Part.Value.DocumentID)
-	q.Page = cloneEvidence(p.Page)
-	q.Page.Value.DocumentID = strings.Clone(p.Page.Value.DocumentID)
-	q.System = cloneEvidence(p.System)
-	q.System.Value.DocumentID = strings.Clone(p.System.Value.DocumentID)
-	q.Staff = cloneEvidence(p.Staff)
-	q.Conversion = cloneEvidence(p.Conversion)
-	q.Basis = strings.Clone(p.Basis)
-	q.Raw = cloneEvidence(p.Raw)
-	q.Raw.Value = cloneAtomic(p.Raw.Value)
-	q.Applicability = cloneEvidence(p.Applicability)
-	q.Unit = ContextUnit(strings.Clone(string(p.Unit)))
-	q.Provenance = ContextProvenance(strings.Clone(string(p.Provenance)))
+	q.Scope.DocumentID = s.own(p.Scope.DocumentID)
+	q.Origin.DocumentID = s.own(p.Origin.DocumentID)
+	q.Part = ownEvidence(s, p.Part)
+	q.Part.Value.DocumentID = s.own(p.Part.Value.DocumentID)
+	q.Page = ownEvidence(s, p.Page)
+	q.Page.Value.DocumentID = s.own(p.Page.Value.DocumentID)
+	q.System = ownEvidence(s, p.System)
+	q.System.Value.DocumentID = s.own(p.System.Value.DocumentID)
+	q.Staff = ownEvidence(s, p.Staff)
+	q.Conversion = ownEvidence(s, p.Conversion)
+	q.Basis = s.own(p.Basis)
+	q.Raw = ownEvidence(s, p.Raw)
+	q.Raw.Value = s.ownAtomic(p.Raw.Value)
+	q.Applicability = ownEvidence(s, p.Applicability)
+	q.Unit = ContextUnit(s.own(string(p.Unit)))
+	q.Provenance = ContextProvenance(s.own(string(p.Provenance)))
 	return q
 }
 

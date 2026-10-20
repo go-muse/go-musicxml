@@ -134,13 +134,10 @@ func (s *Session) observeSourceAttributeLexical(ctx context.Context, provider Ru
 			return s.fail(err)
 		}
 	}
-	before := s.retained
+	mark := s.markRetained()
 	defer func() {
 		if err != nil {
-			if delta := s.retained - before; delta > 0 {
-				_ = s.account.Release(BudgetBufferedBytes, delta)
-				s.retained = before
-			}
+			s.rollbackRetained(mark)
 			s.fail(err)
 		}
 	}()

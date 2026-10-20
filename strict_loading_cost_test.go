@@ -8,7 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -295,7 +297,8 @@ func TestStrictLoadingNonTerminalImportFailureAfterLineTwo(t *testing.T) {
 				}
 				return DictionaryComponentResult{}, providerFailure
 			})
-			result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &SourceOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
+			// The test reads the dictionary evidence of the model line.
+			result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &SourceOptions{Context: validation.ContextFamilyDictionaries, Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
 			if int(calls.Load()) != tc.calls || openedBeforeEOF.Load() {
 				t.Fatalf("provider calls=%d want %d; opened before the source end=%v", calls.Load(), tc.calls, openedBeforeEOF.Load())
 			}
@@ -447,16 +450,26 @@ func TestStrictLoadingCancellationBetweenLines(t *testing.T) {
 	}
 }
 
-func withoutContext(r validation.Report) validation.Report {
-	r.Context = nil
+// selectedContext keeps the records of the complete projection whose family
+// families selects, in order.
+func selectedContext(r validation.Report, families validation.ContextFamilies) validation.Report {
+	var kept []validation.ContextResult
+	for _, c := range r.Context {
+		if c.Family()&families != 0 {
+			kept = append(kept, c)
+		}
+	}
+	r.Context = kept
 	return r
 }
 
-// OmitContext leaves Report.Context empty and changes nothing else: on corpus
-// files strict and lenient loading, source inspection (including the source
-// origins of the internal-DTD profile) and model assessment give the same
-// decisions, counts and findings with and without the projection.
-func TestOmitContextKeepsEveryVerdict(t *testing.T) {
+// A context selection keeps exactly the records of the complete projection
+// whose family it names and changes nothing else: on corpus files strict and
+// lenient loading, source inspection (including the source origins of the
+// internal-DTD profile) and model assessment give the same decisions, counts
+// and findings with the complete projection, with none (the default) and with
+// a rotating single family.
+func TestContextSelectionKeepsEveryVerdict(t *testing.T) {
 	names, err := filepath.Glob(filepath.Join("testdata", "corpus", "musicxml-test-suite", "*.xml"))
 	if err != nil || len(names) < 100 {
 		t.Fatalf("corpus: %d files, %v", len(names), err)
@@ -465,50 +478,73 @@ func TestOmitContextKeepsEveryVerdict(t *testing.T) {
 	if raceEnabled || testing.Short() {
 		stride = 75
 	}
-	projected := 0
+	projected, partial := 0, 0
+	same := func(all validation.Report, families validation.ContextFamilies, got validation.Report) bool {
+		want := selectedContext(all, families)
+		if len(want.Context) == 0 && len(got.Context) == 0 {
+			want.Context, got.Context = nil, nil
+		}
+		if families != 0 && len(want.Context) != 0 && len(want.Context) != len(all.Context) {
+			partial++
+		}
+		return reflect.DeepEqual(want, got)
+	}
 	for i := 0; i < len(names); i += stride {
 		data, err := os.ReadFile(names[i])
 		if err != nil {
 			t.Fatal(err)
 		}
 		name := filepath.Base(names[i])
+		one := validation.ContextFamilies(1) << (i / stride % 11)
 		for _, lenient := range []bool{false, true} {
-			with, withErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient})
-			without, withoutErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient, Assessment: &SourceOptions{OmitContext: true}})
-			if len(without.SourceLine.Context) != 0 || len(without.ModelLine.Context) != 0 {
-				t.Fatalf("%s: omitted projection kept %d/%d records", name, len(without.SourceLine.Context), len(without.ModelLine.Context))
+			all, allErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient, Assessment: &SourceOptions{Context: validation.ContextFamilyAll}})
+			projected += len(all.SourceLine.Context) + len(all.ModelLine.Context)
+			for _, c := range append(slices.Clip(all.SourceLine.Context), all.ModelLine.Context...) {
+				if f := c.Family(); f == 0 || f&(f-1) != 0 {
+					t.Fatalf("%s: property %q has family %b", name, c.Property, f)
+				}
 			}
-			if (withErr == nil) != (withoutErr == nil) || with.Accepted != without.Accepted || !reflect.DeepEqual(withoutContext(with.SourceLine), without.SourceLine) || !reflect.DeepEqual(withoutContext(with.ModelLine), without.ModelLine) || !reflect.DeepEqual(with.Conversion, without.Conversion) {
-				t.Errorf("%s lenient=%v: verdicts differ without the projection: errors %v / %v", name, lenient, withErr, withoutErr)
+			for _, families := range []validation.ContextFamilies{0, one} {
+				var assessment *SourceOptions
+				if families != 0 {
+					assessment = &SourceOptions{Context: families}
+				}
+				got, gotErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient, Assessment: assessment})
+				if (allErr == nil) != (gotErr == nil) || all.Accepted != got.Accepted || !same(all.SourceLine, families, got.SourceLine) || !same(all.ModelLine, families, got.ModelLine) || !reflect.DeepEqual(all.Conversion, got.Conversion) {
+					t.Errorf("%s lenient=%v context=%b: reports differ from the selected projection: errors %v / %v", name, lenient, families, allErr, gotErr)
+				}
 			}
-			projected += len(with.SourceLine.Context) + len(with.ModelLine.Context)
-			if lenient && with.Document != nil {
+			if lenient && all.Document != nil {
 				for _, profile := range []validation.ProfileID{"", ProfileModelXSD.ID()} {
-					a, aErr := AssessModel(context.Background(), with.Document, ModelOptions{Profile: ModelProfile(profile)})
-					b, bErr := AssessModel(context.Background(), with.Document, ModelOptions{Profile: ModelProfile(profile), OmitContext: true})
-					if (aErr == nil) != (bErr == nil) || len(b.Context) != 0 || !reflect.DeepEqual(withoutContext(a), b) {
-						t.Errorf("%s AssessModel %q: verdicts differ without the projection: errors %v / %v", name, profile, aErr, bErr)
+					a, aErr := AssessModel(context.Background(), all.Document, ModelOptions{Profile: ModelProfile(profile), Context: validation.ContextFamilyAll})
+					for _, families := range []validation.ContextFamilies{0, one} {
+						b, bErr := AssessModel(context.Background(), all.Document, ModelOptions{Profile: ModelProfile(profile), Context: families})
+						if (aErr == nil) != (bErr == nil) || !same(a, families, b) {
+							t.Errorf("%s AssessModel %q context=%b: reports differ from the selected projection: errors %v / %v", name, profile, families, aErr, bErr)
+						}
 					}
 				}
 			}
 		}
 		for _, profile := range []validation.ProfileID{ProfileSourceInternalDTD.ID(), ""} {
-			a, aErr := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: SourceProfile(profile)})
-			b, bErr := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: SourceProfile(profile), OmitContext: true})
-			if (aErr == nil) != (bErr == nil) || len(b.Context) != 0 || !reflect.DeepEqual(withoutContext(a), b) {
-				t.Errorf("%s InspectXML %q: verdicts differ without the projection: errors %v / %v", name, profile, aErr, bErr)
+			a, aErr := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: SourceProfile(profile), Context: validation.ContextFamilyAll})
+			for _, families := range []validation.ContextFamilies{0, one} {
+				b, bErr := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: SourceProfile(profile), Context: families})
+				if (aErr == nil) != (bErr == nil) || !same(a, families, b) {
+					t.Errorf("%s InspectXML %q context=%b: reports differ from the selected projection: errors %v / %v", name, profile, families, aErr, bErr)
+				}
 			}
 		}
 	}
-	if projected == 0 {
-		t.Fatal("no projection to omit")
+	if projected == 0 || partial == 0 && !testing.Short() && !raceEnabled {
+		t.Fatalf("no projection to select: %d records, %d partial selections", projected, partial)
 	}
 }
 
-// Omitting the projection roughly halves the buffered storage strict loading
-// needs: the smallest buffer that accepts 01a without the projection is at
-// most 55% of the one with it.
-func TestOmitContextLowersTheBufferedStorage(t *testing.T) {
+// The default empty selection roughly halves the buffered storage strict
+// loading needs: the smallest buffer that accepts 01a without the projection
+// is at most 55% of the one with the complete projection.
+func TestEmptyContextSelectionLowersTheBufferedStorage(t *testing.T) {
 	if raceEnabled {
 		t.Skip("binary search is slow under the race detector")
 	}
@@ -516,11 +552,11 @@ func TestOmitContextLowersTheBufferedStorage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	minimal := func(omit bool) int64 {
+	minimal := func(families validation.ContextFamilies) int64 {
 		lo, hi := int64(0), int64(256<<20)
 		for hi-lo > 64<<10 {
 			mid := lo + (hi-lo)/2
-			_, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &SourceOptions{OmitContext: omit, Budgets: validation.Budgets{MaxBufferedBytes: mid}}})
+			_, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: families, Budgets: validation.Budgets{MaxBufferedBytes: mid}}})
 			if err == nil {
 				hi = mid
 			} else {
@@ -529,10 +565,10 @@ func TestOmitContextLowersTheBufferedStorage(t *testing.T) {
 		}
 		return hi
 	}
-	with, without := minimal(false), minimal(true)
+	with, without := minimal(validation.ContextFamilyAll), minimal(0)
 	t.Logf("minimal buffer: %d with the projection, %d without", with, without)
 	if without*100 > with*55 {
-		t.Fatalf("omitting the projection saved too little: %d with, %d without", with, without)
+		t.Fatalf("leaving out the projection saved too little: %d with, %d without", with, without)
 	}
 }
 
@@ -577,4 +613,166 @@ func TestBundledDictionaryCacheDoesNotCacheFailure(t *testing.T) {
 		t.Fatalf("retried shared import: caller steps=%d cached=%v", steps, cached())
 	}
 	_ = set.Close()
+}
+
+// bundleView is everything an assessment bundle returns, including the views
+// that index resource snapshot contexts, except resource IDs, which are random
+// per run.
+func bundleView(b validation.AssessmentBundle) []any {
+	view := []any{b.Satisfied(), b.EnumerationComplete(), b.AdoptionCount(), b.PackageReport()}
+	for _, report := range b.Resources() {
+		view = append(view, report)
+	}
+	for adoption := range b.AdoptionContexts() {
+		view = append(view, adoption)
+	}
+	for i := range b.ImageAdviceCount() {
+		advice, _ := b.ImageAdviceAt(i)
+		view = append(view, advice)
+	}
+	for i := range b.FileMetadataCount() {
+		metadata, _ := b.FileMetadataAt(i)
+		view = append(view, metadata)
+	}
+	for i := range b.MimetypeCount() {
+		mimetype, _ := b.MimetypeAt(i)
+		view = append(view, mimetype)
+	}
+	if failure, ok := b.FailureReport(); ok {
+		view = append(view, failure)
+	}
+	return view
+}
+
+// narrowView narrows the projection of every report in view to families and
+// replaces the random run identity in every string.
+func narrowView(view []any, families validation.ContextFamilies) []any {
+	out := append([]any{}, view...)
+	for i, v := range out {
+		if report, ok := v.(validation.Report); ok {
+			report = selectedContext(report, families)
+			if len(report.Context) == 0 {
+				report.Context = nil
+			}
+			v = report
+		}
+		copied := reflect.New(reflect.TypeOf(v)).Elem()
+		copied.Set(reflect.ValueOf(v))
+		scrubRunIdentity(copied)
+		out[i] = copied.Interface()
+	}
+	return out
+}
+
+var runIdentity = regexp.MustCompile(`(resource-run|mxl-entry)-[0-9a-f]{32,64}`)
+
+// scrubRunIdentity rewrites, in place, every settable string under v.
+func scrubRunIdentity(v reflect.Value) {
+	switch v.Kind() {
+	case reflect.String:
+		if v.CanSet() {
+			v.SetString(runIdentity.ReplaceAllString(v.String(), "$1"))
+		}
+	case reflect.Pointer, reflect.Interface:
+		if !v.IsNil() {
+			scrubRunIdentity(v.Elem())
+		}
+	case reflect.Struct:
+		for i := range v.NumField() {
+			scrubRunIdentity(v.Field(i))
+		}
+	case reflect.Slice, reflect.Array:
+		for i := range v.Len() {
+			scrubRunIdentity(v.Index(i))
+		}
+	}
+}
+
+// The graph entry points honour the selection too: InspectMXL, both lines of
+// DecodeMXLAssessed and AssessMXLPackage return the bundles of the complete
+// projection, narrowed to the selected families, although their resource
+// snapshots keep the records their package rules read.
+func TestGraphContextSelectionKeepsEveryVerdict(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("testdata", "corpus", "musicxml-test-suite", "90a-Compressed-MusicXML.mxl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	run := func(families validation.ContextFamilies) map[string][]any {
+		options := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: families}}
+		bundle, err := InspectMXL(context.Background(), bytes.NewReader(data), options)
+		if err != nil {
+			t.Fatalf("context=%b: InspectMXL: %v", families, err)
+		}
+		result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(data), DecodeMXLAssessmentOptions{Assessment: options, Lenient: true})
+		if err != nil || result.Package == nil {
+			t.Fatalf("context=%b: DecodeMXLAssessed: %v", families, err)
+		}
+		current, err := AssessMXLPackage(context.Background(), result.Package, options)
+		if err != nil {
+			t.Fatalf("context=%b: AssessMXLPackage: %v", families, err)
+		}
+		return map[string][]any{"InspectMXL": bundleView(bundle), "source line": bundleView(result.SourceLine), "model line": bundleView(result.ModelLine), "AssessMXLPackage": bundleView(current)}
+	}
+	all := run(validation.ContextFamilyAll)
+	projected := 0
+	for _, view := range all {
+		for _, v := range view {
+			if report, ok := v.(validation.Report); ok {
+				projected += len(report.Context)
+			}
+		}
+	}
+	if projected == 0 {
+		t.Fatal("no projection to select")
+	}
+	for _, families := range []validation.ContextFamilies{0, validation.ContextFamilyLayout, validation.ContextFamilyAll &^ validation.ContextFamilyLayout} {
+		for name, view := range run(families) {
+			if !reflect.DeepEqual(narrowView(all[name], families), narrowView(view, validation.ContextFamilyAll)) {
+				t.Errorf("context=%b: %s differs from the selected projection", families, name)
+			}
+		}
+	}
+}
+
+// Every entry point rejects a context selection with an unknown family as an
+// invalid configuration.
+func TestUnknownContextFamilyIsRejected(t *testing.T) {
+	unknown := validation.ContextFamilyAll + 1
+	ctx := context.Background()
+	score := `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>P</part-name></score-part></part-list><part id="P1"><measure number="1"/></part></score-partwise>`
+	document, err := Decode(strings.NewReader(score))
+	if err != nil {
+		t.Fatal(err)
+	}
+	archive, err := os.ReadFile(filepath.Join("testdata", "corpus", "musicxml-test-suite", "90a-Compressed-MusicXML.mxl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	calls := map[string]func() error{
+		"InspectXML": func() error {
+			_, err := InspectXML(ctx, strings.NewReader(score), SourceOptions{Context: unknown})
+			return err
+		},
+		"AssessModel": func() error {
+			_, err := AssessModel(ctx, document, ModelOptions{Context: unknown})
+			return err
+		},
+		"DecodeAssessed": func() error {
+			_, err := DecodeAssessed(ctx, strings.NewReader(score), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: unknown}})
+			return err
+		},
+		"InspectXMLWithResources": func() error {
+			_, err := InspectXMLWithResources(ctx, strings.NewReader(score), LinkedAssessmentOptions{Graph: GraphOptions{Context: unknown}})
+			return err
+		},
+		"InspectMXL": func() error {
+			_, err := InspectMXL(ctx, bytes.NewReader(archive), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: unknown}})
+			return err
+		},
+	}
+	for name, call := range calls {
+		if err := call(); !errors.Is(err, ErrInvalidConfiguration) {
+			t.Errorf("%s: %v", name, err)
+		}
+	}
 }

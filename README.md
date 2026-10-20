@@ -184,7 +184,8 @@ XSD/local profiles and legacy `Validate` unchanged. See the
 
 Select `ProfileModelContext` or `ProfileSourceContext` for the bounded
 repeat/span, local-default, layout and encoded-performance extension. Owned
-`Report.Context` snapshots retain per-field availability and provenance; a
+`Report.Context` snapshots, which the caller selects by context family (empty
+by default), retain per-field availability and provenance; a
 completed provider does not mean every optional fact is known. Selected
 contextual predicates retain unresolved time-only duplicate ordering,
 repeat-content and gesture requirements explicitly. Figure-number text retains
@@ -192,10 +193,11 @@ its deliberately open string domain without an additional numeric grammar gate. 
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
 and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
-profile under the default budgets. Both stop at the 20,000,000-step limit;
-raising work alone still reaches the default 64 MiB buffered-byte limit.
-Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
-complete the measured source/current-model cases. Source measurements remove
+profile under the default budgets. Both stop at the 20,000,000-step limit.
+Raising only the work, to `MaxRuleSteps: 1 << 34`, completes both profiles on
+both samples within the default 64 MiB buffer when no context family is
+selected (the default); with `validation.ContextFamilyAll` the MozaChlo source
+still exceeds it, and `MaxBufferedBytes: 512 << 20` completes every case. Source measurements remove
 only the DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration are
 preserved. The unmodified DOCTYPE-bearing originals are now assessed with their
 bundled external DTD; see [External DTD subsets](API.md#external-dtd-subsets).

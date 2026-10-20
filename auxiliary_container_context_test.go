@@ -13,7 +13,7 @@ import (
 )
 
 func TestAuxiliaryContainerMetadataPublished(t *testing.T) {
-	r, err := InspectXML(context.Background(), strings.NewReader(`<container><rootfiles><rootfile full-path="score.musicxml"/><rootfile full-path="score.pdf" media-type="application/pdf"/></rootfiles></container>`), SourceOptions{Profile: ProfileSourceContainer})
+	r, err := InspectXML(context.Background(), strings.NewReader(`<container><rootfiles><rootfile full-path="score.musicxml"/><rootfile full-path="score.pdf" media-type="application/pdf"/></rootfiles></container>`), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContainer})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestAuxiliaryContainerMetadataPublished(t *testing.T) {
 
 func inspectContainerMetadata(t *testing.T, source string) (validation.Report, []validation.ContextResult) {
 	t.Helper()
-	r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContainer})
+	r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContainer})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func TestAuxiliaryContainerMetadataOwnedReportAndSourceOnly(t *testing.T) {
 		t.Fatal("mutating output altered a subsequent report")
 	}
 	for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview.ID(), ProfileSourceLocal.ID(), ProfileSourceTimeline.ID(), ProfileSourceContext.ID()} {
-		r, err := InspectXML(context.Background(), strings.NewReader(`<opus version="4.0"/>`), SourceOptions{Profile: SourceProfile(profile)})
+		r, err := InspectXML(context.Background(), strings.NewReader(`<opus version="4.0"/>`), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile)})
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -29,7 +29,7 @@ func TestLinkContextReviewDTDHintRowsRetainObservedDescendants(t *testing.T) {
 				}
 				rootEnd := strings.IndexAny(source[1:], " >") + 1
 				source = `<!DOCTYPE ` + source[1:rootEnd] + ` SYSTEM "unread.dtd">` + source
-				report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(tc.profile)})
+				report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(tc.profile)})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -75,7 +75,7 @@ func TestLinkContextReviewDTDHintRowsRetainObservedDescendants(t *testing.T) {
 
 func TestLinkContextReviewDTDFactBudgetDoesNotCapElements(t *testing.T) {
 	source := `<!DOCTYPE score-partwise SYSTEM "unread.dtd">` + resourceScore(strings.Repeat(`<note><rest/><duration>1</duration></note>`, 100))
-	report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLinks, Budgets: validation.Budgets{MaxContextFacts: 4}})
+	report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLinks, Budgets: validation.Budgets{MaxContextFacts: 4}})
 	if err != nil {
 		t.Fatalf("element count consumed hint fact quota: %v", err)
 	}

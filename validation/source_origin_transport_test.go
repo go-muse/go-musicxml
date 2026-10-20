@@ -117,12 +117,12 @@ func TestSourceOriginSnapshotTransportKindsAndCompleteness(t *testing.T) {
 	for _, kind := range []string{"physical", "default", "entity-attribute", "entity-element", "rich"} {
 		for _, seal := range []string{"complete", "missing", "incomplete", "unknown"} {
 			t.Run(kind+"/"+seal, func(t *testing.T) {
-				ordinary := originTransportSession(t, e, key, RunOptions{}, kind, seal, "7")
+				ordinary := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, kind, seal, "7")
 				want, err := ordinary.Finish(context.Background(), originTransportCompletion())
 				if err != nil {
 					t.Fatal(err)
 				}
-				s := originTransportSession(t, e, key, RunOptions{}, kind, seal, "7")
+				s := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, kind, seal, "7")
 				r, snapshot, err := s.FinishWithResourceSnapshot(context.Background(), originTransportCompletion())
 				if err != nil || snapshot == nil {
 					t.Fatalf("source-origin export unavailable: snapshot=%v err=%v", snapshot, err)
@@ -202,7 +202,7 @@ func originTransportPackage(t *testing.T, snapshot *ResourceSnapshot, account *A
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: profiles[0].Profile.ID, Account: account})
+	p, err := catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: profiles[0].Profile.ID, Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func TestSourceOriginSnapshotTransportIndependentAdoptions(t *testing.T) {
 	for _, kind := range []string{"physical", "default", "entity-attribute", "entity-element", "rich"} {
 		t.Run(kind, func(t *testing.T) {
 			ctx := context.Background()
-			s := originTransportSession(t, e, key, RunOptions{}, kind, "complete", "bad")
+			s := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, kind, "complete", "bad")
 			r, snapshot, err := s.FinishWithResourceSnapshot(ctx, originTransportCompletion())
 			if err != nil || snapshot == nil || r.Counts.Fail != 1 {
 				t.Fatalf("snapshot=%v report=%+v err=%v", snapshot, r, err)
@@ -449,7 +449,7 @@ func TestResourceSnapshotTransportCancellationAfterAdmission(t *testing.T) {
 
 func TestSourceOriginSnapshotTransportExactOverlapAdmission(t *testing.T) {
 	e, key := originTransportEngine(t)
-	probe := originTransportSession(t, e, key, RunOptions{}, "rich", "complete", "bad")
+	probe := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, "rich", "complete", "bad")
 	counter := &originTransportContext{Context: context.Background(), account: probe.account}
 	_, snapshot, err := probe.FinishWithResourceSnapshot(counter, originTransportCompletion())
 	if err != nil || snapshot == nil {
@@ -465,7 +465,7 @@ func TestSourceOriginSnapshotTransportExactOverlapAdmission(t *testing.T) {
 	originTransportClean(t, probe.account)
 	for _, delta := range []int64{0, -1} {
 		t.Run(map[bool]string{true: "exact", false: "one-short"}[delta == 0], func(t *testing.T) {
-			s := originTransportSession(t, e, key, RunOptions{Budgets: Budgets{MaxBufferedBytes: counter.peak + delta}}, "rich", "complete", "bad")
+			s := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll, Budgets: Budgets{MaxBufferedBytes: counter.peak + delta}}, "rich", "complete", "bad")
 			r, snapshot, err := s.FinishWithResourceSnapshot(context.Background(), originTransportCompletion())
 			if delta == 0 {
 				if err != nil || snapshot == nil {
@@ -485,7 +485,7 @@ func TestSourceOriginSnapshotTransportExactOverlapAdmission(t *testing.T) {
 
 func TestSourceOriginSnapshotTransportEveryPostChargeCancellation(t *testing.T) {
 	e, key := originTransportEngine(t)
-	probe := originTransportSession(t, e, key, RunOptions{}, "rich", "complete", "bad")
+	probe := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, "rich", "complete", "bad")
 	counter := &originTransportContext{Context: context.Background(), account: probe.account}
 	_, snapshot, err := probe.FinishWithResourceSnapshot(counter, originTransportCompletion())
 	if err != nil || snapshot == nil {
@@ -496,7 +496,7 @@ func TestSourceOriginSnapshotTransportEveryPostChargeCancellation(t *testing.T) 
 	// Count only checks while the snapshot's overlapping lease is live, then
 	// cancel at every one of those checks. Earlier evaluation has already proved
 	// the independent scalar violation and that result must survive each refusal.
-	probe = originTransportSession(t, e, key, RunOptions{}, "rich", "complete", "bad")
+	probe = originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, "rich", "complete", "bad")
 	counter = &originTransportContext{Context: context.Background(), account: probe.account, threshold: peak}
 	_, snapshot, err = probe.FinishWithResourceSnapshot(counter, originTransportCompletion())
 	if err != nil || snapshot == nil || counter.calls < 20 {
@@ -504,7 +504,7 @@ func TestSourceOriginSnapshotTransportEveryPostChargeCancellation(t *testing.T) 
 	}
 	_ = snapshot.Close()
 	for at := 1; at <= counter.calls; at++ {
-		s := originTransportSession(t, e, key, RunOptions{}, "rich", "complete", "bad")
+		s := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, "rich", "complete", "bad")
 		ctx := &originTransportContext{Context: context.Background(), account: s.account, threshold: peak, cancelAt: at}
 		r, snapshot, err := s.FinishWithResourceSnapshot(ctx, originTransportCompletion())
 		if !errors.Is(err, context.Canceled) || snapshot != nil || r.AssessmentComplete || r.Terminal == nil || r.Counts.Fail != 1 || r.Conformance != ConformanceViolated || len(r.Context) != 2 {
@@ -553,7 +553,7 @@ func originTransportGetterBoundary(t *testing.T, account *Account, value any, to
 
 func TestSourceOriginSnapshotTransportGetterBudgetsAndCancellation(t *testing.T) {
 	e, key := originTransportEngine(t)
-	s := originTransportSession(t, e, key, RunOptions{Budgets: Budgets{MaxRuleSteps: 1 << 40}}, "rich", "complete", "bad")
+	s := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll, Budgets: Budgets{MaxRuleSteps: 1 << 40}}, "rich", "complete", "bad")
 	_, snapshot, err := s.FinishWithResourceSnapshot(context.Background(), originTransportCompletion())
 	if err != nil || snapshot == nil {
 		t.Fatalf("snapshot=%v err=%v", snapshot, err)
@@ -584,7 +584,7 @@ func TestSourceOriginSnapshotTransportRejectedTransferKeepsOwner(t *testing.T) {
 	e, key := originTransportEngine(t)
 	for _, mismatch := range []string{"account", "profile", "digest", "assembly", "target", "pin", "canceled", "budget", "collision"} {
 		t.Run(mismatch, func(t *testing.T) {
-			s := originTransportSession(t, e, key, RunOptions{}, "rich", "complete", "bad")
+			s := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, "rich", "complete", "bad")
 			r, snapshot, err := s.FinishWithResourceSnapshot(context.Background(), originTransportCompletion())
 			if err != nil || snapshot == nil {
 				t.Fatalf("snapshot=%v err=%v", snapshot, err)
@@ -629,7 +629,7 @@ func TestSourceOriginSnapshotTransportRejectedTransferKeepsOwner(t *testing.T) {
 				pin.SnapshotID = "model-state"
 			}
 			if mismatch == "collision" {
-				other := originTransportSession(t, e, key, RunOptions{Account: account}, "rich", "complete", "bad")
+				other := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll, Account: account}, "rich", "complete", "bad")
 				_, owned, err := other.FinishWithResourceSnapshot(ctx, originTransportCompletion())
 				if err != nil {
 					t.Fatal(err)
@@ -662,12 +662,12 @@ func TestSourceOriginSnapshotTransportSourceErrorPreservesPrefix(t *testing.T) {
 	e, key := originTransportEngine(t)
 	cause := errors.New("source read stopped")
 	end := Completion{Syntax: SyntaxIncomplete, Cause: cause}
-	ordinary := originTransportSession(t, e, key, RunOptions{}, "rich", "missing", "bad")
+	ordinary := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, "rich", "missing", "bad")
 	want, err := ordinary.Finish(context.Background(), end)
 	if !errors.Is(err, cause) {
 		t.Fatal(err)
 	}
-	s := originTransportSession(t, e, key, RunOptions{}, "rich", "missing", "bad")
+	s := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, "rich", "missing", "bad")
 	r, snapshot, err := s.FinishWithResourceSnapshot(context.Background(), end)
 	if !errors.Is(err, cause) || snapshot == nil || !reflect.DeepEqual(r, want) {
 		t.Fatalf("source error changed intrinsic report: snapshot=%v err=%v", snapshot, err)
@@ -685,7 +685,7 @@ func TestSourceOriginSnapshotTransportSourceErrorPreservesPrefix(t *testing.T) {
 
 func TestSourceOriginSnapshotTransportProjectionOwnsSeparateStorage(t *testing.T) {
 	e, key := originTransportEngine(t)
-	s := originTransportSession(t, e, key, RunOptions{}, "rich", "complete", "bad")
+	s := originTransportSession(t, e, key, RunOptions{Context: ContextFamilyAll}, "rich", "complete", "bad")
 	r, snapshot, err := s.FinishWithResourceSnapshot(context.Background(), originTransportCompletion())
 	if err != nil || snapshot == nil {
 		t.Fatalf("snapshot=%v err=%v", snapshot, err)

@@ -249,6 +249,16 @@ func CompileSchema(assembly Assembly, data SchemaData) (*CompiledSchema, error) 
 	return &CompiledSchema{assembly: assembly, kernel: kernel, timeline: &timelineBindingsCache{}, context: &contextBindingsCache{}}, nil
 }
 
+// share returns a handle on the same immutable compiled graph with its own,
+// empty construction memos, so that engines built from one generated assembly
+// compile its graph once.
+func (s *CompiledSchema) share() *CompiledSchema {
+	if s == nil || s.kernel == nil {
+		return s
+	}
+	return &CompiledSchema{assembly: s.assembly, kernel: s.kernel, timeline: &timelineBindingsCache{}, context: &contextBindingsCache{}}
+}
+
 // snapshot retains only the immutable schema graph. A later constructor on the
 // caller's handle must not grow an already admitted catalog's retained state.
 func (s *CompiledSchema) snapshot() *CompiledSchema {

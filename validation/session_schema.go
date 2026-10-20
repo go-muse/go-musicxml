@@ -58,9 +58,15 @@ func (m schemaMeter) Release(n int64) error                   { return m.session
 func (m schemaMeter) Scalar(n int64) error                    { return m.session.account.Check(BudgetScalarBytes, n) }
 func (m schemaMeter) Identity(n int64) error                  { return m.session.account.Charge(BudgetIDs, n) }
 
+// schemaSubjectBytes is the charge of the subject schemaSubject builds. The
+// run keeps the subject only until the subject completes, when the bind loop
+// releases it.
+func schemaSubjectBytes(n *factNode) int64 {
+	return int64(256) + int64(len(n.header.Bindings))*64 + int64(len(n.attributes))*256 + int64(len(n.children))*64
+}
+
 func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, error) {
-	bytes := int64(256) + int64(len(n.header.Bindings))*64 + int64(len(n.attributes))*256 + int64(len(n.children))*64
-	if err := s.retain(bytes); err != nil {
+	if err := s.retain(schemaSubjectBytes(n)); err != nil {
 		return xsd.Subject{}, err
 	}
 	out := xsd.Subject{ID: xsd.SubjectID(n.header.ID), Parent: xsd.SubjectID(n.header.Parent), Name: xsd.QName{Space: n.header.Name.Space, Local: n.header.Name.Local}, Path: n.header.Location.Path, Text: n.end.Scalar.Lexeme.Value, TextKnown: n.closed && n.end.Scalar.Lexeme.State == EvidenceKnown, AttributesComplete: n.closed && n.end.AttributesComplete.State == EvidenceKnown && n.end.AttributesComplete.Value, ChildrenComplete: n.closed && n.end.ChildrenComplete.State == EvidenceKnown && n.end.ChildrenComplete.Value && n.end.Order.State == EvidenceKnown && n.end.Order.Value == OrderSource}
@@ -315,6 +321,10 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		if completeErr != nil {
 			return completeErr
 		}
+		// The completed run no longer holds the subject.
+		released := schemaSubjectBytes(f.node)
+		_ = s.account.Release(BudgetBufferedBytes, released)
+		s.retained -= released
 		f = nil
 		scratch.pop()
 		if len(scratch.frames) > 0 {
@@ -775,10 +785,14 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 		}
 		return err
 	}
-	if s.schema.recorded == nil {
-		s.schema.recorded = make(map[decisionID]schemaRecord)
+	// Only a cached failure is ever revisited (see the done branch above), so
+	// other outcomes need no record; the logical charge above is unchanged.
+	if d.Outcome == OutcomeFail {
+		if s.schema.recorded == nil {
+			s.schema.recorded = make(map[decisionID]schemaRecord)
+		}
+		s.schema.recorded[id] = schemaRecord{details: len(result.Issues), complete: result.Complete && (!done || previous.complete)}
 	}
-	s.schema.recorded[id] = schemaRecord{details: len(result.Issues), complete: result.Complete && (!done || previous.complete)}
 	if done {
 		return nil
 	}

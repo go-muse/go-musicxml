@@ -28,7 +28,7 @@ func TestRetainedReportLeaseCopylockMarker(t *testing.T) {
 func retainedReportTestSession(t *testing.T, text string) (*Session, int64) {
 	t.Helper()
 	s := snapshotTestSession(t, text)
-	before := s.retained
+	before, interned := s.retained, internCharge(s)
 	row := ContextResult{
 		Provider: RuleKey{"retained-report", 1}, Subject: NodeRef{"source", 1},
 		Property: ContextPropertySpanNormalDots,
@@ -38,7 +38,8 @@ func retainedReportTestSession(t *testing.T, text string) (*Session, int64) {
 	if err := s.publishContextResult(context.Background(), row); err != nil {
 		t.Fatal(err)
 	}
-	return s, s.retained - before
+	// New intern table entries stay with the session, not the report.
+	return s, s.retained - before - (internCharge(s) - interned)
 }
 
 func TestRetainedReportTransfersAlreadyAdmittedContext(t *testing.T) {

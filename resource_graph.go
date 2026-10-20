@@ -192,7 +192,7 @@ func (g *resourceGraphRun) inspectPrimarySource(reader io.Reader) (validation.As
 		return g.finish(err)
 	}
 	id := g.next("source")
-	result := assessResourceSource(g.ctx, reader, sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.source, Engine: engine}, ByteOwner: sourceBytesPrimary})
+	result := assessResourceSource(g.ctx, reader, sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, Context: g.options.context, ResourceSnapshot: true, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.source, Engine: engine}, ByteOwner: sourceBytesPrimary})
 	digest := ""
 	if result.DigestComplete {
 		digest = hex.EncodeToString(result.Digest[:])
@@ -233,7 +233,7 @@ func (g *resourceGraphRun) assessPrimaryModel(document Document) (validation.Ass
 	}
 	id := g.next("model")
 	pin := g.primaryPin(validation.ResourceCurrentModel, "")
-	result := assessResourceModel(g.ctx, document, assessmentRunConfig{Account: g.options.account, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.model, Engine: engine})
+	result := assessResourceModel(g.ctx, document, assessmentRunConfig{Account: g.options.account, Context: g.options.context, ResourceSnapshot: true, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.model, Engine: engine})
 	return g.finishPrimary(result, pin, id)
 }
 func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin validation.ResourcePin, id string) (validation.AssessmentBundle, error) {

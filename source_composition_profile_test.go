@@ -23,9 +23,9 @@ func TestSourceDeclarationCompositionProfiles(t *testing.T) {
 			var report validation.Report
 			var err error
 			if strings.HasSuffix(string(profile), "-dictionaries") {
-				report, err = inspectXMLWithDictionaries(context.Background(), r, dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: profile}})
+				report, err = inspectXMLWithDictionaries(context.Background(), r, dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: profile}})
 			} else {
-				report, err = InspectXML(context.Background(), r, SourceOptions{Profile: SourceProfile(profile)})
+				report, err = InspectXML(context.Background(), r, SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile)})
 			}
 			if err != nil || !report.Satisfied() || report.Profile.ID != profile || report.Syntax != validation.SyntaxWellFormed || !report.InputComplete {
 				t.Fatalf("profile=%s error=%v satisfied=%t syntax=%s findings=%+v", profile, err, report.Satisfied(), report.Syntax, report.Findings)

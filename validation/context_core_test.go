@@ -34,7 +34,7 @@ func TestContextProjectionCanceledPublication(t *testing.T) {
 	if err := s.publishContextResult(ctx, ContextResult{}); !errors.Is(err, context.Canceled) {
 		t.Fatalf("got %v", err)
 	}
-	if len(s.contextResults) != 0 || s.retained != 0 {
+	if len(s.contextResults) != 0 || s.retained != internCharge(s) {
 		t.Fatal("partial publication")
 	}
 }
@@ -44,7 +44,7 @@ func TestContextProjectionQuotaBeforeAllocation(t *testing.T) {
 	if err := s.publishContextResult(context.Background(), ContextResult{Provider: RuleKey{"context-test", 1}, Subject: NodeRef{"score", 7}, Property: ContextPropertySpanNormalDots, Value: Evidence[Atomic]{State: EvidenceAbsent}}); !errors.Is(err, ErrResourceLimit) {
 		t.Fatalf("got %v", err)
 	}
-	if len(s.contextResults) != 0 || cap(s.contextResults) != 0 || s.retained != 0 {
+	if len(s.contextResults) != 0 || cap(s.contextResults) != 0 || s.retained != internCharge(s) {
 		t.Fatal("allocated before admission")
 	}
 }
@@ -123,10 +123,10 @@ func TestContextProjectionEveryCancellationBoundary(t *testing.T) {
 		s := rationalSession(t, Budgets{})
 		c := &rationalCancelContext{Context: context.Background(), at: at}
 		err := s.publishContextResult(c, result)
-		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != 0 {
+		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 			t.Fatalf("at %d: err=%v results=%d retained=%d", at, err, len(s.contextResults), s.retained)
 		}
-		if used, _ := s.account.Usage(BudgetBufferedBytes); used != 0 {
+		if used, _ := s.account.Usage(BudgetBufferedBytes); used != internCharge(s) {
 			t.Fatalf("at %d leaked %d", at, used)
 		}
 		s.cleanup()
@@ -134,7 +134,7 @@ func TestContextProjectionEveryCancellationBoundary(t *testing.T) {
 }
 func TestContextReportSurvivesFinishAndOptionalGap(t *testing.T) {
 	ctx := context.Background()
-	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(ctx, RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(ctx, RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "source-schema-test"})
 	if err != nil {
 		t.Fatal(err)
 	}

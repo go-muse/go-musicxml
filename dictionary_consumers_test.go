@@ -143,7 +143,7 @@ func dictionaryInspectTest(t *testing.T, text string, model, available bool, bud
 	if strings.HasPrefix(text, "<sounds") {
 		profile = ProfileSourceSoundsDictionaries.ID()
 	}
-	s, err := engine.BeginWithDictionaries(ctx, validation.RunOptions{DocumentID: "dictionary-test", Profile: profile, Account: a}, set)
+	s, err := engine.BeginWithDictionaries(ctx, validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: "dictionary-test", Profile: profile, Account: a}, set)
 	if err != nil {
 		t.Fatal(err)
 	}

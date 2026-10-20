@@ -309,7 +309,7 @@ func TestIntrinsicXMLDepthWitnessAndInterruptedCache(t *testing.T) {
 			var result resourceIntrinsicResult
 			if model {
 				engine, _ := modelAssessmentEngineForProfile(ProfileModelLinks.ID())
-				result = assessResourceModel(ctx, depthModel(3, true), assessmentRunConfig{Account: a, DocumentID: "depth", Profile: ProfileModelLinks.ID(), Engine: engine, XMLDepth: limit})
+				result = assessResourceModel(ctx, depthModel(3, true), assessmentRunConfig{Context: validation.ContextFamilyAll, Account: a, DocumentID: "depth", Profile: ProfileModelLinks.ID(), Engine: engine, XMLDepth: limit})
 			} else {
 				cfg := adapterSourceConfig(t, a, "depth", "", ProfileSourceLinks.ID(), sourceBytesPrimary)
 				cfg.XMLDepth = limit

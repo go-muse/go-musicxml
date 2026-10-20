@@ -247,7 +247,7 @@ func TestRetainedLayoutBytesCoverTheCopyHeap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		copied := cloneLayoutContextValue(layout)
+		copied := cloneLayoutContextValue(nil, layout)
 		if real := layoutGuardHeap(reflect.ValueOf(&copied), map[uintptr]bool{}); charged < real {
 			t.Errorf("layout %+v: charged %d, the copy occupies %d", shape, charged, real)
 		}
@@ -394,7 +394,7 @@ func TestContextBackingHeldUntilCommit(t *testing.T) {
 		if commit {
 			want -= record
 		}
-		if got := s.retained - before; got != want || s.contextBackingHold || s.contextBackingHeld != 0 || s.contextReportRetained != s.retained || rationalUsage(t, s, BudgetBufferedBytes) != s.retained {
+		if got := s.retained - before; got != want || s.contextBackingHold || s.contextBackingHeld != 0 || s.contextReportRetained != s.retained-internCharge(s) || rationalUsage(t, s, BudgetBufferedBytes) != s.retained {
 			t.Fatalf("commit=%v: retained delta %d, want %d; subtotal %d of %d", commit, got, want, s.contextReportRetained, s.retained)
 		}
 		s.cleanup()
@@ -412,9 +412,10 @@ func TestSpanRollbackAfterGrowthRestoresAccounting(t *testing.T) {
 	}
 	service := control.s.retained - before
 	r, note := spanRollbackFixture(t)
-	retained, subtotal, results := r.s.retained, r.s.contextReportRetained, r.s.contextResults
+	retained, subtotal, results, interned := r.s.retained, r.s.contextReportRetained, r.s.contextResults, internCharge(r.s)
 	_, _, err := evaluateContextSpans(context.Background(), r.s, note, RuleKey{"spans", 1}, &contextPlan{Bindings: r.b}, true)
-	if !errors.Is(err, ErrResourceLimit) || cap(r.s.contextResults) != 8 || &r.s.contextResults[0] != &results[0] || r.s.retained != retained+service || r.s.contextReportRetained != subtotal || r.s.contextBackingHeld != 0 || r.s.contextBackingHold {
+	// Intern table entries made meanwhile stay owned and charged.
+	if !errors.Is(err, ErrResourceLimit) || cap(r.s.contextResults) != 8 || &r.s.contextResults[0] != &results[0] || r.s.retained != retained+service+internCharge(r.s)-interned || r.s.contextReportRetained != subtotal || r.s.contextBackingHeld != 0 || r.s.contextBackingHold {
 		t.Fatalf("rollback: err=%v cap=%d retained=%d/%d+%d subtotal=%d/%d", err, cap(r.s.contextResults), r.s.retained, retained, service, r.s.contextReportRetained, subtotal)
 	}
 	if used, _ := r.s.account.Usage(BudgetContextFacts); used != 9 {
@@ -602,4 +603,22 @@ func TestContextRecordOriginsMeasuredWithCheckpoints(t *testing.T) {
 	if steps := rationalUsage(t, s, BudgetRuleSteps); steps < 96*256 {
 		t.Fatalf("256 origins charged %d steps", steps)
 	}
+}
+
+// internCharge is what a session's intern table has charged: its header and
+// each entry's slot and string, which rollbacks keep. It is computed from the
+// table itself and returns -1, which no charge equals, when the session's
+// counter disagrees.
+func internCharge(s *Session) int64 {
+	table := int64(0)
+	for v := range s.strings {
+		table += internSlotBytes + ownedStringBytes(v)
+	}
+	if len(s.strings) != 0 {
+		table += internTableBytes
+	}
+	if table != s.internRetained {
+		return -1
+	}
+	return table
 }

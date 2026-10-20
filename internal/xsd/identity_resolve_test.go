@@ -79,7 +79,7 @@ func TestRunResolveIdentityUsesActualContainingOwner(t *testing.T) {
 	owner := &Node{ID: 42}
 	// The ID-valued element has occurrence 99, but its actual-ID owner is its
 	// containing element. Display paths and scalar origins are not owner IDs.
-	run.context.local = &boundState{subject: Subject{ID: 99}}
+	run.context.local = &boundState{bindWork: &bindWork{subject: Subject{ID: 99}}, id: 99}
 	registerResolverOwner(run, " \ttarget\n ", owner)
 	registerResolverOwner(run, "target", owner)
 	run.context.local = nil
@@ -299,7 +299,7 @@ type identityOwnerStopMeter struct {
 }
 
 func (m *identityOwnerStopMeter) Reserve(n int64) error {
-	if m.stopOwner && n == 32 {
+	if m.stopOwner && n == 32+nodeObjectBytes { // the owner entry and its node object
 		return errors.New("owner entry storage exhausted")
 	}
 	return m.testMeter.Reserve(n)

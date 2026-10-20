@@ -26,9 +26,9 @@ func TestResourceXLinkBehaviorIntentMatrix(t *testing.T) {
 					if e != nil {
 						t.Fatal(e)
 					}
-					r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLinks})
+					r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelLinks})
 				} else {
-					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLinks})
+					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLinks})
 				}
 				if err != nil {
 					t.Fatal(err)

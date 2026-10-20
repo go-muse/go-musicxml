@@ -144,7 +144,7 @@ func TestBundledDictionaryPublicAssessmentPreservesSelection(t *testing.T) {
 		for _, mode := range []string{"source", "model", "assessed decode"} {
 			t.Run(tc.name+"/"+mode, func(t *testing.T) {
 				dictionaries := tc.options
-				o := musicxml.SourceOptions{Profile: musicxml.ProfileSourceDictionaries, Dictionaries: &dictionaries}
+				o := musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileSourceDictionaries, Dictionaries: &dictionaries}
 				var report validation.Report
 				var err error
 				switch mode {
@@ -155,7 +155,7 @@ func TestBundledDictionaryPublicAssessmentPreservesSelection(t *testing.T) {
 					if e != nil {
 						t.Fatal(e)
 					}
-					report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelDictionaries, Dictionaries: o.Dictionaries})
+					report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileModelDictionaries, Dictionaries: o.Dictionaries})
 				case "assessed decode":
 					o.Profile = musicxml.ProfileSourceLine
 					if len(o.Dictionaries.Selections) != 0 {
@@ -206,6 +206,7 @@ func TestBundledDictionaryPublicEvidenceBoundaries(t *testing.T) {
 	t.Run("custom standard sound remains allowed", func(t *testing.T) {
 		m, _ := validation.LookupDictionaryManifest(validation.DictionaryManifestStandardSounds40)
 		report, err := musicxml.InspectXML(context.Background(), strings.NewReader(`<sounds><sound id="keyboard.piano"><any/></sound><sound id="custom.allowed"><solo/></sound></sounds>`), musicxml.SourceOptions{
+			Context:      validation.ContextFamilyAll,
 			Profile:      musicxml.ProfileSourceSoundsDictionaries,
 			Dictionaries: &musicxml.DictionaryOptions{Source: musicxml.BundledDictionarySource(), Selections: []validation.DictionarySelection{{Manifest: m.ID, Relations: m.Relations}}},
 		})
@@ -246,6 +247,7 @@ func TestBundledDictionaryPublicEvidenceBoundaries(t *testing.T) {
 			}
 			score := `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1"><measure number="1"><note><rest/><duration>1</duration><play><ipa>` + tc.value + `</ipa></play></note></measure></part></score-partwise>`
 			report, err := musicxml.InspectXML(context.Background(), strings.NewReader(score), musicxml.SourceOptions{
+				Context:      validation.ContextFamilyAll,
 				Profile:      musicxml.ProfileSourceDictionaries,
 				Dictionaries: &musicxml.DictionaryOptions{Source: musicxml.BundledDictionarySource(), Selections: []validation.DictionarySelection{{Manifest: m.ID, Relations: relations}}},
 			})

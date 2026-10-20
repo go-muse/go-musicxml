@@ -16,13 +16,14 @@ type RunOptions struct {
 	Profile    ProfileID
 	Budgets    Budgets
 	Account    *Account
-	// OmitContext leaves Report.Context empty. Providers compute and check
-	// their context exactly as otherwise, and every decision, count and
-	// finding is the same; the session only keeps no copy of the projection
-	// for the report, which saves the storage it would hold. A resource
-	// snapshot reads that projection, so FinishWithResourceSnapshot refuses
-	// a session that omits it.
-	OmitContext bool
+	// Context selects the context families kept in Report.Context; the zero
+	// value keeps none (see ContextFamilies). FinishWithResourceSnapshot
+	// needs the records it copies, so it refuses a session whose selection
+	// lacks one of their families unless the root package prepared the run
+	// for a snapshot.
+	Context ContextFamilies
+
+	resourceSnapshot bool
 }
 
 // Engine shares only an immutable compiled catalog. Independent sessions may run
@@ -94,6 +95,7 @@ type factNode struct {
 	attributes          []AttributeFact
 	attributeSeal       *Evidence[bool]
 }
+
 type decisionID struct {
 	rule RuleKey
 	node NodeID
@@ -141,7 +143,10 @@ type Session struct {
 	// contextSharedTableBytes sums the charges of the shared attribute tables.
 	contextSharedTableBytes int64
 	contextResults          []ContextResult
-	omitContext             bool
+	internRetained          int64
+	contextFamilies         ContextFamilies
+	resourceSnapshot        bool
+	hiddenContexts          []hiddenContext
 	// contextBackingHold keeps replaced Report.Context arrays charged while
 	// a rollback snapshot may restore one; contextBackingHeld sums them.
 	contextBackingHold      bool
@@ -159,7 +164,8 @@ type Session struct {
 	sequence                []NodeID
 	stack                   []*factNode
 	decisions               map[decisionID]Decision
-	successful              map[RuleKey]map[NodeID]successfulOutcome
+	successful              map[RuleKey]*outcomeBits
+	strings                 map[string]string
 	documentPrerequisites   map[RuleKey]*documentPrerequisite
 	contexts                map[ContextKey]ContextFact
 	identities              map[string]*identityIndex
@@ -194,6 +200,9 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 	if !ok {
 		return nil, contract("profile", "unknown or empty explicit profile")
 	}
+	if opts.Context&^ContextFamilyAll != 0 {
+		return nil, contract("context families", "unknown context family")
+	}
 	account := opts.Account
 	if account != nil {
 		if opts.Budgets != (Budgets{}) {
@@ -209,7 +218,7 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 			return nil, err
 		}
 	}
-	s := &Session{catalog: e.catalog, documentID: strings.Clone(opts.DocumentID), profile: profile, account: account, nodes: make(map[NodeID]*factNode), decisions: make(map[decisionID]Decision), contexts: make(map[ContextKey]ContextFact), identities: make(map[string]*identityIndex), registered: make(map[decisionID]bool), omitContext: opts.OmitContext}
+	s := &Session{catalog: e.catalog, documentID: strings.Clone(opts.DocumentID), profile: profile, account: account, nodes: make(map[NodeID]*factNode), decisions: make(map[decisionID]Decision), contexts: make(map[ContextKey]ContextFact), identities: make(map[string]*identityIndex), registered: make(map[decisionID]bool), contextFamilies: opts.Context, resourceSnapshot: opts.resourceSnapshot}
 	// Profile/report fixed metadata is finite at compile time and its per-run
 	// copied payload is also reserved before the report snapshot is allocated.
 	if err := s.retain(int64(1024+len(opts.DocumentID)) + profileLogicalBytes(profile)); err != nil {
@@ -456,7 +465,7 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 			return s.fail(&SessionError{Operation: "Attribute", Reason: "duplicate expanded attribute slot"})
 		}
 	}
-	n.attributes = append(n.attributes, cloneAttribute(attribute))
+	n.attributes = append(n.attributes, s.ownAttribute(attribute))
 	if s.sourceOriginKey() != (RuleKey{}) {
 		if attribute.Presence.State == EvidenceKnown && attribute.Presence.Value {
 			s.sourceOriginExpected++
@@ -765,6 +774,7 @@ func (s *Session) cleanup() {
 	s.timeline = nil
 	s.contextServices = nil
 	s.contextResults = nil
+	s.hiddenContexts = nil
 	s.contextReportRetained = 0
 	if s.depth > 0 {
 		_ = s.account.Release(BudgetDepth, s.depth)
@@ -774,6 +784,8 @@ func (s *Session) cleanup() {
 		_ = s.account.Release(BudgetBufferedBytes, s.retained)
 		s.retained = 0
 	}
+	s.internRetained = 0 // released with s.retained above
+	s.strings = nil
 	s.nodes = nil
 	s.facts = nil
 	s.nodeCapacity = 0

@@ -75,7 +75,7 @@ func TestQAPostExportRetentionKeepsBoundedSummaryWhenWorkRefused(t *testing.T) {
 	if _, err := g.finishPrimary(intrinsic, pin, id); err != nil {
 		t.Fatal(err)
 	}
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus wrong="yes"/>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxRuleSteps: steps}}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus wrong="yes"/>`), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxRuleSteps: steps}}})
 	if !errors.Is(err, validation.ErrResourceLimit) {
 		t.Fatal(err)
 	}

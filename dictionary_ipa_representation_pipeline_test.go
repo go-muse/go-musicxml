@@ -67,7 +67,7 @@ func TestIPARepresentationPublicSourceModelAndAssessedReader(t *testing.T) {
 				ctx := context.Background()
 				text := contextFixtureXML(`<note><rest/><duration>1</duration><play><ipa>`+value+`</ipa></play></note>`, false)
 				calls := 0
-				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
+				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceDictionaries.ID()}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
 				var report validation.Report
 				var err error
 				switch mode {
@@ -124,7 +124,7 @@ func TestIPARepresentationGraphAliasesAndMXLUseSameWitness(t *testing.T) {
 			case "graph-aliases":
 				root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="a.musicxml"/><score xlink:href="b.musicxml"/></opus>`
 				fixture := &graphFixtureResolver{resources: map[string]string{"https://ipa.test/a.musicxml": text, "https://ipa.test/b.musicxml": text}, pins: map[string]string{"https://ipa.test/a.musicxml": "same", "https://ipa.test/b.musicxml": "same"}}
-				bundle, err = inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphDictionaries}, Identity: ResourceIdentity{RetrievalURI: "https://ipa.test/root.opus"}, Resolver: fixture, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), Dictionaries: dictionaries})
+				bundle, err = inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphDictionaries}, Identity: ResourceIdentity{RetrievalURI: "https://ipa.test/root.opus"}, Resolver: fixture, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), Dictionaries: dictionaries})
 				if fixture.calls != 2 || bundle.ResourceCount() != 2 || bundle.AdoptionCount() != 3 {
 					t.Fatalf("graph counts %d %d %d", fixture.calls, bundle.ResourceCount(), bundle.AdoptionCount())
 				}
@@ -133,13 +133,13 @@ func TestIPARepresentationGraphAliasesAndMXLUseSameWitness(t *testing.T) {
 				if mode == "dtd-raw-mxl" {
 					profile = ProfileMXLSourceInternalDTDDictionaries
 				}
-				bundle, err = inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(text, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: profile}}.internal(), Dictionaries: dictionaries})
+				bundle, err = inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(text, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: profile}}.internal(), Dictionaries: dictionaries})
 			case "model-mxl":
 				doc, e := Decode(strings.NewReader(text))
 				if e != nil {
 					t.Fatal(e)
 				}
-				bundle, err = assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModelDictionaries}}.internal(), Dictionaries: dictionaries})
+				bundle, err = assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModelDictionaries}}.internal(), Dictionaries: dictionaries})
 			}
 			if err != nil {
 				t.Fatal(err)
@@ -163,7 +163,7 @@ func TestIPARepresentationManyShortMarkSegmentsFitDefaultBudget(t *testing.T) {
 	value := strings.Repeat("a\u0301", 31438)
 	text := contextFixtureXML(`<note><rest/><duration>1</duration><play><ipa>`+value+`</ipa></play></note>`, false)
 	calls := 0
-	options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
+	options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceDictionaries.ID()}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
 	report, err := inspectXMLWithDictionaries(context.Background(), strings.NewReader(text), options)
 	if err != nil {
 		t.Fatal(err)
@@ -200,7 +200,7 @@ func TestIPARepresentationWholeMarksAndHalfPairScope(t *testing.T) {
 			t.Run(tc.name+"/"+mode, func(t *testing.T) {
 				text := contextFixtureXML(`<note><rest/><duration>1</duration><play><ipa>`+tc.value+`</ipa></play></note>`, false)
 				calls := 0
-				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
+				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceDictionaries.ID()}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
 				var report validation.Report
 				var err error
 				if mode == "source" {

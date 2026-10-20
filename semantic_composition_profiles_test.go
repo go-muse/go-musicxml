@@ -56,7 +56,7 @@ func TestSemanticCompositionPublicProfiles(t *testing.T) {
 func TestSemanticCompositionEffectiveDTDBarline(t *testing.T) {
 	const profile validation.ProfileID = "musicxml-4.0/source-semantics"
 	input := `<!DOCTYPE score-partwise [<!ATTLIST barline location CDATA "left">]>` + barlineLocationScore(false, barlineDivisions+barlineNote("1")+`<barline/>`, "")
-	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: SourceProfile(profile)})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile)})
 	if err != nil || report.Conformance != validation.ConformanceViolated {
 		t.Fatalf("defaulted wrong location not assessed: %v %+v", err, report.Findings)
 	}

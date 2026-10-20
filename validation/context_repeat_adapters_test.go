@@ -28,9 +28,9 @@ func repeatAssessHeader(t *testing.T, body, header string, check func(*testing.T
 				if e != nil {
 					t.Fatal(e)
 				}
-				report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
+				report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileModelContext})
 			} else {
-				report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Profile: musicxml.ProfileSourceContext})
+				report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileSourceContext})
 			}
 			if err != nil {
 				t.Fatalf("timewise=%v model=%v: %v", timewise, model, err)
@@ -123,9 +123,9 @@ func TestRepeatAdaptersMeasureContentAndStopBoundary(t *testing.T) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
+			report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileModelContext})
 		} else {
-			report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Profile: musicxml.ProfileSourceContext})
+			report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileSourceContext})
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -219,9 +219,9 @@ func TestRepeatAdaptersInstrumentPassUpdates(t *testing.T) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
+			report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileModelContext})
 		} else {
-			report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Profile: musicxml.ProfileSourceContext})
+			report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileSourceContext})
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -439,9 +439,9 @@ func TestRepeatAdaptersEmptyTargetRequiresSoundCoverage(t *testing.T) {
 					if e != nil {
 						t.Fatal(e)
 					}
-					r, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
+					r, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileModelContext})
 				} else {
-					r, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Profile: musicxml.ProfileSourceContext})
+					r, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -680,9 +680,9 @@ func TestRepeatAdaptersPartIsolation(t *testing.T) {
 				if e != nil {
 					t.Fatal(e)
 				}
-				r, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
+				r, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileModelContext})
 			} else {
-				r, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Profile: musicxml.ProfileSourceContext})
+				r, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileSourceContext})
 			}
 			if err != nil {
 				t.Fatal(err)

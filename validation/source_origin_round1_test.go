@@ -156,7 +156,7 @@ func TestSourceOriginTypedRetentionAvoidsPerFieldReserves(t *testing.T) {
 	// The closed fixed record plus one physical site should fit this conservative
 	// allowance, which includes the allocator rounding of each owned string.
 	// Every context envelope/map reserve is separate from this payload.
-	bytes := rationalUsage(t, s, BudgetBufferedBytes)
+	bytes := rationalUsage(t, s, BudgetBufferedBytes) - internCharge(s)
 	if bytes > 1280 {
 		t.Errorf("physical origin payload retained %d logical bytes; fixed headers were counted repeatedly", bytes)
 	}

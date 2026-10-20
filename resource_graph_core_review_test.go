@@ -22,7 +22,7 @@ func TestResourceGraphCoreReviewRawMXLDiscoveryPairing(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			data := packageGraphBytes(`<opus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" `+tc.hint+`/>`, "main.opus", "")
-			b, err := InspectMXL(context.Background(), bytes.NewReader(data), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}})
+			b, err := InspectMXL(context.Background(), bytes.NewReader(data), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource}})
 			if err != nil {
 				t.Fatal(err)
 			}

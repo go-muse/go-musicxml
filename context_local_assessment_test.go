@@ -64,7 +64,7 @@ func localContextAssess(t *testing.T, engine *validation.Engine, source string, 
 	if model {
 		profile, documentID = ProfileModelLocal.ID(), modelDocumentID
 	}
-	session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: documentID, Profile: profile, Account: account})
+	session, err := engine.Begin(ctx, validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: documentID, Profile: profile, Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}

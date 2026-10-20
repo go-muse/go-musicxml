@@ -248,15 +248,15 @@ func (s *Session) retainFactHeader(ctx context.Context, v NodeHeader) (retainedH
 		return out, err
 	}
 	out.ID, out.Parent = v.ID, v.Parent
-	out.Name = QName{strings.Clone(v.Name.Space), strings.Clone(v.Name.Local)}
+	out.Name = QName{s.own(v.Name.Space), s.own(v.Name.Local)}
 	out.Location = v.Location
 	out.Location.Target = s.profile.Target
 	out.Location.DocumentID = s.documentID
-	out.Location.Entry = strings.Clone(v.Location.Entry)
+	out.Location.Entry = s.own(v.Location.Entry)
 	out.Location.Path = strings.Clone(v.Location.Path)
 	if v.Location.Position != nil {
 		p := *v.Location.Position
-		p.CoordinateSpace = strings.Clone(p.CoordinateSpace)
+		p.CoordinateSpace = s.own(p.CoordinateSpace)
 		out.Location.Position = &p
 	}
 	out.Bindings = make([]Binding, len(v.Bindings))
@@ -264,7 +264,7 @@ func (s *Session) retainFactHeader(ctx context.Context, v NodeHeader) (retainedH
 		if err := s.step(ctx, 1); err != nil {
 			return out, err
 		}
-		out.Bindings[i] = Binding{strings.Clone(b.Prefix), strings.Clone(b.URI)}
+		out.Bindings[i] = Binding{s.own(b.Prefix), s.own(b.URI)}
 	}
 	return out, nil
 }

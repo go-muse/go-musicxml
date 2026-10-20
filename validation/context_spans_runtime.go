@@ -371,7 +371,7 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 		return Decision{Outcome: OutcomePass}, false, nil
 	}
 	beforeRetained, beforeResults := s.retained, s.contextResults
-	beforeReportRetained, beforeShared := s.contextReportRetained, s.contextSharedTableBytes
+	beforeReportRetained, beforeShared, beforeIntern := s.contextReportRetained, s.contextSharedTableBytes, s.internRetained
 	// beforeResults may be restored, so a backing array replaced meanwhile
 	// stays charged until the evaluation commits.
 	hold := s.holdContextBacking()
@@ -383,9 +383,9 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 			}
 			s.contextResults = beforeResults
 			s.contextReportRetained = beforeReportRetained
-			// Shared attribute tables built meanwhile stay in the session and
-			// keep their charge.
-			delta := s.retained - beforeRetained - (s.contextSharedTableBytes - beforeShared)
+			// Shared attribute tables and intern table entries built
+			// meanwhile stay in the session and keep their charge.
+			delta := s.retained - beforeRetained - (s.contextSharedTableBytes - beforeShared) - (s.internRetained - beforeIntern)
 			if delta > 0 {
 				_ = s.account.Release(BudgetBufferedBytes, delta)
 				s.retained -= delta

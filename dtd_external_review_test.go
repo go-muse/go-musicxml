@@ -25,7 +25,7 @@ func houseDTDInput(internal, workTitle string) string {
 
 func inspectHouseDTD(dtd, internal, workTitle string, budgets validation.Budgets) (validation.Report, error) {
 	return InspectXML(context.Background(), strings.NewReader(houseDTDInput(internal, workTitle)),
-		SourceOptions{Profile: ProfileSourceInternalDTD, Budgets: budgets, DTD: &DTDOptions{Source: mapDTDSource{"house.dtd": dtd}}})
+		SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD, Budgets: budgets, DTD: &DTDOptions{Source: mapDTDSource{"house.dtd": dtd}}})
 }
 
 func requireResourceKind(t *testing.T, err error, kind validation.BudgetKind, msg string) {
@@ -268,7 +268,7 @@ func TestExternalDTDDeclarationSitesThroughParameterEntities(t *testing.T) {
 	// note's default-x comes from %print-style; in note.mod, whose
 	// replacement includes the %position; literal of common.mod.
 	input := dtdTestScore(partwiseDOCTYPE, "Title", `<note default-x="1"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type></note>`)
-	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 	require.NoError(t, err)
 	require.True(t, report.Satisfied())
 	found := false

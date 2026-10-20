@@ -228,13 +228,10 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 	} else if location.Position != nil && (in.Kind != SourceOriginUnavailable || in.Physical.State == EvidenceAbsent || in.Specified.State == EvidenceKnown && !in.Specified.Value) {
 		return s.fail(contract("source origin physical", "synthetic occurrence must not carry source coordinates"))
 	}
-	before := s.retained
+	mark := s.markRetained()
 	defer func() {
 		if err != nil {
-			if delta := s.retained - before; delta > 0 {
-				_ = s.account.Release(BudgetBufferedBytes, delta)
-				s.retained = before
-			}
+			s.rollbackRetained(mark)
 			s.fail(err)
 		}
 	}()
@@ -245,18 +242,19 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 	if err = s.retain(cost); err != nil {
 		return err
 	}
-	if err = s.publishValidatedContextResult(ctx, publication); err != nil {
+	kept, err := s.keepValidatedContextResult(ctx, publication)
+	if err != nil {
 		return err
 	}
 	var owned *SourceOriginContextResult
-	if s.omitContext {
-		// Without a projection the index owns its own copy.
+	if kept == nil {
+		// Without a kept record the index owns its own copy.
 		if owned, err = cloneSourceOriginContext(ctx, s, &in); err != nil {
 			return err
 		}
 	} else {
-		// Borrow only from the newly owned projection, never from the adapter.
-		owned = s.contextResults[len(s.contextResults)-1].SourceOrigin
+		// Borrow only from the newly owned record, never from the adapter.
+		owned = kept.SourceOrigin
 	}
 	if s.sourceOriginSeen == nil {
 		s.sourceOriginSeen = make(map[sourceOriginSubject]*SourceOriginContextResult)

@@ -31,9 +31,9 @@ func layoutReports(t *testing.T, body string, header string, check func(*testing
 					if e != nil {
 						t.Fatal(e)
 					}
-					r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+					r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 				} else {
-					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -135,9 +135,9 @@ func TestLayoutPageSystemMeasureLifetimes(t *testing.T) {
 				if e != nil {
 					t.Fatal(e)
 				}
-				r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+				r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 			} else {
-				r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+				r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 			}
 			if err != nil {
 				t.Fatal(err)
@@ -203,9 +203,9 @@ func TestLayoutStaffDefaultsApplyAcrossParts(t *testing.T) {
 				if e != nil {
 					t.Fatal(e)
 				}
-				r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+				r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 			} else {
-				r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+				r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 			}
 			if err != nil {
 				t.Fatal(err)
@@ -379,9 +379,9 @@ func TestLayoutHiddenSpaceAndVisiblePublisherAreSeparate(t *testing.T) {
 					if e != nil {
 						t.Fatal(e)
 					}
-					r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+					r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 				} else {
-					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -506,9 +506,9 @@ func TestLayoutWidthComparisonFiveAxes(t *testing.T) {
 					if e != nil {
 						t.Fatal(e)
 					}
-					r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+					r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 				} else {
-					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -573,9 +573,9 @@ func TestLayoutGroupDisplayPriorityAndExplicitOverride(t *testing.T) {
 						if e != nil {
 							t.Fatal(e)
 						}
-						r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+						r, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 					} else {
-						r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+						r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 					}
 					if err != nil {
 						t.Fatal(err)
@@ -645,9 +645,9 @@ func TestLayoutParallelPrintPositionsUseMusicalOffsets(t *testing.T) {
 					if e != nil {
 						t.Fatal(e)
 					}
-					report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+					report, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
 				} else {
-					report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+					report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)

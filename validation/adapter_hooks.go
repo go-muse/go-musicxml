@@ -34,6 +34,8 @@ func init() {
 	validationlink.Register("NewXSDPlanWithSourceDeclarations", newXSDPlanWithSourceDeclarations)
 	validationlink.Register("NewXSDRepresentabilityPlan", newXSDRepresentabilityPlan)
 	validationlink.Register("ShareDictionarySet", shareDictionarySet)
+	validationlink.Register("CompiledSchema.Share", (*CompiledSchema).share)
+	validationlink.Register("RunOptions.ResourceSnapshot", resourceSnapshotRun)
 	validationlink.Register("Engine.SourceAttributeLexicalProvider", (*Engine).sourceAttributeLexicalProvider)
 	validationlink.Register("Engine.SourceDTDIDsSelected", (*Engine).sourceDTDIDsSelected)
 	validationlink.Register("Engine.SourceOriginProvider", (*Engine).sourceOriginProvider)

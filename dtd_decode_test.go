@@ -207,7 +207,7 @@ func TestExternalDTDDeclarationOrigins(t *testing.T) {
 	t.Parallel()
 
 	input := dtdTestScore(partwiseDOCTYPE, "Title", `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>eighth</type><beam>begin</beam></note>`)
-	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
 	require.NoError(t, err)
 	require.True(t, report.Satisfied())
 

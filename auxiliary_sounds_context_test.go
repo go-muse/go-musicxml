@@ -15,7 +15,7 @@ import (
 
 func inspectSounds(t *testing.T, source string) validation.Report {
 	t.Helper()
-	r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceSounds})
+	r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceSounds})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,7 +183,7 @@ func TestAuxiliarySoundsAssemblyAndSourceOnly(t *testing.T) {
 		}
 	}
 	for _, profile := range []validation.ProfileID{ProfileSourceContainer.ID(), ProfileSourceSounds.ID()} {
-		if _, err = AssessModel(context.Background(), NewOpusDocument(), ModelOptions{Profile: ModelProfile(profile)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
+		if _, err = AssessModel(context.Background(), NewOpusDocument(), ModelOptions{Context: validation.ContextFamilyAll, Profile: ModelProfile(profile)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Fatalf("source-only profile model accepted: %v", err)
 		}
 	}
@@ -199,7 +199,7 @@ func TestAuxiliarySourceUnavailableEvidence(t *testing.T) {
 		profile validation.ProfileID
 		source  string
 	}{{ProfileSourceContainer.ID(), `<!DOCTYPE container SYSTEM "https://invalid.example/no-fetch"><container><rootfiles><rootfile full-path="a"/></rootfiles></container>`}, {ProfileSourceSounds.ID(), `<!DOCTYPE sounds SYSTEM "https://invalid.example/no-fetch"><sounds><sound id="a"/></sounds>`}} {
-		r, err := InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Profile: SourceProfile(tc.profile)})
+		r, err := InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(tc.profile)})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -236,29 +236,29 @@ func TestAuxiliarySourceOwnershipAndBudgets(t *testing.T) {
 			text = `<sounds><sound id="a"><any/><any/></sound></sounds>`
 		}
 		r := &auxiliaryOwnedReader{Reader: strings.NewReader(text)}
-		report, err := InspectXML(context.Background(), r, SourceOptions{Profile: SourceProfile(profile), Budgets: validation.Budgets{MaxInputBytes: int64(len(text))}})
+		report, err := InspectXML(context.Background(), r, SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile), Budgets: validation.Budgets{MaxInputBytes: int64(len(text))}})
 		if err != nil || !report.Satisfied() || r.closed {
 			t.Fatalf("exact bytes/reader ownership: %v", err)
 		}
-		report, err = InspectXML(context.Background(), strings.NewReader(text), SourceOptions{Profile: SourceProfile(profile), Budgets: validation.Budgets{MaxInputBytes: int64(len(text) - 1)}})
+		report, err = InspectXML(context.Background(), strings.NewReader(text), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile), Budgets: validation.Budgets{MaxInputBytes: int64(len(text) - 1)}})
 		if !errors.Is(err, validation.ErrResourceLimit) || report.Satisfied() {
 			t.Fatalf("one-under input accepted: %v", err)
 		}
 		for _, b := range []validation.Budgets{{MaxRuleSteps: 1}, {MaxBufferedBytes: 1}, {MaxInputBytes: -1}} {
-			report, err = InspectXML(context.Background(), strings.NewReader(text), SourceOptions{Profile: SourceProfile(profile), Budgets: b})
+			report, err = InspectXML(context.Background(), strings.NewReader(text), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile), Budgets: b})
 			if err == nil || report.Satisfied() {
 				t.Fatalf("invalid/limited budgets accepted: %+v", b)
 			}
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		if _, err = InspectXML(ctx, strings.NewReader(text), SourceOptions{Profile: SourceProfile(profile)}); !errors.Is(err, context.Canceled) {
+		if _, err = InspectXML(ctx, strings.NewReader(text), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile)}); !errors.Is(err, context.Canceled) {
 			t.Fatalf("cancellation lost: %v", err)
 		}
 	}
 	text := `<sounds><sound id="a"><any/><any/></sound></sounds>`
 	for _, limit := range []int64{3, 4} {
-		r, err := InspectXML(context.Background(), strings.NewReader(text), SourceOptions{Profile: ProfileSourceSounds, Budgets: validation.Budgets{MaxContextFacts: limit}})
+		r, err := InspectXML(context.Background(), strings.NewReader(text), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceSounds, Budgets: validation.Budgets{MaxContextFacts: limit}})
 		if limit == 4 {
 			if err != nil || !r.Satisfied() || len(r.Context) != 4 {
 				t.Fatalf("exact context budget: %v %+v", err, r)
@@ -297,9 +297,9 @@ func TestAuxiliaryFrozenEightProfiles(t *testing.T) {
 	for i, row := range rows {
 		var got validation.Report
 		if row.Profile.Target == validation.TargetSource {
-			got, err = InspectXML(context.Background(), strings.NewReader(`<opus version="4.0"/>`), SourceOptions{Profile: SourceProfile(row.Profile.ID)})
+			got, err = InspectXML(context.Background(), strings.NewReader(`<opus version="4.0"/>`), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(row.Profile.ID)})
 		} else {
-			got, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(row.Profile.ID)})
+			got, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ModelProfile(row.Profile.ID)})
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -330,7 +330,7 @@ func TestAuxiliaryDiagnosticsCannotEraseViolation(t *testing.T) {
 		profile validation.ProfileID
 		source  string
 	}{{ProfileSourceContainer.ID(), `<container extra="x"><rootfiles><rootfile/></rootfiles></container>`}, {ProfileSourceSounds.ID(), `<sounds><sound id="a" primary="maybe"/><sound id="a" primary="maybe"/></sounds>`}} {
-		r, err := InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Profile: SourceProfile(tc.profile), Budgets: validation.Budgets{MaxDiagnosticBytes: 1}})
+		r, err := InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(tc.profile), Budgets: validation.Budgets{MaxDiagnosticBytes: 1}})
 		if err != nil || !r.DiagnosticsTruncated || r.Counts.Fail == 0 || r.Satisfied() || r.Conformance != validation.ConformanceViolated {
 			t.Fatalf("truncated details erased normative failure: %v %+v", err, r)
 		}
@@ -393,7 +393,7 @@ func FuzzAuxiliarySourceAssessment(f *testing.F) {
 		if sounds {
 			profile = ProfileSourceSounds
 		}
-		r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: profile, Budgets: validation.Budgets{MaxInputBytes: 65536, MaxBufferedBytes: 4 << 20, MaxRuleSteps: 1_000_000, MaxNodes: 2048, MaxContextFacts: 2048, MaxDiagnostics: 16}})
+		r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: profile, Budgets: validation.Budgets{MaxInputBytes: 65536, MaxBufferedBytes: 4 << 20, MaxRuleSteps: 1_000_000, MaxNodes: 2048, MaxContextFacts: 2048, MaxDiagnostics: 16}})
 		if err != nil && r.Satisfied() {
 			t.Fatal("operation error accepted")
 		}

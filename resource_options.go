@@ -60,6 +60,7 @@ type resourceRunOptions struct {
 	resolver validation.ResourceResolver
 	selected map[ResourceDependency]bool
 	dtd      *DTDOptions
+	context  validation.ContextFamilies
 }
 
 func validateLinkedAssessmentOptions(ctx context.Context, o linkedAssessmentOptions, expected validation.ProfileID) (resourceRunOptions, error) {
@@ -78,6 +79,9 @@ func validateLinkedAssessmentOptionsAccount(ctx context.Context, o linkedAssessm
 	}
 	if expected == "" || o.Graph.Profile != expected {
 		return invalid("graph profile", "explicit entry-point compatible graph profile required")
+	}
+	if o.Graph.Context&^validation.ContextFamilyAll != 0 {
+		return invalid("context families", "unknown context family")
 	}
 	if len(o.Dependencies) > 4 {
 		return invalid("resource dependencies", "bounded closed selection required")
@@ -123,7 +127,7 @@ func validateLinkedAssessmentOptionsAccount(ctx context.Context, o linkedAssessm
 			return out, err
 		}
 	}
-	out.account, out.identity, out.resolver, out.dtd = account, o.Identity, o.Resolver, o.Graph.DTD
+	out.account, out.identity, out.resolver, out.dtd, out.context = account, o.Identity, o.Resolver, o.Graph.DTD, o.Graph.Context
 	if nilValue(out.resolver) {
 		out.resolver = nil
 	} else {

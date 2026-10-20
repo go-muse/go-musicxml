@@ -27,16 +27,18 @@ type SourceOptions struct {
 	// those profiles require; with an explicit profile, nil keeps the
 	// profile's dictionary-free behaviour.
 	Dictionaries *DictionaryOptions
-	// OmitContext leaves Report.Context empty in every returned report,
-	// including both reports of DecodeAssessed. Every decision, count and
-	// finding is the same as with the projection; the call only keeps no copy
-	// of it, which lowers the buffered storage it needs (see
-	// validation.RunOptions.OmitContext).
-	OmitContext bool
+	// Context selects the context families kept in Report.Context of every
+	// returned report, including both reports of DecodeAssessed. The zero
+	// value keeps none; validation.ContextFamilyAll keeps the complete
+	// projection. An unselected record is computed and checked but not kept,
+	// which lowers the buffered storage the call needs; within budgets that
+	// admit both, every decision, count and finding is the same whatever the
+	// selection.
+	Context validation.ContextFamilies
 }
 
 func (o SourceOptions) internal() assessmentOptions {
-	return assessmentOptions{Profile: o.Profile.ID(), Budgets: o.Budgets, DTD: o.DTD, Dictionaries: o.Dictionaries, OmitContext: o.OmitContext}
+	return assessmentOptions{Profile: o.Profile.ID(), Budgets: o.Budgets, DTD: o.DTD, Dictionaries: o.Dictionaries, Context: o.Context}
 }
 
 // ModelOptions configures AssessModel. An empty Profile selects the full
@@ -49,28 +51,33 @@ type ModelOptions struct {
 	// Dictionaries selects pinned dictionary capabilities, as for
 	// SourceOptions.Dictionaries.
 	Dictionaries *DictionaryOptions
-	// OmitContext leaves Report.Context empty, as for SourceOptions.
-	OmitContext bool
+	// Context selects the context families kept in Report.Context, as for
+	// SourceOptions.
+	Context validation.ContextFamilies
 }
 
 func (o ModelOptions) internal() assessmentOptions {
-	return assessmentOptions{Profile: o.Profile.ID(), Budgets: o.Budgets, Dictionaries: o.Dictionaries, OmitContext: o.OmitContext}
+	return assessmentOptions{Profile: o.Profile.ID(), Budgets: o.Budgets, Dictionaries: o.Dictionaries, Context: o.Context}
 }
 
 // GraphOptions configures the graph of InspectXMLWithResources and
 // AssessModelWithResources: its profile, the budgets of the whole run, caller
 // DTDs and dictionaries. An empty Profile selects ProfileResourceGraphSemantics
-// with the bundled required dictionaries unless Dictionaries is set. A graph
-// keeps the context projection, which its resource snapshots read.
+// with the bundled required dictionaries unless Dictionaries is set.
 type GraphOptions struct {
 	Profile      GraphProfile
 	Budgets      validation.Budgets
 	DTD          *DTDOptions
 	Dictionaries *DictionaryOptions
+	// Context selects the context families kept in Report.Context of the
+	// returned report and of every resource report, as for SourceOptions.
+	// The graph's resource snapshots keep the records its package rules read
+	// whatever the selection.
+	Context validation.ContextFamilies
 }
 
 func (o GraphOptions) internal() assessmentOptions {
-	return assessmentOptions{Profile: o.Profile.ID(), Budgets: o.Budgets, DTD: o.DTD, Dictionaries: o.Dictionaries}
+	return assessmentOptions{Profile: o.Profile.ID(), Budgets: o.Budgets, DTD: o.DTD, Dictionaries: o.Dictionaries, Context: o.Context}
 }
 
 // MXLGraphOptions configures the package graph of InspectMXL,
@@ -81,10 +88,13 @@ type MXLGraphOptions struct {
 	Budgets      validation.Budgets
 	DTD          *DTDOptions
 	Dictionaries *DictionaryOptions
+	// Context selects the context families of the returned reports, as for
+	// GraphOptions.
+	Context validation.ContextFamilies
 }
 
 func (o MXLGraphOptions) internal() assessmentOptions {
-	return assessmentOptions{Profile: o.Profile.ID(), Budgets: o.Budgets, DTD: o.DTD, Dictionaries: o.Dictionaries}
+	return assessmentOptions{Profile: o.Profile.ID(), Budgets: o.Budgets, DTD: o.DTD, Dictionaries: o.Dictionaries, Context: o.Context}
 }
 
 // LinkedAssessmentOptions selects an explicit graph profile and one shared set

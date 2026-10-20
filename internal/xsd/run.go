@@ -5,6 +5,7 @@ import (
 	"errors"
 	"iter"
 	"math"
+	"strings"
 	"unsafe"
 )
 
@@ -110,7 +111,75 @@ type Meter interface {
 	Identity(int64) error
 }
 
+// boundState is the per-subject record a Run keeps until Close. Only the
+// fields read through Binding after completion (results, scalar, attributes,
+// actual type) live here directly; operation scratch lives in bindWork, which
+// Complete releases.
 type boundState struct {
+	*bindWork
+	run        *Run
+	id         SubjectID
+	actual     *TypeRef
+	attributes []*AttributeResult
+	// After completion: nil final means all five results are fresh (applicable,
+	// valid, complete, no details); nil finalScalar means the zero scalar.
+	final       *NodeResults
+	finalScalar *ScalarResult
+	done        bool
+}
+
+func (s *boundState) nodeResults() NodeResults {
+	if s.bindWork != nil {
+		return s.results
+	}
+	if s.final == nil {
+		return freshResults()
+	}
+	return *s.final
+}
+
+func (s *boundState) scalarResult() ScalarResult {
+	if s.bindWork != nil {
+		return s.scalar
+	}
+	if s.finalScalar == nil {
+		return ScalarResult{}
+	}
+	return *s.finalScalar
+}
+
+func isFreshResult(r *Result) bool {
+	return r.Applicable && r.Valid && r.Complete && r.Issues == nil && r.Limitations == nil
+}
+
+func isZeroScalar(v *ScalarResult) bool {
+	return !v.Known && !v.Complete && !v.Defaulted && !v.Atomic && v.Lexeme == "" && v.EffectiveLexeme == "" && v.Builtin == "" &&
+		v.Value.Domain == 0 && v.Value.Primitive == "" && !v.Value.Boolean && v.Value.Text == "" && v.Value.Number == (Decimal{}) && v.Value.Items == nil
+}
+
+// Retention charges of one subject. A bound state and its Run.states entry
+// live until Close. A node object lives until the parent completes and
+// deletes it. Deleting map entries does not free the map's backing storage,
+// which follows the most entries ever live at once, so Run.nodes is charged
+// one entry per new high-water mark and keeps that charge until Close. The
+// work and everything Bind charges to it live until the subject completes.
+var (
+	boundStateBytes = int64(unsafe.Sizeof(boundState{})) + runMapEntryBytes
+	// A node is rounded up to the allocator's 16-byte size classes.
+	nodeObjectBytes = (int64(unsafe.Sizeof(Node{})) + 15) &^ 15
+	bindWorkBytes   = int64(unsafe.Sizeof(bindWork{}))
+	finalBytes      = int64(unsafe.Sizeof(NodeResults{}))
+	finalScalarSize = int64(unsafe.Sizeof(ScalarResult{}))
+)
+
+// runMapEntryBytes covers one key, one pointer and the map's per-entry
+// overhead, rounded up.
+const runMapEntryBytes = 64
+
+// bindWork is scratch needed only between Bind and Complete of one subject.
+type bindWork struct {
+	results                                      NodeResults
+	scalar                                       ScalarResult
 	currentAttribute                             CurrentScalar
 	currentAttributeSet                          bool
 	attributeEpoch                               uint64
@@ -118,14 +187,9 @@ type boundState struct {
 	attributeLimited                             bool
 	attributeInvalid                             bool
 	defaulted                                    bool
-	run                                          *Run
 	subject                                      Subject
 	node                                         *Node
-	use                                          Use
-	actual, declared                             *TypeRef
-	results                                      NodeResults
-	scalar                                       ScalarResult
-	attributes                                   []*AttributeResult
+	declared                                     *TypeRef
 	matches                                      []ElementMatch
 	witnesses                                    []Witness
 	typeValid, declarationValid, identityAllowed bool
@@ -135,8 +199,11 @@ type boundState struct {
 	issueSubject                                 SubjectID
 	scalarAssessment                             SimpleAssessment
 	scalarAssessed                               bool
-	done                                         bool
-	completion                                   Completion
+	// charged is what Complete releases: the work itself, the node's text
+	// and child slice, the witnesses, and the nodes Bind created for
+	// children, which Complete deletes. text is the part for the node's
+	// text, which a kept scalar result may still reference.
+	charged, text int64
 }
 
 // Run contains only run-local state. Compiled schema handles remain immutable.
@@ -145,6 +212,7 @@ type Run struct {
 	meter                 Meter
 	context               Context
 	nodes                 map[SubjectID]*Node
+	nodesPeak             int
 	states                map[SubjectID]*boundState
 	retained              int64
 	scratchRetained       int64
@@ -200,6 +268,17 @@ func (r *Run) reserve(n int64) {
 		panic(runAbort{err})
 	}
 	r.retained += n
+}
+
+// reserveNode admits a node object about to be inserted into Run.nodes, and
+// a map entry when the insertion raises the most entries ever live.
+func (r *Run) reserveNode() {
+	if len(r.nodes) < r.nodesPeak {
+		r.reserve(nodeObjectBytes)
+		return
+	}
+	r.reserve(nodeObjectBytes + runMapEntryBytes)
+	r.nodesPeak++
 }
 func (r *Run) step(n int64) {
 	if err := r.current.Err(); err != nil {
@@ -310,11 +389,13 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		subject.Current = r.context.checkCurrent(subject.Current)
 	}
 	r.scalar(int64(len(subject.Text)))
-	r.reserve(int64(unsafe.Sizeof(boundState{})) + int64(unsafe.Sizeof(Node{})) + 192)
-	r.reserve(r.context.builderAllowance(int64(len(subject.Text))))
-	r.reserve(r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
+	r.reserve(boundStateBytes)
+	text := r.context.builderAllowance(int64(len(subject.Text)))
+	work := r.context.sum(bindWorkBytes, text, r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
+	r.reserve(work)
 	node := r.nodes[subject.ID]
 	if node == nil {
+		r.reserveNode()
 		node = &Node{}
 		r.nodes[subject.ID] = node
 	}
@@ -332,7 +413,8 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 		n := r.nodes[ch.ID]
 		if n == nil {
-			r.reserve(256)
+			r.reserveNode()
+			work += nodeObjectBytes
 			n = &Node{ID: ch.ID, Name: ch.Name}
 			r.nodes[ch.ID] = n
 		} else if n.Name != ch.Name {
@@ -340,7 +422,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 		node.Children[i] = n
 	}
-	s := &boundState{run: r, subject: subject, node: node, use: use, results: freshResults(), family: "binding"}
+	s := &boundState{bindWork: &bindWork{subject: subject, node: node, family: "binding", results: freshResults(), charged: work, text: text}, run: r, id: subject.ID}
 	r.states[subject.ID] = s
 	bound = Binding{r, s}
 	r.context.local = s
@@ -400,16 +482,19 @@ func (r *Run) ActualType(b Binding) (TypeID, bool) {
 func (r *Run) typeID(ref *TypeRef) (TypeID, bool) { return r.schema.typeID(ref) }
 
 func (r *Run) owns(b Binding) bool {
-	return r != nil && b.run == r && b.state != nil && r.states[b.state.subject.ID] == b.state
+	return r != nil && b.run == r && b.state != nil && r.states[b.state.id] == b.state
 }
 func (r *Run) Results(b Binding) NodeResults {
 	if !r.owns(b) {
 		return NodeResults{}
 	}
-	return b.state.results
+	return b.state.nodeResults()
 }
+
+// Witnesses returns the subject's child witnesses, borrowed until the subject
+// completes. After Complete, which releases them, it returns nil.
 func (r *Run) Witnesses(b Binding) []Witness {
-	if !r.owns(b) {
+	if !r.owns(b) || b.state.bindWork == nil {
 		return nil
 	}
 	return b.state.witnesses
@@ -418,7 +503,7 @@ func (r *Run) Scalar(b Binding) ScalarResult {
 	if !r.owns(b) {
 		return ScalarResult{}
 	}
-	return b.state.scalar
+	return b.state.scalarResult()
 }
 
 // Attributes yields assessed attribute facts in input order, then schema order
@@ -451,7 +536,9 @@ func (r *Run) buildWitnesses(s *boundState) {
 		}
 	}
 	if count != 0 {
-		r.reserve(r.context.size(int64(count), int64(unsafe.Sizeof(Witness{}))))
+		n := r.context.size(int64(count), int64(unsafe.Sizeof(Witness{})))
+		r.reserve(n)
+		s.charged += n
 		s.witnesses = make([]Witness, 0, count)
 	}
 	for _, m := range s.matches {
@@ -513,6 +600,12 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 			b.state.abort()
 			b.state.done = true
 		}
+		// Completed subjects keep only their published results.
+		if b.state.done {
+			if releaseErr := r.releaseWork(b.state); err == nil {
+				err = releaseErr
+			}
+		}
 	}()
 	defer recoverRun(&err)
 	defer r.releaseScratch()
@@ -545,8 +638,49 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 		r.context.RecordElementIdentity(s.declared, s.actual, s.effectiveText, s.subject.Path, r.nodes[s.subject.Parent], declarationValid)
 	}
 	s.done = true
-	s.completion = Completion{TypeValid: typeValid, DeclarationValid: declarationValid, Complete: complete, IdentityClosed: complete && !r.context.IdentityIncomplete, run: r, subject: s.subject.ID}
-	return s.completion, nil
+	return Completion{TypeValid: typeValid, DeclarationValid: declarationValid, Complete: complete, IdentityClosed: complete && !r.context.IdentityIncomplete, run: r, subject: s.id}, nil
+}
+
+// releaseWork drops a completed subject's scratch and the borrowed facts of
+// its input node. Its children are complete (or never bound), and no later
+// operation reads them: only a child's Complete reads its parent's node, as
+// the identity owner. The subject's own node entry stays until its parent
+// completes. The work's charge is released less the copies of nondefault
+// results, which the work's own results and scalar always exceed. A kept
+// scalar's lexemes and value may share the node's text buffer, so its charge
+// stays as well.
+func (r *Run) releaseWork(s *boundState) error {
+	w := s.bindWork
+	if w == nil {
+		return nil
+	}
+	s.bindWork = nil
+	release := w.charged
+	res := &w.results
+	if !isFreshResult(&res.Binding) || !isFreshResult(&res.Declaration) || !isFreshResult(&res.Attributes) || !isFreshResult(&res.Scalar) || !isFreshResult(&res.Content) {
+		final := w.results
+		s.final = &final
+		release -= finalBytes
+	}
+	if !isZeroScalar(&w.scalar) {
+		scalar := w.scalar
+		s.finalScalar = &scalar
+		release -= finalScalarSize + w.text
+	}
+	if n := w.node; n != nil {
+		for _, ch := range n.Children {
+			if ch != nil {
+				delete(r.nodes, ch.ID)
+			}
+		}
+		n.Children, n.Attrs, n.Namespaces = nil, nil, nil
+		n.Text = strings.Builder{}
+	}
+	if release <= 0 {
+		return nil
+	}
+	r.retained -= release
+	return r.meter.Release(release)
 }
 
 // Identity reports currently proved identity facts; false completeness suppresses
@@ -778,7 +912,12 @@ func (c *Context) proveIdentityFailure() {
 
 // A stopped local operation cannot publish its untouched pass defaults as
 // completed evidence. Proved failures and exact scalar facts remain available.
+// Only an operation on a subject that has not completed can stop: a completed
+// subject's results are final.
 func (s *boundState) abort() {
+	if s.bindWork == nil {
+		return
+	}
 	for _, result := range []*Result{&s.results.Binding, &s.results.Declaration, &s.results.Attributes, &s.results.Scalar, &s.results.Content} {
 		result.Complete = false
 	}

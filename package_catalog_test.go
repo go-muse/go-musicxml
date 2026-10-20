@@ -254,7 +254,7 @@ func TestPackageIntrinsicSourceDiscoveryAvailableForEveryAssembly(t *testing.T) 
 		}
 		t.Run(string(row.Assembly), func(t *testing.T) {
 			source := strings.Replace(sources[row.Assembly], ">", ` xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:a a.xsd trailing">`, 1)
-			report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(row.Profile)})
+			report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(row.Profile)})
 			if err != nil || !report.Satisfied() {
 				t.Fatalf("odd source hint changed intrinsic datatype validity: %v %+v", err, report)
 			}

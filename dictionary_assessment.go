@@ -53,7 +53,7 @@ func dictionaryAssessmentConfigAccount(ctx context.Context, options dictionaryAs
 		return cfg, &validation.ConfigurationError{Field: "dictionary capability", Reason: "loader returned neither a set nor a failure"}
 	}
 	cfg.Account, cfg.Profile, cfg.Engine, cfg.Dictionaries = account, options.Assessment.Profile, engine, set
-	cfg.OmitContext = options.Assessment.OmitContext
+	cfg.Context = options.Assessment.Context
 	return cfg, loadErr
 }
 

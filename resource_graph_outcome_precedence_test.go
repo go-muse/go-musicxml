@@ -32,10 +32,10 @@ func TestResourceGraphSchemaHintSiblingPrecedence(t *testing.T) {
 				var err error
 				switch mode {
 				case "source":
-					b, err = InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
+					b, err = InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}})
 				case "raw-package":
 					data := packageGraphBytes(source, "main.opus", "")
-					b, err = InspectMXL(context.Background(), bytes.NewReader(data), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}})
+					b, err = InspectMXL(context.Background(), bytes.NewReader(data), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource}})
 				default:
 					var doc Document
 					doc, err = Decode(strings.NewReader(source))
@@ -43,9 +43,9 @@ func TestResourceGraphSchemaHintSiblingPrecedence(t *testing.T) {
 						t.Fatal(err)
 					}
 					if mode == "model" {
-						b, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
+						b, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}})
 					} else {
-						b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
+						b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel}})
 					}
 				}
 				if err != nil {

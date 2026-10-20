@@ -232,7 +232,7 @@ func TestSourceAuxiliaryHintOnlyEffectiveAndPhysicalValues(t *testing.T) {
 					t.Fatal(err)
 				}
 				ctx := context.Background()
-				s, err := engine.Begin(ctx, RunOptions{DocumentID: "source", Profile: "auxiliary-hint-test"})
+				s, err := engine.Begin(ctx, RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "auxiliary-hint-test"})
 				if err != nil {
 					t.Fatal(err)
 				}

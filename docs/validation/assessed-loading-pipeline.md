@@ -264,25 +264,33 @@ source-only budget receipts do not promise capacity for the combined pipeline.
 
 Minimal budgets of `DecodeAssessed`, found by binary search through the public
 API on darwin/arm64. "Before the split" is the pipeline before the validation
-lines; "lines" is `59d4536`; "now" adds the verified-set cache, the deferred
-import, real-layout projection accounting and shared attribute tables;
-"without context" also sets `SourceOptions.OmitContext`:
+lines; "lines" is `59d4536`; "batch 2" adds the verified-set cache, the
+deferred import, real-layout projection accounting and shared attribute
+tables, with the complete projection that was then the default; "now" adds
+the default empty context selection, compact XSD state, outcome bits,
+interned engine strings and the release of XSD work charges when a subject
+completes; "now, complete projection" sets `SourceOptions.Context` to
+`validation.ContextFamilyAll`:
 
-| File | Before the split | Lines | Now | Without context |
-| --- | --- | --- | --- | --- |
-| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 27.1 MiB | 8.69 million, 12.3 MiB |
-| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 34.7 MiB | 10.13 million, 15.5 MiB |
-| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 75.6 MiB | 23.91 million, 34.7 MiB |
-| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.13 million, 39.2 MiB |
+| File | Before the split | Lines | Batch 2 | Now | Now, complete projection |
+| --- | --- | --- | --- | --- | --- |
+| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 27.1 MiB | 8.68 million, 8.8 MiB | 9.73 million, 23.8 MiB |
+| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 34.7 MiB | 10.13 million, 11.2 MiB | 11.40 million, 30.6 MiB |
+| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 75.6 MiB | 23.92 million, 25.4 MiB | 26.74 million, 66.8 MiB |
+| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.23 million, 27.5 MiB | 32.24 million, 73.0 MiB |
 
 The first two load within the default budgets (20 million rule steps, 64 MiB);
-`TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores still
-need explicit budgets. These are logical account figures for these files, not
-heap measurements or general capacity. A one-off comparison when these changes
-were made, not a test, found the reports unchanged: on every corpus and
-official file that loads within the default budgets, the reports of
-`DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`, `InspectMXL` and
-`AssessModel` were identical to those of `59d4536`.
+`TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores now
+fit the default buffer but still need more rule steps than the default. These
+are logical account figures for these files, not heap measurements or general
+capacity; at the end of input the charge covers the live heap
+(`TestBufferedChargeCoversTheHeapAtEndOfInput`), and while `Finish` evaluates
+the document families it still exceeds it several times over. A one-off
+comparison when these changes were made, not a test, found the reports
+unchanged: on every corpus and official file, the reports of `DecodeAssessed`,
+`DecodeMXLAssessed`, `InspectXML`, `InspectMXL`, `AssessModel`,
+`AssessMXLPackage` and both graph entry points, for every profile and with the
+complete projection selected, were identical to those of `9d61a8b`.
 
 ### Dictionary import cost
 
@@ -316,12 +324,12 @@ completed line-2 report.
 cloned strings and payload rounded to the allocator's size classes, and the
 backing array exactly for its capacity, including the moment it grows.
 `TestContextProjectionAccountingCoversItsHeap` checks on corpus documents that
-the charge never falls below the measured heap. `OmitContext` of `SourceOptions` and `ModelOptions`
-leaves `Report.Context` empty in every returned report and keeps every
-decision, count and finding; it roughly halves the buffer strict loading needs
-(table above). It applies to the single-document entry points, whose options
-are `SourceOptions` or `ModelOptions`; graph and package assessment keep the projection,
-which their resource snapshots read.
+the charge never falls below the measured heap. `Report.Context` is empty
+unless the caller selects context families (the `Context` field of every
+options type). Within budgets that admit both runs, every decision, count and
+finding is the same whatever the selection; the default empty selection needs
+about a third of the buffer of the complete projection (table above). A graph's resource snapshots keep
+the records their package rules read whatever the selection.
 
 ### Low-level retained-report ownership
 

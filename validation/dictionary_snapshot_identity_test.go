@@ -23,7 +23,7 @@ func TestDictionaryPackageSnapshotsDoNotAliasActualCapabilities(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		s, err := engine.BeginWithDictionaries(ctx, RunOptions{DocumentID: document, Profile: "source-schema-test", Account: account}, set)
+		s, err := engine.BeginWithDictionaries(ctx, RunOptions{Context: ContextFamilyAll, DocumentID: document, Profile: "source-schema-test", Account: account}, set)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -53,7 +53,7 @@ func TestDictionaryPackageSnapshotsDoNotAliasActualCapabilities(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	session, err := catalog.begin(ctx, RunOptions{DocumentID: "package", Profile: "test.package", Account: account})
+	session, err := catalog.begin(ctx, RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -30,9 +30,9 @@ func TestDTDPackageCompositionAuxiliaryProfiles(t *testing.T) {
 			var r validation.Report
 			var err error
 			if tc.id == dtdSoundsProfile {
-				r, err = inspectXMLWithDictionaries(context.Background(), strings.NewReader(tc.source), dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: tc.id}})
+				r, err = inspectXMLWithDictionaries(context.Background(), strings.NewReader(tc.source), dictionaryAssessmentOptions{Assessment: assessmentOptions{Context: validation.ContextFamilyAll, Profile: tc.id}})
 			} else {
-				r, err = InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Profile: SourceProfile(tc.id)})
+				r, err = InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(tc.id)})
 			}
 			if err != nil || r.Conformance == validation.ConformanceViolated || !r.InputComplete {
 				t.Fatalf("err=%v report=%+v", err, r)

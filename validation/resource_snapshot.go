@@ -81,8 +81,8 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}
-	if s.omitContext {
-		return nil, contract("resource snapshot", "requires the context projection that RunOptions.OmitContext omits")
+	if !s.resourceSnapshot && s.contextFamilies&resourceContextFamilies != resourceContextFamilies {
+		return nil, contract("resource snapshot", "requires the context families it copies or a run prepared for a snapshot")
 	}
 	h := ResourceSnapshotHeader{DocumentID: s.documentID, Root: NodeRef{DocumentID: s.documentID}, Profile: s.profile.ID, CatalogDigest: s.profile.CatalogDigest, Target: s.profile.Target, InputComplete: s.inputComplete, Syntax: report.Syntax, Name: Evidence[QName]{State: EvidenceUnknown, Reason: "resource-root-unavailable"}, Assembly: Evidence[Assembly]{State: EvidenceUnknown, Reason: "resource-assembly-unavailable"}, ScopeComplete: Evidence[bool]{State: EvidenceUnknown, Reason: "resource-scope-incomplete"}}
 	if s.rejectedRootName.Local != "" {
@@ -128,10 +128,8 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 		return nil, err
 	}
 	count := 0
-	for _, v := range report.Context {
-		if resourceSelectedContext(v.Property) {
-			count++
-		}
+	if err := s.snapshotContexts(ctx, func(*ContextResult) error { count++; return nil }); err != nil {
+		return nil, err
 	}
 	// Account the private canonical report, selected fact copies, and their
 	// exact-length backing arrays while session/output representations coexist.
@@ -179,18 +177,15 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	if e != nil {
 		return nil, e
 	}
-	for _, v := range report.Context {
-		if !resourceSelectedContext(v.Property) {
-			continue
-		}
-		n, e := resourceMeasure(ctx, s.account, reflect.ValueOf(v))
+	if err = s.snapshotContexts(ctx, func(v *ContextResult) error {
+		n, e := resourceMeasure(ctx, s.account, reflect.ValueOf(*v))
 		if e != nil {
-			return nil, e
+			return e
 		}
 		size, e = rationalCheckedAdd(BudgetBufferedBytes, size, n)
-		if e != nil {
-			return nil, e
-		}
+		return e
+	}); err != nil {
+		return nil, err
 	}
 	if _, err = allocationSize(size); err != nil {
 		return nil, err
@@ -227,13 +222,14 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	}
 	out.contexts = make([]ContextResult, count)
 	at := 0
-	for _, v := range report.Context {
-		if resourceSelectedContext(v.Property) {
-			if err = resourceCopyInto(ctx, reflect.ValueOf(&out.contexts[at]).Elem(), reflect.ValueOf(v), "", ""); err != nil {
-				return nil, err
-			}
-			at++
+	if err = s.snapshotContexts(ctx, func(v *ContextResult) error {
+		if e := resourceCopyInto(ctx, reflect.ValueOf(&out.contexts[at]).Elem(), reflect.ValueOf(*v), "", ""); e != nil {
+			return e
 		}
+		at++
+		return nil
+	}); err != nil {
+		return nil, err
 	}
 	if err = ctx.Err(); err != nil {
 		return nil, err
@@ -640,6 +636,12 @@ func resourceCopyAs(ctx context.Context, v reflect.Value, from, to string) (refl
 // every struct/string field. The root and mutable pointers/slices still own their
 // storage; immutable numeric values may safely share their private magnitude.
 func resourceCopyInto(ctx context.Context, out, v reflect.Value, from, to string) error {
+	return resourceCopyIntoOwned(ctx, out, v, from, to, nil)
+}
+
+// resourceCopyIntoOwned shares short strings through the session intern table
+// when s is not nil.
+func resourceCopyIntoOwned(ctx context.Context, out, v reflect.Value, from, to string, s *Session) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -650,7 +652,7 @@ func resourceCopyInto(ctx context.Context, out, v reflect.Value, from, to string
 	switch v.Kind() {
 	case reflect.Struct:
 		for i := 0; i < v.NumField(); i++ {
-			if err := resourceCopyInto(ctx, out.Field(i), v.Field(i), from, to); err != nil {
+			if err := resourceCopyIntoOwned(ctx, out.Field(i), v.Field(i), from, to, s); err != nil {
 				return err
 			}
 		}
@@ -680,16 +682,20 @@ func resourceCopyInto(ctx context.Context, out, v reflect.Value, from, to string
 			return nil
 		}
 		for i := 0; i < v.Len(); i++ {
-			if err := resourceCopyInto(ctx, out.Index(i), v.Index(i), from, to); err != nil {
+			if err := resourceCopyIntoOwned(ctx, out.Index(i), v.Index(i), from, to, s); err != nil {
 				return err
 			}
 		}
 	case reflect.Pointer:
 		if !v.IsNil() {
 			out.Set(reflect.New(v.Type().Elem()))
-			return resourceCopyInto(ctx, out.Elem(), v.Elem(), from, to)
+			return resourceCopyIntoOwned(ctx, out.Elem(), v.Elem(), from, to, s)
 		}
 	case reflect.String:
+		if s != nil && v.Len() <= resourceCopyChunk {
+			out.SetString(s.own(v.String()))
+			return ctx.Err()
+		}
 		text, err := resourceCopyString(ctx, v.String())
 		if err != nil {
 			return err

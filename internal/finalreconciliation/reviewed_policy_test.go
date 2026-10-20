@@ -11,7 +11,7 @@ import (
 // pin update. These hashes freeze evidence classifications and residual text;
 // they do not establish runtime conformance or interpret arbitrary prose.
 const reviewedRequirementPolicySHA256 = "d90dc8cab1ce1ff7c46eae6d481e9cfb723b9a855065176997ca470363ed67ce"
-const reviewedCasePolicySHA256 = "39142d49a9a6798fbd689f0c40a43aeee29cec4490fe19fcb6067355abb9ff21"
+const reviewedCasePolicySHA256 = "fb700fa9185362e3d89094837937b7a3f9c3ba70c3d9788231d3c8dc2748e442"
 const reviewedAxisPolicySHA256 = "790639672f0e3f9d3bdf3aa925c4de35ade4d826ed76a640fc740c217cb5272e"
 
 var preservedSourcePins = map[string]string{
