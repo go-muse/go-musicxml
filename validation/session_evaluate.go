@@ -175,7 +175,7 @@ func evidenceDecision(state EvidenceState, reason Code, cause *DecisionRef, abse
 // lookupDecision is the only reader of per-subject outcomes. Reconstructed
 // Pass/NA results preserve their identity without retaining diagnostic payloads.
 func (s *Session) lookupDecision(id decisionID) (Decision, bool) {
-	if result := s.successful[id.rule][id.node]; result != 0 {
+	if result := s.successful[id.rule].get(id.node); result != 0 {
 		outcome := OutcomePass
 		if result == successfulNotApplicable {
 			outcome = OutcomeNotApplicable
@@ -205,26 +205,22 @@ func (s *Session) cacheDecision(r RuleDefinition, n *factNode, d Decision) error
 	id := decisionID{r.Key, n.header.ID}
 	if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
 		results := s.successful[r.Key]
-		bytes := int64(32) // NodeID, outcome byte and conservative map allowance.
 		if results == nil {
-			bytes += int64(128 + len(r.Key.ID)) // Both map levels and per-rule state.
-		}
-		if err := s.retain(bytes); err != nil {
-			return err
-		}
-		if results == nil {
-			if s.successful == nil {
-				s.successful = make(map[RuleKey]map[NodeID]successfulOutcome)
+			// Both map levels and per-rule state.
+			if err := s.retain(int64(128 + len(r.Key.ID))); err != nil {
+				return err
 			}
-			results = make(map[NodeID]successfulOutcome)
+			if s.successful == nil {
+				s.successful = make(map[RuleKey]*outcomeBits)
+			}
+			results = &outcomeBits{}
 			s.successful[r.Key] = results
 		}
 		result := successfulPass
 		if d.Outcome == OutcomeNotApplicable {
 			result = successfulNotApplicable
 		}
-		results[n.header.ID] = result
-		return nil
+		return results.set(s, n.header.ID, result)
 	}
 	// Problem dependencies retain only outcome, reason and cause, not copied
 	// attacker-controlled value text or diagnostic location lists.

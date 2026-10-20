@@ -477,12 +477,14 @@ func TestReviewCompactCacheReservesBeforeAllocation(t *testing.T) {
 			if err := account.Charge(BudgetBufferedBytes, sibling); err != nil {
 				t.Fatal(err)
 			}
-			n.header.ID = 2
+			// Outcome bitsets charge per word block: pick an ID outside the
+			// first block so the existing table must grow.
+			n.header.ID = 2 + 32*16
 			err := s.record(rule, n, Decision{Outcome: OutcomePass})
 			if !errors.Is(err, ErrResourceLimit) {
 				t.Fatalf("missing per-entry reservation: %v", err)
 			}
-			if _, ok := s.lookupDecision(decisionID{key, 2}); ok {
+			if _, ok := s.lookupDecision(decisionID{key, 2 + 32*16}); ok {
 				t.Fatal("failed reservation retained compact entry")
 			}
 			if !existing && s.successful != nil {

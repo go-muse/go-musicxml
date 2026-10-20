@@ -94,6 +94,7 @@ type factNode struct {
 	attributes          []AttributeFact
 	attributeSeal       *Evidence[bool]
 }
+
 type decisionID struct {
 	rule RuleKey
 	node NodeID
@@ -159,7 +160,8 @@ type Session struct {
 	sequence                []NodeID
 	stack                   []*factNode
 	decisions               map[decisionID]Decision
-	successful              map[RuleKey]map[NodeID]successfulOutcome
+	successful              map[RuleKey]*outcomeBits
+	strings                 map[string]string
 	documentPrerequisites   map[RuleKey]*documentPrerequisite
 	contexts                map[ContextKey]ContextFact
 	identities              map[string]*identityIndex
@@ -456,7 +458,7 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 			return s.fail(&SessionError{Operation: "Attribute", Reason: "duplicate expanded attribute slot"})
 		}
 	}
-	n.attributes = append(n.attributes, cloneAttribute(attribute))
+	n.attributes = append(n.attributes, s.ownAttribute(attribute))
 	if s.sourceOriginKey() != (RuleKey{}) {
 		if attribute.Presence.State == EvidenceKnown && attribute.Presence.Value {
 			s.sourceOriginExpected++
@@ -774,6 +776,7 @@ func (s *Session) cleanup() {
 		_ = s.account.Release(BudgetBufferedBytes, s.retained)
 		s.retained = 0
 	}
+	s.strings = nil
 	s.nodes = nil
 	s.facts = nil
 	s.nodeCapacity = 0

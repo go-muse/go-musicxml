@@ -640,6 +640,12 @@ func resourceCopyAs(ctx context.Context, v reflect.Value, from, to string) (refl
 // every struct/string field. The root and mutable pointers/slices still own their
 // storage; immutable numeric values may safely share their private magnitude.
 func resourceCopyInto(ctx context.Context, out, v reflect.Value, from, to string) error {
+	return resourceCopyIntoOwned(ctx, out, v, from, to, nil)
+}
+
+// resourceCopyIntoOwned shares short strings through the session intern table
+// when s is not nil.
+func resourceCopyIntoOwned(ctx context.Context, out, v reflect.Value, from, to string, s *Session) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -650,7 +656,7 @@ func resourceCopyInto(ctx context.Context, out, v reflect.Value, from, to string
 	switch v.Kind() {
 	case reflect.Struct:
 		for i := 0; i < v.NumField(); i++ {
-			if err := resourceCopyInto(ctx, out.Field(i), v.Field(i), from, to); err != nil {
+			if err := resourceCopyIntoOwned(ctx, out.Field(i), v.Field(i), from, to, s); err != nil {
 				return err
 			}
 		}
@@ -680,16 +686,20 @@ func resourceCopyInto(ctx context.Context, out, v reflect.Value, from, to string
 			return nil
 		}
 		for i := 0; i < v.Len(); i++ {
-			if err := resourceCopyInto(ctx, out.Index(i), v.Index(i), from, to); err != nil {
+			if err := resourceCopyIntoOwned(ctx, out.Index(i), v.Index(i), from, to, s); err != nil {
 				return err
 			}
 		}
 	case reflect.Pointer:
 		if !v.IsNil() {
 			out.Set(reflect.New(v.Type().Elem()))
-			return resourceCopyInto(ctx, out.Elem(), v.Elem(), from, to)
+			return resourceCopyIntoOwned(ctx, out.Elem(), v.Elem(), from, to, s)
 		}
 	case reflect.String:
+		if s != nil && v.Len() <= resourceCopyChunk {
+			out.SetString(s.own(v.String()))
+			return ctx.Err()
+		}
 		text, err := resourceCopyString(ctx, v.String())
 		if err != nil {
 			return err

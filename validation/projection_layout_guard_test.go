@@ -247,7 +247,7 @@ func TestRetainedLayoutBytesCoverTheCopyHeap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		copied := cloneLayoutContextValue(layout)
+		copied := cloneLayoutContextValue(nil, layout)
 		if real := layoutGuardHeap(reflect.ValueOf(&copied), map[uintptr]bool{}); charged < real {
 			t.Errorf("layout %+v: charged %d, the copy occupies %d", shape, charged, real)
 		}
@@ -602,4 +602,13 @@ func TestContextRecordOriginsMeasuredWithCheckpoints(t *testing.T) {
 	if steps := rationalUsage(t, s, BudgetRuleSteps); steps < 96*256 {
 		t.Fatalf("256 origins charged %d steps", steps)
 	}
+}
+
+// internCharge is what a session's intern table has charged: its header and
+// one slot per entry.
+func internCharge(s *Session) int64 {
+	if len(s.strings) == 0 {
+		return 0
+	}
+	return internTableBytes + int64(len(s.strings))*internSlotBytes
 }

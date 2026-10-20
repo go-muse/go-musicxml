@@ -270,7 +270,7 @@ func TestContextReviewLayoutTypedReferenceAndShape(t *testing.T) {
 	}
 	var checkStrings func(reflect.Value, reflect.Value)
 	checkStrings = func(a, b reflect.Value) {
-		if a.Type() == reflect.TypeFor[Integer]() || a.Type() == reflect.TypeFor[Decimal]() || a.Type() == reflect.TypeFor[Rational]() {
+		if a.Type() == reflect.TypeFor[Integer]() || a.Type() == reflect.TypeFor[Decimal]() || a.Type() == reflect.TypeFor[Rational]() || a.Type() == reflect.TypeFor[AtomicKind]() {
 			return
 		}
 		switch a.Kind() {
@@ -307,7 +307,9 @@ func TestContextReviewLayoutExactBudgetAndCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	size, work := ample.retained, rationalUsage(t, ample, BudgetRuleSteps)
+	// Interning is optional under pressure, so the exact admission excludes
+	// the intern table's charges.
+	size, work := ample.retained-internCharge(ample), rationalUsage(t, ample, BudgetRuleSteps)
 	ample.cleanup()
 	for _, tc := range []struct {
 		kind  BudgetKind

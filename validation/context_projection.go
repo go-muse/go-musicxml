@@ -3,7 +3,6 @@ package validation
 import (
 	"context"
 	"reflect"
-	"strings"
 	"unsafe"
 )
 
@@ -193,15 +192,15 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 		return err
 	}
 	out := in
-	out.Provider = cloneKey(in.Provider)
-	out.Subject.DocumentID = strings.Clone(in.Subject.DocumentID)
-	out.Property = ContextProperty(strings.Clone(string(in.Property)))
-	out.Value = cloneEvidence(in.Value)
-	out.Value.Value = cloneAtomic(in.Value.Value)
+	out.Provider = s.ownKey(in.Provider)
+	out.Subject.DocumentID = s.own(in.Subject.DocumentID)
+	out.Property = ContextProperty(s.own(string(in.Property)))
+	out.Value = ownEvidence(s, in.Value)
+	out.Value.Value = s.ownAtomic(in.Value.Value)
 	if len(in.Origins) != 0 {
 		out.Origins = make([]Location, len(in.Origins))
 		for i, origin := range in.Origins {
-			out.Origins[i] = cloneLocation(origin)
+			out.Origins[i] = s.ownLocation(origin)
 		}
 	}
 	if out.Span, err = cloneSpanContext(ctx, s, in.Span); err != nil {
