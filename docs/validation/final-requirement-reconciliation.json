@@ -18341,7 +18341,7 @@
       "anchors": [
         {
           "file": "internal/xsd/identity_resolve_test.go",
-          "text": "\trun, _ := newIdentityResolverRun(t)\n\towner := &Node{ID: 42}\n\t// The ID-valued element has occurrence 99, but its actual-ID owner is its\n\t// containing element. Display paths and scalar origins are not owner IDs.\n\trun.context.local = &boundState{subject: Subject{ID: 99}}\n\tregisterResolverOwner(run, \" \\ttarget\\n \", owner)\n\tregisterResolverOwner(run, \"target\", owner)\n\trun.context.local = nil\n\tif _, err := run.Identity(context.Background(), true); err != nil {\n\t\tt.Fatal(err)\n\t}"
+          "text": "run, _ := newIdentityResolverRun(t)\n\towner := &Node{ID: 42}\n\t// The ID-valued element has occurrence 99, but its actual-ID owner is its\n\t// containing element. Display paths and scalar origins are not owner IDs.\n\trun.context.local = &boundState{bindWork: &bindWork{subject: Subject{ID: 99}}, id: 99}\n\tregisterResolverOwner(run, \" \\ttarget\\n \", owner)\n\tregisterResolverOwner(run, \"target\", owner)\n\trun.context.local = nil\n\tif _, err := run.Identity(context.Background(), true); err != nil {\n\t\tt.Fatal(err)\n\t}"
         },
         {
           "file": "internal/xsd/identity_resolve_test.go",
@@ -18877,7 +18877,7 @@
       "anchors": [
         {
           "file": "resource_graph_boundary_inventory_test.go",
-          "text": "for _, current := range []bool{false, true} {\n\t\tfor _, mode := range []string{\"absent\", \"existing\", \"cycle\"} {\n\t\t\tt.Run(fmt.Sprintf(\"current=%t/%s\", current, mode), func(t *testing.T) {\n\t\t\t\tlast := \"missing.opus\"\n\t\t\t\tif mode == \"cycle\" {\n\t\t\t\t\tlast = \"one.opus\"\n\t\t\t\t}\n\t\t\t\tdata, value := reviewBoundaryFixture(t, last, mode == \"existing\")\n\t\t\t\tcalls := 0\n\t\t\t\toptions := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {\n\t\t\t\t\tcalls++"
+          "text": "for _, current := range []bool{false, true} {\n\t\tfor _, mode := range []string{\"absent\", \"existing\", \"cycle\"} {\n\t\t\tt.Run(fmt.Sprintf(\"current=%t/%s\", current, mode), func(t *testing.T) {\n\t\t\t\tlast := \"missing.opus\"\n\t\t\t\tif mode == \"cycle\" {\n\t\t\t\t\tlast = \"one.opus\"\n\t\t\t\t}\n\t\t\t\tdata, value := reviewBoundaryFixture(t, last, mode == \"existing\")\n\t\t\t\tcalls := 0\n\t\t\t\toptions := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {\n\t\t\t\t\tcalls++"
         },
         {
           "file": "resource_graph_boundary_inventory_test.go",
