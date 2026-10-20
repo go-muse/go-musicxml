@@ -160,7 +160,7 @@ func TestMandatoryAssessedLoadingKeepsSourceReportLeaseDuringModel(t *testing.T)
 	expected := mandatoryIndependentLeaseCheckpoint(t, source, sourceNodes)
 	observed := &mandatoryLeaseCheckpointContext{Context: context.Background(), sourceNodes: sourceNodes}
 	run, modelConfig := mandatoryLeaseFixture(t, observed, source)
-	result, err := decodeAssessedRun(observed, run, modelConfig, nil, false)
+	result, err := decodeAssessedRun(observed, run, preloadedModelLine(modelConfig), false)
 	if err != nil || result.Document == nil {
 		t.Fatalf("pipeline control failed: document=%T error=%v", result.Document, err)
 	}
@@ -180,7 +180,7 @@ func TestMandatoryAssessedLoadingModelStartupCancellationLeavesUnrequestedReport
 	defer cancel()
 	observed := &mandatoryLeaseCheckpointContext{Context: ctx, sourceNodes: sourceNodes, cancel: cancel, cancelAtBuffered: expected.modelStartupBuffered}
 	run, modelConfig := mandatoryLeaseFixture(t, observed, source)
-	result, err := decodeAssessedRun(observed, run, modelConfig, nil, false)
+	result, err := decodeAssessedRun(observed, run, preloadedModelLine(modelConfig), false)
 	if !observed.startupCanceled || !errors.Is(err, context.Canceled) || !errors.Is(err, ErrIncompleteAssessment) || result.Document != nil || result.Conversion.State != validation.ConversionConverted {
 		t.Fatalf("model startup cancellation missed its boundary: canceled=%v document=%T conversion=%s error=%v", observed.startupCanceled, result.Document, result.Conversion.State, err)
 	}
@@ -275,6 +275,21 @@ func mandatoryLeaseFixture(t *testing.T, observed *mandatoryLeaseCheckpointConte
 	}
 	observed.source = run
 	return run, modelConfig
+}
+
+// assessedLoadingLines configures both lines up front, for tests that drive
+// decodeAssessedRun with an already imported line-3 configuration.
+func assessedLoadingLines(ctx context.Context, normalized dictionaryAssessmentOptions) (source, model assessmentRunConfig, err error) {
+	if source, err = assessedSourceLine(normalized); err != nil {
+		return source, model, err
+	}
+	model, err = assessedModelLine(ctx, normalized, source.Account)
+	return source, model, err
+}
+
+// preloadedModelLine hands decodeAssessedRun an imported configuration.
+func preloadedModelLine(model assessmentRunConfig) func() (assessmentRunConfig, error) {
+	return func() (assessmentRunConfig, error) { return model, nil }
 }
 
 func mandatoryLiveBuffered(t *testing.T, account *validation.Account) int64 {

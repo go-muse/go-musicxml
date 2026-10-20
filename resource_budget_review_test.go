@@ -61,15 +61,19 @@ func TestReviewDefaultBudgetOfficialSourceComposition(t *testing.T) {
 			r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: profile})
 			if profile == ProfileSourceSemantics && err != nil {
 				// Historically this input reached the 20M work limit before layout
-				// publication. Reduced repeated work now reaches a later buffer
-				// refusal after the same complete input. Matched-phase diagnostics
-				// show lower live storage and identical complete reports; neither
+				// publication; reduced repeated work then moved the refusal to the
+				// buffer. With real-layout projection accounting the buffer and the
+				// work limit are both close to exhaustion at the end of the same
+				// complete input, so either may refuse first. Neither
 				// default-budget refusal is a completed or satisfied assessment.
 				var limit *validation.ResourceError
-				if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
+				if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes && limit.Kind != validation.BudgetRuleSteps || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
 					t.Fatalf("unexpected default-budget failure: %v", err)
 				}
 				wantLimit := validation.DefaultBudgets().MaxBufferedBytes
+				if limit.Kind == validation.BudgetRuleSteps {
+					wantLimit = validation.DefaultBudgets().MaxRuleSteps
+				}
 				if limit.Limit != wantLimit {
 					t.Fatalf("resource refusal did not use the default limit: %v", err)
 				}
@@ -90,11 +94,12 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 	}
 	_, err = InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: ProfileSourceSemantics})
 	if err != nil {
+		// The default buffer or work limit refuses, whichever comes first.
 		var limit *validation.ResourceError
-		if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes {
+		if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes && limit.Kind != validation.BudgetRuleSteps {
 			t.Fatalf("unexpected original-byte limit: %v", err)
 		}
-		t.Logf("original UTF-16 sample default buffer: %v", err)
+		t.Logf("original UTF-16 sample default limit: %v", err)
 	}
 	// With configured capacity the original bytes complete: the external
 	// subset comes from the bundled official MusicXML DTD.
@@ -184,13 +189,16 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 		// moved the boundary to 571/572; since that rule belongs to the
 		// strict-loading source line only, this internal-DTD graph profile no
 		// longer carries it, and the boundary is 576/577 again. The structural
-		// score/part role wording adds 59 live bytes.
+		// score/part role wording adds 59 live bytes. Accounting the context
+		// projection by its real layout moves the boundary to 613/614.
 		{568, 76155, false, 0, 0},
 		{569, 76289, false, 0, 0},
 		{571, 76557, false, 0, 0},
 		{572, 76691, false, 0, 0},
 		{576, 77227, false, 0, 0},
-		{577, 77361, true, 42123851, 25064575},
+		{577, 77361, false, 0, 0},
+		{613, 82185, false, 0, 0},
+		{614, 82319, true, 40496624, 26667267},
 	} {
 		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
 			source := reviewBudgetScore(tc.measures)
@@ -224,8 +232,9 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	// strings. The current-state schema-hint wording adds 84 live bytes. The
 	// source representability rule added its definitions and node results
 	// until it moved to the strict-loading source line. The structural
-	// score/part role wording adds 59 live bytes.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54551399, 34741296)
+	// score/part role wording adds 59 live bytes. Real-layout projection
+	// accounting lowers the live side to 48,656,055.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 48656055, 34741296)
 	t.Logf("source bytes=%d err=%v", len(source), err)
 }
 
@@ -233,15 +242,15 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 	if runtime.GOARCH != "amd64" {
 		t.Skip("documented amd64 capacity witness")
 	}
-	// Retain the historical 569-measure fixture and the current 577-measure
+	// Retain the historical 569-measure fixture and the current 614-measure
 	// default refusal. Their measured final-snapshot overlaps establish exact
 	// and one-short admission controls, without changing production defaults.
 	for _, tc := range []struct {
 		measures, bytes int
 		used, requested int64
 	}{
-		{569, 76289, 41546451, 24718047},
-		{577, 77361, 42123851, 25064575},
+		{569, 76289, 37602213, 24718047},
+		{614, 82319, 40496624, 26667267},
 	} {
 		for _, short := range []int64{0, 1} {
 			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {

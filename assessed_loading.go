@@ -57,9 +57,11 @@ func requireDictionaryRelations(dictionaries DictionaryOptions, required []valid
 	return nil
 }
 
-// decodeValidated owns one account across both lines and one imported
-// dictionary set, which only line 3 reads. Inspect/Assess entry points
-// continue to use their explicit profile contracts.
+// decodeValidated owns one account across both lines. Line 3 alone reads the
+// dictionaries, so the set is imported only once line 3 is due: after line 2
+// accepts the source, or after any line 2 without an operational failure in
+// the lenient mode. Inspect/Assess entry points continue to use their explicit
+// profile contracts.
 func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions, options *dictionaryAssessmentOptions, lenient bool) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	if err = assessmentContext(ctx, "canceled-before-source"); err != nil {
@@ -75,40 +77,48 @@ func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions
 	if err != nil {
 		return result, err
 	}
-	sourceConfig, modelConfig, loadErr := assessedLoadingLines(ctx, normalized)
-	if modelConfig.Dictionaries == nil {
-		return result, loadErr
+	sourceConfig, err := assessedSourceLine(normalized)
+	if err != nil {
+		return result, err
 	}
-	defer func() {
-		err = errors.Join(err, modelConfig.Dictionaries.Close())
-		if err != nil {
-			result.Document, result.Accepted = nil, false
-		}
-	}()
 	run, startErr := newSourceAssessmentRunWithConfig(ctx, reader, decode, &sourceAssessmentConfig{assessmentRunConfig: sourceConfig, ByteOwner: sourceBytesPrimary}, true)
 	if startErr != nil {
 		if run != nil {
 			result.SourceLine = run.startupReport
 		}
-		return result, errors.Join(loadErr, startErr)
+		return result, startErr
 	}
-	return decodeAssessedRun(ctx, run, modelConfig, loadErr, lenient)
+	return decodeAssessedRun(ctx, run, func() (assessmentRunConfig, error) {
+		return assessedModelLine(ctx, normalized, sourceConfig.Account)
+	}, lenient)
 }
 
-// assessedLoadingLines configures both validation lines of strict loading on
-// one account: line 2, ProfileSourceLine, reads the source without
-// dictionaries; line 3, ProfileModelSemantics, owns the imported dictionary
-// set. A nil model.Dictionaries means the import failed and err says why.
-func assessedLoadingLines(ctx context.Context, normalized dictionaryAssessmentOptions) (source, model assessmentRunConfig, err error) {
-	sourceEngine, err := sourceAssessmentEngineForProfile(ProfileSourceLine)
-	if err != nil {
-		return source, model, err
+// assessedSourceLine configures line 2 of strict loading, ProfileSourceLine,
+// which reads the source without dictionaries, on a new account for both
+// lines. Every dictionary option is validated here, before the source is read.
+func assessedSourceLine(normalized dictionaryAssessmentOptions) (assessmentRunConfig, error) {
+	var source assessmentRunConfig
+	if err := validateDictionaryOptions(normalized.Dictionaries); err != nil {
+		return source, err
 	}
-	model, err = dictionaryAssessmentConfig(ctx, normalized, validation.TargetModel)
-	source = model
-	source.Profile, source.Engine, source.DocumentID, source.Dictionaries = ProfileSourceLine, sourceEngine, sourceDocumentID, nil
-	source.DTD = normalized.Assessment.DTD
-	return source, model, err
+	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLine)
+	if err != nil {
+		return source, err
+	}
+	account, err := validation.NewBudgetAccount(normalized.Assessment.Budgets)
+	if err != nil {
+		return source, err
+	}
+	source.Account, source.Profile, source.Engine, source.DocumentID = account, ProfileSourceLine, engine, sourceDocumentID
+	source.DTD, source.OmitContext = normalized.Assessment.DTD, normalized.Assessment.OmitContext
+	return source, nil
+}
+
+// assessedModelLine configures line 3, ProfileModelSemantics, on the shared
+// account and imports its dictionary set. A nil Dictionaries means the import
+// failed and err says why; a set with an error is an ordinary import failure.
+func assessedModelLine(ctx context.Context, normalized dictionaryAssessmentOptions, account *validation.Account) (assessmentRunConfig, error) {
+	return dictionaryAssessmentConfigAccount(ctx, normalized, validation.TargetModel, account)
 }
 
 func modelAcceptanceError(report validation.Report, status modelWalkStatus) error {

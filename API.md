@@ -137,15 +137,16 @@ lists the only accepted overlap with its reasons:
 Tests fail when a rule has no line, a line profile requires another line's
 rule, or the overlap changes.
 
-Only line 3 reads dictionaries. `DecodeAssessed` imports them once per call,
-before it reads the input, and passes them to line 3; `DecodeMXLAssessed`
-imports them once, when line 3 starts. When line 3 runs, a dictionary failure
-shows in `ModelLine`; in every case the document is withheld. Splitting the lines cut the cost of strict
-loading by about a third: `DecodeAssessed` needs about 13.7 million rule steps and 34 MiB of
-buffer for the 31 KB `01a-Pitches-Pitches.xml` and 15.6 million steps and 46.5
+Only line 3 reads dictionaries. Both loaders obtain them when line 3 starts;
+the default bundled set is imported once per process and shared. When line 3
+runs, a dictionary failure shows in `ModelLine`; in every case the document is
+withheld. Splitting the lines cut the cost of strict loading by about a third,
+and the shared dictionary set and real-layout context accounting by another
+fifth to a quarter: `DecodeAssessed` needs about 9.7 million rule steps and 27 MiB of
+buffer for the 31 KB `01a-Pitches-Pitches.xml` and 11.4 million steps and 35
 MiB for the 42 KB `41c-StaffGroups.xml` of the MusicXML test suite, both within
 the default budgets (20 million steps, 64 MiB), where it needed 21.7 and 24.9
-million steps before.
+million steps before the split ([measurements][loading-budgets]).
 
 `InspectXML`, `InspectMXL`, `InspectXMLWithResources`,
 `AssessModelWithResources` and `Validate` are diagnostic tools outside the
@@ -1434,9 +1435,11 @@ contracts. Ordinary `Decode` remains transport-only.
 
 The result includes `ModelLine validation.Report`. An earlier operation failure,
 unsatisfied/incomplete source report or conversion failure leaves it unrequested.
-Model-session startup failure, including cancellation after source acceptance,
-can also leave `ModelLine.Requested == false`; that field cannot distinguish the two
-cases. Once initialized, model assessment walks the actual Go object directly and
+A dictionary import that refuses after line 2 (cancellation, resource limit,
+invalid dictionary data) or a model-session startup failure, including
+cancellation after source acceptance, can also leave `ModelLine.Requested ==
+false` while `SourceLine` and `Conversion` are complete; that field cannot
+distinguish these cases. Once initialized, model assessment walks the actual Go object directly and
 preserves its available report, including on failure. `Document` is
 returned only when both reports are satisfied, conversion succeeds and there is
 no operation or close error. All other outcomes retain the available reports and
@@ -1449,23 +1452,24 @@ The XML parser has one owner. After a recoverable model mapping error, that same
 healthy parser is drained; the failed reflection decoder is never resumed.
 There is no reader replay, second XML parse or model Encode→parse in this path.
 The implementation retains a budgeted fact graph; single-pass input does not
-mean constant-memory processing. One finite budget account covers dictionary
-import, source assessment and direct model assessment, with the source report's
-retained context accounted for while the model stage runs. One imported
-dictionary set serves line 3; line 2 reads no dictionaries. The caller retains
-ownership of the reader.
+mean constant-memory processing. One finite budget account covers source
+assessment, the dictionary set and direct model assessment, with the source
+report's retained context accounted for while the model stage runs. The
+dictionary set serves line 3 only and is obtained when line 3 starts: a
+document that line 2 rejects in the strict mode never opens a dictionary
+source. The caller retains ownership of the reader.
 
-The set is fresh per invocation: the default path reopens, verifies and parses
-both required bundled components before reading input, without a cross-call
-verified-set cache. At reviewed head `7e7126e9405e0731e6cefa713e801515b4874703`,
-the reviewer reported about 3.08 ms, 1.55 MB allocated and 8,641 allocations for
-import alone. The reported logical import cost was 3,279,308 rule steps (16.4% of
-the default 20 million) and 360,428 `MaxExternalBytes`, even though the data is
-embedded and no network/file fetch occurs. Previously sufficient budgets may
-therefore refuse before source reads, leaving `SourceLine.Requested == false`. These
-are reviewer-reported, head-specific observations, not independently reproduced
-benchmarks or portable minima. See the [per-call cost and budget receipt][loading-cost]
-for the original review links, one-note comparison and scope limits.
+The default dictionaries, the required selections of `BundledDictionarySource()`,
+are imported and verified once per process. Each call reads that verified set
+and is charged its retained storage on `MaxBufferedBytes` while holding it, but
+no import work: a few rule steps and no `MaxExternalBytes`. Any other source or
+selection is imported on every call, at the caller's expense (about 3.3 million
+rule steps for the required bundled pair at an earlier head). See the [dictionary
+import cost][loading-cost] for details and the measured budgets.
+
+`AssessmentOptions.OmitContext` leaves `Report.Context` empty in both reports
+and keeps every decision, count and finding, which roughly halves the buffer
+strict loading needs.
 
 The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
 64 MiB file or one million nodes can be assessed. The historical `d336f089`
@@ -1483,7 +1487,9 @@ before the shared absent-attribute optimization.
 Composition costs differ from that XSD-only table. In the historical
 linux/amd64 receipt below, the original 223,068-byte UTF-16BE
 `MozaChloSample.musicxml` with `ProfileSourceSemantics` exhausts the default
-64 MiB buffer. Its external subset is now read from the bundled official DTD, so
+64 MiB buffer; with real-layout projection accounting the default buffer and the
+default 20 million rule steps are both near exhaustion, and either may refuse
+first. Its external subset is now read from the bundled official DTD, so
 the assessment does its full work: with `MaxBufferedBytes: 256 << 20` and
 `MaxRuleSteps: 100_000_000` this particular fixture completes and is satisfied.
 This is a measured finite allowance for that exact input and profile, not a new
@@ -2277,11 +2283,11 @@ Default-buffer capacity is limited for source-origin graph compositions: every
 selected origin row has two independently owned snapshot copies while session
 storage still overlaps. On Go 1.27.2 linux/amd64, the single-note-per-measure
 `reviewBudgetScore` fixture with `ProfileResourceGraphInternalDTDDictionaries`
-now admits 576 measures (77,227 source bytes) with defaults; 577 measures
-(77,361 bytes) refuse the 64 MiB live-buffer allowance. The earlier published
-531/532 and initial PR 43 568/569 boundaries are historical; all four cases
-now complete. Exact/one-short snapshot controls pin 66,195,635 bytes for
-569 measures and 67,118,603 bytes for 577 measures.
+now admits 613 measures (82,185 source bytes) with defaults; 614 measures
+(82,319 bytes) refuse the 64 MiB live-buffer allowance. The earlier published
+531/532, PR 43 568/569 and 576/577 boundaries are historical; all of these
+cases now complete. Exact/one-short snapshot controls pin 62,320,260 bytes for
+569 measures and 67,163,891 bytes for 614 measures.
 The review reported the
 500-measure case at approximately 62.9 MB of the 67.1 MB allowance, a
 previous boundary of 494 measures (about 66 KB), and comparison boundaries of
@@ -2902,4 +2908,5 @@ external desired-score authority or universal conformance. See the
 [bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
 
 [loading-capacity]: docs/validation/assessed-loading-pipeline.md#official-score-capacity-control
-[loading-cost]: docs/validation/assessed-loading-pipeline.md#per-call-import-cost-and-pre-input-budget-floor
+[loading-cost]: docs/validation/assessed-loading-pipeline.md#dictionary-import-cost
+[loading-budgets]: docs/validation/assessed-loading-pipeline.md#budgets-and-capacity

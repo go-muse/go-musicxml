@@ -172,7 +172,10 @@ func TestMandatoryAssessedDictionariesRejectPartialSelectionBeforeIO(t *testing.
 	}
 }
 
-func TestMandatoryAssessedDictionariesRejectCorruptIPAAtStartup(t *testing.T) {
+// A corrupt override is imported only once line 3 is due, after line 2
+// accepted the source, and fails as a configuration error without a fallback
+// to the bundled data and without starting line 3.
+func TestMandatoryAssessedDictionariesRejectCorruptIPABeforeLineThree(t *testing.T) {
 	for _, corruptCanonical := range []bool{false, true} {
 		t.Run(fmt.Sprintf("corrupt-canonical=%v", corruptCanonical), func(t *testing.T) {
 			calls := 0
@@ -197,10 +200,10 @@ func TestMandatoryAssessedDictionariesRejectCorruptIPAAtStartup(t *testing.T) {
 			result, err := decodeAssessedWithDictionaries(context.Background(), reader, decodeDictionaryTestOptions{Assessment: &options})
 			var configuration *validation.ConfigurationError
 			if !errors.Is(err, validation.ErrInvalidConfiguration) || !errors.As(err, &configuration) || configuration.Field != "dictionary IPA representation" || configuration.Reason != "source SHA-256 mismatch" {
-				t.Fatalf("corrupt IPA override did not preserve its startup failure: %v", err)
+				t.Fatalf("corrupt IPA override did not preserve its configuration failure: %v", err)
 			}
-			if result.Document != nil || result.SourceLine.Requested || result.ModelLine.Requested || result.Conversion.State != validation.ConversionIncomplete || reader.reads != 0 || calls != 2 || len(bodies) != 2 {
-				t.Fatalf("corrupt IPA override fell back or touched source: document=%T source-requested=%v model-requested=%v reads=%d provider-calls=%d bodies=%d", result.Document, result.SourceLine.Requested, result.ModelLine.Requested, reader.reads, calls, len(bodies))
+			if result.Document != nil || !result.SourceLine.Satisfied() || result.ModelLine.Requested || result.Conversion.State != validation.ConversionConverted || reader.reads == 0 || calls != 2 || len(bodies) != 2 {
+				t.Fatalf("corrupt IPA override fell back or ran out of order: document=%T source-satisfied=%v model-requested=%v conversion=%s reads=%d provider-calls=%d bodies=%d", result.Document, result.SourceLine.Satisfied(), result.ModelLine.Requested, result.Conversion.State, reader.reads, calls, len(bodies))
 			}
 			for _, body := range bodies {
 				if body.closed != 1 {
@@ -266,7 +269,7 @@ func TestMandatoryAssessedLoadingModelCancellationPreservesSourceAndReleasesOwne
 			if err != nil {
 				t.Fatal(err)
 			}
-			result, err := decodeAssessedRun(observed, run, modelCfg, nil, false)
+			result, err := decodeAssessedRun(observed, run, preloadedModelLine(modelCfg), false)
 			err = errors.Join(err, modelCfg.Dictionaries.Close())
 			mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine, validation.TargetSource)
 			if result.Conversion.State != validation.ConversionConverted || !result.ModelLine.Requested {

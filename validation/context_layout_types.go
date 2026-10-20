@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"reflect"
 	"strings"
 	"unsafe"
 )
@@ -79,18 +80,21 @@ func cloneLayoutContext(ctx context.Context, s *Session, p *LayoutContextResult)
 	return &q, nil
 }
 
-// layoutContextSize counts the flat object once, every owned string/cause, and
-// the immutable numeric storage retained by all four wrappers. The fixed 512
-// byte allowance covers numeric object headers and allocator rounding; report
+// layoutContextSize returns what a copy of p retains, measured as
+// retainedProjectionBytes does (the flat object plus every owned string,
+// cause and exact number, rounded as the allocator does), and the work of
+// copying it: every string, evidence and numeric byte plus 16. Report
 // backing-array growth is independently covered by publishContextResult.
 func layoutContextSize(p LayoutContextResult) (size, work int64, err error) {
-	size = int64(unsafe.Sizeof(LayoutContextResult{})) + 512
+	shape, err := measureRetained(reflect.ValueOf(p), true)
+	if err != nil {
+		return 0, 0, err
+	}
+	if size, err = rationalCheckedAdd(BudgetBufferedBytes, allocationSlack(int64(unsafe.Sizeof(LayoutContextResult{}))), shape.bytes); err != nil {
+		return 0, 0, err
+	}
 	work = 16
 	add := func(n int64) {
-		if err != nil {
-			return
-		}
-		size, err = rationalCheckedAdd(BudgetBufferedBytes, size, n)
 		if err == nil {
 			work, err = rationalCheckedAdd(BudgetRuleSteps, work, n)
 		}
@@ -108,7 +112,7 @@ func layoutContextSize(p LayoutContextResult) (size, work int64, err error) {
 	add(p.Staff.Value.ByteSize())
 	add(p.Conversion.Value.ByteSize())
 	add(atomicLogicalBytes(p.Raw.Value))
-	return
+	return size, work, err
 }
 func layoutEvidenceBytes[T any](v Evidence[T]) int64 {
 	return int64(len(v.State)) + evidenceLogicalBytes(v)

@@ -16,6 +16,13 @@ type RunOptions struct {
 	Profile    ProfileID
 	Budgets    Budgets
 	Account    *Account
+	// OmitContext leaves Report.Context empty. Providers compute and check
+	// their context exactly as otherwise, and every decision, count and
+	// finding is the same; the session only keeps no copy of the projection
+	// for the report, which saves the storage it would hold. A resource
+	// snapshot reads that projection, so FinishWithResourceSnapshot refuses
+	// a session that omits it.
+	OmitContext bool
 }
 
 // Engine shares only an immutable compiled catalog. Independent sessions may run
@@ -127,7 +134,16 @@ type Session struct {
 	sourceOriginSeal        *Evidence[bool]
 	contextServices         map[RuleKey]*contextService
 	contextElementRoles     map[contextBoundElementKey][]contextRole
+	contextAttributeTables  map[contextAttributeTableKey]*contextAttributeTable
+	contextAttributeIntern  map[contextSharedInternKey]*contextAttributeTable
+	// contextSharedTableBytes sums the charges of the shared attribute tables.
+	contextSharedTableBytes int64
 	contextResults          []ContextResult
+	omitContext             bool
+	// contextBackingHold keeps replaced Report.Context arrays charged while
+	// a rollback snapshot may restore one; contextBackingHeld sums them.
+	contextBackingHold      bool
+	contextBackingHeld      int64
 	contextReportRetained   int64
 	timeline                map[RuleKey]*timelineService
 	localDocuments          map[*localPlan]localDocumentResult
@@ -191,7 +207,7 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 			return nil, err
 		}
 	}
-	s := &Session{catalog: e.catalog, documentID: strings.Clone(opts.DocumentID), profile: profile, account: account, nodes: make(map[NodeID]*factNode), decisions: make(map[decisionID]Decision), contexts: make(map[ContextKey]ContextFact), identities: make(map[string]*identityIndex), registered: make(map[decisionID]bool)}
+	s := &Session{catalog: e.catalog, documentID: strings.Clone(opts.DocumentID), profile: profile, account: account, nodes: make(map[NodeID]*factNode), decisions: make(map[decisionID]Decision), contexts: make(map[ContextKey]ContextFact), identities: make(map[string]*identityIndex), registered: make(map[decisionID]bool), omitContext: opts.OmitContext}
 	// Profile/report fixed metadata is finite at compile time and its per-run
 	// copied payload is also reserved before the report snapshot is allocated.
 	if err := s.retain(int64(1024+len(opts.DocumentID)) + profileLogicalBytes(profile)); err != nil {
@@ -734,6 +750,9 @@ func (s *Session) cleanup() {
 	// Drop borrowed schema bindings before closing their run and releasing the
 	// session-owned cache allowance below.
 	s.contextElementRoles = nil
+	s.contextAttributeTables = nil
+	s.contextAttributeIntern = nil
+	s.contextSharedTableBytes = 0
 	if s.schema != nil && s.schema.run != nil {
 		_ = s.schema.run.Close()
 	}

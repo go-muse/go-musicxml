@@ -2,7 +2,9 @@ package validation
 
 import (
 	"context"
+	"reflect"
 	"strings"
+	"unsafe"
 )
 
 // ContextProperty identifies one reviewed scalar fact or typed context payload.
@@ -64,7 +66,9 @@ func validContextProperty(p ContextProperty) bool {
 	return dictionaryPropertyValid(p) || resourcePropertyValid(p) || contextLocalPropertyValid(p) || contextSpanPropertyValid(p) || contextRepeatPropertyValid(p) || contextPerformancePropertyValid(p)
 }
 
-const contextResultReserveBytes int64 = 1536
+// contextResultBytes is one ContextResult record in Report.Context. The
+// backing array is accounted exactly by growContextResults.
+var contextResultBytes = int64(unsafe.Sizeof(ContextResult{}))
 
 // publishContextResult is transactional with respect to visibility and live
 // retention. Cumulative work/fact counters are never refunded on interruption.
@@ -149,7 +153,6 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 			}
 		}
 	}()
-	cost := contextResultReserveBytes + int64(len(in.Provider.ID)+len(in.Subject.DocumentID)+len(in.Property)) + contextAtomicBytes(in.Value.Value) + evidenceLogicalBytes(in.Value)
 	if err = s.account.Check(BudgetScalarBytes, atomicLogicalBytes(in.Value.Value)); err != nil {
 		return err
 	}
@@ -157,6 +160,35 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	if err = s.step(ctx, work); err != nil {
 		return err
 	}
+	if s.omitContext {
+		// The result is counted and checked, but the report keeps no copy.
+		return nil
+	}
+	// The record itself lives in the backing array. Its cloned strings, the
+	// value's strings, cause and numbers, and the origins' backing array,
+	// strings and positions are separate allocations, each rounded up as the
+	// allocator does. The walks copy nothing. The value's strings are in the
+	// work charged above. Each origin is charged its fixed 96 steps, plus 64
+	// for a position, before the origins are walked; the walk charges their
+	// strings, checking the context at every string and every 64 items.
+	value, err := measureRetainedMetered(ctx, s, reflect.ValueOf(in.Value), true, false)
+	if err != nil {
+		return err
+	}
+	for _, origin := range in.Origins {
+		fixed := int64(96)
+		if origin.Position != nil {
+			fixed += 64
+		}
+		if err = s.step(ctx, fixed); err != nil {
+			return err
+		}
+	}
+	origins, err := measureRetainedMetered(ctx, s, reflect.ValueOf(in.Origins), true, true)
+	if err != nil {
+		return err
+	}
+	cost := ownedStringBytes(string(in.Provider.ID)) + ownedStringBytes(in.Subject.DocumentID) + ownedStringBytes(string(in.Property)) + value.bytes + origins.bytes
 	if err = s.retain(cost); err != nil {
 		return err
 	}
@@ -166,22 +198,6 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	out.Property = ContextProperty(strings.Clone(string(in.Property)))
 	out.Value = cloneEvidence(in.Value)
 	out.Value.Value = cloneAtomic(in.Value.Value)
-	originBytes, e := rationalCheckedMul(BudgetBufferedBytes, int64(len(in.Origins)), 384)
-	if e != nil {
-		return e
-	}
-	if err = s.retain(originBytes); err != nil {
-		return err
-	}
-	for _, origin := range in.Origins {
-		n := locationLogicalBytes(origin)
-		if err = s.step(ctx, n); err != nil {
-			return err
-		}
-		if err = s.retain(n); err != nil {
-			return err
-		}
-	}
 	if len(in.Origins) != 0 {
 		out.Origins = make([]Location, len(in.Origins))
 		for i, origin := range in.Origins {
@@ -221,14 +237,73 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	if err = s.step(ctx, 1); err != nil {
 		return err
 	}
-	// The per-record reserve covers geometric slice backing growth and the
-	// simultaneous old/new backing arrays; payload allocations were precharged.
+	if len(s.contextResults) == cap(s.contextResults) {
+		if err = s.growContextResults(); err != nil {
+			return err
+		}
+	}
 	s.contextResults = append(s.contextResults, out)
 	// The projection owns these charges independently of intrinsic facts and
 	// provider scratch. A retained-report finalizer can transfer the admitted
 	// subtotal without copying or temporarily releasing the live projection.
 	s.contextReportRetained += s.retained - before
 	return nil
+}
+
+// growContextResults doubles the Report.Context backing array. The charge for
+// a backing array of capacity c is contextBackingBytes(c): the new array is
+// admitted before allocation, both coexist during the copy, and the old
+// array's charge is released afterward. A rollback that restores an earlier
+// slice header thereby restores the charge for its capacity too.
+func (s *Session) growContextResults() error {
+	old := cap(s.contextResults)
+	grown := max(8, 2*old)
+	if err := s.retain(contextBackingBytes(grown)); err != nil {
+		return err
+	}
+	next := make([]ContextResult, len(s.contextResults), grown)
+	copy(next, s.contextResults)
+	// The old array is not cleared: a span rollback may restore its header.
+	s.contextResults = next
+	released := contextBackingBytes(old)
+	if s.contextBackingHold {
+		// A rollback snapshot still references the old array; it stays
+		// charged until releaseHeldContextBacking or the rollback.
+		s.contextBackingHeld += released
+		return nil
+	}
+	if released != 0 {
+		_ = s.account.Release(BudgetBufferedBytes, released)
+		s.retained -= released
+	}
+	return nil
+}
+
+// holdContextBacking keeps the charge of every backing array that growth
+// replaces until releaseHeldContextBacking, for a caller whose rollback may
+// restore an earlier slice header. It returns the previous hold state.
+func (s *Session) holdContextBacking() bool {
+	previous := s.contextBackingHold
+	s.contextBackingHold = true
+	return previous
+}
+
+// releaseHeldContextBacking ends a hold. On commit it releases the held
+// charges of replaced arrays, which the projection subtotal also counts; a
+// rollback restores the earlier header and its charge itself, so it only
+// forgets them.
+func (s *Session) releaseHeldContextBacking(previous, commit bool) {
+	held := s.contextBackingHeld
+	s.contextBackingHold, s.contextBackingHeld = previous, 0
+	if commit && held != 0 {
+		_ = s.account.Release(BudgetBufferedBytes, held)
+		s.retained -= held
+		s.contextReportRetained -= held
+	}
+}
+
+func contextBackingBytes(capacity int) int64 {
+	return allocationSlack(int64(capacity) * contextResultBytes)
 }
 
 type contextService struct {

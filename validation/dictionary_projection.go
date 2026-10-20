@@ -94,7 +94,7 @@ func cloneDictionaryContext(ctx context.Context, s *Session, p *DictionaryContex
 			return nil, err
 		}
 	}
-	size, err := resourceMeasure(ctx, s.account, reflect.ValueOf(*p))
+	size, err := retainedProjectionBytes(ctx, s, reflect.ValueOf(*p))
 	if err != nil {
 		return nil, err
 	}

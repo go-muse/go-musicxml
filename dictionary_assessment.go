@@ -9,6 +9,12 @@ import (
 )
 
 func dictionaryAssessmentConfig(ctx context.Context, options dictionaryAssessmentOptions, target validation.Target) (assessmentRunConfig, error) {
+	return dictionaryAssessmentConfigAccount(ctx, options, target, nil)
+}
+
+// dictionaryAssessmentConfigAccount imports on account, or on a new account
+// bounded by the options' budgets when account is nil.
+func dictionaryAssessmentConfigAccount(ctx context.Context, options dictionaryAssessmentOptions, target validation.Target, account *validation.Account) (assessmentRunConfig, error) {
 	var cfg assessmentRunConfig
 	if err := assessmentContext(ctx, "canceled-before-dictionaries"); err != nil {
 		return cfg, err
@@ -31,9 +37,10 @@ func dictionaryAssessmentConfig(ctx context.Context, options dictionaryAssessmen
 	if err != nil {
 		return cfg, err
 	}
-	account, err := validation.NewBudgetAccount(options.Assessment.Budgets)
-	if err != nil {
-		return cfg, err
+	if account == nil {
+		if account, err = validation.NewBudgetAccount(options.Assessment.Budgets); err != nil {
+			return cfg, err
+		}
 	}
 	set, loadErr := loadValidatedDictionarySet(ctx, account, options.Dictionaries)
 	if dictionaryImportTerminal(loadErr) {
@@ -46,6 +53,7 @@ func dictionaryAssessmentConfig(ctx context.Context, options dictionaryAssessmen
 		return cfg, &validation.ConfigurationError{Field: "dictionary capability", Reason: "loader returned neither a set nor a failure"}
 	}
 	cfg.Account, cfg.Profile, cfg.Engine, cfg.Dictionaries = account, options.Assessment.Profile, engine, set
+	cfg.OmitContext = options.Assessment.OmitContext
 	return cfg, loadErr
 }
 

@@ -98,6 +98,9 @@ type DictionarySet struct {
 	retained    int64
 	entries     []dictionaryEntry
 	fingerprint [32]byte
+	// parent is the separately owned set whose immutable entries a shared view
+	// reads; the view holds one of its borrows until the view is freed.
+	parent *DictionarySet
 }
 
 type dictionaryLease struct {
@@ -630,15 +633,15 @@ func (l *dictionaryLease) release() {
 	d.mu.Lock()
 	d.borrowers--
 	var retained int64
+	var parent *DictionarySet
 	if d.closed && d.borrowers == 0 {
-		retained = d.retained
-		d.retained = 0
-		d.entries = nil
+		retained, parent = d.free()
 	}
 	d.mu.Unlock()
 	if retained != 0 {
 		_ = d.account.Release(BudgetBufferedBytes, retained)
 	}
+	parent.releaseView()
 	if leaseBytes != 0 {
 		_ = d.account.Release(BudgetBufferedBytes, leaseBytes)
 	}
@@ -659,16 +662,81 @@ func (d *DictionarySet) Close() error {
 	}
 	d.closed = true
 	var retained int64
+	var parent *DictionarySet
 	if d.borrowers == 0 {
-		retained = d.retained
-		d.retained = 0
-		d.entries = nil
+		retained, parent = d.free()
 	}
 	d.mu.Unlock()
+	parent.releaseView()
 	if retained != 0 {
 		return d.account.Release(BudgetBufferedBytes, retained)
 	}
 	return nil
+}
+
+// free drops the storage of a closed set without borrowers. The caller holds
+// d.mu, releases the returned bytes and then the returned parent's view borrow.
+func (d *DictionarySet) free() (retained int64, parent *DictionarySet) {
+	retained, parent = d.retained, d.parent
+	d.retained, d.entries, d.parent = 0, nil, nil
+	return retained, parent
+}
+
+// releaseView returns the borrow that a freed shared view held on its parent.
+func (d *DictionarySet) releaseView() {
+	if d == nil {
+		return
+	}
+	d.mu.Lock()
+	d.borrowers--
+	var retained int64
+	var parent *DictionarySet
+	if d.closed && d.borrowers == 0 {
+		retained, parent = d.free()
+	}
+	d.mu.Unlock()
+	if retained != 0 {
+		_ = d.account.Release(BudgetBufferedBytes, retained)
+	}
+	parent.releaseView()
+}
+
+// shareDictionarySet admits a view of parent to caller. The view reads the
+// parent's immutable entries and fingerprint, so its sessions and reports are
+// those of the parent; only the parent's account paid for importing and
+// verifying them. The caller is charged the parent's retained storage for the
+// life of the view, which keeps that account bounded by the data its sessions
+// read. The view is an ordinary set owned by caller: borrowing requires that
+// exact account and Close returns the charge. The parent stays readable while
+// any view lives, even if it is closed meanwhile.
+func shareDictionarySet(ctx context.Context, parent *DictionarySet, caller *Account) (*DictionarySet, error) {
+	if err := dictionaryStep(ctx, caller, 1); err != nil {
+		return nil, err
+	}
+	if parent == nil {
+		return nil, dictionaryConfiguration("nil set")
+	}
+	parent.mu.Lock()
+	if !parent.initialized || parent.closed {
+		parent.mu.Unlock()
+		return nil, dictionaryConfiguration("uninitialized or closed set")
+	}
+	if parent.borrowers == int64(^uint64(0)>>1) {
+		parent.mu.Unlock()
+		return nil, dictionaryConfiguration("too many dictionary borrowers")
+	}
+	parent.borrowers++
+	view := &DictionarySet{initialized: true, account: caller, retained: parent.retained, entries: parent.entries, fingerprint: parent.fingerprint, parent: parent}
+	parent.mu.Unlock()
+	err := dictionaryStep(ctx, caller, int64(len(view.entries)))
+	if err == nil {
+		err = caller.Charge(BudgetBufferedBytes, view.retained)
+	}
+	if err != nil {
+		parent.releaseView()
+		return nil, err
+	}
+	return view, nil
 }
 
 // Fingerprint returns the immutable capability identity, including selected

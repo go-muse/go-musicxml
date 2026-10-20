@@ -42,11 +42,14 @@ The acceptance sequence is:
 
 1. Validate context, profile, decode limits, budgets and dictionary configuration
    before reading input or calling a dictionary source.
-2. Import one dictionary set for line 3, then run line 2, `ProfileSourceLine`,
-   on the original source while converting through the existing mapping path.
-   Line 2 reads no dictionaries. Source EOF, line-2 acceptance, successful
-   conversion and no earlier stream error are required to advance.
-3. Run line 3, `ProfileModelSemantics`, on the actual converted Go object. The
+2. Run line 2, `ProfileSourceLine`, on the original source while converting
+   through the existing mapping path. Line 2 reads no dictionaries. Source EOF,
+   line-2 acceptance, successful conversion and no earlier stream error are
+   required to advance; the lenient mode advances after any line 2 without an
+   operational failure.
+3. Import one dictionary set for line 3, then run line 3,
+   `ProfileModelSemantics`, on the actual converted Go object. A document that
+   does not reach line 3 never calls the dictionary source. The
    walker uses current field/index facts directly; it does not invent source
    bytes, lexical values, namespace declarations or discarded attributes. A
    dictionary import that failed but returned a set does not stop line 3, so
@@ -61,8 +64,9 @@ The acceptance sequence is:
 - `Conversion`: mapping state and bounded findings. `ConversionConverted` is not
   an exact lexical or numeric round-trip guarantee.
 - `ModelLine`: the independent line-3 report of the converted model, when
-  initialized. `ModelLine.Requested` can be false after an earlier failure or a failure to start
-  the model session, including cancellation after satisfied source assessment and
+  initialized. `ModelLine.Requested` can be false after an earlier failure, a
+  dictionary import that refuses after line 2, or a failure to start the model
+  session, including cancellation after satisfied source assessment and
   successful conversion. It cannot distinguish those cases and is never a pass.
   Once a model report exists, it is retained even if model assessment fails.
 - `Document`: nonnil only on complete successful loading. It is nil for source or
@@ -249,74 +253,75 @@ not replace those data terms.
 
 ## Budgets and capacity
 
-One finite account covers dictionary import and both validation lines.
-`DecodeAssessed` imports one dictionary set, before it reads the input, and
-passes it to line 3 only; `DecodeMXLAssessed` imports it once, when line 3
-starts, because the line-3 graph owns its set. Retained source-report context stays accounted for while the model stage
-runs; the model stage does not receive a fresh allowance. The source graph and
-model candidate make single-pass input different from constant-memory processing.
-No default resource limit is raised. Previous source-only budget receipts do not
-promise capacity for the combined pipeline.
+One finite account covers both validation lines and the dictionary set.
+`DecodeAssessed` and `DecodeMXLAssessed` both obtain the set only when line 3
+starts, so a document that line 2 rejects in the strict mode never opens a
+dictionary source. Retained source-report context stays accounted for while
+the model stage runs; the model stage does not receive a fresh allowance. The
+source graph and model candidate make single-pass input different from
+constant-memory processing. No default resource limit is raised. Previous
+source-only budget receipts do not promise capacity for the combined pipeline.
 
-Splitting the lines removed the 62 rules the source stage used to repeat.
 Minimal budgets of `DecodeAssessed`, found by binary search through the public
-API on darwin/arm64:
+API on darwin/arm64. "Before the split" is the pipeline before the validation
+lines; "lines" is `59d4536`; "now" adds the verified-set cache, the deferred
+import, real-layout projection accounting and shared attribute tables;
+"without context" also sets `AssessmentOptions.OmitContext`:
 
-| File | Before the split | After the split |
-| --- | --- | --- |
-| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB |
-| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB |
+| File | Before the split | Lines | Now | Without context |
+| --- | --- | --- | --- | --- |
+| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 27.1 MiB | 8.69 million, 12.3 MiB |
+| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 34.7 MiB | 10.13 million, 15.5 MiB |
+| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 75.6 MiB | 23.91 million, 34.7 MiB |
+| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.13 million, 39.2 MiB |
 
-Both now load within the default budgets (20 million rule steps, 64 MiB);
-`TestStrictLoadingFitsDefaultBudgets` keeps that. These are logical account
-figures for these files, not heap measurements or general capacity.
+The first two load within the default budgets (20 million rule steps, 64 MiB);
+`TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores still
+need explicit budgets. These are logical account figures for these files, not
+heap measurements or general capacity. A one-off comparison when these changes
+were made, not a test, found the reports unchanged: on every corpus and
+official file that loads within the default budgets, the reports of
+`DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`, `InspectMXL` and
+`AssessModel` were identical to those of `59d4536`.
 
-### Per-call import cost and pre-input budget floor
+### Dictionary import cost
 
-Each invocation imports, verifies and parses a fresh account-bound dictionary set
-before reading the document. The default path imports canonical SMuFL and the
-IPA representation bundle even if the document has no dictionary-dependent
-content. The set is reused by the two stages of that invocation, then closed;
-there is no cross-call verified-set cache. Embedded bytes are shared, but parsed
-sets and their verification work are not. Repeated loading of small documents
-therefore pays this fixed cost each time.
+The required bundled selections, canonical SMuFL and the IPA representation
+bundle from `BundledDictionarySource()`, are imported, verified and parsed once
+per process, on a private account with the default budgets. Every later call that selects exactly them, including the
+defaults of both loaders and of `InspectXML` and `AssessModel` with an empty
+profile, reads the same verified set: its fingerprint and every report are those
+of a fresh import. Each call is charged the set's retained storage on its
+`MaxBufferedBytes` for as long as it holds the set, but none of the import
+work: a few rule steps and no `MaxExternalBytes`. A failed process-wide import is
+not cached; the call then imports on its own account as before.
 
-The [PR 46 performance review][review-import] reported the following for reviewed
-head `7e7126e9405e0731e6cefa713e801515b4874703`:
+Any other source, including a caller source that serves the same bundled
+bytes, and any other selection, including the required ones in another order,
+is imported on the caller's account on every call. Earlier figures for that
+path, reported by the [PR 46 performance review][review-import] at reviewed head
+`7e7126e9405e0731e6cefa713e801515b4874703`: about 3.08 ms, 1.55 MB allocated and
+8,641 allocations per import, and, by the [same review's logical-budget
+probe][review-budget], 3,279,308 rule steps and 360,428 `MaxExternalBytes`
+(the embedded component bytes, though nothing is fetched). These are
+reviewer-reported observations at that head, not portable minima.
 
-| Reviewer probe | Reported per-call result |
-| --- | --- |
-| Bundled import alone | About 3.08 ms, 1.55 MB allocated, 8,641 allocations |
-| One-note default load, prior main | 14,935 ns, about 20 KB allocated |
-| One-note default load, reviewed head | 6,393,642 ns, about 8.6 MB allocated |
+An import refusal is resource incompleteness, not invalid MusicXML. In
+`DecodeAssessed` it now happens after line 2, so `SourceLine` holds the
+completed line-2 report.
 
-These are reviewer-reported timing/allocation observations, not independently
-reproduced benchmarks, latency guarantees or portable capacities. The cited
-comment does not specify a complete benchmark environment. The old default did
-not perform these required assessments, so this is a compatibility-cost
-comparison rather than equivalent validation work. No caching redesign is
-introduced by this migration.
+### Context projection cost
 
-The [same review's logical-budget probe][review-budget] reported 3,279,308 rule
-steps for one required import, about 16.4% of the default 20,000,000-step account.
-The 301,683 canonical SMuFL bytes plus 58,745 IPA representation bytes also charge
-360,428 `MaxExternalBytes` before the document is read. This existing import-byte
-accounting applies to embedded data despite no network or filesystem fetch; the
-charge is not a claim that an external service was contacted.
-
-| Reviewer's one-note probe | Standalone source semantics | Mandatory loader |
-| --- | ---: | ---: |
-| Minimum `MaxRuleSteps` in that probe | 109,716 | 3,486,332 |
-| Minimum configured `MaxExternalBytes` in that probe | 1 | 360,428 |
-| Minimum `MaxBufferedBytes` in that probe | 675,607 | 1,372,253 |
-
-These are reviewer-measured logical boundaries at the named head, not new defaults
-or independently measured general minima. The standalone comparison does not
-include the mandatory loader's import and direct-model stage. Previously
-sufficient explicit budgets can now fail before any input read, leaving
-`Source.Requested=false`, `Model.Requested=false` and no document. Recheck tuned
-budgets for the entire operation; an import refusal is resource incompleteness,
-not invalid MusicXML.
+`Report.Context` is accounted for at the heap it occupies: each record's
+cloned strings and payload rounded to the allocator's size classes, and the
+backing array exactly for its capacity, including the moment it grows.
+`TestContextProjectionAccountingCoversItsHeap` checks on corpus documents that
+the charge never falls below the measured heap. `AssessmentOptions.OmitContext`
+leaves `Report.Context` empty in every returned report and keeps every
+decision, count and finding; it roughly halves the buffer strict loading needs
+(table above). It applies to the single-document entry points, whose options
+are `AssessmentOptions`; graph and package assessment keep the projection,
+which their resource snapshots read.
 
 ### Low-level retained-report ownership
 

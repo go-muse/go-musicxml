@@ -39,13 +39,22 @@ type AssessmentOptions struct {
 	// those profiles require; with an explicit profile, nil keeps the
 	// profile's dictionary-free behaviour.
 	Dictionaries *DictionaryOptions
+	// OmitContext leaves Report.Context empty in every report of InspectXML,
+	// AssessModel and DecodeAssessed (both lines). Every decision, count and
+	// finding is the same as with the projection; the call only keeps no copy
+	// of it, which lowers the buffered storage it needs (see
+	// validation.RunOptions.OmitContext). Graph and package assessment read
+	// the projection, so their entry points reject it as the Graph options of
+	// LinkedAssessmentOptions or MXLAssessmentOptions with a configuration
+	// error, before any input is read.
+	OmitContext bool
 }
 
 // DecodeAssessmentOptions configures strict loading (scenario 2). Nil
 // Assessment and an empty Profile select validation line 2, ProfileSourceLine,
 // and line 3, ProfileModelSemantics. A nonempty Profile must be
 // ProfileSourceLine; it cannot narrow validation. Budgets are shared by
-// dictionary import and both lines. Decode remains the separate
+// both lines and the dictionary set of line 3. Decode remains the separate
 // conversion-only API (scenario 1).
 type DecodeAssessmentOptions struct {
 	Decode     DecodeOptions
@@ -152,8 +161,9 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // After recoverable conversion failure, the healthy parser is drained so later
 // source violations remain visible. Line 3 runs only after line 2 and
 // conversion accept the document. Both lines share one finite budget account;
-// the bundled pinned canonical SMuFL and IPA representation data serve line 3.
-// A dictionary import that fails but still returns a set keeps line 3
+// the bundled pinned canonical SMuFL and IPA representation data serve line 3,
+// which obtains them when it starts, so in the strict mode a document line 2
+// rejects never opens a dictionary source. A dictionary import that fails but still returns a set keeps line 3
 // running, so that its report shows the unavailable evidence; the failure
 // still rejects the document.
 //
@@ -194,7 +204,7 @@ func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessm
 
 // decodeAssessedRun preserves the single source/parser owner for both the
 // original public API and additive capability wrappers.
-func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfig assessmentRunConfig, priorErr error, lenient bool) (result DecodeResult, err error) {
+func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, loadModel func() (assessmentRunConfig, error), lenient bool) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	// The mapping decoder only receives namespace-neutral projected elements and
 	// the existing allowlisted expanded attributes. Its namespace table is empty.
@@ -239,19 +249,23 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 	// operational failure, which no mode tolerates. The lenient mode still
 	// assesses the model after source findings, so that both reports exist.
 	acceptanceErr := sourceAcceptanceError(report)
-	// priorErr is a dictionary import failure that still returned a set. Line
-	// 3 runs anyway, so that its report shows the unavailable dictionary
-	// evidence; the failure still rejects the document.
-	streamErr := errors.Join(conversionErr, sourceErr, finishErr)
-	operationErr := errors.Join(priorErr, streamErr)
+	operationErr := errors.Join(conversionErr, sourceErr, finishErr)
 	modelAssessed := false
-	if streamErr == nil && (acceptanceErr == nil || lenient) {
-		var modelErr error
-		var modelStatus modelWalkStatus
-		result.ModelLine, modelStatus, modelErr = assessModelWithConfig(ctx, document, modelConfig, modelWalkOptions{})
-		operationErr = errors.Join(priorErr, modelErr)
-		acceptanceErr = errors.Join(acceptanceErr, modelAcceptanceError(result.ModelLine, modelStatus))
-		modelAssessed = true
+	if operationErr == nil && (acceptanceErr == nil || lenient) {
+		// Line 3 imports its dictionaries only now. An import failure that
+		// still returned a set lets line 3 run, so that its report shows the
+		// unavailable dictionary evidence; the failure still rejects the
+		// document.
+		modelConfig, importErr := loadModel()
+		operationErr = importErr
+		if modelConfig.Dictionaries != nil {
+			var modelErr error
+			var modelStatus modelWalkStatus
+			result.ModelLine, modelStatus, modelErr = assessModelWithConfig(ctx, document, modelConfig, modelWalkOptions{})
+			operationErr = errors.Join(importErr, modelErr, modelConfig.Dictionaries.Close())
+			acceptanceErr = errors.Join(acceptanceErr, modelAcceptanceError(result.ModelLine, modelStatus))
+			modelAssessed = true
+		}
 	}
 	accepted := operationErr == nil && acceptanceErr == nil && modelAssessed
 	err = operationErr
@@ -311,7 +325,7 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	if err != nil {
 		return nil, err
 	}
-	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine, DTD: assessment.DTD}, ByteOwner: sourceBytesPrimary}
+	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine, DTD: assessment.DTD, OmitContext: assessment.OmitContext}, ByteOwner: sourceBytesPrimary}
 	return newSourceAssessmentRunWithConfig(ctx, reader, decode, config, converting)
 }
 

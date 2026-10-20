@@ -22,7 +22,7 @@ func TestIndependentContextLargeStandaloneProjectionAdmission(t *testing.T) {
 		}
 		for _, payload := range []any{span, timing} {
 			probe := rationalSession(t, Budgets{MaxBufferedBytes: 512 << 20})
-			n, err := stateMeasure(context.Background(), probe, reflect.ValueOf(payload))
+			n, err := retainedLayoutBytes(context.Background(), probe, reflect.ValueOf(payload))
 			probe.cleanup()
 			if err != nil {
 				t.Fatal(err)

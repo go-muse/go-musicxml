@@ -916,8 +916,9 @@ type AssessmentOptions struct, comparable
 type AssessmentOptions struct, field Budgets validation.Budgets
 type AssessmentOptions struct, field DTD *DTDOptions
 type AssessmentOptions struct, field Dictionaries *DictionaryOptions
+type AssessmentOptions struct, field OmitContext bool
 type AssessmentOptions struct, field Profile validation.ProfileID
-type AssessmentOptions struct, field order Profile Budgets DTD Dictionaries
+type AssessmentOptions struct, field order Profile Budgets DTD Dictionaries OmitContext
 type Attributes struct, field Clef []Clef `xml:"clef"`
 type Attributes struct, field Directive []struct{Value string "xml:\",chardata\""; Lang *string "xml:\"http://www.w3.org/XML/1998/namespace lang,attr,omitempty\""; DefaultX *Tenths "xml:\"default-x,attr,omitempty\""; DefaultY *Tenths "xml:\"default-y,attr,omitempty\""; RelativeX *Tenths "xml:\"relative-x,attr,omitempty\""; RelativeY *Tenths "xml:\"relative-y,attr,omitempty\""; FontFamily *FontFamily "xml:\"font-family,attr,omitempty\""; FontStyle *FontStyle "xml:\"font-style,attr,omitempty\""; FontSize *FontSize "xml:\"font-size,attr,omitempty\""; FontWeight *FontWeight "xml:\"font-weight,attr,omitempty\""; Color *Color "xml:\"color,attr,omitempty\""} `xml:"directive"`
 type Attributes struct, field Divisions *PositiveDivisions `xml:"divisions,omitempty"`

@@ -54,8 +54,33 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The identities of the changed profiles and of the catalogs that hold them
   change (source and model semantics, the internal-DTD source composition and
   the DTD-dictionary and semantic package catalogs).
+- The required bundled dictionaries, canonical SMuFL and the IPA
+  representation bundle from `BundledDictionarySource()`, are imported and
+  verified once per process instead of on every call. Calls that select
+  exactly them (the defaults of both loaders, `InspectXML` and `AssessModel`)
+  read the shared verified set, which is charged to their buffer while they
+  hold it, and no longer pay the import's 3.3 million rule steps and
+  `MaxExternalBytes`; a few steps remain. Other sources and selections import
+  on every call as before.
+- `DecodeAssessed` imports the line-3 dictionaries only when line 3 starts, as
+  `DecodeMXLAssessed` already did, so in the strict mode a document rejected
+  by line 2 never opens a dictionary source, and an import refusal keeps the
+  line-2 report.
+- The context projection is accounted for at the heap it occupies instead of
+  fixed reserves of about three times that size, and final context readers
+  share attribute tables. Copies of typed context payloads and timeline state
+  charge every string byte but one rule step per 64 reflected items instead
+  of one per item. With the shared dictionary set, `DecodeAssessed` needs 27–29%
+  fewer rule steps and 21–25% fewer buffer bytes on the test-suite scores
+  (about 3.3 million of the saved steps come from the dictionary set); every
+  report within the budgets is unchanged.
 
 ### Added
+
+- `AssessmentOptions.OmitContext` and `validation.RunOptions.OmitContext`
+  leave `Report.Context` empty with every decision, count and finding
+  unchanged, which roughly halves the buffer strict loading needs. A session
+  that omits the projection refuses `FinishWithResourceSnapshot`.
 
 - `ValidationLine` (`LineDecoder`, `LineSource`, `LineModel`), `RuleLine` and
   `AllowedLineOverlap` name the validation line of every rule revision of a
@@ -1118,4 +1143,4 @@ The option types `DictionaryAssessmentOptions`,
 [bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
 
 [assessed-loading]: docs/validation/assessed-loading-pipeline.md
-[loading-cost]: docs/validation/assessed-loading-pipeline.md#per-call-import-cost-and-pre-input-budget-floor
+[loading-cost]: docs/validation/assessed-loading-pipeline.md#dictionary-import-cost
