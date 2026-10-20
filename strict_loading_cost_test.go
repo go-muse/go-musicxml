@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -240,6 +243,208 @@ func TestStrictLoadingCancellationDuringImport(t *testing.T) {
 		source.open = func(context.Context, DictionaryComponentRequest) { cancel() }
 	}
 	cancel()
+}
+
+// invalidDictionaryScore fails line 2 on its pitch step and still carries the
+// SMuFL and IPA values that line 3 checks against the dictionaries.
+func invalidDictionaryScore() string {
+	return strings.Replace(mandatoryDictionaryScore(), "<step>C</step>", "<step>H</step>", 1)
+}
+
+// eofReader records whether the source reached its end.
+type eofReader struct {
+	io.Reader
+	eof atomic.Bool
+}
+
+func (r *eofReader) Read(p []byte) (int, error) {
+	n, err := r.Reader.Read(p)
+	if err == io.EOF {
+		r.eof.Store(true)
+	}
+	return n, err
+}
+
+// An ordinary provider failure after line 2 leaves a set whose components are
+// unavailable: line 3 still runs on it and reports the unavailable evidence,
+// and the failure rejects the document in both modes. The provider is opened
+// once per component, only after line 2 read the whole source, and never
+// after a line-2 rejection in the strict mode.
+func TestStrictLoadingNonTerminalImportFailureAfterLineTwo(t *testing.T) {
+	providerFailure := errors.New("dictionary provider failed")
+	invalid := invalidDictionaryScore()
+	for _, tc := range []struct {
+		name, input    string
+		lenient        bool
+		calls          int
+		sourceAccepted bool
+	}{
+		{"strict accepted", mandatoryDictionaryScore(), false, 2, true},
+		{"lenient accepted", mandatoryDictionaryScore(), true, 2, true},
+		{"strict rejected", invalid, false, 0, false},
+		{"lenient rejected", invalid, true, 2, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := &eofReader{Reader: strings.NewReader(tc.input)}
+			var calls atomic.Int32
+			var openedBeforeEOF atomic.Bool
+			source := dictionaryImportSourceFunc(func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error) {
+				calls.Add(1)
+				if !reader.eof.Load() {
+					openedBeforeEOF.Store(true)
+				}
+				return DictionaryComponentResult{}, providerFailure
+			})
+			result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &AssessmentOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
+			if int(calls.Load()) != tc.calls || openedBeforeEOF.Load() {
+				t.Fatalf("provider calls=%d want %d; opened before the source end=%v", calls.Load(), tc.calls, openedBeforeEOF.Load())
+			}
+			if err == nil || result.Document != nil || result.Accepted || result.SourceLine.Satisfied() != tc.sourceAccepted || !result.SourceLine.InputComplete {
+				t.Fatalf("document=%T accepted=%v source satisfied=%v complete=%v error=%v", result.Document, result.Accepted, result.SourceLine.Satisfied(), result.SourceLine.InputComplete, err)
+			}
+			if tc.calls == 0 {
+				if result.ModelLine.Requested {
+					t.Fatal("line 3 ran after a strict line-2 rejection")
+				}
+				return
+			}
+			var importErr *DictionaryImportError
+			if !errors.Is(err, providerFailure) || !errors.As(err, &importErr) || !errors.Is(err, ErrDictionaryUnavailable) {
+				t.Fatalf("import failure lost: %v", err)
+			}
+			if !result.ModelLine.Requested || !result.ModelLine.InputComplete || result.ModelLine.Satisfied() {
+				t.Fatalf("line 3 did not report the unavailable set: requested=%v complete=%v satisfied=%v", result.ModelLine.Requested, result.ModelLine.InputComplete, result.ModelLine.Satisfied())
+			}
+			for _, property := range []validation.ContextProperty{validation.ContextDictionaryCanonical, validation.ContextDictionaryIPARepresentation} {
+				evidence := dictionaryResults(result.ModelLine, property)
+				if len(evidence) != 1 || evidence[0].ComponentVerified || evidence[0].Result.State == validation.EvidenceKnown {
+					t.Fatalf("unavailable %s evidence: %+v", property, evidence)
+				}
+			}
+		})
+	}
+}
+
+// A resource refusal during the import is terminal: line 3 does not start, the
+// document is not returned, and the error is the resource limit itself rather
+// than a dictionary failure. The import draws on the same account as line 2,
+// which has already completed and keeps its report.
+func TestStrictLoadingTerminalImportFailureAfterLineTwo(t *testing.T) {
+	invalid := invalidDictionaryScore()
+	for _, tc := range []struct {
+		name, input    string
+		lenient        bool
+		calls          int
+		sourceAccepted bool
+	}{
+		{"strict accepted", mandatoryDictionaryScore(), false, 1, true},
+		{"lenient accepted", mandatoryDictionaryScore(), true, 1, true},
+		{"strict rejected", invalid, false, 0, false},
+		{"lenient rejected", invalid, true, 1, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			reader := &eofReader{Reader: strings.NewReader(tc.input)}
+			source := &bundledPassThroughSource{open: func(context.Context, DictionaryComponentRequest) {
+				if !reader.eof.Load() {
+					t.Error("dictionary opened before the source end")
+				}
+			}}
+			// Line 2 charges no external bytes; the first dictionary body
+			// exceeds this limit.
+			result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &AssessmentOptions{
+				Budgets:      validation.Budgets{MaxExternalBytes: 1024},
+				Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()},
+			}})
+			if source.count() != tc.calls {
+				t.Fatalf("provider calls=%d want %d; error=%v", source.count(), tc.calls, err)
+			}
+			if err == nil || result.Document != nil || result.Accepted || result.ModelLine.Requested || !result.SourceLine.Requested || !result.SourceLine.InputComplete || result.SourceLine.Satisfied() != tc.sourceAccepted {
+				t.Fatalf("document=%T accepted=%v model requested=%v source satisfied=%v complete=%v error=%v", result.Document, result.Accepted, result.ModelLine.Requested, result.SourceLine.Satisfied(), result.SourceLine.InputComplete, err)
+			}
+			if tc.calls == 0 {
+				return
+			}
+			var limit *validation.ResourceError
+			if !errors.As(err, &limit) || limit.Kind != validation.BudgetExternalBytes || limit.Limit != 1024 {
+				t.Fatalf("import did not refuse on the external-byte limit: %v", err)
+			}
+			var importErr *DictionaryImportError
+			if errors.As(err, &importErr) || errors.Is(err, ErrDictionaryUnavailable) {
+				t.Fatalf("terminal refusal reported as an unavailable dictionary: %v", err)
+			}
+		})
+	}
+}
+
+// cancelAtImportContext cancels on the first context check made by the line-3
+// import, which is the boundary between the two lines.
+type cancelAtImportContext struct {
+	context.Context
+	cancel context.CancelFunc
+	fired  atomic.Bool
+}
+
+func (c *cancelAtImportContext) Err() error {
+	if !c.fired.Load() && calledFrom(".dictionaryAssessmentConfigAccount") {
+		c.fired.Store(true)
+		c.cancel()
+	}
+	return c.Context.Err()
+}
+
+func calledFrom(suffix string) bool {
+	pcs := make([]uintptr, 8)
+	frames := runtime.CallersFrames(pcs[:runtime.Callers(2, pcs)])
+	for {
+		frame, more := frames.Next()
+		if strings.HasSuffix(frame.Function, suffix) {
+			return true
+		}
+		if !more {
+			return false
+		}
+	}
+}
+
+// Cancellation after line 2 and before the import opens nothing, starts no
+// line 3 and returns no document; the line-2 report stays. The default bundled
+// set, which is shared rather than imported, stops at the same boundary.
+func TestStrictLoadingCancellationBetweenLines(t *testing.T) {
+	invalid := invalidDictionaryScore()
+	for _, tc := range []struct {
+		name, input    string
+		lenient        bool
+		caller         bool
+		sourceAccepted bool
+	}{
+		{"strict caller source", mandatoryDictionaryScore(), false, true, true},
+		{"lenient caller source", mandatoryDictionaryScore(), true, true, true},
+		{"lenient rejected caller source", invalid, true, true, false},
+		{"strict bundled", mandatoryDictionaryScore(), false, false, true},
+		{"lenient bundled", mandatoryDictionaryScore(), true, false, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			base, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			ctx := &cancelAtImportContext{Context: base, cancel: cancel}
+			source := &bundledPassThroughSource{}
+			assessment := &AssessmentOptions{}
+			if tc.caller {
+				assessment.Dictionaries = &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}
+			}
+			result, err := DecodeAssessed(ctx, strings.NewReader(tc.input), DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: assessment})
+			if !ctx.fired.Load() {
+				t.Fatalf("the import boundary was never reached: %v", err)
+			}
+			var incomplete *validation.IncompleteError
+			if !errors.Is(err, context.Canceled) || !errors.As(err, &incomplete) || incomplete.Reason != "canceled-before-dictionaries" {
+				t.Fatalf("cancellation between the lines lost its boundary: %v", err)
+			}
+			if source.count() != 0 || result.Document != nil || result.Accepted || result.ModelLine.Requested || !result.SourceLine.InputComplete || result.SourceLine.Satisfied() != tc.sourceAccepted {
+				t.Fatalf("provider calls=%d document=%T accepted=%v model requested=%v source satisfied=%v complete=%v", source.count(), result.Document, result.Accepted, result.ModelLine.Requested, result.SourceLine.Satisfied(), result.SourceLine.InputComplete)
+			}
+		})
+	}
 }
 
 func withoutContext(r validation.Report) validation.Report {
