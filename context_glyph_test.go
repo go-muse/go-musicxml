@@ -44,9 +44,9 @@ func TestContextLocalGlyphSemanticsAcrossTargets(t *testing.T) {
 				for _, model := range []bool{false, true} {
 					var r validation.Report
 					if model {
-						r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+						r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 					} else {
-						r, err = InspectXML(context.Background(), strings.NewReader(xml), AssessmentOptions{Profile: ProfileSourceContext})
+						r, err = InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Profile: ProfileSourceContext})
 					}
 					if err != nil {
 						t.Fatal(err)

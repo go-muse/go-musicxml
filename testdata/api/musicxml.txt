@@ -434,43 +434,43 @@ const PrincipalVoiceSymbolHauptstimme PrincipalVoiceSymbol = "Hauptstimme"
 const PrincipalVoiceSymbolNebenstimme PrincipalVoiceSymbol = "Nebenstimme"
 const PrincipalVoiceSymbolNone PrincipalVoiceSymbol = "none"
 const PrincipalVoiceSymbolPlain PrincipalVoiceSymbol = "plain"
-const ProfileMXLModel validation.ProfileID = "musicxml-4.0/mxl-model"
-const ProfileMXLModelDictionaries validation.ProfileID = "musicxml-4.0/mxl-model-dictionaries"
-const ProfileMXLModelInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/mxl-model-internal-dtd-dictionaries"
-const ProfileMXLModelSemantics validation.ProfileID = "musicxml-4.0/mxl-model-semantics"
-const ProfileMXLSource validation.ProfileID = "musicxml-4.0/mxl-source"
-const ProfileMXLSourceDictionaries validation.ProfileID = "musicxml-4.0/mxl-source-dictionaries"
-const ProfileMXLSourceInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/mxl-source-internal-dtd-dictionaries"
-const ProfileMXLSourceLine validation.ProfileID = "musicxml-4.0/mxl-source-line"
-const ProfileMXLSourceSemantics validation.ProfileID = "musicxml-4.0/mxl-source-semantics"
-const ProfileModelContext validation.ProfileID = "musicxml-4.0/model-context"
-const ProfileModelDictionaries validation.ProfileID = "musicxml-4.0/model-links-dictionaries"
-const ProfileModelLinks validation.ProfileID = "musicxml-4.0/model-links"
-const ProfileModelLocal validation.ProfileID = "musicxml-4.0/model-local"
-const ProfileModelSemantics validation.ProfileID = "musicxml-4.0/model-semantics"
-const ProfileModelTimeline validation.ProfileID = "musicxml-4.0/model-timeline"
-const ProfileModelXSD validation.ProfileID = "musicxml-4.0/model-xsd"
-const ProfileResourceGraph validation.ProfileID = "musicxml-4.0/resource-graph"
-const ProfileResourceGraphDictionaries validation.ProfileID = "musicxml-4.0/resource-graph-dictionaries"
-const ProfileResourceGraphInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/resource-graph-internal-dtd-dictionaries"
-const ProfileResourceGraphSemantics validation.ProfileID = "musicxml-4.0/resource-graph-semantics"
-const ProfileSourceContainer validation.ProfileID = "musicxml-4.0/source-container"
-const ProfileSourceContext validation.ProfileID = "musicxml-4.0/source-context"
-const ProfileSourceDictionaries validation.ProfileID = "musicxml-4.0/source-links-dictionaries"
-const ProfileSourceInternalDTD validation.ProfileID = "musicxml-4.0/source-internal-dtd"
-const ProfileSourceInternalDTDContainer validation.ProfileID = "musicxml-4.0/source-internal-dtd-container"
-const ProfileSourceInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/source-internal-dtd-links-dictionaries"
-const ProfileSourceInternalDTDLinks validation.ProfileID = "musicxml-4.0/source-internal-dtd-links"
-const ProfileSourceInternalDTDLocal validation.ProfileID = "musicxml-4.0/source-internal-dtd-local"
-const ProfileSourceInternalDTDSoundsDictionaries validation.ProfileID = "musicxml-4.0/source-internal-dtd-sounds-dictionaries"
-const ProfileSourceLine validation.ProfileID = "musicxml-4.0/source-line"
-const ProfileSourceLinks validation.ProfileID = "musicxml-4.0/source-links"
-const ProfileSourceLocal validation.ProfileID = "musicxml-4.0/source-local"
-const ProfileSourceSemantics validation.ProfileID = "musicxml-4.0/source-semantics"
-const ProfileSourceSounds validation.ProfileID = "musicxml-4.0/source-sounds"
-const ProfileSourceSoundsDictionaries validation.ProfileID = "musicxml-4.0/source-sounds-dictionaries"
-const ProfileSourceTimeline validation.ProfileID = "musicxml-4.0/source-timeline"
-const ProfileSourceXSDPreview validation.ProfileID = "musicxml-4.0/source-xsd-preview"
+const ProfileMXLModel MXLProfile = "musicxml-4.0/mxl-model"
+const ProfileMXLModelDictionaries MXLProfile = "musicxml-4.0/mxl-model-dictionaries"
+const ProfileMXLModelInternalDTDDictionaries MXLProfile = "musicxml-4.0/mxl-model-internal-dtd-dictionaries"
+const ProfileMXLModelSemantics MXLProfile = "musicxml-4.0/mxl-model-semantics"
+const ProfileMXLSource MXLProfile = "musicxml-4.0/mxl-source"
+const ProfileMXLSourceDictionaries MXLProfile = "musicxml-4.0/mxl-source-dictionaries"
+const ProfileMXLSourceInternalDTDDictionaries MXLProfile = "musicxml-4.0/mxl-source-internal-dtd-dictionaries"
+const ProfileMXLSourceLine MXLProfile = "musicxml-4.0/mxl-source-line"
+const ProfileMXLSourceSemantics MXLProfile = "musicxml-4.0/mxl-source-semantics"
+const ProfileModelContext ModelProfile = "musicxml-4.0/model-context"
+const ProfileModelDictionaries ModelProfile = "musicxml-4.0/model-links-dictionaries"
+const ProfileModelLinks ModelProfile = "musicxml-4.0/model-links"
+const ProfileModelLocal ModelProfile = "musicxml-4.0/model-local"
+const ProfileModelSemantics ModelProfile = "musicxml-4.0/model-semantics"
+const ProfileModelTimeline ModelProfile = "musicxml-4.0/model-timeline"
+const ProfileModelXSD ModelProfile = "musicxml-4.0/model-xsd"
+const ProfileResourceGraph GraphProfile = "musicxml-4.0/resource-graph"
+const ProfileResourceGraphDictionaries GraphProfile = "musicxml-4.0/resource-graph-dictionaries"
+const ProfileResourceGraphInternalDTDDictionaries GraphProfile = "musicxml-4.0/resource-graph-internal-dtd-dictionaries"
+const ProfileResourceGraphSemantics GraphProfile = "musicxml-4.0/resource-graph-semantics"
+const ProfileSourceContainer SourceProfile = "musicxml-4.0/source-container"
+const ProfileSourceContext SourceProfile = "musicxml-4.0/source-context"
+const ProfileSourceDictionaries SourceProfile = "musicxml-4.0/source-links-dictionaries"
+const ProfileSourceInternalDTD SourceProfile = "musicxml-4.0/source-internal-dtd"
+const ProfileSourceInternalDTDContainer SourceProfile = "musicxml-4.0/source-internal-dtd-container"
+const ProfileSourceInternalDTDDictionaries SourceProfile = "musicxml-4.0/source-internal-dtd-links-dictionaries"
+const ProfileSourceInternalDTDLinks SourceProfile = "musicxml-4.0/source-internal-dtd-links"
+const ProfileSourceInternalDTDLocal SourceProfile = "musicxml-4.0/source-internal-dtd-local"
+const ProfileSourceInternalDTDSoundsDictionaries SourceProfile = "musicxml-4.0/source-internal-dtd-sounds-dictionaries"
+const ProfileSourceLine SourceProfile = "musicxml-4.0/source-line"
+const ProfileSourceLinks SourceProfile = "musicxml-4.0/source-links"
+const ProfileSourceLocal SourceProfile = "musicxml-4.0/source-local"
+const ProfileSourceSemantics SourceProfile = "musicxml-4.0/source-semantics"
+const ProfileSourceSounds SourceProfile = "musicxml-4.0/source-sounds"
+const ProfileSourceSoundsDictionaries SourceProfile = "musicxml-4.0/source-sounds-dictionaries"
+const ProfileSourceTimeline SourceProfile = "musicxml-4.0/source-timeline"
+const ProfileSourceXSDPreview SourceProfile = "musicxml-4.0/source-xsd-preview"
 const ResourceAssociations ResourceDependency = "instrument-associations"
 const ResourceDocuments ResourceDependency = "documents"
 const ResourceImages ResourceDependency = "image-metadata"
@@ -680,7 +680,7 @@ func AsOpusDocument(document Document) (*OpusDocument, bool)
 func AsScorePartwise(document Document) (*ScorePartwise, bool)
 func AsScoreTimewise(document Document) (*ScoreTimewise, bool)
 func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessmentOptions) (validation.AssessmentBundle, error)
-func AssessModel(ctx context.Context, document Document, options AssessmentOptions) (validation.Report, error)
+func AssessModel(ctx context.Context, document Document, options ModelOptions) (validation.Report, error)
 func AssessModelWithResources(ctx context.Context, document Document, options LinkedAssessmentOptions) (validation.AssessmentBundle, error)
 func BundledDictionarySource() DictionarySource
 func Decode(reader io.Reader) (Document, error)
@@ -713,7 +713,7 @@ func EncodeMXL(writer io.Writer, document Document) error
 func EncodeMXLPackage(writer io.Writer, value *MXLPackage) error
 func EncodeWithOptions(writer io.Writer, document Document, options EncodeOptions) error
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error)
-func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions) (report validation.Report, err error)
+func InspectXML(ctx context.Context, reader io.Reader, options SourceOptions) (report validation.Report, err error)
 func InspectXMLWithResources(ctx context.Context, reader io.Reader, options LinkedAssessmentOptions) (validation.AssessmentBundle, error)
 func NewOpusDocument() *OpusDocument
 func NewPitchedNote(step Step, octave Octave, duration PositiveDivisions) *Note
@@ -912,13 +912,6 @@ type Assess struct, field Player *string `xml:"player,attr,omitempty"`
 type Assess struct, field TimeOnly *TimeOnly `xml:"time-only,attr,omitempty"`
 type Assess struct, field Type YesNo `xml:"type,attr"`
 type Assess struct, field order Type Player TimeOnly
-type AssessmentOptions struct, comparable
-type AssessmentOptions struct, field Budgets validation.Budgets
-type AssessmentOptions struct, field DTD *DTDOptions
-type AssessmentOptions struct, field Dictionaries *DictionaryOptions
-type AssessmentOptions struct, field OmitContext bool
-type AssessmentOptions struct, field Profile validation.ProfileID
-type AssessmentOptions struct, field order Profile Budgets DTD Dictionaries OmitContext
 type Attributes struct, field Clef []Clef `xml:"clef"`
 type Attributes struct, field Directive []struct{Value string "xml:\",chardata\""; Lang *string "xml:\"http://www.w3.org/XML/1998/namespace lang,attr,omitempty\""; DefaultX *Tenths "xml:\"default-x,attr,omitempty\""; DefaultY *Tenths "xml:\"default-y,attr,omitempty\""; RelativeX *Tenths "xml:\"relative-x,attr,omitempty\""; RelativeY *Tenths "xml:\"relative-y,attr,omitempty\""; FontFamily *FontFamily "xml:\"font-family,attr,omitempty\""; FontStyle *FontStyle "xml:\"font-style,attr,omitempty\""; FontSize *FontSize "xml:\"font-size,attr,omitempty\""; FontWeight *FontWeight "xml:\"font-weight,attr,omitempty\""; Color *Color "xml:\"color,attr,omitempty\""} `xml:"directive"`
 type Attributes struct, field Divisions *PositiveDivisions `xml:"divisions,omitempty"`
@@ -1216,7 +1209,7 @@ type Dashes struct, field SpaceLength *Tenths `xml:"space-length,attr,omitempty"
 type Dashes struct, field Type StartStopContinue `xml:"type,attr"`
 type Dashes struct, field order Type Number DashLength SpaceLength DefaultX DefaultY RelativeX RelativeY Color ID
 type DecodeAssessmentOptions struct, comparable
-type DecodeAssessmentOptions struct, field Assessment *AssessmentOptions
+type DecodeAssessmentOptions struct, field Assessment *SourceOptions
 type DecodeAssessmentOptions struct, field Decode DecodeOptions
 type DecodeAssessmentOptions struct, field Lenient bool
 type DecodeAssessmentOptions struct, field order Decode Assessment Lenient
@@ -1939,6 +1932,14 @@ type Grace struct, field Slash *YesNo `xml:"slash,attr,omitempty"`
 type Grace struct, field StealTimeFollowing *Percent `xml:"steal-time-following,attr,omitempty"`
 type Grace struct, field StealTimePrevious *Percent `xml:"steal-time-previous,attr,omitempty"`
 type Grace struct, field order StealTimePrevious StealTimeFollowing MakeTime Slash
+type GraphOptions struct, comparable
+type GraphOptions struct, field Budgets validation.Budgets
+type GraphOptions struct, field DTD *DTDOptions
+type GraphOptions struct, field Dictionaries *DictionaryOptions
+type GraphOptions struct, field Profile GraphProfile
+type GraphOptions struct, field order Profile Budgets DTD Dictionaries
+type GraphProfile string
+type GraphProfile, method (GraphProfile) ID() validation.ProfileID
 type GroupBarline struct, comparable
 type GroupBarline struct, field Color *Color `xml:"color,attr,omitempty"`
 type GroupBarline struct, field Value GroupBarlineValue `xml:",chardata"`
@@ -2371,7 +2372,7 @@ type Link, method (*Link) EffectiveShow() string
 type Link, method (*Link) EffectiveType() string
 type Link, method (*Link) TypeMatchesFixed() bool
 type LinkedAssessmentOptions struct, field Dependencies []ResourceDependency
-type LinkedAssessmentOptions struct, field Graph AssessmentOptions
+type LinkedAssessmentOptions struct, field Graph GraphOptions
 type LinkedAssessmentOptions struct, field Identity ResourceIdentity
 type LinkedAssessmentOptions struct, field Resolver validation.ResourceResolver
 type LinkedAssessmentOptions struct, field order Graph Identity Resolver Dependencies
@@ -2490,12 +2491,18 @@ type MIDIInstrument struct, field Pan *RotationDegrees `xml:"pan,omitempty"`
 type MIDIInstrument struct, field Volume *Percent `xml:"volume,omitempty"`
 type MIDIInstrument struct, field order MIDIChannel MIDIName MIDIBank MIDIProgram MIDIUnpitched Volume Pan Elevation ID
 type MXLAssessmentOptions struct, field Dependencies []ResourceDependency
-type MXLAssessmentOptions struct, field Graph AssessmentOptions
+type MXLAssessmentOptions struct, field Graph MXLGraphOptions
 type MXLAssessmentOptions struct, field Identity ResourceIdentity
 type MXLAssessmentOptions struct, field MXL MXLOptions
 type MXLAssessmentOptions struct, field Resolver validation.ResourceResolver
 type MXLAssessmentOptions struct, field order Graph Identity Resolver Dependencies MXL
 type MXLAssessmentOptions struct, not comparable
+type MXLGraphOptions struct, comparable
+type MXLGraphOptions struct, field Budgets validation.Budgets
+type MXLGraphOptions struct, field DTD *DTDOptions
+type MXLGraphOptions struct, field Dictionaries *DictionaryOptions
+type MXLGraphOptions struct, field Profile MXLProfile
+type MXLGraphOptions struct, field order Profile Budgets DTD Dictionaries
 type MXLLinkError struct, comparable
 type MXLLinkError struct, field Err error
 type MXLLinkError struct, field Href string
@@ -2521,6 +2528,8 @@ type MXLPackage struct, not comparable
 type MXLPackage, method (*MXLPackage) ResolveOpus() (*MXLResolvedOpus, error)
 type MXLPackage, method (*MXLPackage) ResolveOpusWithOptions(options DecodeOptions) (*MXLResolvedOpus, error)
 type MXLPackage, method (*MXLPackage) SyncResolvedOpus(resolved *MXLResolvedOpus) error
+type MXLProfile string
+type MXLProfile, method (MXLProfile) ID() validation.ProfileID
 type MXLResolvedOpus struct, field Content []MXLResolvedOpusContent
 type MXLResolvedOpus struct, field Document *OpusDocument
 type MXLResolvedOpus struct, field Path string
@@ -2685,6 +2694,14 @@ type MiscellaneousField struct, field Name string `xml:"name,attr"`
 type MiscellaneousField struct, field Value string `xml:",chardata"`
 type MiscellaneousField struct, field order Value Name
 type Mode string
+type ModelOptions struct, comparable
+type ModelOptions struct, field Budgets validation.Budgets
+type ModelOptions struct, field Dictionaries *DictionaryOptions
+type ModelOptions struct, field OmitContext bool
+type ModelOptions struct, field Profile ModelProfile
+type ModelOptions struct, field order Profile Budgets Dictionaries OmitContext
+type ModelProfile string
+type ModelProfile, method (ModelProfile) ID() validation.ProfileID
 type Mordent struct, comparable
 type Mordent struct, embedded EmptyTrillSound EmptyTrillSound
 type Mordent struct, field Approach *AboveBelow `xml:"approach,attr,omitempty"`
@@ -3711,6 +3728,15 @@ type SoundContent, method (SoundContent) MarshalXML(encoder *xml.Encoder, _ xml.
 type SoundContent, method (SoundContent) Value() any
 type SoundContents []SoundContent
 type SoundContents, method (*SoundContents) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
+type SourceOptions struct, comparable
+type SourceOptions struct, field Budgets validation.Budgets
+type SourceOptions struct, field DTD *DTDOptions
+type SourceOptions struct, field Dictionaries *DictionaryOptions
+type SourceOptions struct, field OmitContext bool
+type SourceOptions struct, field Profile SourceProfile
+type SourceOptions struct, field order Profile Budgets DTD Dictionaries OmitContext
+type SourceProfile string
+type SourceProfile, method (SourceProfile) ID() validation.ProfileID
 type StaffDetails struct, field Capo *NonNegativeInteger `xml:"capo,omitempty"`
 type StaffDetails struct, field LineDetail []LineDetail `xml:"line-detail"`
 type StaffDetails struct, field Number *StaffNumber `xml:"number,attr,omitempty"`

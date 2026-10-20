@@ -93,12 +93,13 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	if nilValue(reader) {
 		return result, ErrNilReader
 	}
-	limits, err := options.Assessment.MXL.limits()
+	assessment := options.Assessment.internal()
+	limits, err := assessment.MXL.limits()
 	if err != nil {
 		return result, err
 	}
-	graph := options.Assessment.Graph
-	if graph.Profile != "" && graph.Profile != ProfileMXLSourceLine {
+	graph := assessment.Graph
+	if graph.Profile != "" && graph.Profile != profileMXLSourceLine {
 		return result, &validation.ConfigurationError{Field: "assessed loading profile", Reason: "requires mxl-source-line; use InspectMXL for individually selected profiles"}
 	}
 	dictionaries := requiredDictionaryOptions()
@@ -114,18 +115,18 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	if err != nil {
 		return result, err
 	}
-	stage := func(profile validation.ProfileID) LinkedAssessmentOptions {
-		linked := options.Assessment.linked()
+	stage := func(profile validation.ProfileID) linkedAssessmentOptions {
+		linked := assessment.linked()
 		linked.Graph.Profile, linked.Graph.Dictionaries = profile, nil
 		return linked
 	}
 	// Every option is checked before the reader is touched. The model stage
 	// uses the same options under its own fixed profile.
-	if _, err := validateLinkedAssessmentOptionsAccount(ctx, stage(ProfileMXLSourceLine), ProfileMXLSourceLine, account); err != nil {
+	if _, err := validateLinkedAssessmentOptionsAccount(ctx, stage(profileMXLSourceLine), profileMXLSourceLine, account); err != nil {
 		return result, err
 	}
 	// Conversion resolves DTDs as the source stage does: Graph.DTD first.
-	limits.dtd = stage(ProfileMXLSourceLine).Graph.DTD
+	limits.dtd = stage(profileMXLSourceLine).Graph.DTD
 	// The archive is read and indexed on the shared account, metered as in
 	// InspectMXL: reads, buffer growth and the ZIP inventory are admitted
 	// before they happen.
@@ -148,7 +149,7 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 
 	var sourceErr error
 	// Line 2 reads no dictionaries; only line 3 imports them.
-	source, err := startSourceLineResourceGraph(ctx, stage(ProfileMXLSourceLine), account)
+	source, err := startSourceLineResourceGraph(ctx, stage(profileMXLSourceLine), account)
 	if source == nil {
 		archive.Close()
 		return result, err
@@ -201,7 +202,7 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	}
 
 	// The model stage assesses the converted package as AssessMXLPackage does.
-	model, err := startDictionaryResourceGraphAccount(ctx, stage(ProfileMXLModelSemantics), dictionaries, ProfileMXLModelDictionaries, account)
+	model, err := startDictionaryResourceGraphAccount(ctx, stage(profileMXLModelSemantics), dictionaries, profileMXLModelDictionaries, account)
 	if model == nil {
 		return result, err
 	}

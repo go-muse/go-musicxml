@@ -12,42 +12,14 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// AssessmentOptions selects a target-specific profile and finite shared limits.
-// An empty Profile selects the full semantic profile of each entry point, with
-// the bundled required dictionaries unless Dictionaries is set; a non-empty
-// Profile must be known and fit the entry point. Zero budget fields select
-// defaults. DecodeAssessed fixes its validation lines and accepts only an
-// empty Profile or ProfileSourceLine.
-// Source and model profiles describe their bounded target-specific scope and
-// cannot be interchanged. Standalone source/model entry points reject the
-// separate package/resource-graph profiles. Source
-// facts also have fixed identity limits: 1024
-// UTF-8 bytes per local name or prefix, 4096 per namespace URI, and 65536 in-scope
-// namespace bindings. Exceeding these is incomplete, never malformed XML.
-// Buffered-byte accounting bounds admitted retained representations and logical
-// model-candidate storage, not exact Go heap use or garbage-collector overhead.
-type AssessmentOptions struct {
-	Profile validation.ProfileID
-	Budgets validation.Budgets
-	// DTD supplies caller DTD bytes ahead of the bundled official MusicXML
-	// DTDs to source profiles that read DTD declarations. Nil uses only the
-	// bundled DTDs. Model assessment ignores it.
-	DTD *DTDOptions
-	// Dictionaries selects pinned dictionary capabilities, which the
-	// dictionary and semantic profiles consult. With an empty Profile, nil or
-	// a value with a nil Source and no selections selects the bundled data
-	// those profiles require; with an explicit profile, nil keeps the
-	// profile's dictionary-free behaviour.
+// assessmentOptions is the normalized form of SourceOptions, ModelOptions,
+// GraphOptions and MXLGraphOptions that the engine adapters share.
+type assessmentOptions struct {
+	Profile      validation.ProfileID
+	Budgets      validation.Budgets
+	DTD          *DTDOptions
 	Dictionaries *DictionaryOptions
-	// OmitContext leaves Report.Context empty in every report of InspectXML,
-	// AssessModel and DecodeAssessed (both lines). Every decision, count and
-	// finding is the same as with the projection; the call only keeps no copy
-	// of it, which lowers the buffered storage it needs (see
-	// validation.RunOptions.OmitContext). Graph and package assessment read
-	// the projection, so their entry points reject it as the Graph options of
-	// LinkedAssessmentOptions or MXLAssessmentOptions with a configuration
-	// error, before any input is read.
-	OmitContext bool
+	OmitContext  bool
 }
 
 // DecodeAssessmentOptions configures strict loading (scenario 2). Nil
@@ -58,7 +30,7 @@ type AssessmentOptions struct {
 // conversion-only API (scenario 1).
 type DecodeAssessmentOptions struct {
 	Decode     DecodeOptions
-	Assessment *AssessmentOptions
+	Assessment *SourceOptions
 	// Lenient returns the converted document even when an assessment finds
 	// violations or is incomplete, with err == nil and DecodeResult.Accepted
 	// false. Operational failures still return an error and no document:
@@ -137,11 +109,12 @@ func (e *ConversionError) Unwrap() error {
 // gives the line-2 report of DecodeAssessed. Otherwise Profile must be a
 // source-target profile, and a non-nil options.Dictionaries requires a
 // dictionary or semantic one.
-func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions) (report validation.Report, err error) {
-	if assessment, dictionaries, ok := options.scenario(ProfileSourceSemantics); ok {
+func InspectXML(ctx context.Context, reader io.Reader, options SourceOptions) (report validation.Report, err error) {
+	normalized := options.internal()
+	if assessment, dictionaries, ok := normalized.scenario(profileSourceSemantics); ok {
 		return inspectXMLWithDictionaries(ctx, reader, dictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
 	}
-	run, err := newSourceAssessmentRun(ctx, reader, DecodeOptions{}, &options, false)
+	run, err := newSourceAssessmentRun(ctx, reader, DecodeOptions{}, &normalized, false)
 	if err != nil {
 		if run != nil {
 			return run.startupReport, err
@@ -197,7 +170,7 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessmentOptions) (DecodeResult, error) {
 	var assessment *dictionaryAssessmentOptions
 	if options.Assessment != nil {
-		assessment = &dictionaryAssessmentOptions{Assessment: *options.Assessment}
+		assessment = &dictionaryAssessmentOptions{Assessment: options.Assessment.internal()}
 		if dictionaries := options.Assessment.Dictionaries; dictionaries != nil {
 			assessment.Dictionaries = *dictionaries
 		}
@@ -308,7 +281,7 @@ type sourceAssessmentRun struct {
 
 // Public wrappers alone create the root account. Resource orchestration supplies
 // the same account to every child via newSourceAssessmentRunWithConfig.
-func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode DecodeOptions, assessment *AssessmentOptions, converting bool) (*sourceAssessmentRun, error) {
+func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode DecodeOptions, assessment *assessmentOptions, converting bool) (*sourceAssessmentRun, error) {
 	if err := assessmentContext(ctx, "canceled-before-source"); err != nil {
 		return nil, err
 	}

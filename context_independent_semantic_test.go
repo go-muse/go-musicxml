@@ -18,9 +18,9 @@ func independentContextReport(t *testing.T, source string, model bool) validatio
 		if e != nil {
 			t.Fatal(e)
 		}
-		report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+		report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 	} else {
-		report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+		report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 	}
 	if err != nil {
 		t.Fatal(err)

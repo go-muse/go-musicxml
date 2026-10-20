@@ -17,9 +17,9 @@ func TestSourceOriginReviewOfficialCapacity(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, limit := range []int64{0, 16000000} {
-		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceInternalDTD} {
+		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview.ID(), ProfileSourceInternalDTD.ID()} {
 			limits := validation.Budgets{MaxBufferedBytes: limit}
-			run, err := newSourceAssessmentRun(context.Background(), bytes.NewReader(data), DecodeOptions{}, &AssessmentOptions{Profile: profile, Budgets: limits}, false)
+			run, err := newSourceAssessmentRun(context.Background(), bytes.NewReader(data), DecodeOptions{}, &assessmentOptions{Profile: profile, Budgets: limits}, false)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -32,7 +32,7 @@ func TestSourceOriginReviewOfficialCapacity(t *testing.T) {
 			afterFinish, _ := run.account.Usage(validation.BudgetBufferedBytes)
 			t.Logf("profile=%s max_buffered=%d input_bytes=%d sha256=%x before_finish=%d after_finish=%d nodes=%d attrs=%d origins=%d steps_before_finish=%d input_complete=%v assessment_complete=%v syntax=%s satisfied=%v resource_refusal=%v err=%v", profile, run.account.Limits().MaxBufferedBytes, len(data), sha256.Sum256(data), beforeFinish, afterFinish, nodes, attrs, len(report.Context), steps, report.InputComplete, report.AssessmentComplete, report.Syntax, report.Satisfied(), errors.Is(err, validation.ErrResourceLimit), err)
 			switch {
-			case profile == ProfileSourceXSDPreview:
+			case profile == ProfileSourceXSDPreview.ID():
 				// The preview does not read DTDs; its external subset stays unread.
 				if err != nil || !report.InputComplete || report.AssessmentComplete || report.Satisfied() {
 					t.Fatalf("bounded official input must complete with unread-DTD assessment evidence: err=%v report=%+v", err, report)

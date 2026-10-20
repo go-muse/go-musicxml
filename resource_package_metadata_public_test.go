@@ -39,11 +39,11 @@ func TestPackageMetadataPublicEntryPointsInvokeSelectedRoles(t *testing.T) {
 				if e != nil {
 					t.Fatal(e)
 				}
-				o := MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceRoles}}
+				o := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceRoles}}
 				b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: d, RootFiles: []MXLRootFile{{FullPath: "part.xml"}, {FullPath: "score.xml"}}, Resources: []MXLResource{{Path: "score.xml", Data: []byte(`<opus/>`)}}}, o)
 			default:
 				source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/book.mxl"/></opus>`
-				o := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments, ResourceRoles}}
+				o := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments, ResourceRoles}}
 				if mode == "source-graph" {
 					b, err = InspectXMLWithResources(context.Background(), strings.NewReader(source), o)
 				} else {

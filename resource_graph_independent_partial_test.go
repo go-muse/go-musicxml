@@ -15,7 +15,7 @@ import (
 )
 
 func finalQAOptions(r validation.ResourceResolver) LinkedAssessmentOptions {
-	return LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://final-qa.test/root.opus"}, Resolver: r, Dependencies: []ResourceDependency{ResourceDocuments}}
+	return LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://final-qa.test/root.opus"}, Resolver: r, Dependencies: []ResourceDependency{ResourceDocuments}}
 }
 func finalQARun(t *testing.T, mode, source string, ctx context.Context, opts LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
 	t.Helper()
@@ -29,14 +29,14 @@ func finalQARun(t *testing.T, mode, source string, ctx context.Context, opts Lin
 		}
 		return AssessModelWithResources(ctx, d, opts)
 	case "raw-mxl":
-		o := MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource, Budgets: opts.Graph.Budgets}, Identity: opts.Identity, Resolver: opts.Resolver, Dependencies: opts.Dependencies}
+		o := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: opts.Graph.Budgets}, Identity: opts.Identity, Resolver: opts.Resolver, Dependencies: opts.Dependencies}
 		return InspectMXL(ctx, bytes.NewReader(packageGraphBytes(source, "root.opus", "")), o)
 	case "current-mxl":
 		d, e := Decode(strings.NewReader(source))
 		if e != nil {
 			t.Fatal(e)
 		}
-		o := MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel, Budgets: opts.Graph.Budgets}, Identity: opts.Identity, Resolver: opts.Resolver, Dependencies: opts.Dependencies}
+		o := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel, Budgets: opts.Graph.Budgets}, Identity: opts.Identity, Resolver: opts.Resolver, Dependencies: opts.Dependencies}
 		return AssessMXLPackage(ctx, &MXLPackage{Document: d, RootFiles: []MXLRootFile{{FullPath: "root.opus"}}}, o)
 	default:
 		t.Fatal(mode)
@@ -56,7 +56,7 @@ func finalQAWrongKind(b validation.AssessmentBundle) bool {
 // bounded failure channel, without creating a canonical resource or kind proof.
 func finalQAOriginalSourceFailure(t *testing.T, b validation.AssessmentBundle, source string) {
 	t.Helper()
-	original, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLinks})
+	original, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLinks})
 	if err == nil || original.Terminal == nil {
 		t.Fatal("fixture needs an original terminal intrinsic result", err)
 	}
@@ -143,16 +143,16 @@ func (r *finalQAReadError) Read(p []byte) (int, error) {
 }
 func finalQAMeasuredXML(t *testing.T, ctx context.Context, source string, opts LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
 	t.Helper()
-	g, e := startResourceGraph(ctx, opts, ProfileResourceGraph)
+	g, e := startResourceGraph(ctx, opts.internal(), ProfileResourceGraph.ID())
 	if e != nil {
 		t.Fatal(e)
 	}
-	engine, e := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+	engine, e := sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
 	if e != nil {
 		t.Fatal(e)
 	}
 	id := g.next("source")
-	r := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesPrimary})
+	r := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 	b, e := g.finishPrimary(r, g.primaryPin(validation.ResourceSourceXML, hex.EncodeToString(r.Digest[:])), id)
 	for _, kind := range []validation.BudgetKind{validation.BudgetBufferedBytes, validation.BudgetDepth} {
 		used, x := g.options.account.Usage(kind)
@@ -248,16 +248,16 @@ func TestFinalQAEmptyFragmentCannotInventRoot(t *testing.T) {
 	for _, target := range []string{"", "<!-- no root -->", "<sounds/>", "<opus>", "<opus/>"} {
 		t.Run(target, func(t *testing.T) {
 			ctx := context.Background()
-			g, e := startResourceGraph(ctx, finalQAOptions(nil), ProfileResourceGraph)
+			g, e := startResourceGraph(ctx, finalQAOptions(nil).internal(), ProfileResourceGraph.ID())
 			if e != nil {
 				t.Fatal(e)
 			}
-			engine, e := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+			engine, e := sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
 			if e != nil {
 				t.Fatal(e)
 			}
 			id := g.next("source")
-			r := assessResourceSource(ctx, strings.NewReader(target), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesPrimary})
+			r := assessResourceSource(ctx, strings.NewReader(target), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 			if r.Snapshot == nil {
 				t.Fatal("partial retained snapshot missing", r.Err)
 			}

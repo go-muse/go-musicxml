@@ -41,9 +41,9 @@ func TestIndependentTimelinePracticalDefaults(t *testing.T) {
 					for _, model := range []bool{false, true} {
 						var report validation.Report
 						if model {
-							report, err = AssessModel(context.Background(), document, AssessmentOptions{Profile: ProfileModelTimeline})
+							report, err = AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelTimeline})
 						} else {
-							report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceTimeline})
+							report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceTimeline})
 						}
 						t.Logf("model=%t bytes=%d complete=%t satisfied=%t err=%v", model, len(source), report.AssessmentComplete, report.Satisfied(), err)
 						if err != nil || !report.Satisfied() {
@@ -63,8 +63,8 @@ func TestIndependentTimelineParallelProfilesAndOwnedReports(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Warm the lazy immutable engines before the race stress.
-	for _, p := range []validation.ProfileID{ProfileSourceLocal, ProfileSourceTimeline} {
-		if _, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p}); err != nil {
+	for _, p := range []validation.ProfileID{ProfileSourceLocal.ID(), ProfileSourceTimeline.ID()} {
+		if _, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p)}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -78,17 +78,17 @@ func TestIndependentTimelineParallelProfilesAndOwnedReports(t *testing.T) {
 				var err error
 				timeline := i%2 == 0
 				if i%3 == 0 {
-					p := ProfileModelLocal
+					p := ProfileModelLocal.ID()
 					if timeline {
-						p = ProfileModelTimeline
+						p = ProfileModelTimeline.ID()
 					}
-					got, err = AssessModel(context.Background(), document, AssessmentOptions{Profile: p})
+					got, err = AssessModel(context.Background(), document, ModelOptions{Profile: ModelProfile(p)})
 				} else {
-					p := ProfileSourceLocal
+					p := ProfileSourceLocal.ID()
 					if timeline {
-						p = ProfileSourceTimeline
+						p = ProfileSourceTimeline.ID()
 					}
-					got, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p})
+					got, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p)})
 				}
 				if err != nil || got.Satisfied() == timeline {
 					t.Errorf("profile leakage timeline=%t satisfied=%t err=%v", timeline, got.Satisfied(), err)
@@ -104,7 +104,7 @@ func TestIndependentTimelineParallelProfilesAndOwnedReports(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	again, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceTimeline})
+	again, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceTimeline})
 	if err != nil || again.Satisfied() {
 		t.Fatalf("fresh timeline report=%+v err=%v", again, err)
 	}
@@ -118,7 +118,7 @@ func TestIndependentTimelineParallelProfilesAndOwnedReports(t *testing.T) {
 func TestIndependentTimelineDiagnosticCapKeepsProvedFailure(t *testing.T) {
 	source := (localFixture{body: timelineNumeral("", "")}).xml()
 	for _, budgets := range []validation.Budgets{{MaxDiagnostics: 1}, {MaxDiagnosticBytes: 1}} {
-		r, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceTimeline, Budgets: budgets})
+		r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceTimeline, Budgets: budgets})
 		if r.Conformance != validation.ConformanceViolated || r.Satisfied() {
 			t.Fatalf("proved failure disappeared: conformance=%s err=%v findings=%s", r.Conformance, err, localFindings(r))
 		}
@@ -144,24 +144,24 @@ func BenchmarkIndependentTimelineProfiles(b *testing.B) {
 		for _, model := range []bool{false, true} {
 			for _, timeline := range []bool{false, true} {
 				b.Run(fmt.Sprintf("%s/model%t/timeline%t", fixture.name, model, timeline), func(b *testing.B) {
-					p := ProfileSourceLocal
+					p := ProfileSourceLocal.ID()
 					if model {
-						p = ProfileModelLocal
+						p = ProfileModelLocal.ID()
 					}
 					if timeline {
-						p = ProfileSourceTimeline
+						p = ProfileSourceTimeline.ID()
 						if model {
-							p = ProfileModelTimeline
+							p = ProfileModelTimeline.ID()
 						}
 					}
-					opts := AssessmentOptions{Profile: p, Budgets: validation.Budgets{MaxBufferedBytes: 512 << 20, MaxRuleSteps: 1 << 34}}
+					budgets := validation.Budgets{MaxBufferedBytes: 512 << 20, MaxRuleSteps: 1 << 34}
 					run := func() {
 						var r validation.Report
 						var err error
 						if model {
-							r, err = AssessModel(context.Background(), document, opts)
+							r, err = AssessModel(context.Background(), document, ModelOptions{Profile: ModelProfile(p), Budgets: budgets})
 						} else {
-							r, err = InspectXML(context.Background(), strings.NewReader(source), opts)
+							r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p), Budgets: budgets})
 						}
 						if err != nil || !r.Satisfied() {
 							b.Fatalf("benchmark fixture: %v; %s", err, localFindings(r))
@@ -186,11 +186,11 @@ func TestIndependentTimelineRepeatedDivisionsCosts(t *testing.T) {
 			t.Run(fmt.Sprintf("notes%d/timeline%t", count, timeline), func(t *testing.T) {
 				body := strings.Repeat(`<attributes><divisions>3</divisions></attributes>`+timelineNote("1", "", ""), count)
 				source := (localFixture{body: body}).xml()
-				p := ProfileSourceLocal
+				p := ProfileSourceLocal.ID()
 				if timeline {
-					p = ProfileSourceTimeline
+					p = ProfileSourceTimeline.ID()
 				}
-				r, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p})
+				r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p)})
 				t.Logf("complete=%t conformance=%s bytes=%d err=%v", r.AssessmentComplete, r.Conformance, len(source), err)
 				if err != nil || !r.Satisfied() {
 					t.Errorf("repeated ordinary divisions failed: %v", err)
@@ -210,12 +210,12 @@ func TestIndependentTimelineManyAttributesDefaultClassification(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, p := range []validation.ProfileID{ProfileSourceLocal, ProfileSourceTimeline, ProfileModelLocal, ProfileModelTimeline} {
+	for _, p := range []validation.ProfileID{ProfileSourceLocal.ID(), ProfileSourceTimeline.ID(), ProfileModelLocal.ID(), ProfileModelTimeline.ID()} {
 		var r validation.Report
-		if p == ProfileModelLocal || p == ProfileModelTimeline {
-			r, err = AssessModel(context.Background(), document, AssessmentOptions{Profile: p})
+		if p == ProfileModelLocal.ID() || p == ProfileModelTimeline.ID() {
+			r, err = AssessModel(context.Background(), document, ModelOptions{Profile: ModelProfile(p)})
 		} else {
-			r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p})
+			r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p)})
 		}
 		t.Logf("profile=%s complete=%t satisfied=%t err=%v", p, r.AssessmentComplete, r.Satisfied(), err)
 		if err != nil {
@@ -234,12 +234,12 @@ func TestIndependentTimelineSourceHugeExactStaffIsSparse(t *testing.T) {
 	huge := new(big.Int).Lsh(big.NewInt(1), 8192).String()
 	body := `<attributes><divisions>3</divisions><key number="` + huge + `"><fifths>0</fifths></key><staves>` + huge + `</staves></attributes>` + timelineNumeral("", `<staff>`+huge+`</staff>`)
 	source := (localFixture{body: body}).xml()
-	r, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceTimeline})
+	r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceTimeline})
 	if err != nil || !r.Satisfied() {
 		t.Fatalf("large exact staff was enumerated/narrowed: %v %s", err, localFindings(r))
 	}
 	body = `<attributes><divisions>3</divisions><key number="` + huge + `"><fifths>0</fifths></key><staves>` + huge + `</staves></attributes>` + timelineNumeral("", "")
-	r, err = InspectXML(context.Background(), strings.NewReader((localFixture{body: body}).xml()), AssessmentOptions{Profile: ProfileSourceTimeline})
+	r, err = InspectXML(context.Background(), strings.NewReader((localFixture{body: body}).xml()), SourceOptions{Profile: ProfileSourceTimeline})
 	if err != nil || r.Conformance == validation.ConformanceViolated || r.AssessmentComplete || r.Satisfied() {
 		t.Fatalf("unresolved implicit staff became an invented result: %v %s", err, localFindings(r))
 	}

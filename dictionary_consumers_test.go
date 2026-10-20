@@ -136,12 +136,12 @@ func dictionaryInspectTest(t *testing.T, text string, model, available bool, bud
 		set = dictionaryConsumerSet(t, a, true)
 		defer set.Close()
 	}
-	profile := ProfileSourceDictionaries
+	profile := ProfileSourceDictionaries.ID()
 	if model {
-		profile = ProfileModelDictionaries
+		profile = ProfileModelDictionaries.ID()
 	}
 	if strings.HasPrefix(text, "<sounds") {
-		profile = ProfileSourceSoundsDictionaries
+		profile = ProfileSourceSoundsDictionaries.ID()
 	}
 	s, err := engine.BeginWithDictionaries(ctx, validation.RunOptions{DocumentID: "dictionary-test", Profile: profile, Account: a}, set)
 	if err != nil {

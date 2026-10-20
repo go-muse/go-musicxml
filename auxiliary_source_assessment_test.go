@@ -92,7 +92,7 @@ func auxiliarySourceCases() []auxiliarySourceCase {
 func TestAuxiliarySourceAssemblies(t *testing.T) {
 	for _, tc := range auxiliarySourceCases() {
 		t.Run(tc.name, func(t *testing.T) {
-			report, err := InspectXML(context.Background(), strings.NewReader(tc.source), AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/source-" + tc.assembly)})
+			report, err := InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Profile: SourceProfile(validation.ProfileID("musicxml-4.0/source-" + tc.assembly))})
 			if strings.HasSuffix(tc.name, "wrong root") || strings.HasSuffix(tc.name, "foreign root") {
 				if !errors.Is(err, ErrUnsupportedRoot) || report.Satisfied() {
 					t.Fatalf("root profile admission: %v %+v", err, report)

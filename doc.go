@@ -50,6 +50,13 @@
 // linked documents. Reports are validation.Report values; resource graphs and
 // MXL packages return a validation.AssessmentBundle.
 //
+// Each kind of entry point takes its own options type, and the Profile field
+// of each has its own profile type: SourceOptions and SourceProfile (the
+// ProfileSource* constants), ModelOptions and ModelProfile (ProfileModel*),
+// GraphOptions and GraphProfile (ProfileResourceGraph*), MXLGraphOptions and
+// MXLProfile (ProfileMXL*). A profile of another kind does not compile; ID
+// gives the engine identity that reports carry.
+//
 // # Constructing documents
 //
 // Constructors and ordered-content Add methods provide a smaller API for

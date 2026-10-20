@@ -14,7 +14,7 @@ func packageRoleData(extra ...assessmentZIPFixture) []byte {
 }
 func packageMetadataGraph(t *testing.T, data []byte, options MXLAssessmentOptions) *resourceGraphRun {
 	t.Helper()
-	g, err := startResourceGraph(context.Background(), options.linked(), ProfileMXLSource)
+	g, err := startResourceGraph(context.Background(), options.internal().linked(), ProfileMXLSource.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +186,7 @@ func TestPackageMetadataPlainGraphHasNoRoleRequest(t *testing.T) {
 		calls++
 		return packageRoleReply(q), nil
 	})
-	options := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Dependencies: []ResourceDependency{ResourceRoles}, Resolver: resolver}
+	options := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Dependencies: []ResourceDependency{ResourceRoles}, Resolver: resolver}
 	b, err := InspectXMLWithResources(context.Background(), bytes.NewBufferString(`<opus/>`), options)
 	if err != nil || !b.Satisfied() || calls != 0 {
 		t.Fatal(err, calls, b.PackageReport())

@@ -20,7 +20,7 @@ func TestDictionaryRuntimeFailuresKeepUsableReport(t *testing.T) {
 		t.Run(which, func(t *testing.T) {
 			var body *resourceTestBody
 			var wantCause error
-			opts := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(id)}}}
+			opts := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(id)}}}
 			opts.Dictionaries.Source = dictionaryImportSourceFunc(func(_ context.Context, r DictionaryComponentRequest) (DictionaryComponentResult, error) {
 				out := DictionaryComponentResult{Request: r, State: validation.EvidenceKnown}
 				raw := dictionaryImportFixture(t, id)

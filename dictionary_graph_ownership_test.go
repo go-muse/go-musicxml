@@ -53,7 +53,7 @@ func dictionaryGraphRequireDocument(t *testing.T, value any, document string) {
 
 func TestDictionaryGraphAdoptionsRemapNestedCausalEvidence(t *testing.T) {
 	ctx := context.Background()
-	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, DictionaryOptions{}, ProfileResourceGraphDictionaries)
+	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphDictionaries}}.internal(), DictionaryOptions{}, ProfileResourceGraphDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +118,7 @@ func TestDictionaryGraphAdmitsExplicitSourceSoundsProfile(t *testing.T) {
 		calls++
 		return DictionaryComponentResult{Request: q, State: validation.EvidenceKnown, Body: body}, nil
 	})}
-	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, d, ProfileResourceGraphDictionaries)
+	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphDictionaries}}.internal(), d, ProfileResourceGraphDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestDictionaryGraphAdmitsExplicitSourceSoundsProfile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if report.Target != validation.TargetSource || report.Profile.ID != ProfileSourceSoundsDictionaries || report.Conformance == validation.ConformanceViolated {
+	if report.Target != validation.TargetSource || report.Profile.ID != ProfileSourceSoundsDictionaries.ID() || report.Conformance == validation.ConformanceViolated {
 		t.Fatalf("sounds recognition changed open string semantics: %+v", report)
 	}
 	found := map[string]bool{}
@@ -173,7 +173,7 @@ func TestDictionaryGraphTerminalImportStopsBeforePrimaryAndReleases(t *testing.T
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			source, calls, bodies := dictionaryGraphKnownSource(t)
-			resources := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}
+			resources := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphDictionaries}}
 			want := validation.ErrResourceLimit
 			if mode == "external budget" {
 				resources.Graph.Budgets.MaxExternalBytes = 301682
@@ -186,7 +186,7 @@ func TestDictionaryGraphTerminalImportStopsBeforePrimaryAndReleases(t *testing.T
 					return r, e
 				})
 			}
-			g, err := startDictionaryResourceGraph(ctx, resources, DictionaryOptions{Selections: dictionaryGraphSelection(), Source: source}, ProfileResourceGraphDictionaries)
+			g, err := startDictionaryResourceGraph(ctx, resources.internal(), DictionaryOptions{Selections: dictionaryGraphSelection(), Source: source}, ProfileResourceGraphDictionaries.ID())
 			if g == nil {
 				t.Fatal("no graph to inspect cleanup", err)
 			}
@@ -214,7 +214,7 @@ func TestDictionaryGraphTerminalImportStopsBeforePrimaryAndReleases(t *testing.T
 
 func TestDictionaryGraphDoesNotEnableInternalDTD(t *testing.T) {
 	input := `<!DOCTYPE score-partwise [<!ENTITY glyph "accidentalSharp">]>` + resourceScore(`<note><rest/><duration>1</duration><accidental smufl="&glyph;">sharp</accidental></note>`)
-	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}})
+	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphDictionaries}}.internal()})
 	if err == nil && b.Satisfied() {
 		t.Fatal("dictionary profile silently enabled internal DTD")
 	}

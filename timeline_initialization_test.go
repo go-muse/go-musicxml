@@ -153,7 +153,7 @@ func TestTimelineInitializationCannotGrowAdmittedModelCatalog(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	before, _ := catalog.Profile(ProfileModelLocal)
+	before, _ := catalog.Profile(ProfileModelLocal.ID())
 	assertDetached := func() {
 		t.Helper()
 		plans := reflect.ValueOf(catalog).Elem().FieldByName("plans")
@@ -177,7 +177,7 @@ func TestTimelineInitializationCannotGrowAdmittedModelCatalog(t *testing.T) {
 		}
 	}
 	assertDetached()
-	after, _ := catalog.Profile(ProfileModelLocal)
+	after, _ := catalog.Profile(ProfileModelLocal.ID())
 	if !reflect.DeepEqual(before, after) {
 		t.Fatal("warming the caller schema changed the admitted profile")
 	}
@@ -220,7 +220,7 @@ func TestTimelineSharedBindingsConcurrentSessions(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := range 24 {
 		wg.Go(func() {
-			report, err := InspectXML(context.Background(), strings.NewReader(sources[i%2]), AssessmentOptions{Profile: ProfileSourceTimeline})
+			report, err := InspectXML(context.Background(), strings.NewReader(sources[i%2]), SourceOptions{Profile: ProfileSourceTimeline})
 			if err != nil || !report.AssessmentComplete || report.Satisfied() != (i%2 == 0) {
 				t.Errorf("concurrent session %d: satisfied=%t complete=%t error=%v", i, report.Satisfied(), report.AssessmentComplete, err)
 			}

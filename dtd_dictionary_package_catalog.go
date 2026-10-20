@@ -10,19 +10,25 @@ import (
 // ProfileResourceGraphInternalDTDDictionaries selects the bounded graph with
 // explicitly DTD-enabled source children and supplied dictionary capabilities.
 // Current model roots retain their existing model-only interpretation.
-const ProfileResourceGraphInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/resource-graph-internal-dtd-dictionaries"
+const ProfileResourceGraphInternalDTDDictionaries GraphProfile = "musicxml-4.0/resource-graph-internal-dtd-dictionaries"
+
+const profileResourceGraphInternalDTDDictionaries = validation.ProfileID(ProfileResourceGraphInternalDTDDictionaries)
 
 // ProfileMXLSourceInternalDTDDictionaries selects original MXL assessment with
 // bounded internal-DTD source interpretations, including its source container.
-const ProfileMXLSourceInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/mxl-source-internal-dtd-dictionaries"
+const ProfileMXLSourceInternalDTDDictionaries MXLProfile = "musicxml-4.0/mxl-source-internal-dtd-dictionaries"
+
+const profileMXLSourceInternalDTDDictionaries = validation.ProfileID(ProfileMXLSourceInternalDTDDictionaries)
 
 // ProfileMXLModelInternalDTDDictionaries assesses the current primary model
 // directly, with explicitly DTD-enabled retained source children. No original
 // container, ZIP header, lexical spelling or DTD history is reconstructed.
-const ProfileMXLModelInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/mxl-model-internal-dtd-dictionaries"
+const ProfileMXLModelInternalDTDDictionaries MXLProfile = "musicxml-4.0/mxl-model-internal-dtd-dictionaries"
+
+const profileMXLModelInternalDTDDictionaries = validation.ProfileID(ProfileMXLModelInternalDTDDictionaries)
 
 func dtdDictionaryResourceIntrinsicProfiles() resourceIntrinsicProfiles {
-	return resourceIntrinsicProfiles{source: ProfileSourceInternalDTDDictionaries, model: ProfileModelDictionaries, container: ProfileSourceInternalDTDContainer, sounds: ProfileSourceInternalDTDSoundsDictionaries}
+	return resourceIntrinsicProfiles{source: profileSourceInternalDTDDictionaries, model: profileModelDictionaries, container: profileSourceInternalDTDContainer, sounds: profileSourceInternalDTDSoundsDictionaries}
 }
 
 var dtdDictionaryPackageAssessmentCatalog = sync.OnceValues(buildDTDDictionaryPackageAssessmentCatalog)
@@ -46,12 +52,12 @@ func buildDTDDictionaryPackageAssessmentDefinitions() ([]validation.PackageRuleB
 	for i := range profiles {
 		p := &profiles[i]
 		switch p.Profile.ID {
-		case ProfileResourceGraph:
-			p.Profile.ID = ProfileResourceGraphInternalDTDDictionaries
-		case ProfileMXLSource:
-			p.Profile.ID = ProfileMXLSourceInternalDTDDictionaries
-		case ProfileMXLModel:
-			p.Profile.ID = ProfileMXLModelInternalDTDDictionaries
+		case profileResourceGraph:
+			p.Profile.ID = profileResourceGraphInternalDTDDictionaries
+		case profileMXLSource:
+			p.Profile.ID = profileMXLSourceInternalDTDDictionaries
+		case profileMXLModel:
+			p.Profile.ID = profileMXLModelInternalDTDDictionaries
 		}
 		p.Profile.NormativeClosure = strings.Replace(p.Profile.NormativeClosure, "renderer, dictionary, automatic", "renderer, automatic", 1) + " Explicit composition adds bounded internal-DTD processing only to actually assessed source XML, using only actually-read internal declarations and a DOCTYPE external subset read from the bundled official MusicXML DTDs or a caller DTD source. Direct XML shorthand targets join actually read effective DTD IDs with independently established XSD IDs and select the first document-order owner, requiring complete elected identity domains before proving a miss or excluding an earlier candidate. Current-model identity remains current-state XSD-only; DTD declaration validity is not asserted. Exact source-origin snapshots retain independently qualified provenance through adoption without asserting complete origin evidence. Effective Container metadata and schema hints remain separate from physical Raw; effective Sounds mappings and supplied standard-sound recognition are supported only when explicitly assessed, with no auxiliary discovery. The current primary model keeps its existing model dictionary interpretation and cannot establish discarded source, DTD, original container or ZIP history. One root-owned dictionary set and account are shared by every intrinsic child. Pinned canonical membership, open-string sound recognition, unchanged partial IPA positive facts and a separately selected bounded whole-input IPA representation witness preserve independent failures and unavailable capabilities. All existing package, ZIP, path, dependency, indirection, unread-external, unsupported-capability and unproved-IPA-representation gates remain active; no phonotactics, pronunciation intent or universal IPA conformance is asserted. No external declaration, schema or dictionary is fetched automatically."
 		for j := range p.Intrinsic {
@@ -92,15 +98,15 @@ func buildDTDDictionaryPackageAssessmentDefinitions() ([]validation.PackageRuleB
 func selectDictionaryPackageProfile(selected, ordinary validation.ProfileID) (validation.ProfileID, bool, error) {
 	var composed, semantic validation.ProfileID
 	switch ordinary {
-	case ProfileResourceGraphDictionaries:
-		composed = ProfileResourceGraphInternalDTDDictionaries
-		semantic = ProfileResourceGraphSemantics
-	case ProfileMXLSourceDictionaries:
-		composed = ProfileMXLSourceInternalDTDDictionaries
-		semantic = ProfileMXLSourceSemantics
-	case ProfileMXLModelDictionaries:
-		composed = ProfileMXLModelInternalDTDDictionaries
-		semantic = ProfileMXLModelSemantics
+	case profileResourceGraphDictionaries:
+		composed = profileResourceGraphInternalDTDDictionaries
+		semantic = profileResourceGraphSemantics
+	case profileMXLSourceDictionaries:
+		composed = profileMXLSourceInternalDTDDictionaries
+		semantic = profileMXLSourceSemantics
+	case profileMXLModelDictionaries:
+		composed = profileMXLModelInternalDTDDictionaries
+		semantic = profileMXLModelSemantics
 	default:
 		return "", false, &validation.ConfigurationError{Field: "graph profile", Reason: "unknown dictionary entry point"}
 	}

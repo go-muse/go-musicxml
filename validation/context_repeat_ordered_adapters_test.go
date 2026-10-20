@@ -69,9 +69,9 @@ func TestRepeatOrderedAdaptersPreserveFallback(t *testing.T) {
 							if e != nil {
 								t.Fatal(e)
 							}
-							report, err = musicxml.AssessModel(context.Background(), doc, musicxml.AssessmentOptions{Profile: musicxml.ProfileModelContext})
+							report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
 						} else {
-							report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceContext})
+							report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Profile: musicxml.ProfileSourceContext})
 						}
 						if err != nil {
 							t.Fatal(err)

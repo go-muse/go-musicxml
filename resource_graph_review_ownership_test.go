@@ -14,16 +14,16 @@ import (
 
 func reviewGraphSource(t *testing.T, ctx context.Context, source string, options LinkedAssessmentOptions) (*resourceGraphRun, resourceIntrinsicResult, validation.ResourcePin, string) {
 	t.Helper()
-	g, err := startResourceGraph(ctx, options, ProfileResourceGraph)
+	g, err := startResourceGraph(ctx, options.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
 	id := g.next("source")
-	result := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesPrimary})
+	result := assessResourceSource(ctx, strings.NewReader(source), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 	if result.Err != nil || !result.DigestComplete {
 		t.Fatal(result.Err)
 	}
@@ -63,7 +63,7 @@ func TestReviewGraphDepthRefusesBeforeResolverIO(t *testing.T) {
 				sum := sha256.Sum256(data)
 				return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: q.Document.Href, Representation: kind, Digest: hex.EncodeToString(sum[:])}, RetrievalURI: "https://e.test/" + q.Document.Href, Body: body}, nil
 			})
-			g, result, pin, id := reviewGraphSource(t, context.Background(), source, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 2}}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+			g, result, pin, id := reviewGraphSource(t, context.Background(), source, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 2}}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 			b, err := g.finishPrimary(result, pin, id)
 			var depth *validation.ResourceError
 			if !errors.As(err, &depth) || depth.Kind != validation.BudgetDepth || depth.Limit != 2 || depth.Used != 2 || depth.Requested != 1 {
@@ -94,7 +94,7 @@ func TestReviewGraphDepthKeepsKnownSameEntityAdmission(t *testing.T) {
 	source := depthLink("child.opus")
 	child := depthLink("#")
 	resolver := &graphFixtureResolver{resources: map[string]string{"https://e.test/child.opus": child}, pins: map[string]string{"https://e.test/child.opus": "child"}}
-	g, result, pin, id := reviewGraphSource(t, context.Background(), source, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 2}}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	g, result, pin, id := reviewGraphSource(t, context.Background(), source, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 2}}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	b, err := g.finishPrimary(result, pin, id)
 	linked, _ := g.options.account.Usage(validation.BudgetLinkedDocuments)
 	if err != nil || !b.Satisfied() || b.AdoptionCount() != 3 || linked != 2 || resolver.calls != 1 {
@@ -107,7 +107,7 @@ func TestReviewGraphDepthDoesNotInferExternalIdentityFromURI(t *testing.T) {
 	source := depthLink("child.opus")
 	child := depthLink("root.opus")
 	resolver := &graphFixtureResolver{resources: map[string]string{"https://e.test/child.opus": child, "https://e.test/root.opus": source}, pins: map[string]string{"https://e.test/child.opus": "child", "https://e.test/root.opus": "different-canonical-root"}}
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 2}}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 2}}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if !errors.Is(err, validation.ErrResourceLimit) || resolver.calls != 1 || b.ResourceCount() != 2 {
 		t.Fatalf("unknown same-URI target crossed depth boundary: %v calls=%d resources=%d", err, resolver.calls, b.ResourceCount())
 	}
@@ -133,7 +133,7 @@ func TestReviewGraphAliasMXLReleasesUnusedOwnership(t *testing.T) {
 	var result resourceIntrinsicResult
 	var pin validation.ResourcePin
 	var id string
-	g, result, pin, id = reviewGraphSource(t, context.Background(), source, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	g, result, pin, id = reviewGraphSource(t, context.Background(), source, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	b, err := g.finishPrimary(result, pin, id)
 	if err != nil || !b.EnumerationComplete() {
 		t.Fatal(err, b.PackageReport())
@@ -163,7 +163,7 @@ func TestReviewGraphAliasMXLReleasesUnusedOwnership(t *testing.T) {
 
 func TestReviewGraphQueueCancellationBeforeWorkCharge(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}}, ProfileResourceGraph)
+	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +180,7 @@ func TestReviewGraphQueueCancellationBeforeWorkCharge(t *testing.T) {
 }
 
 func TestReviewGraphFinishDoesNotDuplicateCause(t *testing.T) {
-	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}}, ProfileResourceGraph)
+	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,16 +193,16 @@ func TestReviewGraphFinishDoesNotDuplicateCause(t *testing.T) {
 }
 
 func TestReviewGraphCanonicalRevisionReasonAndDepthWitness(t *testing.T) {
-	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}}, ProfileResourceGraph)
+	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
 	pin := validation.ResourcePin{CanonicalID: "resource", Revision: "old", Representation: validation.ResourceSourceXML}
-	if _, err = g.cacheResource(pin, ProfileSourceLinks, "id", 9, true); err != nil {
+	if _, err = g.cacheResource(pin, ProfileSourceLinks.ID(), "id", 9, true); err != nil {
 		t.Fatal(err)
 	}
 	pin.Revision = "new"
-	_, err = g.cacheResource(pin, ProfileSourceLinks, "other-id", 9, true)
+	_, err = g.cacheResource(pin, ProfileSourceLinks.ID(), "other-id", 9, true)
 	if !errors.Is(err, validation.ErrInvalidConfiguration) || !strings.Contains(err.Error(), "revision") {
 		t.Errorf("revision-only mismatch blamed content: %v", err)
 	}
@@ -228,7 +228,7 @@ func TestReviewGraphDepthLocalSelectionAndKnownArchiveCycle(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel, Budgets: validation.Budgets{MaxDepth: 3}}}, ProfileMXLModel)
+			g, err := startResourceGraph(context.Background(), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel, Budgets: validation.Budgets{MaxDepth: 3}}}.internal().linked(), ProfileMXLModel.ID())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -267,7 +267,7 @@ func TestReviewGraphDepthLocalSelectionAndKnownArchiveCycle(t *testing.T) {
 func TestReviewGraphJoinPreservesUnrelatedTransportCauses(t *testing.T) {
 	one, two := errors.New("first unique cause"), errors.New("second unique cause")
 	for _, input := range []error{one, errors.Join(one, two)} {
-		_, err := InspectXMLWithResources(context.Background(), &resourceReadError{data: []byte(`<opus>`), err: input}, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+		_, err := InspectXMLWithResources(context.Background(), &resourceReadError{data: []byte(`<opus>`), err: input}, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 		if !errors.Is(err, one) || strings.Count(err.Error(), one.Error()) != 1 {
 			t.Errorf("first cause repeated/lost: %v", err)
 		}
@@ -295,7 +295,7 @@ func TestReviewGraphRawArchiveFailureClosesPartialOwners(t *testing.T) {
 			resolver := graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
 				return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "archive", Representation: validation.ResourceRawMXL, Digest: hex.EncodeToString(sum[:])}, RetrievalURI: "https://e.test/archive.mxl", Body: body}, nil
 			})
-			g, result, pin, id := reviewGraphSource(t, context.Background(), depthLink("archive.mxl"), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: budgets}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+			g, result, pin, id := reviewGraphSource(t, context.Background(), depthLink("archive.mxl"), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: budgets}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 			b, err := g.finishPrimary(result, pin, id)
 			if err == nil || b.EnumerationComplete() || body.closed != 1 {
 				t.Errorf("failed import result=%v complete=%v closes=%d", err, b.EnumerationComplete(), body.closed)

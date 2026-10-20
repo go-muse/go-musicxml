@@ -21,18 +21,18 @@ func TestAssessModelPreflight(t *testing.T) {
 		name    string
 		ctx     context.Context
 		doc     Document
-		options AssessmentOptions
+		options ModelOptions
 		want    error
 	}{
-		{"nil-context", nil, NewOpusDocument(), AssessmentOptions{Profile: ProfileModelXSD}, validation.ErrInvalidConfiguration},
-		{"canceled", canceled, NewOpusDocument(), AssessmentOptions{Profile: ProfileModelXSD}, context.Canceled},
-		{"unknown-profile", context.Background(), NewOpusDocument(), AssessmentOptions{Profile: "unknown"}, validation.ErrInvalidConfiguration},
-		{"source-profile", context.Background(), NewOpusDocument(), AssessmentOptions{Profile: ProfileSourceXSDPreview}, validation.ErrInvalidConfiguration},
-		{"negative-budget", context.Background(), NewOpusDocument(), AssessmentOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxNodes: -1}}, validation.ErrInvalidConfiguration},
-		{"nil-interface", context.Background(), nil, AssessmentOptions{Profile: ProfileModelXSD}, ErrNilDocument},
-		{"typed-nil-partwise", context.Background(), nilPartwise, AssessmentOptions{Profile: ProfileModelXSD}, ErrNilDocument},
-		{"typed-nil-timewise", context.Background(), nilTimewise, AssessmentOptions{Profile: ProfileModelXSD}, ErrNilDocument},
-		{"typed-nil-opus", context.Background(), nilOpus, AssessmentOptions{Profile: ProfileModelXSD}, ErrNilDocument},
+		{"nil-context", nil, NewOpusDocument(), ModelOptions{Profile: ProfileModelXSD}, validation.ErrInvalidConfiguration},
+		{"canceled", canceled, NewOpusDocument(), ModelOptions{Profile: ProfileModelXSD}, context.Canceled},
+		{"unknown-profile", context.Background(), NewOpusDocument(), ModelOptions{Profile: "unknown"}, validation.ErrInvalidConfiguration},
+		{"source-profile", context.Background(), NewOpusDocument(), ModelOptions{Profile: ModelProfile(ProfileSourceXSDPreview)}, validation.ErrInvalidConfiguration},
+		{"negative-budget", context.Background(), NewOpusDocument(), ModelOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxNodes: -1}}, validation.ErrInvalidConfiguration},
+		{"nil-interface", context.Background(), nil, ModelOptions{Profile: ProfileModelXSD}, ErrNilDocument},
+		{"typed-nil-partwise", context.Background(), nilPartwise, ModelOptions{Profile: ProfileModelXSD}, ErrNilDocument},
+		{"typed-nil-timewise", context.Background(), nilTimewise, ModelOptions{Profile: ProfileModelXSD}, ErrNilDocument},
+		{"typed-nil-opus", context.Background(), nilOpus, ModelOptions{Profile: ProfileModelXSD}, ErrNilDocument},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			report, err := AssessModel(tt.ctx, tt.doc, tt.options)
@@ -68,8 +68,8 @@ func TestAssessModelCurrentTargetAndRootMetadata(t *testing.T) {
 		case *OpusDocument:
 			v.XMLName = xml.Name{Local: "\x00", Space: "\xff"}
 		}
-		for _, profile := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal} {
-			report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: profile})
+		for _, profile := range []validation.ProfileID{ProfileModelXSD.ID(), ProfileModelLocal.ID()} {
+			report, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(profile)})
 			if err != nil || !report.Satisfied() || report.Target != validation.TargetModel || report.Syntax != validation.SyntaxNotAssessed || report.Profile.ID != profile {
 				t.Fatalf("%T %s: report=%+v err=%v", doc, profile, report, err)
 			}
@@ -83,7 +83,7 @@ func TestAssessModelReportsCurrentEditsWithoutMutation(t *testing.T) {
 	note.Rest = nil
 	note.Pitch = &Pitch{Step: Step("H"), Octave: 4}
 	before := *note.Pitch
-	report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelXSD})
+	report, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelXSD})
 	if err != nil || report.Satisfied() || report.Conformance != validation.ConformanceViolated || !report.InputComplete {
 		t.Fatalf("current invalid edit was not assessed: %+v %v", report, err)
 	}

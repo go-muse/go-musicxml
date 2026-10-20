@@ -45,7 +45,7 @@ func sourceDTDIDOneAssemblyEngine(t *testing.T) *validation.Engine {
 
 func TestSourceDTDIDObserverUsesActiveAssemblySelection(t *testing.T) {
 	engine := sourceDTDIDOneAssemblyEngine(t)
-	if !validationEngineSourceDTDIDsSelected(engine, ProfileSourceInternalDTDLinks) {
+	if !validationEngineSourceDTDIDsSelected(engine, ProfileSourceInternalDTDLinks.ID()) {
 		t.Fatal("pre-root capture must preserve declarations for the selected assembly")
 	}
 	t.Run("unselected-opus", func(t *testing.T) {
@@ -58,7 +58,7 @@ func TestSourceDTDIDObserverUsesActiveAssemblySelection(t *testing.T) {
 			{`<!DOCTYPE opus [<!ATTLIST opus version ID #IMPLIED>]><opus version="O1"/>`, true},
 			{`<opus invalid="x"/>`, false},
 		} {
-			resource := fragmentCompositionSource(t, engine, ProfileSourceInternalDTDLinks, account, "unselected-opus", tc.input, true)
+			resource := fragmentCompositionSource(t, engine, ProfileSourceInternalDTDLinks.ID(), account, "unselected-opus", tc.input, true)
 			if resource.report.Satisfied() != tc.valid || resource.report.Terminal != nil || !tc.valid && resource.report.Conformance != validation.ConformanceViolated {
 				t.Fatalf("unselected DTD input disrupted independent Opus XSD assessment: %+v", resource.report)
 			}
@@ -67,7 +67,7 @@ func TestSourceDTDIDObserverUsesActiveAssemblySelection(t *testing.T) {
 	t.Run("selected-musicxml", func(t *testing.T) {
 		account := fragmentCompositionAccount(t)
 		input := `<!DOCTYPE score-partwise [<!ATTLIST measure number ID #IMPLIED>]><score-partwise><part-list><score-part id="P1"><part-name>Part</part-name></score-part></part-list><part id="P1"><measure number="anchor"/></part></score-partwise>`
-		resource := fragmentCompositionSource(t, engine, ProfileSourceInternalDTDLinks, account, "selected-musicxml", input, true)
+		resource := fragmentCompositionSource(t, engine, ProfileSourceInternalDTDLinks.ID(), account, "selected-musicxml", input, true)
 		if !resource.report.Satisfied() {
 			t.Fatalf("selected MusicXML assessment: %+v", resource.report)
 		}
@@ -82,7 +82,7 @@ func TestSourceDTDIDCustomAssemblyCatalogDoesNotBypassPreflight(t *testing.T) {
 	engine := sourceDTDIDOneAssemblyEngine(t)
 	account := fragmentCompositionAccount(t)
 	reader := &assessmentCountingReader{source: strings.NewReader(`<opus/>`)}
-	_, err := newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: "source", Profile: ProfileSourceInternalDTDLinks, Engine: engine}, ByteOwner: sourceBytesPrimary}, false)
+	_, err := newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: "source", Profile: ProfileSourceInternalDTDLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary}, false)
 	if !errors.Is(err, validation.ErrInvalidConfiguration) || reader.reads != 0 {
 		t.Fatalf("custom catalog bypassed pre-I/O production identity check: err=%v reads=%d", err, reader.reads)
 	}

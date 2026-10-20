@@ -24,7 +24,7 @@ func TestResourceUnknownAssemblyPreservesSyntaxFailure(t *testing.T) {
 					if decodeErr != nil {
 						t.Fatal(decodeErr)
 					}
-					bundle, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "bad.xml", MediaType: Ptr(media)}}, Resources: []MXLResource{{Path: "bad.xml", Data: []byte("\x00")}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+					bundle, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "bad.xml", MediaType: Ptr(media)}}, Resources: []MXLResource{{Path: "bad.xml", Data: []byte("\x00")}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 				} else {
 					container := `<container><rootfiles><rootfile full-path="main.opus"/><rootfile full-path="bad.xml" media-type="` + media + `"/></rootfiles></container>`
 					wire := assessmentZIPBytes([]assessmentZIPFixture{{name: mxlContainerPath, body: container}, {name: "main.opus", body: `<opus/>`}, {name: "bad.xml", body: "\x00"}}, nil, "")
@@ -48,7 +48,7 @@ func TestResourceUnknownAssemblyPrimaryAndExternal(t *testing.T) {
 		t.Run(fmt.Sprintf("external=%t", external), func(t *testing.T) {
 			body := &resourceTestBody{Reader: strings.NewReader("\x00")}
 			calls := 0
-			options := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}}
+			options := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}
 			source := "\x00"
 			if external {
 				source = `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://example.test/bad.xml"/></opus>`
@@ -77,7 +77,7 @@ func TestResourceUnknownAssemblyPrimaryAndExternal(t *testing.T) {
 func TestResourceUnknownAssemblyBeforeRoot(t *testing.T) {
 	for _, source := range []string{"", "<", "<unsupported/>"} {
 		t.Run(fmt.Sprintf("%q", source), func(t *testing.T) {
-			bundle, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+			bundle, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 			if errors.Is(err, validation.ErrInvalidConfiguration) || errors.Is(err, validation.ErrInvalidSession) {
 				t.Fatalf("document input became adapter misuse: %v", err)
 			}

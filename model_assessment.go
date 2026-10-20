@@ -36,17 +36,18 @@ const modelDocumentID = "model"
 // Finite float64 decimal fields mean the shortest decimal that reads back to the
 // same float64, so float64(0.1) is decimal 1/10. String-backed fields provide their
 // current string to shared schema-domain checks, never an original source lexeme.
-func AssessModel(ctx context.Context, document Document, options AssessmentOptions) (validation.Report, error) {
-	if assessment, dictionaries, ok := options.scenario(ProfileModelSemantics); ok {
+func AssessModel(ctx context.Context, document Document, options ModelOptions) (validation.Report, error) {
+	normalized := options.internal()
+	if assessment, dictionaries, ok := normalized.scenario(profileModelSemantics); ok {
 		return assessModelWithDictionaries(ctx, document, dictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
 	}
-	report, _, err := assessModel(ctx, document, options, modelWalkOptions{})
+	report, _, err := assessModel(ctx, document, normalized, modelWalkOptions{})
 	return report, err
 }
 
 // Root entry points create one account; child orchestration calls the configured
 // constructor below and never recurses through AssessModel.
-func assessModel(ctx context.Context, document Document, options AssessmentOptions, walkOptions modelWalkOptions) (validation.Report, modelWalkStatus, error) {
+func assessModel(ctx context.Context, document Document, options assessmentOptions, walkOptions modelWalkOptions) (validation.Report, modelWalkStatus, error) {
 	if err := assessmentContext(ctx, "canceled-before-model"); err != nil {
 		return validation.Report{}, modelWalkStatus{}, err
 	}

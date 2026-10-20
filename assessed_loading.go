@@ -19,10 +19,10 @@ func assessedLoadingOptions(options *dictionaryAssessmentOptions) (dictionaryAss
 	if options != nil {
 		out = *options
 	}
-	if out.Assessment.Profile != "" && out.Assessment.Profile != ProfileSourceLine {
+	if out.Assessment.Profile != "" && out.Assessment.Profile != profileSourceLine {
 		return out, &validation.ConfigurationError{Field: "assessed loading profile", Reason: "requires source-line; use InspectXML for individually selected profiles"}
 	}
-	out.Assessment.Profile = ProfileModelSemantics
+	out.Assessment.Profile = profileModelSemantics
 	required := requiredDictionarySelections()
 	// A typed-nil Source is an explicit override, not a request for defaults.
 	if out.Dictionaries.Source == nil && len(out.Dictionaries.Selections) == 0 {
@@ -101,7 +101,7 @@ func assessedSourceLine(normalized dictionaryAssessmentOptions) (assessmentRunCo
 	if err := validateDictionaryOptions(normalized.Dictionaries); err != nil {
 		return source, err
 	}
-	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLine)
+	engine, err := sourceAssessmentEngineForProfile(profileSourceLine)
 	if err != nil {
 		return source, err
 	}
@@ -109,7 +109,7 @@ func assessedSourceLine(normalized dictionaryAssessmentOptions) (assessmentRunCo
 	if err != nil {
 		return source, err
 	}
-	source.Account, source.Profile, source.Engine, source.DocumentID = account, ProfileSourceLine, engine, sourceDocumentID
+	source.Account, source.Profile, source.Engine, source.DocumentID = account, profileSourceLine, engine, sourceDocumentID
 	source.DTD, source.OmitContext = normalized.Assessment.DTD, normalized.Assessment.OmitContext
 	return source, nil
 }
@@ -138,7 +138,7 @@ func modelAcceptanceError(report validation.Report, status modelWalkStatus) erro
 			invalid = fmt.Errorf("%w; model assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail+report.ModelFailures)
 		}
 	}
-	if !report.Requested || !report.InputComplete || !report.AssessmentComplete || report.Target != validation.TargetModel || report.Profile.ID != ProfileModelSemantics || report.Syntax != validation.SyntaxNotAssessed || report.BlockingProblems > report.ModelFailures || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
+	if !report.Requested || !report.InputComplete || !report.AssessmentComplete || report.Target != validation.TargetModel || report.Profile.ID != profileModelSemantics || report.Syntax != validation.SyntaxNotAssessed || report.BlockingProblems > report.ModelFailures || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
 		return errors.Join(invalid, &validation.IncompleteError{Reason: "model-profile-not-satisfied"})
 	}
 	return invalid

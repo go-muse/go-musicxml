@@ -57,7 +57,7 @@ func testIndependentReviewArchivePrimaryExactBase(t *testing.T, limit int64) {
 }
 
 func TestReviewArchivePrimaryDifferentBaseNeedsOwnExpansion(t *testing.T) {
-	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 3}}}, ProfileResourceGraph)
+	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 3}}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}

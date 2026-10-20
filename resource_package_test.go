@@ -20,7 +20,7 @@ func packageGraphBytes(root, name, media string, extra ...assessmentZIPFixture) 
 	return assessmentZIPBytes(append(entries, extra...), nil, "")
 }
 func packageGraphOptions() MXLAssessmentOptions {
-	return MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource}}
+	return MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}}
 }
 func TestPackageGraphRawPrimaryAndSourceContainer(t *testing.T) {
 	b, err := InspectMXL(context.Background(), bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), packageGraphOptions())
@@ -32,7 +32,7 @@ func TestPackageGraphRawPrimaryAndSourceContainer(t *testing.T) {
 		_, r, _ := b.ResourceReport(i)
 		seen[r.Profile.ID] = true
 	}
-	if !seen[ProfileSourceContainer] || !seen[ProfileSourceLinks] {
+	if !seen[ProfileSourceContainer.ID()] || !seen[ProfileSourceLinks.ID()] {
 		t.Fatal(seen)
 	}
 }
@@ -65,12 +65,12 @@ func TestPackageGraphCurrentDirectModelAndNoInputMutation(t *testing.T) {
 		t.Fatal(err)
 	}
 	value := &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "selected.opus"}}, Resources: []MXLResource{{Path: "selected.opus", Data: []byte(`<opus/>`)}}}
-	b, err := AssessMXLPackage(context.Background(), value, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+	b, err := AssessMXLPackage(context.Background(), value, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 	if err != nil || b.ResourceCount() != 2 {
 		t.Fatal(err, b.PackageReport().Findings)
 	}
 	_, r, _ := b.ResourceReport(0)
-	if r.Target != validation.TargetModel || r.Profile.ID != ProfileModelLinks {
+	if r.Target != validation.TargetModel || r.Profile.ID != ProfileModelLinks.ID() {
 		t.Fatal(r)
 	}
 	if len(value.RootFiles) != 2 || value.RootFiles[0].FullPath != "main.opus" || value.RootFiles[1].FullPath != "selected.opus" || value.Resources[0].Path != "selected.opus" || string(value.Resources[0].Data) != `<opus/>` {
@@ -107,7 +107,7 @@ func TestPackageGraphRejectConfigurationBeforeRead(t *testing.T) {
 	if !errors.Is(err, ErrNilReader) {
 		t.Fatal(err)
 	}
-	_, err = AssessMXLPackage(context.Background(), nil, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+	_, err = AssessMXLPackage(context.Background(), nil, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 	if !errors.Is(err, ErrNilMXLPackage) {
 		t.Fatal(err)
 	}

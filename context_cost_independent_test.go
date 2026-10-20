@@ -109,9 +109,9 @@ func TestIndependentContextOrdinaryHundredNotesDefaultWork(t *testing.T) {
 	for _, model := range []bool{false, true} {
 		var r validation.Report
 		if model {
-			r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+			r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 		} else {
-			r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+			r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 		}
 		if err != nil || !r.Satisfied() {
 			t.Errorf("ordinary 100-note context fixture exceeds unchanged finite defaults (model=%t): %v", model, err)
@@ -135,7 +135,7 @@ func TestIndependentContextFullSharedAccountCost(t *testing.T) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			session, e := engine.Begin(context.Background(), validation.RunOptions{Profile: ProfileModelContext, DocumentID: modelDocumentID, Account: account})
+			session, e := engine.Begin(context.Background(), validation.RunOptions{Profile: ProfileModelContext.ID(), DocumentID: modelDocumentID, Account: account})
 			if e != nil {
 				t.Fatal(e)
 			}

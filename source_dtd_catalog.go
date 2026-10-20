@@ -14,7 +14,9 @@ import (
 // prevents acceptance. This is
 // an explicit developmental source profile, not general XML/DTD conformance or
 // a change to Decode and the existing source/model/package profiles.
-const ProfileSourceInternalDTD validation.ProfileID = "musicxml-4.0/source-internal-dtd"
+const ProfileSourceInternalDTD SourceProfile = "musicxml-4.0/source-internal-dtd"
+
+const profileSourceInternalDTD = validation.ProfileID(ProfileSourceInternalDTD)
 
 var sourceInternalDTDEngine = sync.OnceValues(func() (*validation.Engine, error) {
 	return buildSourceXSDProfileEngine(true)

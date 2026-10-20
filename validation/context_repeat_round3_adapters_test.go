@@ -42,7 +42,7 @@ func TestRound3RepeatEventlessModelContainer(t *testing.T) {
 			case *musicxml.ScoreTimewise:
 				v.Measure[2].Part[0].Content[0].Forward = &musicxml.Forward{}
 			}
-			report, err := musicxml.AssessModel(context.Background(), doc, musicxml.AssessmentOptions{Profile: musicxml.ProfileModelContext})
+			report, err := musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
 			if err != nil {
 				t.Fatal(err)
 			}

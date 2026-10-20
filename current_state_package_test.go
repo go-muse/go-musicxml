@@ -54,9 +54,9 @@ func TestAssessMXLPackageCurrentStateIsSatisfied(t *testing.T) {
 
 	for name, options := range map[string]MXLAssessmentOptions{
 		"semantics":                       {},
-		"model":                           {Graph: AssessmentOptions{Profile: ProfileMXLModel}},
-		"model dictionaries":              {Graph: AssessmentOptions{Profile: ProfileMXLModelDictionaries, Dictionaries: &dictionaries}},
-		"model internal DTD dictionaries": {Graph: AssessmentOptions{Profile: ProfileMXLModelInternalDTDDictionaries, Dictionaries: &dictionaries}},
+		"model":                           {Graph: MXLGraphOptions{Profile: ProfileMXLModel}},
+		"model dictionaries":              {Graph: MXLGraphOptions{Profile: ProfileMXLModelDictionaries, Dictionaries: &dictionaries}},
+		"model internal DTD dictionaries": {Graph: MXLGraphOptions{Profile: ProfileMXLModelInternalDTDDictionaries, Dictionaries: &dictionaries}},
 	} {
 		for kind, pkg := range map[string]*MXLPackage{"valid": valid, "hinted source": hinted} {
 			b, err := AssessMXLPackage(ctx, pkg, options)
@@ -69,9 +69,9 @@ func TestAssessMXLPackageCurrentStateIsSatisfied(t *testing.T) {
 	// A current model root of a resource graph is assessed the same way.
 	for name, options := range map[string]LinkedAssessmentOptions{
 		"semantics":                       {},
-		"graph":                           {Graph: AssessmentOptions{Profile: ProfileResourceGraph}},
-		"graph dictionaries":              {Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries, Dictionaries: &dictionaries}},
-		"graph internal DTD dictionaries": {Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Dictionaries: &dictionaries}},
+		"graph":                           {Graph: GraphOptions{Profile: ProfileResourceGraph}},
+		"graph dictionaries":              {Graph: GraphOptions{Profile: ProfileResourceGraphDictionaries, Dictionaries: &dictionaries}},
+		"graph internal DTD dictionaries": {Graph: GraphOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Dictionaries: &dictionaries}},
 	} {
 		b, err := AssessModelWithResources(ctx, hinted.Document, options)
 		require.NoError(t, err, name)
@@ -217,7 +217,7 @@ func TestDecodeMXLAssessedModelStageUsesLoaderOptions(t *testing.T) {
 		return BundledDictionarySource().Open(ctx, request)
 	})
 	options := MXLAssessmentOptions{
-		Graph:        AssessmentOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}},
+		Graph:        MXLGraphOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}},
 		Resolver:     resolver,
 		Dependencies: []ResourceDependency{ResourceDocuments},
 	}
@@ -237,7 +237,7 @@ func TestDecodeMXLAssessedModelStageUsesLoaderOptions(t *testing.T) {
 
 	// Line 2 alone asks neither the resolver nor a dictionary source.
 	line := options
-	line.Graph = AssessmentOptions{Profile: ProfileMXLSourceLine}
+	line.Graph = MXLGraphOptions{Profile: ProfileMXLSourceLine}
 	inspected, err := InspectMXL(ctx, bytes.NewReader(archive), line)
 	require.NoError(t, err)
 	assert.Equal(t, ProfileMXLSourceLine, inspected.PackageReport().Profile.ID)
@@ -263,7 +263,7 @@ func TestDecodeMXLAssessedModelStageSharesAccount(t *testing.T) {
 	ctx := context.Background()
 	archive := scenarioMXL(t, scenarioValid)
 	load := func(steps int64, lenient bool) (DecodeMXLResult, error) {
-		return DecodeMXLAssessed(ctx, bytes.NewReader(archive), DecodeMXLAssessmentOptions{Lenient: lenient, Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxRuleSteps: steps}}}})
+		return DecodeMXLAssessed(ctx, bytes.NewReader(archive), DecodeMXLAssessmentOptions{Lenient: lenient, Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: validation.Budgets{MaxRuleSteps: steps}}}})
 	}
 	var account *validation.Account
 	decodeMXLStageHook = func(stage string, a *validation.Account) { account = a }
@@ -276,7 +276,7 @@ func TestDecodeMXLAssessedModelStageSharesAccount(t *testing.T) {
 	result, err = load(minimum, false)
 	require.NoError(t, err, "the steps a load uses are enough for it")
 	require.True(t, result.Accepted)
-	inspected, err := InspectMXL(ctx, bytes.NewReader(archive), MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxRuleSteps: minimum - 1}}})
+	inspected, err := InspectMXL(ctx, bytes.NewReader(archive), MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: validation.Budgets{MaxRuleSteps: minimum - 1}}})
 	require.NoError(t, err)
 	require.True(t, inspected.Satisfied(), "the source stage alone fits one step under the loader's minimum")
 

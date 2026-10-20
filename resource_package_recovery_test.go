@@ -35,7 +35,7 @@ func TestRecoveryPackageLongInputIsProcessingRefusal(t *testing.T) {
 			var e error
 			var b validation.AssessmentBundle
 			if tc.current != nil {
-				b, e = AssessMXLPackage(context.Background(), tc.current, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+				b, e = AssessMXLPackage(context.Background(), tc.current, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 			} else {
 				b, e = InspectMXL(context.Background(), bytes.NewReader(tc.raw), packageGraphOptions())
 			}
@@ -62,7 +62,7 @@ func TestRecoveryPackageCurrentDuplicateRoots(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, roots := range [][]MXLRootFile{{{FullPath: "main.opus"}, {FullPath: "main.opus"}}, {{FullPath: "main.opus"}, {FullPath: "r.opus"}, {FullPath: "r.opus"}}} {
-		_, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: roots, Resources: []MXLResource{{Path: "r.opus", Data: []byte(`<opus/>`)}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+		_, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: roots, Resources: []MXLResource{{Path: "r.opus", Data: []byte(`<opus/>`)}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 		if !errors.Is(err, ErrMXLDuplicateEntry) || errors.Is(err, ErrMXLRootFileNotFound) {
 			t.Fatal(err)
 		}
@@ -83,7 +83,7 @@ func TestRecoveryPackageLaterMediaControlsParsing(t *testing.T) {
 			if (err != nil) != knownXML || b.ResourceCount() != 2 {
 				t.Fatalf("raw error=%v resources=%d", err, b.ResourceCount())
 			}
-			b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "alt.bin", MediaType: Ptr(media)}}, Resources: []MXLResource{{Path: "alt.bin", Data: []byte("\x00binary")}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+			b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "alt.bin", MediaType: Ptr(media)}}, Resources: []MXLResource{{Path: "alt.bin", Data: []byte("\x00binary")}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 			if (err != nil) != knownXML || b.ResourceCount() != 1 {
 				t.Fatalf("current error=%v resources=%d", err, b.ResourceCount())
 			}
@@ -98,7 +98,7 @@ func TestRecoveryPackageExternalMalformedMediaIsOptional(t *testing.T) {
 			resolver := graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
 				return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "child", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(body)))}, RetrievalURI: "https://example.test/child.opus", MediaType: media, Body: &resourceTestBody{Reader: strings.NewReader(body)}}, nil
 			})
-			b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://example.test/child.opus"/></opus>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+			b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://example.test/child.opus"/></opus>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 			if err != nil || !b.Satisfied() {
 				t.Fatalf("error=%v report=%+v", err, b.PackageReport())
 			}
@@ -118,7 +118,7 @@ func TestRecoveryPackageCurrentMetadataBeforeIntrinsicFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "primary.bad"}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}, MXL: MXLOptions{MaxXMLDepth: 3}})
+	b, err := AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "primary.bad"}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}, MXL: MXLOptions{MaxXMLDepth: 3}})
 	if !errors.Is(err, ErrXMLTooDeep) || b.FileMetadataCount() != 1 {
 		t.Fatalf("error=%v metadata=%d", err, b.FileMetadataCount())
 	}
@@ -273,7 +273,7 @@ func TestRecoveryPackageExactEvidenceTextBound(t *testing.T) {
 			if surface == "raw" {
 				_, e = InspectMXL(context.Background(), bytes.NewReader(packageGraphBytes(`<opus/>`, exact, exact)), packageGraphOptions())
 			} else {
-				_, e = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: exact, MediaType: Ptr(exact)}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+				_, e = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: exact, MediaType: Ptr(exact)}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 			}
 			if e != nil {
 				t.Fatalf("exact 4096-byte bound refused: %v", e)
@@ -296,7 +296,7 @@ func TestRecoveryPackageVerifiedPinBorrowAvoidsSecondDigest(t *testing.T) {
 		t.Fatal("no verified member pin")
 	}
 	before, _ := g.options.account.Usage(validation.BudgetRuleSteps)
-	resource, _, err := g.assessVerifiedPackageSource(p, "main.opus", []byte(`<opus/>`), ProfileSourceLinks, pin)
+	resource, _, err := g.assessVerifiedPackageSource(p, "main.opus", []byte(`<opus/>`), ProfileSourceLinks.ID(), pin)
 	after, _ := g.options.account.Usage(validation.BudgetRuleSteps)
 	// The sole charge is contextual XML-depth admission, not another hash.
 	if err != nil || resource == nil || after-before != 1 {

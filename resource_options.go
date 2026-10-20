@@ -29,34 +29,25 @@ const (
 // Source digests are measured, and current snapshots receive fresh opaque IDs.
 type ResourceIdentity struct{ CanonicalID, Revision, RetrievalURI string }
 
-// LinkedAssessmentOptions selects an explicit graph profile and one shared set
-// of finite limits for primary input, children, metadata and graph operations.
-// Empty Dependencies invokes no resolver. Nil (including typed-nil) Resolver
-// leaves selected external dependencies unavailable. No schema hint is fetched.
-// The caller must not mutate options or input models during assessment.
-type LinkedAssessmentOptions struct {
-	Graph        AssessmentOptions
+// linkedAssessmentOptions is the normalized form of LinkedAssessmentOptions.
+type linkedAssessmentOptions struct {
+	Graph        assessmentOptions
 	Identity     ResourceIdentity
 	Resolver     validation.ResourceResolver
 	Dependencies []ResourceDependency
 }
 
-// MXLAssessmentOptions adds the existing independent archive processing caps.
-// MXL does not create another account; Graph.Budgets bounds the complete run.
-// MXL.MaxXMLDepth independently caps each represented XML document in an MXL
-// context (zero uses 256), without restricting graph hops between shallow XML.
-// Original raw ZIP evidence is available only to InspectMXL, never reconstructed
-// from the current object passed to AssessMXLPackage.
-type MXLAssessmentOptions struct {
-	Graph        AssessmentOptions
+// mxlAssessmentOptions is the normalized form of MXLAssessmentOptions.
+type mxlAssessmentOptions struct {
+	Graph        assessmentOptions
 	Identity     ResourceIdentity
 	Resolver     validation.ResourceResolver
 	Dependencies []ResourceDependency
 	MXL          MXLOptions
 }
 
-func (o MXLAssessmentOptions) linked() LinkedAssessmentOptions {
-	linked := LinkedAssessmentOptions{Graph: o.Graph, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies}
+func (o mxlAssessmentOptions) linked() linkedAssessmentOptions {
+	linked := linkedAssessmentOptions{Graph: o.Graph, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies}
 	if linked.Graph.DTD == nil {
 		linked.Graph.DTD = o.MXL.DTD
 	}
@@ -71,13 +62,13 @@ type resourceRunOptions struct {
 	dtd      *DTDOptions
 }
 
-func validateLinkedAssessmentOptions(ctx context.Context, o LinkedAssessmentOptions, expected validation.ProfileID) (resourceRunOptions, error) {
+func validateLinkedAssessmentOptions(ctx context.Context, o linkedAssessmentOptions, expected validation.ProfileID) (resourceRunOptions, error) {
 	return validateLinkedAssessmentOptionsAccount(ctx, o, expected, nil)
 }
 
 // validateLinkedAssessmentOptionsAccount uses account when it is non-nil, so
 // that several graph runs share one operation's budgets.
-func validateLinkedAssessmentOptionsAccount(ctx context.Context, o LinkedAssessmentOptions, expected validation.ProfileID, account *validation.Account) (resourceRunOptions, error) {
+func validateLinkedAssessmentOptionsAccount(ctx context.Context, o linkedAssessmentOptions, expected validation.ProfileID, account *validation.Account) (resourceRunOptions, error) {
 	var out resourceRunOptions
 	invalid := func(field, reason string) (resourceRunOptions, error) {
 		return out, &validation.ConfigurationError{Field: field, Reason: reason}
@@ -87,11 +78,6 @@ func validateLinkedAssessmentOptionsAccount(ctx context.Context, o LinkedAssessm
 	}
 	if expected == "" || o.Graph.Profile != expected {
 		return invalid("graph profile", "explicit entry-point compatible graph profile required")
-	}
-	if o.Graph.OmitContext {
-		// Resource snapshots, from which graphs and packages are built, read
-		// the context projection.
-		return invalid("Graph.OmitContext", "graph and package assessment keep the context projection")
 	}
 	if len(o.Dependencies) > 4 {
 		return invalid("resource dependencies", "bounded closed selection required")

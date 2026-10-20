@@ -11,7 +11,7 @@ import (
 
 func ExampleInspectXMLWithResources() {
 	bundle, err := musicxml.InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), musicxml.LinkedAssessmentOptions{
-		Graph: musicxml.AssessmentOptions{Profile: musicxml.ProfileResourceGraph},
+		Graph: musicxml.GraphOptions{Profile: musicxml.ProfileResourceGraph},
 		// No selected dependencies means no external resolver invocation.
 	})
 	if err != nil {
@@ -27,7 +27,7 @@ func ExampleInspectMXL() {
 		panic(err)
 	}
 	bundle, err := musicxml.InspectMXL(context.Background(), bytes.NewReader(original.Bytes()), musicxml.MXLAssessmentOptions{
-		Graph: musicxml.AssessmentOptions{Profile: musicxml.ProfileMXLSource},
+		Graph: musicxml.MXLGraphOptions{Profile: musicxml.ProfileMXLSource},
 	})
 	if err != nil {
 		panic(err)

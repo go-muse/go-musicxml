@@ -27,7 +27,7 @@ func FuzzContextAssessment(f *testing.F) {
 			t.Skip()
 		}
 		budgets := validation.Budgets{MaxInputBytes: 4096, MaxBufferedBytes: 8 << 20, MaxDepth: 24, MaxNodes: 128, MaxAttributes: 256, MaxEvents: 2048, MaxRuleSteps: 2000000, MaxScalarBytes: 2048, MaxDiagnostics: 16, MaxDiagnosticBytes: 8192, MaxContextFacts: 2048}
-		options := AssessmentOptions{Profile: ProfileSourceContext, Budgets: budgets}
+		options := SourceOptions{Profile: ProfileSourceContext, Budgets: budgets}
 		a, ea := InspectXML(context.Background(), bytes.NewReader(data), options)
 		b, eb := InspectXML(context.Background(), bytes.NewReader(data), options)
 		if !reflect.DeepEqual(a, b) || (ea == nil) != (eb == nil) {
@@ -40,9 +40,9 @@ func FuzzContextAssessment(f *testing.F) {
 		if err != nil {
 			return
 		}
-		options.Profile = ProfileModelContext
-		a, ea = AssessModel(context.Background(), doc, options)
-		b, eb = AssessModel(context.Background(), doc, options)
+		model := ModelOptions{Profile: ProfileModelContext, Budgets: options.Budgets}
+		a, ea = AssessModel(context.Background(), doc, model)
+		b, eb = AssessModel(context.Background(), doc, model)
 		if !reflect.DeepEqual(a, b) || (ea == nil) != (eb == nil) {
 			t.Fatal("nondeterministic current-model context")
 		}

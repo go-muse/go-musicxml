@@ -72,7 +72,7 @@ const dtdAuditPublicRepeated = `<!DOCTYPE opus [<!ATTLIST score xlink:href CDATA
 
 func TestDTDAuditPublicDefaultMultiplicityAndOwnership(t *testing.T) {
 	a := adapterAccount(t, validation.Budgets{})
-	c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+	c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD.ID(), sourceBytesPrimary)
 	report, err := adapterInspect(t, strings.NewReader(dtdAuditPublicRepeated), c)
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("error=%v syntax=%s findings=%+v", err, report.Syntax, report.Findings)
@@ -123,7 +123,7 @@ func TestDTDAuditPublicDefaultMultiplicityAndOwnership(t *testing.T) {
 func TestDTDAuditPublicBudgetAndCancellationCleanup(t *testing.T) {
 	for _, limits := range []validation.Budgets{{MaxAttributes: 3}, {MaxNodes: 3}, {MaxContextFacts: 1}, {MaxEvents: 1}, {MaxBufferedBytes: 1}, {MaxScalarBytes: 1}} {
 		a := adapterAccount(t, limits)
-		c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+		c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD.ID(), sourceBytesPrimary)
 		report, err := adapterInspect(t, strings.NewReader(dtdAuditPublicRepeated), c)
 		if !errors.Is(err, validation.ErrResourceLimit) || report.Satisfied() {
 			t.Fatalf("limits=%+v err=%v", limits, err)
@@ -134,7 +134,7 @@ func TestDTDAuditPublicBudgetAndCancellationCleanup(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		counted := &dtdAuditCountingContext{Context: ctx, cancel: cancel, at: at}
 		a := adapterAccount(t, validation.Budgets{})
-		c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+		c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD.ID(), sourceBytesPrimary)
 		run, err := newSourceAssessmentRunWithConfig(counted, strings.NewReader(dtdAuditPublicRepeated), DecodeOptions{}, &c, false)
 		if err == nil {
 			cause := run.drain()
@@ -151,7 +151,7 @@ func TestDTDAuditPublicBudgetAndCancellationCleanup(t *testing.T) {
 
 func TestDTDAuditPublicPartialProvenanceIsNotComplete(t *testing.T) {
 	source := `<!DOCTYPE opus [<!ENTITY % p "<!ATTLIST opus version CDATA '4.0'>">%p;]><opus/>`
-	report, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceInternalDTD})
 	if err != nil || report.Satisfied() || report.AssessmentComplete {
 		t.Fatalf("err=%v satisfied=%v complete=%v", err, report.Satisfied(), report.AssessmentComplete)
 	}
@@ -173,7 +173,7 @@ func TestDTDAuditPublicPartialProvenanceIsNotComplete(t *testing.T) {
 func TestDTDAuditPublicSnapshotExportsOwnedOrigins(t *testing.T) {
 	ctx := context.Background()
 	a := adapterAccount(t, validation.Budgets{})
-	c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+	c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD.ID(), sourceBytesPrimary)
 	run, err := newSourceAssessmentRunWithConfig(ctx, strings.NewReader(dtdAuditPublicRepeated), DecodeOptions{}, &c, false)
 	if err != nil {
 		t.Fatal(err)
@@ -224,7 +224,7 @@ func TestDTDAuditPublicSnapshotExportsOwnedOrigins(t *testing.T) {
 
 func TestDTDAuditPublicExactAttributeBudgetStaysAggregate(t *testing.T) {
 	a := adapterAccount(t, validation.Budgets{MaxAttributes: 4})
-	c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+	c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD.ID(), sourceBytesPrimary)
 	first, err := adapterInspect(t, strings.NewReader(dtdAuditPublicRepeated), c)
 	if err != nil || !first.Satisfied() {
 		t.Fatalf("exact four: %v", err)
@@ -252,14 +252,14 @@ func TestDTDAuditPublicSnapshotKindsPreserveOriginalReport(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
 			baselineAccount := adapterAccount(t, validation.Budgets{})
-			baselineConfig := adapterSourceConfig(t, baselineAccount, "source", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+			baselineConfig := adapterSourceConfig(t, baselineAccount, "source", "", ProfileSourceInternalDTD.ID(), sourceBytesPrimary)
 			want, err := adapterInspect(t, strings.NewReader(tc.source), baselineConfig)
 			if err != nil {
 				t.Fatal(err)
 			}
 			adapterClean(t, baselineAccount)
 			a := adapterAccount(t, validation.Budgets{})
-			config := adapterSourceConfig(t, a, "source", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+			config := adapterSourceConfig(t, a, "source", "", ProfileSourceInternalDTD.ID(), sourceBytesPrimary)
 			run, err := newSourceAssessmentRunWithConfig(ctx, strings.NewReader(tc.source), DecodeOptions{}, &config, false)
 			if err != nil {
 				t.Fatal(err)

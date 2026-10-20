@@ -11,19 +11,25 @@ import (
 // score-partwise, score-timewise and opus roots, including model representation
 // checks. It assesses current values and model-defined structure, not original
 // XML or an encoder's output. Reached unsupported capabilities remain incomplete.
-const ProfileModelXSD validation.ProfileID = "musicxml-4.0/model-xsd"
+const ProfileModelXSD ModelProfile = "musicxml-4.0/model-xsd"
+
+const profileModelXSD = validation.ProfileID(ProfileModelXSD)
 
 // ProfileModelLocal selects current-model XSD and the explicitly bounded local
 // musical relations and typed references described in the profile closure. It
 // excludes timeline, intent, repeats, packages, links and external dictionaries;
 // a satisfied report is not a claim of complete MusicXML conformance.
-const ProfileModelLocal validation.ProfileID = "musicxml-4.0/model-local"
+const ProfileModelLocal ModelProfile = "musicxml-4.0/model-local"
+
+const profileModelLocal = validation.ProfileID(ProfileModelLocal)
 
 // ProfileSourceLocal selects original-source XSD plus the same bounded local
 // musical clauses as ProfileModelLocal. It retains the source preview's DTD and
 // XSD capability limits; unread external subsets prevent acceptance. It is not
 // an implicit default or complete MusicXML conformance profile.
-const ProfileSourceLocal validation.ProfileID = "musicxml-4.0/source-local"
+const ProfileSourceLocal SourceProfile = "musicxml-4.0/source-local"
+
+const profileSourceLocal = validation.ProfileID(ProfileSourceLocal)
 
 const assessmentRegistryCommit = "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c"
 
@@ -56,18 +62,18 @@ func buildModelAssessmentEngine() (*validation.Engine, error) {
 // Each target family receives an independent catalog and therefore its own digest.
 func buildModelAssessmentDefinitions() (*assessmentDefinitions, error) {
 	modelXSD := validation.Profile{
-		ID: ProfileModelXSD, MusicXMLVersion: "4.0", Target: validation.TargetModel,
+		ID: profileModelXSD, MusicXMLVersion: "4.0", Target: validation.TargetModel,
 		RegistryCommit:   assessmentRegistryCommit,
 		SupportedRoots:   []validation.QName{{Local: "score-partwise"}, {Local: "score-timewise"}, {Local: "opus"}},
 		NormativeClosure: "Current generated MusicXML 4.0 score and opus model structure and value XSD assessment, with required model representation checks. Current field/Content order is assessed without reconstructing original XML. Finite float64 decimal fields mean the shortest decimal that reads back to the same float64. Source lexical history, encoder spellings, MusicXML prose, timeline, intent, packages, linked resources and external dictionaries are outside this profile. Reached unavailable lexical/value/default/identity capabilities remain incomplete. Composite counts are predicate instances, not research-record coverage.",
 	}
 	modelLocal := validation.Profile{
-		ID: ProfileModelLocal, MusicXMLVersion: "4.0", Target: validation.TargetModel,
+		ID: profileModelLocal, MusicXMLVersion: "4.0", Target: validation.TargetModel,
 		RegistryCommit: assessmentRegistryCommit, SupportedRoots: append([]validation.QName(nil), modelXSD.SupportedRoots...),
 		NormativeClosure: strings.Replace(modelXSD.NormativeClosure, "MusicXML prose,", "unselected MusicXML prose,", 1) + " Additionally includes only the exact local musical and typed same-part reference clauses bound in this catalog. Instrument-link is local-only. Date restrictions and MIDI instrument existence reuse shared predicates. Excluded clauses include timeline/effective state, broader context/intent, repeats/spans, time-only ordering, linked resources, packages, external dictionaries and all remaining normative translations. Score-only clauses are inapplicable to opus, not claims about linked opus content.",
 	}
 	sourceLocal := validation.Profile{
-		ID: ProfileSourceLocal, MusicXMLVersion: "4.0", Target: validation.TargetSource,
+		ID: profileSourceLocal, MusicXMLVersion: "4.0", Target: validation.TargetSource,
 		RegistryCommit: assessmentRegistryCommit, SupportedRoots: append([]validation.QName(nil), modelXSD.SupportedRoots...),
 		NormativeClosure: "Original single-pass MusicXML 4.0 score and opus source XSD plus only the exact local musical and typed same-part reference clauses bound in this catalog. Instrument-link is local-only; date restrictions and MIDI instrument existence reuse shared predicates. Original syntax and format conformance are independent. Reached unsupported XSD, value, identity or DTD capabilities remain incomplete; unread external subsets, including the official score examples, cannot be accepted. No DTD trust, stripping, fetching or ignore policy is introduced. Excludes timeline/effective state, broader context/intent, repeats/spans, time-only ordering, linked resources, packages, external dictionaries and remaining normative translations. Score-only clauses are inapplicable to opus, not claims about linked opus content. Predicate-instance counts are not research-record coverage or complete MusicXML conformance.",
 	}

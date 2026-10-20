@@ -12,7 +12,9 @@ import (
 // decoding and conversion lose or change the data they read. DecodeAssessed
 // runs it while it reads the document; line 3, ProfileModelSemantics, checks
 // the converted structure.
-const ProfileSourceLine validation.ProfileID = "musicxml-4.0/source-line"
+const ProfileSourceLine SourceProfile = "musicxml-4.0/source-line"
+
+const profileSourceLine = validation.ProfileID(ProfileSourceLine)
 
 var sourceLineEngine = sync.OnceValues(buildSourceLineEngine)
 
@@ -52,7 +54,7 @@ func buildSourceLineDefinitions() (*assessmentDefinitions, error) {
 		return nil, err
 	}
 	profile := compositionProfileCopy(d.profiles[0])
-	profile.ID = ProfileSourceLine
+	profile.ID = profileSourceLine
 	profile.NormativeClosure = "Validation line 2 of strict loading: bounded MusicXML 4.0 XSD assessment of the effective internal-DTD source infoset, source occurrence provenance and original schema hints, which the converted model cannot show. A DOCTYPE external subset is read from the bundled official MusicXML DTDs or a caller DTD source, never fetched. Every numeric value the generated model holds must survive conversion unchanged. Local, timeline, contextual, resource-link and dictionary checks belong to line 3 on the converted model; no universal conformance claim."
 	profile.Required = profile.Required[:0]
 	for _, key := range d.profiles[0].Required {

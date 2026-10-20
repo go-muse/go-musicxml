@@ -93,7 +93,7 @@ func TestResourceGraphReturnedRetrievalFragmentPublic(t *testing.T) {
 				}, nil
 			})
 			bundle, err := musicxml.InspectXMLWithResources(context.Background(), strings.NewReader(rootXML), musicxml.LinkedAssessmentOptions{
-				Graph:        musicxml.AssessmentOptions{Profile: musicxml.ProfileResourceGraph},
+				Graph:        musicxml.GraphOptions{Profile: musicxml.ProfileResourceGraph},
 				Identity:     musicxml.ResourceIdentity{CanonicalID: "root", RetrievalURI: rootURI},
 				Dependencies: []musicxml.ResourceDependency{musicxml.ResourceDocuments}, Resolver: resolver,
 			})

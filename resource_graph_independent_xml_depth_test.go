@@ -43,7 +43,7 @@ func TestFinalQAMXLXMLDepthIsIndependent(t *testing.T) {
 					}
 					calls := 0
 					var body *resourceTestBody
-					opts := MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 20}}, MXL: MXLOptions{MaxXMLDepth: cap}, Identity: ResourceIdentity{RetrievalURI: "https://final-qa.test/root.mxl"}, Dependencies: []ResourceDependency{ResourceDocuments}}
+					opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 20}}, MXL: MXLOptions{MaxXMLDepth: cap}, Identity: ResourceIdentity{RetrievalURI: "https://final-qa.test/root.mxl"}, Dependencies: []ResourceDependency{ResourceDocuments}}
 					opts.Resolver = graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
 						calls++
 						body = &resourceTestBody{Reader: strings.NewReader(target)}
@@ -106,7 +106,7 @@ func TestFinalQAMXLXMLDepthDoesNotBoundGraphHops(t *testing.T) {
 					extras = append(extras, assessmentZIPFixture{name: p, body: s})
 					resources = append(resources, MXLResource{Path: p, Data: []byte(s)})
 				}
-				opts := MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: graphCap}}, MXL: MXLOptions{MaxXMLDepth: 3}}
+				opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: graphCap}}, MXL: MXLOptions{MaxXMLDepth: 3}}
 				var b validation.AssessmentBundle
 				var e error
 				if surface == "raw" {

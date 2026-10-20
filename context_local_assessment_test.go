@@ -38,7 +38,7 @@ func buildLocalContextTestEngine() (*validation.Engine, error) {
 	d.rules = append(d.rules, rule)
 	d.plans = append(d.plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})
 	for i := range d.profiles {
-		if d.profiles[i].ID == ProfileSourceLocal || d.profiles[i].ID == ProfileModelLocal {
+		if d.profiles[i].ID == ProfileSourceLocal.ID() || d.profiles[i].ID == ProfileModelLocal.ID() {
 			d.profiles[i].Required = append(d.profiles[i].Required, key)
 			d.profiles[i].Support = append(d.profiles[i].Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 		}
@@ -60,9 +60,9 @@ func localContextAssess(t *testing.T, engine *validation.Engine, source string, 
 	if err != nil {
 		t.Fatal(err)
 	}
-	profile, documentID := ProfileSourceLocal, sourceDocumentID
+	profile, documentID := ProfileSourceLocal.ID(), sourceDocumentID
 	if model {
-		profile, documentID = ProfileModelLocal, modelDocumentID
+		profile, documentID = ProfileModelLocal.ID(), modelDocumentID
 	}
 	session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: documentID, Profile: profile, Account: account})
 	if err != nil {

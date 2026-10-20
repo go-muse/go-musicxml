@@ -44,7 +44,7 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			report, err := InspectXML(context.Background(), strings.NewReader(tt.input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+			report, err := InspectXML(context.Background(), strings.NewReader(tt.input), SourceOptions{Profile: ProfileSourceXSDPreview})
 			if err != nil || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.Satisfied() != tt.valid {
 				t.Errorf("source assessment=%+v error=%v expected-valid=%t", report, err, tt.valid)
 			}
@@ -71,7 +71,7 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			report, err := InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+			report, err := InspectXML(context.Background(), bytes.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview})
 			if err != nil || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed {
 				t.Fatalf("original source: %+v %v", report, err)
 			}
@@ -115,7 +115,7 @@ func TestSourceAssessmentRetainsOrderErasedByModels(t *testing.T) {
 	if err = Validate(document); err != nil {
 		t.Fatalf("fixture must demonstrate reordered model loses original evidence: %v", err)
 	}
-	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview})
 	if err != nil || report.Conformance != validation.ConformanceViolated {
 		t.Fatalf("physical source ordering vanished: %+v %v", report, err)
 	}

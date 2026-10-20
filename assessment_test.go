@@ -41,10 +41,10 @@ func TestSourceAssessmentPreflightDoesNotRead(t *testing.T) {
 		{"nil-context", nil, DecodeAssessmentOptions{}, validation.ErrInvalidConfiguration},
 		{"canceled", canceled, DecodeAssessmentOptions{}, context.Canceled},
 		{"depth", context.Background(), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: -1}}, ErrInvalidDecodeOptions},
-		{"narrow-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}}, validation.ErrInvalidConfiguration},
-		{"unknown-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: "unknown"}}, validation.ErrInvalidConfiguration},
-		{"model-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: "musicxml-4.0/model"}}, validation.ErrInvalidConfiguration},
-		{"negative-budget", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxNodes: -1}}}, validation.ErrInvalidConfiguration},
+		{"narrow-profile", context.Background(), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceXSDPreview}}, validation.ErrInvalidConfiguration},
+		{"unknown-profile", context.Background(), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: "unknown"}}, validation.ErrInvalidConfiguration},
+		{"model-profile", context.Background(), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: "musicxml-4.0/model"}}, validation.ErrInvalidConfiguration},
+		{"negative-budget", context.Background(), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxNodes: -1}}}, validation.ErrInvalidConfiguration},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -58,7 +58,7 @@ func TestSourceAssessmentPreflightDoesNotRead(t *testing.T) {
 			}
 		})
 	}
-	if _, err := InspectXML(context.Background(), nil, AssessmentOptions{Profile: ProfileSourceXSDPreview}); !errors.Is(err, ErrNilReader) {
+	if _, err := InspectXML(context.Background(), nil, SourceOptions{Profile: ProfileSourceXSDPreview}); !errors.Is(err, ErrNilReader) {
 		t.Errorf("nil reader: %v", err)
 	}
 }
@@ -69,13 +69,13 @@ func TestDecodeAssessedMandatoryAndOrdinaryDecodeAreSeparate(t *testing.T) {
 	if err != nil || document == nil {
 		t.Fatalf("ordinary decode document=%T error=%v", document, err)
 	}
-	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview})
 	if err != nil || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.Conformance != validation.ConformanceViolated {
 		t.Fatalf("inspection result=%+v error=%v", report, err)
 	}
-	for _, options := range []DecodeAssessmentOptions{{}, {Assessment: &AssessmentOptions{}}, strictSourceOptions()} {
+	for _, options := range []DecodeAssessmentOptions{{}, {Assessment: &SourceOptions{}}, strictSourceOptions()} {
 		result, err := DecodeAssessed(context.Background(), strings.NewReader(input), options)
-		if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.Requested || result.SourceLine.Profile.ID != ProfileSourceLine || result.SourceLine.Conformance != validation.ConformanceViolated || result.ModelLine.Requested {
+		if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.Requested || result.SourceLine.Profile.ID != ProfileSourceLine.ID() || result.SourceLine.Conformance != validation.ConformanceViolated || result.ModelLine.Requested {
 			t.Fatalf("mandatory result=%+v error=%v", result, err)
 		}
 	}
@@ -98,7 +98,7 @@ func TestSourceAssessmentDTDCompletenessAxes(t *testing.T) {
 		{"entity-declaration", `<!DOCTYPE score-partwise [<!ENTITY unused "value">]>`, validation.SyntaxIncomplete, false},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			report, err := InspectXML(context.Background(), strings.NewReader(tt.prefix+valid), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+			report, err := InspectXML(context.Background(), strings.NewReader(tt.prefix+valid), SourceOptions{Profile: ProfileSourceXSDPreview})
 			if err != nil || !report.InputComplete || report.Syntax != tt.syntax || report.Satisfied() != tt.complete {
 				t.Fatalf("DTD axes report=%+v error=%v", report, err)
 			}
@@ -111,7 +111,7 @@ func TestSourceAssessmentDTDCompletenessAxes(t *testing.T) {
 			if !tt.complete && report.Counts.Unsupported == 0 {
 				t.Errorf("DTD missing required unsupported blocker: %+v %v", report, err)
 			}
-			semantic, semanticErr := InspectXML(context.Background(), strings.NewReader(tt.prefix+valid), AssessmentOptions{Profile: ProfileSourceSemantics})
+			semantic, semanticErr := InspectXML(context.Background(), strings.NewReader(tt.prefix+valid), SourceOptions{Profile: ProfileSourceSemantics})
 			if semanticErr != nil || !semantic.InputComplete {
 				t.Fatalf("semantic DTD control did not finish: inputComplete=%v error=%v", semantic.InputComplete, semanticErr)
 			}
@@ -138,7 +138,7 @@ func TestSourceAssessmentConcurrentIndependentReports(t *testing.T) {
 		t.Run(strconv.Itoa(worker), func(t *testing.T) {
 			t.Parallel()
 			for repeat := 0; repeat < 4; repeat++ {
-				report, err := InspectXML(context.Background(), strings.NewReader(`<score-partwise/>`), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+				report, err := InspectXML(context.Background(), strings.NewReader(`<score-partwise/>`), SourceOptions{Profile: ProfileSourceXSDPreview})
 				if err != nil || report.Conformance != validation.ConformanceViolated || len(report.Findings) == 0 {
 					t.Fatalf("independent report: %+v %v", report, err)
 				}
@@ -196,7 +196,7 @@ func TestSourceAssessmentDiagnosticOriginalPosition(t *testing.T) {
 	}
 	for _, tt := range variants {
 		t.Run(tt.name, func(t *testing.T) {
-			report, err := InspectXML(context.Background(), bytes.NewReader(tt.input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+			report, err := InspectXML(context.Background(), bytes.NewReader(tt.input), SourceOptions{Profile: ProfileSourceXSDPreview})
 			if err != nil || report.Conformance != validation.ConformanceViolated {
 				t.Fatalf("invalid attribute not assessed: %+v %v", report, err)
 			}
@@ -218,7 +218,7 @@ func TestSourceAssessmentDiagnosticOriginalPosition(t *testing.T) {
 }
 
 func TestSourcePreviewDeclaresExternalDOCTYPEAcceptanceLimit(t *testing.T) {
-	report, err := InspectXML(context.Background(), strings.NewReader(assessedScore("1", "")), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+	report, err := InspectXML(context.Background(), strings.NewReader(assessedScore("1", "")), SourceOptions{Profile: ProfileSourceXSDPreview})
 	if err != nil {
 		t.Fatal(err)
 	}

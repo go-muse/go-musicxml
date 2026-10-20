@@ -56,7 +56,7 @@ func TestDecodeMXLAssessedInfosetChargesInputOnce(t *testing.T) {
 	archive := rawMXL(t, `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>`+
 		`<part id="P1"><measure number="1"><attributes><divisions>1</divisions></attributes><note><rest/><duration>1</duration></note></measure></part></score-partwise>`)
 	accepts := func(limit int64) bool {
-		bundle, err := InspectMXL(context.Background(), bytes.NewReader(archive), MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxInputBytes: limit}}})
+		bundle, err := InspectMXL(context.Background(), bytes.NewReader(archive), MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: validation.Budgets{MaxInputBytes: limit}}})
 		return err == nil && bundle.Satisfied()
 	}
 	low, high := int64(1), int64(len(archive)*4)
@@ -67,7 +67,7 @@ func TestDecodeMXLAssessedInfosetChargesInputOnce(t *testing.T) {
 			low = mid + 1
 		}
 	}
-	result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(archive), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxInputBytes: low}}}})
+	result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(archive), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: validation.Budgets{MaxInputBytes: low}}}})
 	if err != nil || result.Package == nil {
 		t.Fatalf("MaxInputBytes=%d: source accepted but loading failed: conversion=%s error=%v", low, result.Conversion.State, err)
 	}

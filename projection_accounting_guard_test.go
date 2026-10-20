@@ -131,7 +131,7 @@ func TestContextProjectionAccountingCoversItsHeap(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: true, Assessment: &AssessmentOptions{Budgets: validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}}})
+		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: true, Assessment: &SourceOptions{Budgets: validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}}})
 		if err != nil || result.Document == nil {
 			continue
 		}

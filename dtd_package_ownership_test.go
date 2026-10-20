@@ -16,7 +16,7 @@ func TestDTDPackageCompositionTransferIdentityAndCallerOwnership(t *testing.T) {
 	ctx := context.Background()
 	for _, mode := range []string{"exact", "legacy profile", "different digest", "different account", "wrong target"} {
 		t.Run(mode, func(t *testing.T) {
-			cfg, err := validateLinkedAssessmentOptions(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: dtdGraphProfile}}, dtdGraphProfile)
+			cfg, err := validateLinkedAssessmentOptions(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal(), dtdGraphProfile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -49,7 +49,7 @@ func TestDTDPackageCompositionTransferIdentityAndCallerOwnership(t *testing.T) {
 			if mode == "legacy profile" {
 				profile = ProfileSourceDictionaries
 			}
-			result := assessResourceSource(ctx, strings.NewReader(`<opus/>`), adapterSourceConfig(t, account, "source", "source.opus", profile, sourceBytesPrimary))
+			result := assessResourceSource(ctx, strings.NewReader(`<opus/>`), adapterSourceConfig(t, account, "source", "source.opus", profile.ID(), sourceBytesPrimary))
 			if result.Err != nil || result.Snapshot == nil {
 				t.Fatal("snapshot", result.Err)
 			}
@@ -102,7 +102,7 @@ func TestDTDPackageCompositionExplicitSoundsAdoption(t *testing.T) {
 		calls++
 		return DictionaryComponentResult{Request: q, State: validation.EvidenceKnown, Body: body}, nil
 	})}
-	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: dtdGraphProfile}}, dictionaries, ProfileResourceGraphDictionaries)
+	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal(), dictionaries, ProfileResourceGraphDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +188,7 @@ func TestDTDPackageCompositionCacheProfilesAndCapabilitiesStayDistinct(t *testin
 	g := &resourceGraphRun{ctx: context.Background(), options: resourceRunOptions{account: a}, cache: map[graphResourceKey]*graphResource{}, pins: map[graphCanonicalKey]validation.ResourcePin{}}
 	pin := validation.ResourcePin{CanonicalID: "same", Representation: validation.ResourceSourceXML, Digest: strings.Repeat("a", 64)}
 	seen := map[*graphResource]bool{}
-	for _, profile := range []validation.ProfileID{ProfileSourceDictionaries, ProfileSourceInternalDTDDictionaries} {
+	for _, profile := range []validation.ProfileID{ProfileSourceDictionaries.ID(), ProfileSourceInternalDTDDictionaries.ID()} {
 		for _, fingerprint := range [][32]byte{{1}, {2}} {
 			g.dictionaryFingerprint = fingerprint
 			r, e := g.cacheResource(pin, profile, validation.ResourceAssessmentID(string(profile)+string(rune(fingerprint[0]))), 1, true)
@@ -208,7 +208,7 @@ func TestDTDPackageCompositionCacheProfilesAndCapabilitiesStayDistinct(t *testin
 func TestDTDPackageCompositionBudgetsAndCancellationCleanup(t *testing.T) {
 	input := `<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`
 	run := func(ctx context.Context, budgets validation.Budgets) (*resourceGraphRun, validation.AssessmentBundle, error) {
-		g, e := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: dtdGraphProfile, Budgets: budgets}}, DictionaryOptions{}, ProfileResourceGraphDictionaries)
+		g, e := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile), Budgets: budgets}}.internal(), DictionaryOptions{}, ProfileResourceGraphDictionaries.ID())
 		if g == nil {
 			return nil, validation.AssessmentBundle{}, e
 		}

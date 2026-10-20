@@ -14,11 +14,11 @@ func TestLinkContextInitialProfileAndHintComposition(t *testing.T) {
 	// remain preserved; this current-API regression isolates hint discovery
 	// from the unchanged facet-free list(anyURI) datatype contract.
 	source := `<opus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="urn:a a.xsd trailing"><score xlink:href="score.musicxml"/></opus>`
-	old, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLocal})
+	old, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLocal})
 	if err != nil || !old.Satisfied() {
 		t.Fatalf("odd list datatype baseline: err=%v report=%+v", err, old)
 	}
-	got, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: validation.ProfileID("musicxml-4.0/source-links")})
+	got, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(validation.ProfileID("musicxml-4.0/source-links"))})
 	if err != nil {
 		t.Fatalf("new nonfetching local link profile unavailable: %v", err)
 	}
@@ -44,7 +44,7 @@ func resourceScore(body string) string {
 }
 func linkResources(t *testing.T, source string) (validation.Report, []validation.ContextResult) {
 	t.Helper()
-	report, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLinks})
+	report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLinks})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -220,7 +220,7 @@ func TestLinkContextModelCurrentFactsDoNotRecoverSourceHints(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLinks})
+	report, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLinks})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -272,10 +272,10 @@ func TestLinkContextTimewiseCreditAndForeignHomonyms(t *testing.T) {
 			var doc Document
 			doc, err = Decode(strings.NewReader(source))
 			if err == nil {
-				report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLinks})
+				report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLinks})
 			}
 		} else {
-			report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLinks})
+			report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLinks})
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -315,7 +315,7 @@ func TestLinkContextModelEditsAndOwnedReports(t *testing.T) {
 	}
 	score := doc.(*ScorePartwise)
 	score.Part[0].Measure[0].Content[0].Link.Href = "current.musicxml#"
-	report, err := AssessModel(context.Background(), score, AssessmentOptions{Profile: ProfileModelLinks})
+	report, err := AssessModel(context.Background(), score, ModelOptions{Profile: ProfileModelLinks})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -330,7 +330,7 @@ func TestLinkContextModelEditsAndOwnedReports(t *testing.T) {
 	}
 	score.Part[0].Measure[0].Content[0].Link.Href = "latest.musicxml"
 	old.Href.Value.Value.Text = "caller-edit"
-	next, err := AssessModel(context.Background(), score, AssessmentOptions{Profile: ProfileModelLinks})
+	next, err := AssessModel(context.Background(), score, ModelOptions{Profile: ProfileModelLinks})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -397,7 +397,7 @@ func TestLinkContextNewTemporaryOwnersReleaseOnLimits(t *testing.T) {
 	source := resourceScore(`<link xlink:href="score.musicxml"/><note><rest/><duration>1</duration></note>`)
 	for _, budgets := range []validation.Budgets{{}, {MaxContextFacts: 1}, {MaxBufferedBytes: 64 * 1024}, {MaxRuleSteps: 1000}} {
 		account := adapterAccount(t, budgets)
-		config := adapterSourceConfig(t, account, "resource-test", "scores/main.musicxml", ProfileSourceLinks, sourceBytesPrimary)
+		config := adapterSourceConfig(t, account, "resource-test", "scores/main.musicxml", ProfileSourceLinks.ID(), sourceBytesPrimary)
 		_, _ = adapterInspect(t, strings.NewReader(source), config)
 		adapterClean(t, account)
 	}

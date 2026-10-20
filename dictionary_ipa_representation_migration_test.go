@@ -17,15 +17,15 @@ import (
 func migrateIPARepresentationProfileHash(t *testing.T, id validation.ProfileID, historical string) string {
 	t.Helper()
 	changes := map[validation.ProfileID][2]string{
-		ProfileSourceDictionaries:            {"4d2391d0dc93fd9137d42d0432d3bf7bd4490ecb1e4380d4559bdb68dfac907b", "7713fd75714d24bcb49ac71dffc3e9ec9e8ae642cccffcb310a2ca211bfd5fc6"},
-		ProfileSourceSoundsDictionaries:      {"448ccb8c118aa48a81e814f59c8e31a17a2e89a9683aa87d1d63f8f899f8bbd8", "94a540d749c6bd05a10c2990efcfcbd43e388044ebc8a6b381cd684e243d5962"},
-		ProfileModelDictionaries:             {"20f625be8f866db58a259b717a931816485aa98ca86d696e79f346378281ef81", "8bddd6162b1c8aefcecb0514fa35dcc42da251008917e335763a2ac02f2dc16b"},
-		ProfileSourceInternalDTDLocal:        {"66ade1cc00540aebc746f1a9cc6a1cf0f3515c37d8a8c547093bbe686f5f6ff0", "495ed5614e4b3ed35157cc5583c0ad67f00a17c99cf514d0d960e52170ed0f35"},
-		ProfileSourceInternalDTDLinks:        {"db744ca59d2ea60a0db07ef7e6693fee44ae2148a3481cbf9be80cdfb654bb01", "45bf20217d5b7349f0cabc289855026eeb610f5b81ecaf165e731ccef6a6862a"},
-		ProfileSourceInternalDTDDictionaries: {"7ef8ca4eff9b989c8482b2cf7f98ebe8823ea98e40236461246186f59ec7792a", "1010c4222bb19b422e6714ae5105d23d976d66c2b88d53bf502bdc390e3a25f0"},
-		ProfileResourceGraphDictionaries:     {"ac509b748631e72b90f10e6c5f2496d542dd7a906e3bd7c5a80bf825065e9741", "80fb2fe78ecd080cef9a57366e81a74c830fd8f4fb186adfe4b81c1fefaf2dfe"},
-		ProfileMXLSourceDictionaries:         {"14a5570d39d1f3c8524a603b5590aba0bfaf95cf9c0b1cc06b9c4cc91523f222", "3a5b6cb1addd7da5ce1a53f50e56ecb1c5ed63ce048d0e6c42ecef855598f31c"},
-		ProfileMXLModelDictionaries:          {"a04e03d483a3b13eb90b7e0f122268b1091fc5eefb71bae3a16bd23b99d6b7ec", "54b724f9afa5f1465186350bfa28c107c1fd5add87803999b3475314d17c40e1"},
+		ProfileSourceDictionaries.ID():            {"4d2391d0dc93fd9137d42d0432d3bf7bd4490ecb1e4380d4559bdb68dfac907b", "7713fd75714d24bcb49ac71dffc3e9ec9e8ae642cccffcb310a2ca211bfd5fc6"},
+		ProfileSourceSoundsDictionaries.ID():      {"448ccb8c118aa48a81e814f59c8e31a17a2e89a9683aa87d1d63f8f899f8bbd8", "94a540d749c6bd05a10c2990efcfcbd43e388044ebc8a6b381cd684e243d5962"},
+		ProfileModelDictionaries.ID():             {"20f625be8f866db58a259b717a931816485aa98ca86d696e79f346378281ef81", "8bddd6162b1c8aefcecb0514fa35dcc42da251008917e335763a2ac02f2dc16b"},
+		ProfileSourceInternalDTDLocal.ID():        {"66ade1cc00540aebc746f1a9cc6a1cf0f3515c37d8a8c547093bbe686f5f6ff0", "495ed5614e4b3ed35157cc5583c0ad67f00a17c99cf514d0d960e52170ed0f35"},
+		ProfileSourceInternalDTDLinks.ID():        {"db744ca59d2ea60a0db07ef7e6693fee44ae2148a3481cbf9be80cdfb654bb01", "45bf20217d5b7349f0cabc289855026eeb610f5b81ecaf165e731ccef6a6862a"},
+		ProfileSourceInternalDTDDictionaries.ID(): {"7ef8ca4eff9b989c8482b2cf7f98ebe8823ea98e40236461246186f59ec7792a", "1010c4222bb19b422e6714ae5105d23d976d66c2b88d53bf502bdc390e3a25f0"},
+		ProfileResourceGraphDictionaries.ID():     {"ac509b748631e72b90f10e6c5f2496d542dd7a906e3bd7c5a80bf825065e9741", "80fb2fe78ecd080cef9a57366e81a74c830fd8f4fb186adfe4b81c1fefaf2dfe"},
+		ProfileMXLSourceDictionaries.ID():         {"14a5570d39d1f3c8524a603b5590aba0bfaf95cf9c0b1cc06b9c4cc91523f222", "3a5b6cb1addd7da5ce1a53f50e56ecb1c5ed63ce048d0e6c42ecef855598f31c"},
+		ProfileMXLModelDictionaries.ID():          {"a04e03d483a3b13eb90b7e0f122268b1091fc5eefb71bae3a16bd23b99d6b7ec", "54b724f9afa5f1465186350bfa28c107c1fd5add87803999b3475314d17c40e1"},
 	}
 	pair, ok := changes[id]
 	if !ok {
@@ -47,14 +47,14 @@ func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 		ids           []validation.ProfileID
 		before, after string
 	}{
-		{[]validation.ProfileID{ProfileSourceDictionaries, ProfileModelDictionaries, ProfileSourceSoundsDictionaries}, "21c731b5d19ebf918bff42fb3a15cac2fae6053b5b8006faf3f32b6108a8db21", "d8199be864c2baa081aca5887ca0ac188052ba22f6a690ea9bb3b436dc054c57"},
-		{[]validation.ProfileID{ProfileSourceInternalDTDLocal, ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries}, "9f9d4a3ef31008332be016a7fe5b86cc10b2a764cf13426735683455ec07e5d0", "110b5e123d135680ad95c927c67a0c9642bb2d6ca43f5748ffd7bf118a83eff4"},
-		{[]validation.ProfileID{ProfileSourceInternalDTDSoundsDictionaries}, "4d3745b2a8b4a04862dce514a19d1c744770059e8321a99e9c5e083df63bda06", "7706e0ab6531e1690df71b44fdf586164b73c4d7cd4d3a55287c44eb098ca65f"},
+		{[]validation.ProfileID{ProfileSourceDictionaries.ID(), ProfileModelDictionaries.ID(), ProfileSourceSoundsDictionaries.ID()}, "21c731b5d19ebf918bff42fb3a15cac2fae6053b5b8006faf3f32b6108a8db21", "d8199be864c2baa081aca5887ca0ac188052ba22f6a690ea9bb3b436dc054c57"},
+		{[]validation.ProfileID{ProfileSourceInternalDTDLocal.ID(), ProfileSourceInternalDTDLinks.ID(), ProfileSourceInternalDTDDictionaries.ID()}, "9f9d4a3ef31008332be016a7fe5b86cc10b2a764cf13426735683455ec07e5d0", "110b5e123d135680ad95c927c67a0c9642bb2d6ca43f5748ffd7bf118a83eff4"},
+		{[]validation.ProfileID{ProfileSourceInternalDTDSoundsDictionaries.ID()}, "4d3745b2a8b4a04862dce514a19d1c744770059e8321a99e9c5e083df63bda06", "7706e0ab6531e1690df71b44fdf586164b73c4d7cd4d3a55287c44eb098ca65f"},
 	} {
 		for _, id := range tc.ids {
 			var engine *validation.Engine
 			var err error
-			if id == ProfileModelDictionaries {
+			if id == ProfileModelDictionaries.ID() {
 				engine, err = modelAssessmentEngineForProfile(id)
 			} else {
 				engine, err = sourceAssessmentEngineForProfile(id)
@@ -78,8 +78,8 @@ func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 		ids           []validation.ProfileID
 		before, after string
 	}{
-		{newDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphDictionaries, ProfileMXLSourceDictionaries, ProfileMXLModelDictionaries}, "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333", "f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44"},
-		{dtdDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphInternalDTDDictionaries, ProfileMXLSourceInternalDTDDictionaries, ProfileMXLModelInternalDTDDictionaries}, "4ecfcba585d635aa3a67ae6748985bb63c2b0482e6257cff7ccf39220acad319", "69d813b09c15ea5083d382fe8864a41179e93cf52c4b04bfb140493070df7648"},
+		{newDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphDictionaries.ID(), ProfileMXLSourceDictionaries.ID(), ProfileMXLModelDictionaries.ID()}, "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333", "f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44"},
+		{dtdDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphInternalDTDDictionaries.ID(), ProfileMXLSourceInternalDTDDictionaries.ID(), ProfileMXLModelInternalDTDDictionaries.ID()}, "4ecfcba585d635aa3a67ae6748985bb63c2b0482e6257cff7ccf39220acad319", "69d813b09c15ea5083d382fe8864a41179e93cf52c4b04bfb140493070df7648"},
 	} {
 		c, err := tc.factory()
 		if err != nil {

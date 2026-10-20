@@ -28,9 +28,9 @@ func assessTimelineBoth(t *testing.T, source string, check func(*testing.T, vali
 			var report validation.Report
 			var err error
 			if target == validation.TargetSource {
-				report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceTimeline})
+				report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceTimeline})
 			} else {
-				report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelTimeline})
+				report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelTimeline})
 			}
 			if err != nil {
 				t.Fatalf("operation: %v; %s", err, localFindings(report))
@@ -94,19 +94,19 @@ func TestTimelineProfilesAreExplicitAndLegacyRemainsXSDOnly(t *testing.T) {
 	if err := Validate(doc); err != nil {
 		t.Fatalf("legacy XSD scope broadened: %v", err)
 	}
-	for _, profile := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal} {
-		r, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: profile})
+	for _, profile := range []validation.ProfileID{ProfileModelXSD.ID(), ProfileModelLocal.ID()} {
+		r, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(profile)})
 		if err != nil || !r.Satisfied() {
 			t.Fatalf("frozen model profile broadened: %s %v %s", profile, err, localFindings(r))
 		}
 	}
-	for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceLocal} {
-		r, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: profile})
+	for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview.ID(), ProfileSourceLocal.ID()} {
+		r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(profile)})
 		if err != nil || !r.Satisfied() {
 			t.Fatalf("frozen source profile broadened: %s %v %s", profile, err, localFindings(r))
 		}
 	}
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}})
 	if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted {
 		t.Fatalf("strict timeline acceptance: %+v %v", result, err)
 	}
@@ -117,7 +117,7 @@ func TestTimelinePreservesFrozenCatalogDigests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, id := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal, ProfileSourceLocal} {
+	for _, id := range []validation.ProfileID{ProfileModelXSD.ID(), ProfileModelLocal.ID(), ProfileSourceLocal.ID()} {
 		if got := catalogProfile(t, engine, id).CatalogDigest; got != decimalContractCatalogAfter {
 			t.Errorf("frozen profile %s digest changed: %s", id, got)
 		}
@@ -126,7 +126,7 @@ func TestTimelinePreservesFrozenCatalogDigests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := catalogProfile(t, engine, ProfileSourceXSDPreview).CatalogDigest; got != "e6139cbdde4b7eeb977fab3c4c33213300c536a902b5bb313ffa3483ff880760" {
+	if got := catalogProfile(t, engine, ProfileSourceXSDPreview.ID()).CatalogDigest; got != "e6139cbdde4b7eeb977fab3c4c33213300c536a902b5bb313ffa3483ff880760" {
 		t.Errorf("frozen source preview digest changed: %s", got)
 	}
 }

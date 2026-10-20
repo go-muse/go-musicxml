@@ -9,13 +9,13 @@ import (
 
 func TestResourceGraphIntrinsicProfileBundlePreservesLegacyChoices(t *testing.T) {
 	want := resourceIntrinsicProfiles{
-		source:    ProfileSourceLinks,
-		model:     ProfileModelLinks,
-		container: ProfileSourceContainer,
-		sounds:    ProfileSourceSounds,
+		source:    ProfileSourceLinks.ID(),
+		model:     ProfileModelLinks.ID(),
+		container: ProfileSourceContainer.ID(),
+		sounds:    ProfileSourceSounds.ID(),
 	}
-	for _, profile := range []validation.ProfileID{ProfileResourceGraph, ProfileMXLSource, ProfileMXLModel} {
-		g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}}, profile)
+	for _, profile := range []validation.ProfileID{ProfileResourceGraph.ID(), ProfileMXLSource.ID(), ProfileMXLModel.ID()} {
+		g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}}.internal(), profile)
 		if err != nil {
 			t.Fatal(err)
 		}

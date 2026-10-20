@@ -57,9 +57,9 @@ func singletonRepeatAssess(t *testing.T, measures []string, want validation.Evid
 					if e != nil {
 						t.Fatal(e)
 					}
-					r, err = musicxml.AssessModel(context.Background(), doc, musicxml.AssessmentOptions{Profile: musicxml.ProfileModelContext})
+					r, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
 				} else {
-					r, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceContext})
+					r, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.SourceOptions{Profile: musicxml.ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)

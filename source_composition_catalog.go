@@ -11,28 +11,34 @@ import (
 // ProfileSourceInternalDTDLocal explicitly composes the bounded internal-DTD
 // infoset, document ENTITY/ENTITIES evidence and existing local score/Opus rules.
 // It does not retrieve external declarations or reconstruct current-model history.
-const ProfileSourceInternalDTDLocal validation.ProfileID = "musicxml-4.0/source-internal-dtd-local"
+const ProfileSourceInternalDTDLocal SourceProfile = "musicxml-4.0/source-internal-dtd-local"
+
+const profileSourceInternalDTDLocal = validation.ProfileID(ProfileSourceInternalDTDLocal)
 
 // ProfileSourceInternalDTDLinks adds existing nonfetching local link projections
 // with physical occurrence evidence kept separate from effective DTD values.
-const ProfileSourceInternalDTDLinks validation.ProfileID = "musicxml-4.0/source-internal-dtd-links"
+const ProfileSourceInternalDTDLinks SourceProfile = "musicxml-4.0/source-internal-dtd-links"
+
+const profileSourceInternalDTDLinks = validation.ProfileID(ProfileSourceInternalDTDLinks)
 
 // ProfileSourceInternalDTDDictionaries adds explicitly supplied dictionary
 // capabilities to the standalone DTD/local/link composition. No data is loaded
 // automatically. Legacy IPA facts stay partial; only the explicitly selected
 // representation manifest supplies bounded affirmative whole-input witnesses.
-const ProfileSourceInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/source-internal-dtd-links-dictionaries"
+const ProfileSourceInternalDTDDictionaries SourceProfile = "musicxml-4.0/source-internal-dtd-links-dictionaries"
+
+const profileSourceInternalDTDDictionaries = validation.ProfileID(ProfileSourceInternalDTDDictionaries)
 
 var sourceCompositionEngine = sync.OnceValues(buildSourceCompositionEngine)
 
 // Closed policy, rather than profile-name matching, elects parser capabilities.
 func sourceDTDPolicy(id validation.ProfileID) (internal, declarations, lexical bool) {
 	switch id {
-	case ProfileSourceInternalDTD:
+	case profileSourceInternalDTD:
 		return true, false, false
-	case ProfileSourceInternalDTDLocal:
+	case profileSourceInternalDTDLocal:
 		return true, true, false
-	case ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries, ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries, ProfileSourceSemantics, ProfileSourceLine:
+	case profileSourceInternalDTDLinks, profileSourceInternalDTDDictionaries, profileSourceInternalDTDContainer, profileSourceInternalDTDSoundsDictionaries, profileSourceSemantics, profileSourceLine:
 		return true, true, true
 	default:
 		return false, false, false
@@ -73,7 +79,7 @@ func buildSourceCompositionDefinitions() (*assessmentDefinitions, error) {
 	if err != nil {
 		return nil, err
 	}
-	local, err := compositionSourceProfile(d, ProfileSourceLocal)
+	local, err := compositionSourceProfile(d, profileSourceLocal)
 	if err != nil {
 		return nil, err
 	}
@@ -81,12 +87,12 @@ func buildSourceCompositionDefinitions() (*assessmentDefinitions, error) {
 	if err != nil {
 		return nil, err
 	}
-	links, err := compositionSourceProfile(d, ProfileSourceLinks)
+	links, err := compositionSourceProfile(d, profileSourceLinks)
 	if err != nil {
 		return nil, err
 	}
 	dictionaries := compositionProfileCopy(links)
-	local.ID, links.ID, dictionaries.ID = ProfileSourceInternalDTDLocal, ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries
+	local.ID, links.ID, dictionaries.ID = profileSourceInternalDTDLocal, profileSourceInternalDTDLinks, profileSourceInternalDTDDictionaries
 	baseClosure := "Explicit standalone MusicXML 4.0 score and Opus source assessment after bounded actually-read internal-DTD processing, including a DOCTYPE external subset read from the bundled official MusicXML DTDs or a caller DTD source. Effective first general-entity declarations supply document-local ENTITY/ENTITIES membership for the reviewed XSD 1.0 builtins and restriction carriers. Unread declarations, reached unresolved constructed carriers, schema-component validity and unavailable source evidence remain incomplete. Existing local clauses use the effective source infoset; XSD defaults and physical specifiedness remain distinct. Source-origin projections retain independently available occurrence, declaration and use locations. No network DTD retrieval, general validating DTD processor, model-history reconstruction, timeline/context composition, auxiliary Container/Sounds assembly, package adoption or complete MusicXML conformance claim."
 	local.NormativeClosure = baseClosure
 	links.NormativeClosure = baseClosure + " Adds existing local nonfetching link, attachment, schema-hint and Opus projections; original physical lexical evidence is never reconstructed from effective values. Selected resource snapshots retain effective first-bound DTD ID occurrences separately from XSD IDs, with declaration and occurrence closure, and choose the first document-order joined shorthand owner. XSD identity validity is independent; incomplete identity authorities cannot establish a miss. Invalid ID default declarations retain limited typing evidence without DTD validation. No target is retrieved or assessed."

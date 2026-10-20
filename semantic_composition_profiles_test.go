@@ -16,7 +16,7 @@ func TestSemanticCompositionPublicProfiles(t *testing.T) {
 			name := string(target) + map[bool]string{false: "/partwise", true: "/timewise"}[timewise]
 			t.Run(name, func(t *testing.T) {
 				profile := validation.ProfileID("musicxml-4.0/" + string(target) + "-semantics")
-				options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}}
+				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: profile}}
 				var report validation.Report
 				var err error
 				if target == validation.TargetSource {
@@ -56,7 +56,7 @@ func TestSemanticCompositionPublicProfiles(t *testing.T) {
 func TestSemanticCompositionEffectiveDTDBarline(t *testing.T) {
 	const profile validation.ProfileID = "musicxml-4.0/source-semantics"
 	input := `<!DOCTYPE score-partwise [<!ATTLIST barline location CDATA "left">]>` + barlineLocationScore(false, barlineDivisions+barlineNote("1")+`<barline/>`, "")
-	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: profile})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: SourceProfile(profile)})
 	if err != nil || report.Conformance != validation.ConformanceViolated {
 		t.Fatalf("defaulted wrong location not assessed: %v %+v", err, report.Findings)
 	}
@@ -82,7 +82,7 @@ func TestSemanticCompositionRejectsWrongTargetBeforeDictionaryIO(t *testing.T) {
 		calls++
 		return DictionaryComponentResult{}, nil
 	})
-	options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: "musicxml-4.0/model-semantics"}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}, Source: provider}}
+	options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: "musicxml-4.0/model-semantics"}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}, Source: provider}}
 	reader := &assessmentCountingReader{source: strings.NewReader(assessedScore("1", ""))}
 	if _, err := inspectXMLWithDictionaries(context.Background(), reader, options); err == nil {
 		t.Fatal("wrong source profile accepted")

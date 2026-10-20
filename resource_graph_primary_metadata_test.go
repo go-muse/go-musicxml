@@ -10,7 +10,7 @@ import (
 
 func TestResourceGraphPrimaryRetrievalMetadata(t *testing.T) {
 	for _, model := range []bool{false, true} {
-		options := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/primary.bad"}}
+		options := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/primary.bad"}}
 		var b validation.AssessmentBundle
 		var err error
 		if model {

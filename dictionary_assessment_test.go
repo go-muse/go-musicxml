@@ -13,20 +13,20 @@ import (
 func TestDictionaryAssessmentExplicitProfilesAndConversion(t *testing.T) {
 	ctx := context.Background()
 	source := `<opus/>`
-	report, err := inspectXMLWithDictionaries(ctx, strings.NewReader(source), dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}})
-	if err != nil || !report.Requested || report.Profile.ID != ProfileSourceDictionaries || report.Target != validation.TargetSource {
+	report, err := inspectXMLWithDictionaries(ctx, strings.NewReader(source), dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}})
+	if err != nil || !report.Requested || report.Profile.ID != ProfileSourceDictionaries.ID() || report.Target != validation.TargetSource {
 		t.Fatalf("report=%+v err=%v", report, err)
 	}
-	model, err := assessModelWithDictionaries(ctx, &OpusDocument{}, dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileModelDictionaries}})
-	if err != nil || !model.Requested || model.Profile.ID != ProfileModelDictionaries || model.Target != validation.TargetModel {
+	model, err := assessModelWithDictionaries(ctx, &OpusDocument{}, dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileModelDictionaries.ID()}})
+	if err != nil || !model.Requested || model.Profile.ID != ProfileModelDictionaries.ID() || model.Target != validation.TargetModel {
 		t.Fatalf("report=%+v err=%v", model, err)
 	}
-	decoded, err := decodeAssessedWithDictionaries(ctx, strings.NewReader(source), decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceLine}}})
-	if err != nil || decoded.Document == nil || !decoded.SourceLine.Requested || decoded.SourceLine.Profile.ID != ProfileSourceLine || !decoded.SourceLine.Satisfied() || !decoded.ModelLine.Satisfied() || decoded.ModelLine.Profile.ID != ProfileModelSemantics {
+	decoded, err := decodeAssessedWithDictionaries(ctx, strings.NewReader(source), decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceLine.ID()}}})
+	if err != nil || decoded.Document == nil || !decoded.SourceLine.Requested || decoded.SourceLine.Profile.ID != ProfileSourceLine.ID() || !decoded.SourceLine.Satisfied() || !decoded.ModelLine.Satisfied() || decoded.ModelLine.Profile.ID != ProfileModelSemantics.ID() {
 		t.Fatalf("decoded=%+v err=%v", decoded, err)
 	}
 	defaults, err := decodeAssessedWithDictionaries(ctx, strings.NewReader(source), decodeDictionaryTestOptions{})
-	if err != nil || defaults.Document == nil || !defaults.SourceLine.Satisfied() || defaults.SourceLine.Profile.ID != ProfileSourceLine || !defaults.ModelLine.Satisfied() || defaults.ModelLine.Profile.ID != ProfileModelSemantics {
+	if err != nil || defaults.Document == nil || !defaults.SourceLine.Satisfied() || defaults.SourceLine.Profile.ID != ProfileSourceLine.ID() || !defaults.ModelLine.Satisfied() || defaults.ModelLine.Profile.ID != ProfileModelSemantics.ID() {
 		t.Fatalf("default mandatory decoded=%+v err=%v", defaults, err)
 	}
 }
@@ -36,7 +36,7 @@ func TestDictionaryAssessmentTerminalImportBeforeDocument(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		calls := 0
 		var bodies []*resourceTestBody
-		opts := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries, Budgets: validation.Budgets{MaxExternalBytes: 33703 + 16}}}
+		opts := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID(), Budgets: validation.Budgets{MaxExternalBytes: 33703 + 16}}}
 		opts.Dictionaries.Selections = []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestStandardSounds40), dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}
 		opts.Dictionaries.Source = dictionaryImportSourceFunc(func(_ context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
 			calls++
@@ -67,7 +67,7 @@ func TestDictionaryAssessmentTerminalImportBeforeDocument(t *testing.T) {
 func TestDictionaryAssessmentOrdinaryImportFailurePreservesXSD(t *testing.T) {
 	for _, mismatch := range []bool{false, true} {
 		boom := errors.New("dictionary provider unavailable")
-		opts := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}}
+		opts := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}}
 		opts.Dictionaries.Selections = []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}
 		opts.Dictionaries.Source = dictionaryImportSourceFunc(func(_ context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
 			if !mismatch {
@@ -88,9 +88,9 @@ func TestDictionaryAssessmentOrdinaryImportFailurePreservesXSD(t *testing.T) {
 }
 
 func TestDictionaryAssessmentRejectsBeforeInput(t *testing.T) {
-	for _, profile := range []validation.ProfileID{"", ProfileSourceLinks, ProfileModelDictionaries} {
+	for _, profile := range []validation.ProfileID{"", ProfileSourceLinks.ID(), ProfileModelDictionaries.ID()} {
 		reader := &dictionaryUnexpectedRead{t: t}
-		_, err := inspectXMLWithDictionaries(context.Background(), reader, dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}})
+		_, err := inspectXMLWithDictionaries(context.Background(), reader, dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: profile}})
 		if !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Fatalf("profile=%s err=%v", profile, err)
 		}

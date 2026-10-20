@@ -28,7 +28,7 @@ func groupGraphRun(t *testing.T, model bool, source string, targets map[string]s
 		bodies = append(bodies, body)
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: q.Document.Href, Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(data)))}, RetrievalURI: "https://e.test/" + q.Document.Href, Body: body}, nil
 	})
-	opts := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.xml"}, Resolver: r, Dependencies: []ResourceDependency{ResourceDocuments}}
+	opts := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.xml"}, Resolver: r, Dependencies: []ResourceDependency{ResourceDocuments}}
 	var b validation.AssessmentBundle
 	var err error
 	if model {

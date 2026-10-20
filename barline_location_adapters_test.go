@@ -266,13 +266,13 @@ func TestBarlineLocationSemanticProfilesOrderedPlacement(t *testing.T) {
 						var report validation.Report
 						var err error
 						if target == validation.TargetSource {
-							report, err = InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceSemantics})
+							report, err = InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceSemantics})
 						} else {
 							doc, e := Decode(strings.NewReader(input))
 							if e != nil {
 								t.Fatal(e)
 							}
-							report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelSemantics})
+							report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelSemantics})
 						}
 						if err != nil {
 							t.Fatal(err)

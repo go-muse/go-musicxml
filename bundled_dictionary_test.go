@@ -144,7 +144,7 @@ func TestBundledDictionaryPublicAssessmentPreservesSelection(t *testing.T) {
 		for _, mode := range []string{"source", "model", "assessed decode"} {
 			t.Run(tc.name+"/"+mode, func(t *testing.T) {
 				dictionaries := tc.options
-				o := musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceDictionaries, Dictionaries: &dictionaries}
+				o := musicxml.SourceOptions{Profile: musicxml.ProfileSourceDictionaries, Dictionaries: &dictionaries}
 				var report validation.Report
 				var err error
 				switch mode {
@@ -155,8 +155,7 @@ func TestBundledDictionaryPublicAssessmentPreservesSelection(t *testing.T) {
 					if e != nil {
 						t.Fatal(e)
 					}
-					o.Profile = musicxml.ProfileModelDictionaries
-					report, err = musicxml.AssessModel(context.Background(), doc, o)
+					report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelDictionaries, Dictionaries: o.Dictionaries})
 				case "assessed decode":
 					o.Profile = musicxml.ProfileSourceLine
 					if len(o.Dictionaries.Selections) != 0 {
@@ -206,7 +205,7 @@ func TestBundledDictionaryPublicAssessmentPreservesSelection(t *testing.T) {
 func TestBundledDictionaryPublicEvidenceBoundaries(t *testing.T) {
 	t.Run("custom standard sound remains allowed", func(t *testing.T) {
 		m, _ := validation.LookupDictionaryManifest(validation.DictionaryManifestStandardSounds40)
-		report, err := musicxml.InspectXML(context.Background(), strings.NewReader(`<sounds><sound id="keyboard.piano"><any/></sound><sound id="custom.allowed"><solo/></sound></sounds>`), musicxml.AssessmentOptions{
+		report, err := musicxml.InspectXML(context.Background(), strings.NewReader(`<sounds><sound id="keyboard.piano"><any/></sound><sound id="custom.allowed"><solo/></sound></sounds>`), musicxml.SourceOptions{
 			Profile:      musicxml.ProfileSourceSoundsDictionaries,
 			Dictionaries: &musicxml.DictionaryOptions{Source: musicxml.BundledDictionarySource(), Selections: []validation.DictionarySelection{{Manifest: m.ID, Relations: m.Relations}}},
 		})
@@ -246,7 +245,7 @@ func TestBundledDictionaryPublicEvidenceBoundaries(t *testing.T) {
 				relations = []validation.DictionaryRelation{validation.DictionaryRelationIPASymbol}
 			}
 			score := `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1"><measure number="1"><note><rest/><duration>1</duration><play><ipa>` + tc.value + `</ipa></play></note></measure></part></score-partwise>`
-			report, err := musicxml.InspectXML(context.Background(), strings.NewReader(score), musicxml.AssessmentOptions{
+			report, err := musicxml.InspectXML(context.Background(), strings.NewReader(score), musicxml.SourceOptions{
 				Profile:      musicxml.ProfileSourceDictionaries,
 				Dictionaries: &musicxml.DictionaryOptions{Source: musicxml.BundledDictionarySource(), Selections: []validation.DictionarySelection{{Manifest: m.ID, Relations: relations}}},
 			})

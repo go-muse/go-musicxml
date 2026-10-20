@@ -23,7 +23,7 @@ func TestSourceDeclarationCompositionEffectiveLocalPresence(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			input := "<!DOCTYPE score-partwise [" + tc.declarations + "]>" + (localFixture{body: tc.body}).xml()
-			report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTDLocal})
+			report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTDLocal})
 			if err != nil || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed {
 				t.Fatalf("error=%v syntax=%s inputComplete=%t findings=%s", err, report.Syntax, report.InputComplete, localFindings(report))
 			}

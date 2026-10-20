@@ -12,7 +12,7 @@ import (
 )
 
 func TestResourceGraphRetainsRejectedTargetKindWithoutExpansion(t *testing.T) {
-	original, originalErr := InspectXML(context.Background(), strings.NewReader(`<sounds/>`), AssessmentOptions{Profile: ProfileSourceLinks})
+	original, originalErr := InspectXML(context.Background(), strings.NewReader(`<sounds/>`), SourceOptions{Profile: ProfileSourceLinks})
 	if originalErr == nil || original.Terminal == nil {
 		t.Fatalf("missing rejected-child fixture: %+v %v", original, originalErr)
 	}
@@ -27,7 +27,7 @@ func TestResourceGraphRetainsRejectedTargetKindWithoutExpansion(t *testing.T) {
 				return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "bad-target", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(body)))}, Body: returnedBody, RetrievalURI: "https://e.test/bad.xml"}, nil
 			})
 			source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="bad.xml` + fragment + `"/><score xlink:href="never.xml"/></opus>`
-			b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: r, Dependencies: []ResourceDependency{ResourceDocuments}})
+			b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: r, Dependencies: []ResourceDependency{ResourceDocuments}})
 			if err == nil || !errors.Is(err, ErrUnsupportedRoot) || b.Satisfied() || calls != 1 || b.ResourceCount() != 1 || b.AdoptionCount() != 1 {
 				t.Fatalf("err=%v calls=%d resources=%d adoptions=%d", err, calls, b.ResourceCount(), b.AdoptionCount())
 			}

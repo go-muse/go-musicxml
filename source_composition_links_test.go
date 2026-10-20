@@ -19,7 +19,7 @@ func TestSourceDeclarationCompositionLinkProvenance(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			input := `<!DOCTYPE opus [` + tc.declaration + `]><opus version="4.0" xmlns:xlink="http://www.w3.org/1999/xlink">` + tc.score + `</opus>`
-			report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTDLinks})
+			report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTDLinks})
 			if err != nil || !report.Satisfied() {
 				t.Fatalf("error=%v findings=%s", err, localFindings(report))
 			}
@@ -50,7 +50,7 @@ func TestSourceDeclarationCompositionLinkProvenance(t *testing.T) {
 
 func TestSourceDeclarationCompositionDefaultedSchemaHints(t *testing.T) {
 	input := `<!DOCTYPE opus [<!ATTLIST opus xsi:schemaLocation CDATA "urn:example schema.xsd">]><opus version="4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>`
-	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTDLinks})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTDLinks})
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("error=%v findings=%s", err, localFindings(report))
 	}

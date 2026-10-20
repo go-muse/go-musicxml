@@ -176,16 +176,16 @@ func lineIntrinsic(t *testing.T, id validation.ProfileID) (model, source []valid
 // binds for the files a converted MXLPackage keeps as bytes.
 func lineClosures(t *testing.T, profiles map[validation.ProfileID]validation.Profile) (source, model, retained []validation.Profile) {
 	t.Helper()
-	source = []validation.Profile{profiles[ProfileSourceLine], profiles[ProfileMXLSourceLine]}
-	sourceModelRows, sourceRows := lineIntrinsic(t, ProfileMXLSourceLine)
+	source = []validation.Profile{profiles[ProfileSourceLine.ID()], profiles[ProfileMXLSourceLine.ID()]}
+	sourceModelRows, sourceRows := lineIntrinsic(t, ProfileMXLSourceLine.ID())
 	if len(sourceModelRows) != 0 {
 		t.Fatalf("line 2 binds model profiles %v", sourceModelRows)
 	}
 	for _, id := range sourceRows {
 		source = append(source, profiles[id])
 	}
-	model = []validation.Profile{profiles[ProfileModelSemantics], profiles[ProfileMXLModelSemantics]}
-	modelRows, retainedRows := lineIntrinsic(t, ProfileMXLModelSemantics)
+	model = []validation.Profile{profiles[ProfileModelSemantics.ID()], profiles[ProfileMXLModelSemantics.ID()]}
+	modelRows, retainedRows := lineIntrinsic(t, ProfileMXLModelSemantics.ID())
 	for _, id := range modelRows {
 		model = append(model, profiles[id])
 	}
@@ -228,9 +228,9 @@ func TestLineProfilesOwnTheirRules(t *testing.T) {
 // Line 3 binds exactly these source profiles for the files a converted
 // package keeps as bytes.
 func TestRetainedFilesUseSourceProfiles(t *testing.T) {
-	_, retained := lineIntrinsic(t, ProfileMXLModelSemantics)
+	_, retained := lineIntrinsic(t, ProfileMXLModelSemantics.ID())
 	sort.Slice(retained, func(i, j int) bool { return retained[i] < retained[j] })
-	want := []validation.ProfileID{ProfileSourceInternalDTDContainer, ProfileSourceSemantics, ProfileSourceSemantics, ProfileSourceInternalDTDSoundsDictionaries}
+	want := []validation.ProfileID{ProfileSourceInternalDTDContainer.ID(), ProfileSourceSemantics.ID(), ProfileSourceSemantics.ID(), ProfileSourceInternalDTDSoundsDictionaries.ID()}
 	sort.Slice(want, func(i, j int) bool { return want[i] < want[j] })
 	if fmt.Sprint(retained) != fmt.Sprint(want) {
 		t.Errorf("retained-file profiles %v, want %v", retained, want)
@@ -279,8 +279,8 @@ func TestValidationLineString(t *testing.T) {
 func TestLineProfilesExactIdentity(t *testing.T) {
 	profiles := publicProfiles(t)
 	for id, want := range map[validation.ProfileID][2]string{
-		ProfileSourceLine:    {"7be7564fac3908064f43eeda11d0b93023311db358110234baf8adb8467f1408", "04fb11d56a41d043451031b6133aff7afce75e187612a7330ae365bbeb484b23"},
-		ProfileMXLSourceLine: {"180ad038e9a989fcc9b35918732acb04ebb79c7610d232ebfe60baf05499197f", "ef9df24aece789802884c65bc20820c45561172d92ecdd4f2da8f0f25567a28b"},
+		ProfileSourceLine.ID():    {"7be7564fac3908064f43eeda11d0b93023311db358110234baf8adb8467f1408", "04fb11d56a41d043451031b6133aff7afce75e187612a7330ae365bbeb484b23"},
+		ProfileMXLSourceLine.ID(): {"180ad038e9a989fcc9b35918732acb04ebb79c7610d232ebfe60baf05499197f", "ef9df24aece789802884c65bc20820c45561172d92ecdd4f2da8f0f25567a28b"},
 	} {
 		// Later identity steps migrate these captures.
 		want = [2]string{migrateStructuralRolesCatalog(want[0]), migrateStructuralRolesProfileHash(t, id, want[1])}
@@ -305,7 +305,7 @@ func TestStrictLoadingFitsDefaultBudgets(t *testing.T) {
 			t.Fatal(err)
 		}
 		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{})
-		if err != nil || !result.Accepted || result.SourceLine.Profile.ID != ProfileSourceLine || result.ModelLine.Profile.ID != ProfileModelSemantics {
+		if err != nil || !result.Accepted || result.SourceLine.Profile.ID != ProfileSourceLine.ID() || result.ModelLine.Profile.ID != ProfileModelSemantics.ID() {
 			t.Errorf("%s: accepted=%v error=%v", name, result.Accepted, err)
 		}
 	}
@@ -396,7 +396,7 @@ func TestLinesKeepEverySourceFinding(t *testing.T) {
 		}
 	}
 	for name, input := range inputs {
-		source, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{})
+		source, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -435,10 +435,10 @@ func TestAssessedLoadingLinesConfiguration(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer model.Dictionaries.Close()
-	if source.Profile != ProfileSourceLine || source.Dictionaries != nil || source.DocumentID != sourceDocumentID {
+	if source.Profile != ProfileSourceLine.ID() || source.Dictionaries != nil || source.DocumentID != sourceDocumentID {
 		t.Errorf("line 2 configuration: profile=%s dictionaries=%v document=%s", source.Profile, source.Dictionaries != nil, source.DocumentID)
 	}
-	if model.Profile != ProfileModelSemantics || model.Dictionaries == nil || model.DocumentID != modelDocumentID || model.Account != source.Account {
+	if model.Profile != ProfileModelSemantics.ID() || model.Dictionaries == nil || model.DocumentID != modelDocumentID || model.Account != source.Account {
 		t.Errorf("line 3 configuration: profile=%s dictionaries=%v document=%s shared account=%v", model.Profile, model.Dictionaries != nil, model.DocumentID, model.Account == source.Account)
 	}
 }
@@ -458,7 +458,7 @@ func TestStrictMXLLoadingDictionaryFailureReachesLineThree(t *testing.T) {
 		calls = 0
 		required := requiredDictionarySelections()
 		result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(archive), DecodeMXLAssessmentOptions{
-			Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: required}}},
+			Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: required}}},
 			Lenient:    lenient,
 		})
 		if !errors.Is(err, offline) || result.Package != nil || result.Accepted {
@@ -519,7 +519,7 @@ func TestStrictMXLLineTwoAsksNoResolver(t *testing.T) {
 	archive := rawMXL(t, `<opus xmlns:xlink="http://www.w3.org/1999/xlink" version="4.0"><title>T</title><score xlink:href="https://external.test/score.musicxml"/></opus>`)
 	options := MXLAssessmentOptions{Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments, ResourceImages, ResourceAssociations, ResourceRoles}}
 	line := options
-	line.Graph = AssessmentOptions{Profile: ProfileMXLSourceLine}
+	line.Graph = MXLGraphOptions{Profile: ProfileMXLSourceLine}
 	if _, err := InspectMXL(context.Background(), bytes.NewReader(archive), line); err != nil {
 		t.Fatal(err)
 	}

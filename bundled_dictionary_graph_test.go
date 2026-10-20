@@ -49,19 +49,19 @@ func TestBundledDictionaryGraphAndMXLParity(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			run := func(dictionaries DictionaryOptions, limit int64) (validation.AssessmentBundle, error) {
 				ctx := context.Background()
-				graph := AssessmentOptions{Profile: ProfileResourceGraphDictionaries, Budgets: validation.Budgets{MaxExternalBytes: limit}}
+				graph := GraphOptions{Profile: ProfileResourceGraphDictionaries, Budgets: validation.Budgets{MaxExternalBytes: limit}}
 				identity := ResourceIdentity{CanonicalID: "bundled-parity-root"}
 				switch mode {
 				case "graph source":
-					return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
+					return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}.internal(), Dictionaries: dictionaries})
 				case "graph model":
-					return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
+					return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: graph, Identity: identity}.internal(), Dictionaries: dictionaries})
 				case "MXL source":
-					graph.Profile = ProfileMXLSourceDictionaries
-					return inspectMXLWithDictionaries(ctx, bytes.NewReader(archive), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
+					mxlGraph := MXLGraphOptions{Profile: ProfileMXLSourceDictionaries, Budgets: graph.Budgets}
+					return inspectMXLWithDictionaries(ctx, bytes.NewReader(archive), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: mxlGraph, Identity: identity}.internal(), Dictionaries: dictionaries})
 				default:
-					graph.Profile = ProfileMXLModelDictionaries
-					return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: graph, Identity: identity}, Dictionaries: dictionaries})
+					mxlGraph := MXLGraphOptions{Profile: ProfileMXLModelDictionaries, Budgets: graph.Budgets}
+					return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: mxlGraph, Identity: identity}.internal(), Dictionaries: dictionaries})
 				}
 			}
 			t.Run("all five components", func(t *testing.T) {
@@ -82,22 +82,22 @@ func TestBundledDictionaryGraphAndMXLParity(t *testing.T) {
 						}
 					}
 					reports := bundledParityReports(t, bundle)
-					wantPackage, wantIntrinsic, wantTarget := ProfileResourceGraphDictionaries, ProfileSourceDictionaries, validation.TargetSource
+					wantPackage, wantIntrinsic, wantTarget := ProfileResourceGraphDictionaries.ID(), ProfileSourceDictionaries.ID(), validation.TargetSource
 					if strings.HasSuffix(mode, "model") {
-						wantIntrinsic, wantTarget = ProfileModelDictionaries, validation.TargetModel
+						wantIntrinsic, wantTarget = ProfileModelDictionaries.ID(), validation.TargetModel
 					}
 					switch mode {
 					case "MXL source":
-						wantPackage = ProfileMXLSourceDictionaries
+						wantPackage = ProfileMXLSourceDictionaries.ID()
 					case "MXL model":
-						wantPackage = ProfileMXLModelDictionaries
+						wantPackage = ProfileMXLModelDictionaries.ID()
 					}
 					if reports[0].Profile.ID != wantPackage {
 						t.Fatalf("package profile=%s want=%s", reports[0].Profile.ID, wantPackage)
 					}
 					intrinsic := 0
 					for _, report := range reports[1:] {
-						if mode == "MXL source" && report.Profile.ID == ProfileSourceContainer {
+						if mode == "MXL source" && report.Profile.ID == ProfileSourceContainer.ID() {
 							continue
 						}
 						intrinsic++

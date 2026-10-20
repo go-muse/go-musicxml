@@ -16,7 +16,7 @@ for the overlap `AllowedLineOverlap` lists. Until the lines were split, both
 loaders ran the full `ProfileSourceSemantics` (`ProfileMXLSourceSemantics`),
 which repeated 62 of the 64 rules of the model stage. The former
 `DecodeAssessedWithDictionaries` was removed; its dictionary options are
-`AssessmentOptions.Dictionaries`.
+`SourceOptions.Dictionaries`.
 This breaks the earlier unreleased development API; these entry points did not
 exist in v0.1.0. It does not widen the XML loader's profiles or change their
 catalog digests, and it does not establish complete MusicXML conformance. The
@@ -163,7 +163,7 @@ Finite overrides remain available without selecting a different profile:
 ```go
 options := musicxml.DecodeAssessmentOptions{
     Decode: decodeOptions,
-    Assessment: &musicxml.AssessmentOptions{
+    Assessment: &musicxml.SourceOptions{
         Budgets: budgets,
     },
 }
@@ -208,7 +208,7 @@ For an explicit source, provide the required selections together:
 
 ```go
 options := musicxml.DecodeAssessmentOptions{
-    Assessment: &musicxml.AssessmentOptions{
+    Assessment: &musicxml.SourceOptions{
         Dictionaries: &musicxml.DictionaryOptions{
             Source: dictionarySource,
             Selections: []validation.DictionarySelection{
@@ -266,7 +266,7 @@ Minimal budgets of `DecodeAssessed`, found by binary search through the public
 API on darwin/arm64. "Before the split" is the pipeline before the validation
 lines; "lines" is `59d4536`; "now" adds the verified-set cache, the deferred
 import, real-layout projection accounting and shared attribute tables;
-"without context" also sets `AssessmentOptions.OmitContext`:
+"without context" also sets `SourceOptions.OmitContext`:
 
 | File | Before the split | Lines | Now | Without context |
 | --- | --- | --- | --- | --- |
@@ -316,11 +316,11 @@ completed line-2 report.
 cloned strings and payload rounded to the allocator's size classes, and the
 backing array exactly for its capacity, including the moment it grows.
 `TestContextProjectionAccountingCoversItsHeap` checks on corpus documents that
-the charge never falls below the measured heap. `AssessmentOptions.OmitContext`
+the charge never falls below the measured heap. `OmitContext` of `SourceOptions` and `ModelOptions`
 leaves `Report.Context` empty in every returned report and keeps every
 decision, count and finding; it roughly halves the buffer strict loading needs
 (table above). It applies to the single-document entry points, whose options
-are `AssessmentOptions`; graph and package assessment keep the projection,
+are `SourceOptions` or `ModelOptions`; graph and package assessment keep the projection,
 which their resource snapshots read.
 
 ### Low-level retained-report ownership

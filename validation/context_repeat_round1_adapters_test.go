@@ -46,14 +46,13 @@ func repeatRound1Score(t *testing.T, measures []string, other []string, check fu
 			t.Run(map[bool]string{true: "timewise", false: "partwise"}[tw]+"/"+map[bool]string{true: "model", false: "source"}[model], func(t *testing.T) {
 				var report validation.Report
 				var err error
-				opts := musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceContext}
+				opts := musicxml.SourceOptions{Profile: musicxml.ProfileSourceContext}
 				if model {
 					doc, e := musicxml.Decode(strings.NewReader(source))
 					if e != nil {
 						t.Fatal(e)
 					}
-					opts.Profile = musicxml.ProfileModelContext
-					report, err = musicxml.AssessModel(context.Background(), doc, opts)
+					report, err = musicxml.AssessModel(context.Background(), doc, musicxml.ModelOptions{Profile: musicxml.ProfileModelContext})
 				} else {
 					report, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), opts)
 				}

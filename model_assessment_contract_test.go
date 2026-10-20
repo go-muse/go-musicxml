@@ -15,24 +15,24 @@ import (
 
 func TestAssessModelFiniteResourcesAndIndependentAxes(t *testing.T) {
 	for _, budget := range []validation.Budgets{{MaxNodes: 1}, {MaxAttributes: 1}, {MaxEvents: 1}, {MaxRuleSteps: 1}, {MaxBufferedBytes: 1}, {MaxScalarBytes: 1}, {MaxDepth: 1}} {
-		report, err := AssessModel(context.Background(), modelMinimalScore(), AssessmentOptions{Profile: ProfileModelLocal, Budgets: budget})
+		report, err := AssessModel(context.Background(), modelMinimalScore(), ModelOptions{Profile: ProfileModelLocal, Budgets: budget})
 		if !errors.Is(err, validation.ErrResourceLimit) || errors.Is(err, ErrInvalidDocument) || report.Satisfied() || report.AssessmentComplete || (report.Requested && report.Syntax != validation.SyntaxNotAssessed) {
 			t.Fatalf("budget %+v: err=%v axes=%+v", budget, err, report)
 		}
 	}
-	if report, err := AssessModel(context.Background(), modelMinimalScore(), AssessmentOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxInputBytes: 1}}); err != nil || !report.Satisfied() {
+	if report, err := AssessModel(context.Background(), modelMinimalScore(), ModelOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxInputBytes: 1}}); err != nil || !report.Satisfied() {
 		t.Fatalf("current graph charged as fabricated source bytes: %+v %v", report, err)
 	}
 	doc := modelMinimalScore()
 	doc.Part[0].Measure[0].Content[0].Note.Duration = Ptr(PositiveDivisions(math.NaN()))
-	report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxDiagnostics: 1, MaxDiagnosticBytes: 1}})
+	report, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxDiagnostics: 1, MaxDiagnosticBytes: 1}})
 	if err != nil || !report.InputComplete || report.Satisfied() || report.BlockingProblems == 0 || !report.DiagnosticsTruncated || len(report.Findings) != 0 {
 		t.Fatalf("truncated model problem erased: %+v %v", report, err)
 	}
 	cycle := NewOpusDocument()
 	cycle.AddOpus(cycle)
 	cycle.AddScore(&OpusScore{Href: "after-cycle.musicxml"})
-	report, err = AssessModel(context.Background(), cycle, AssessmentOptions{Profile: ProfileModelXSD})
+	report, err = AssessModel(context.Background(), cycle, ModelOptions{Profile: ProfileModelXSD})
 	if err != nil || !report.InputComplete || report.Satisfied() || report.BlockingProblems == 0 || report.Syntax != validation.SyntaxNotAssessed {
 		t.Fatalf("bounded cycle result: %+v %v", report, err)
 	}
@@ -47,15 +47,15 @@ func TestBoundedLocalStrictAccordionIntegration(t *testing.T) {
 	if err = Validate(doc); err != nil {
 		t.Fatalf("XSD-only facade unexpectedly selected local prose: %v", err)
 	}
-	preview, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+	preview, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceXSDPreview})
 	if err != nil || !preview.Satisfied() {
 		t.Fatalf("XSD preview: %+v %v", preview, err)
 	}
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}})
 	if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.InputComplete || !result.SourceLine.AssessmentComplete {
 		t.Fatalf("strict local outcome: %+v %v", result, err)
 	}
-	report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLocal})
+	report, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLocal})
 	if err != nil || report.Conformance != validation.ConformanceViolated {
 		t.Fatalf("current model local outcome: %+v %v", report, err)
 	}
@@ -63,7 +63,7 @@ func TestBoundedLocalStrictAccordionIntegration(t *testing.T) {
 
 func TestBoundedLocalSourceCapabilityAndPartialFailure(t *testing.T) {
 	source := (localFixture{body: `<sound dacapo="no"/>`}).xml()
-	report, err := InspectXML(context.Background(), strings.NewReader(source+`<broken`), AssessmentOptions{Profile: ProfileSourceLocal})
+	report, err := InspectXML(context.Background(), strings.NewReader(source+`<broken`), SourceOptions{Profile: ProfileSourceLocal})
 	found := false
 	for _, f := range report.Findings {
 		if f.Rule.ID == "MX40-LOCAL-sound-dacapo-yes" && f.Outcome == validation.OutcomeFail {
@@ -75,17 +75,17 @@ func TestBoundedLocalSourceCapabilityAndPartialFailure(t *testing.T) {
 	}
 	valid := (localFixture{}).xml()
 	input := `<!DOCTYPE score-partwise SYSTEM "https://not-fetched.invalid/musicxml.dtd">` + valid
-	report, err = InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceLocal})
+	report, err = InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceLocal})
 	if err != nil || !report.InputComplete || report.Satisfied() || report.AssessmentComplete || report.Syntax != validation.SyntaxWellFormed || report.Counts.Unsupported == 0 {
 		t.Fatalf("DTD closure silently changed: %+v %v", report, err)
 	}
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}})
 	if !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted {
 		t.Fatalf("DTD strict closure: %+v %v", result, err)
 	}
-	for _, profile := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal} {
+	for _, profile := range []validation.ProfileID{ProfileModelXSD.ID(), ProfileModelLocal.ID()} {
 		reader := &assessmentCountingReader{source: strings.NewReader(valid)}
-		if _, err := InspectXML(context.Background(), reader, AssessmentOptions{Profile: profile}); !errors.Is(err, validation.ErrInvalidConfiguration) || reader.reads != 0 {
+		if _, err := InspectXML(context.Background(), reader, SourceOptions{Profile: SourceProfile(profile)}); !errors.Is(err, validation.ErrInvalidConfiguration) || reader.reads != 0 {
 			t.Fatalf("wrong source target consumed input: %s %d %v", profile, reader.reads, err)
 		}
 	}
@@ -102,13 +102,13 @@ func TestAssessModelOfficialCorpusAndSourceDTDRemainSeparate(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			for _, profile := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal} {
-				model, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: profile})
+			for _, profile := range []validation.ProfileID{ProfileModelXSD.ID(), ProfileModelLocal.ID()} {
+				model, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(profile)})
 				if err != nil || !model.Satisfied() {
 					t.Fatalf("current corpus %s: %v %s", profile, err, localFindings(model))
 				}
 			}
-			source, err := InspectXML(context.Background(), strings.NewReader(string(data)), AssessmentOptions{Profile: ProfileSourceLocal})
+			source, err := InspectXML(context.Background(), strings.NewReader(string(data)), SourceOptions{Profile: ProfileSourceLocal})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -133,9 +133,9 @@ func TestBoundedDateReusesScalarConsequenceBothTargets(t *testing.T) {
 		for _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {
 			var report validation.Report
 			if target == validation.TargetSource {
-				report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLocal})
+				report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLocal})
 			} else {
-				report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLocal})
+				report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLocal})
 			}
 			if err != nil || report.Satisfied() != (date == "2024-02-29") {
 				t.Fatalf("%s %s: %v %s", target, date, err, localFindings(report))
@@ -160,14 +160,14 @@ func TestBoundedDateReusesScalarConsequenceBothTargets(t *testing.T) {
 
 func TestBoundedProfilesConcurrentIndependentReports(t *testing.T) {
 	doc := modelMinimalScore()
-	baseline, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLocal})
+	baseline, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLocal})
 	if err != nil {
 		t.Fatal(err)
 	}
 	for i := 0; i < 12; i++ {
 		t.Run(string(rune('a'+i)), func(t *testing.T) {
 			t.Parallel()
-			report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLocal})
+			report, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLocal})
 			if err != nil || !reflect.DeepEqual(baseline, report) {
 				t.Errorf("non-independent model report: %v", err)
 			}

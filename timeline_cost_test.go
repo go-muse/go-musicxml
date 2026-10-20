@@ -32,9 +32,9 @@ func TestTimelinePracticalExactTrajectories(t *testing.T) {
 				t.Run(string(target), func(t *testing.T) {
 					var report validation.Report
 					if target == validation.TargetSource {
-						report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceTimeline})
+						report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceTimeline})
 					} else {
-						report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelTimeline})
+						report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelTimeline})
 					}
 					if err != nil || !report.Satisfied() {
 						t.Fatalf("ordinary exact trajectory exhausted default budget: err=%v %s", err, localFindings(report))

@@ -45,7 +45,7 @@ func TestFinalQAPublicRoleOrchestration(t *testing.T) {
 				if mode == "part-first" {
 					first, second = second, first
 				}
-				opts := MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource}, Identity: ResourceIdentity{RetrievalURI: "https://final-qa.test/package.mxl"}, Dependencies: []ResourceDependency{ResourceRoles}}
+				opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}, Identity: ResourceIdentity{RetrievalURI: "https://final-qa.test/package.mxl"}, Dependencies: []ResourceDependency{ResourceRoles}}
 				if mode == "unselected" {
 					opts.Dependencies = nil
 				}

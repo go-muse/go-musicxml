@@ -13,13 +13,17 @@ import (
 // no xsi attributes, so schema-hint discovery does not apply to it. The profile
 // grants no I/O authority and does not assert complete MusicXML or
 // external-spec conformance.
-const ProfileResourceGraph validation.ProfileID = "musicxml-4.0/resource-graph"
+const ProfileResourceGraph GraphProfile = "musicxml-4.0/resource-graph"
+
+const profileResourceGraph = validation.ProfileID(ProfileResourceGraph)
 
 // ProfileMXLSource selects bounded original-MXL package/resource assessment.
 // Original ZIP evidence and source-only intrinsic reports remain distinct; known
 // residual ZIP, media-type and nested-rootfile interpretation gaps are explicit.
 // It has TargetPackage, no XML roots and no implicit resolver authority.
-const ProfileMXLSource validation.ProfileID = "musicxml-4.0/mxl-source"
+const ProfileMXLSource MXLProfile = "musicxml-4.0/mxl-source"
+
+const profileMXLSource = validation.ProfileID(ProfileMXLSource)
 
 // ProfileMXLModel selects bounded assessment of the current state of a whole
 // MXLPackage, as EncodeMXLPackage would write it. Its current Document is
@@ -29,7 +33,9 @@ const ProfileMXLSource validation.ProfileID = "musicxml-4.0/mxl-source"
 // discarded xsi attributes are never reconstructed: raw checks apply only to
 // separately reached raw-MXL boundaries. The graph report has TargetPackage
 // and no XML roots.
-const ProfileMXLModel validation.ProfileID = "musicxml-4.0/mxl-model"
+const ProfileMXLModel MXLProfile = "musicxml-4.0/mxl-model"
+
+const profileMXLModel = validation.ProfileID(ProfileMXLModel)
 
 var packageAssessmentCatalog = sync.OnceValues(buildPackageAssessmentCatalog)
 
@@ -61,9 +67,9 @@ func buildPackageAssessmentDefinitions() ([]validation.PackageRuleBinding, []val
 		id      validation.ProfileID
 		closure string
 	}{
-		{ProfileResourceGraph, "Finite resource graph rooted in original XML or a direct current MusicXML/Opus model. The graph report has package target; plain XML/model boundaries do not assert ZIP/container obligations. Authorized nested raw MXL boundaries receive the selected applicable package checks. Source and current-model intrinsic interpretations are fixed separately."},
-		{ProfileMXLSource, "Bounded original raw-MXL package and selected resource graph. Original local/central headers, mimetype prefixes, physical order and independently assessed original container XML remain source evidence. Only source intrinsic interpretations are accepted; a decoded current model cannot replace original XML proof. Each authorized nested raw MXL is a separate encapsulation boundary."},
-		{ProfileMXLModel, "Bounded current MXLPackage and selected resource graph. Assess the current primary Document directly and separately selected retained XML bytes as source. Do not encode/reparse to recover original source. Current package fields do not prove original compression, encryption, header extras, physical order, original mimetype bytes or container lexical presence. Those original-byte checks are outside the current-boundary claim; they remain selected for separately reached authorized raw-MXL boundaries."},
+		{profileResourceGraph, "Finite resource graph rooted in original XML or a direct current MusicXML/Opus model. The graph report has package target; plain XML/model boundaries do not assert ZIP/container obligations. Authorized nested raw MXL boundaries receive the selected applicable package checks. Source and current-model intrinsic interpretations are fixed separately."},
+		{profileMXLSource, "Bounded original raw-MXL package and selected resource graph. Original local/central headers, mimetype prefixes, physical order and independently assessed original container XML remain source evidence. Only source intrinsic interpretations are accepted; a decoded current model cannot replace original XML proof. Each authorized nested raw MXL is a separate encapsulation boundary."},
+		{profileMXLModel, "Bounded current MXLPackage and selected resource graph. Assess the current primary Document directly and separately selected retained XML bytes as source. Do not encode/reparse to recover original source. Current package fields do not prove original compression, encryption, header extras, physical order, original mimetype bytes or container lexical presence. Those original-byte checks are outside the current-boundary claim; they remain selected for separately reached authorized raw-MXL boundaries."},
 	} {
 		p := validation.PackageProfileBinding{Profile: validation.Profile{
 			ID: input.id, MusicXMLVersion: "4.0", RegistryCommit: assessmentRegistryCommit,
@@ -74,7 +80,7 @@ func buildPackageAssessmentDefinitions() ([]validation.PackageRuleBinding, []val
 			p.Profile.Support = append(p.Profile.Support, validation.RuleSupport{Rule: r.Rule.Key, State: validation.ImplementationAvailable})
 		}
 		for _, row := range intrinsic {
-			if input.id != ProfileMXLSource || row.Target == validation.TargetSource {
+			if input.id != profileMXLSource || row.Target == validation.TargetSource {
 				p.Intrinsic = append(p.Intrinsic, row)
 			}
 		}
@@ -92,12 +98,12 @@ func packageIntrinsicProfiles() ([]validation.IntrinsicProfileBinding, error) {
 		target   validation.Target
 		profile  validation.ProfileID
 	}{
-		{validation.AssemblyMusicXML, validation.TargetSource, ProfileSourceLinks},
-		{validation.AssemblyOpus, validation.TargetSource, ProfileSourceLinks},
-		{validation.AssemblyContainer, validation.TargetSource, ProfileSourceContainer},
-		{validation.AssemblySounds, validation.TargetSource, ProfileSourceSounds},
-		{validation.AssemblyMusicXML, validation.TargetModel, ProfileModelLinks},
-		{validation.AssemblyOpus, validation.TargetModel, ProfileModelLinks},
+		{validation.AssemblyMusicXML, validation.TargetSource, profileSourceLinks},
+		{validation.AssemblyOpus, validation.TargetSource, profileSourceLinks},
+		{validation.AssemblyContainer, validation.TargetSource, profileSourceContainer},
+		{validation.AssemblySounds, validation.TargetSource, profileSourceSounds},
+		{validation.AssemblyMusicXML, validation.TargetModel, profileModelLinks},
+		{validation.AssemblyOpus, validation.TargetModel, profileModelLinks},
 	} {
 		var engine *validation.Engine
 		var err error

@@ -11,10 +11,9 @@ import (
 )
 
 func resourceReviewSampleRun(data []byte, graph bool, budget int64) error {
-	opts := AssessmentOptions{Profile: ProfileSourceLinks, Budgets: validation.Budgets{MaxBufferedBytes: budget}}
+	opts := SourceOptions{Profile: ProfileSourceLinks, Budgets: validation.Budgets{MaxBufferedBytes: budget}}
 	if graph {
-		opts.Profile = ProfileResourceGraph
-		_, err := InspectXMLWithResources(context.Background(), bytes.NewReader(data), LinkedAssessmentOptions{Graph: opts})
+		_, err := InspectXMLWithResources(context.Background(), bytes.NewReader(data), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: opts.Budgets}})
 		return err
 	}
 	_, err := InspectXML(context.Background(), bytes.NewReader(data), opts)
@@ -28,7 +27,7 @@ func TestResourceReviewOfficialSamplesFitDefaultSnapshotBudget(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			bundle, err := InspectXMLWithResources(context.Background(), bytes.NewReader(data), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+			bundle, err := InspectXMLWithResources(context.Background(), bytes.NewReader(data), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 			if err != nil {
 				t.Fatalf("official DTD-bearing source exceeds default snapshot budget: %v", err)
 			}

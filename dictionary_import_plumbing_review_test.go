@@ -27,15 +27,15 @@ func (dictionaryNilChanResolver) Resolve(context.Context, validation.ResourceReq
 }
 
 func TestDictionarySharedNilCheckPreservesResourceProfiles(t *testing.T) {
-	for _, profile := range []validation.ProfileID{ProfileResourceGraph, ProfileResourceGraphDictionaries} {
+	for _, profile := range []validation.ProfileID{ProfileResourceGraph.ID(), ProfileResourceGraphDictionaries.ID()} {
 		for _, resolver := range []validation.ResourceResolver{nil, (*optionNilResolver)(nil), graphResolverFunc(nil), dictionaryNilMapResolver(nil), dictionaryNilSliceResolver(nil), dictionaryNilChanResolver(nil)} {
-			cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}, profile)
+			cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), profile)
 			if err != nil || cfg.resolver != nil || !cfg.selected[ResourceDocuments] {
 				t.Fatalf("profile=%s resolver=%T cfg=%+v err=%v", profile, resolver, cfg, err)
 			}
 		}
 		nonNil := &optionNilResolver{}
-		cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: nonNil}, profile)
+		cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}, Resolver: nonNil}.internal(), profile)
 		if err != nil || cfg.resolver != (absentTypedNilBodies{nonNil}) {
 			t.Fatalf("profile=%s resolver=%v err=%v", profile, cfg.resolver, err)
 		}
@@ -50,23 +50,23 @@ func TestDictionarySingleValidationStillRejectsBeforeProviderAndInput(t *testing
 	})}
 	for _, run := range []func() error{
 		func() error {
-			_, err := inspectXMLWithDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}, Dictionaries: dictionaries})
+			_, err := inspectXMLWithDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}, Dictionaries: dictionaries})
 			return err
 		},
 		func() error {
-			_, err := assessModelWithDictionaries(context.Background(), &OpusDocument{}, dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileModelDictionaries}, Dictionaries: dictionaries})
+			_, err := assessModelWithDictionaries(context.Background(), &OpusDocument{}, dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileModelDictionaries.ID()}, Dictionaries: dictionaries})
 			return err
 		},
 		func() error {
-			_, err := decodeAssessedWithDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceLine}, Dictionaries: dictionaries}})
+			_, err := decodeAssessedWithDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, decodeDictionaryTestOptions{Assessment: &dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceLine.ID()}, Dictionaries: dictionaries}})
 			return err
 		},
 		func() error {
-			_, err := inspectXMLWithResourcesAndDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: dictionaries})
+			_, err := inspectXMLWithResourcesAndDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphDictionaries}}.internal(), Dictionaries: dictionaries})
 			return err
 		},
 		func() error {
-			_, err := inspectMXLWithDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}, Dictionaries: dictionaries})
+			_, err := inspectMXLWithDictionaries(context.Background(), &dictionaryUnexpectedRead{t}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSourceDictionaries}}.internal(), Dictionaries: dictionaries})
 			return err
 		},
 	} {

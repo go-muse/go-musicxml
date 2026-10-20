@@ -13,9 +13,9 @@ import (
 
 func TestPackageProfilesExactSelectionAndMetadata(t *testing.T) {
 	for got, want := range map[validation.ProfileID]string{
-		ProfileResourceGraph: "musicxml-4.0/resource-graph",
-		ProfileMXLSource:     "musicxml-4.0/mxl-source",
-		ProfileMXLModel:      "musicxml-4.0/mxl-model",
+		ProfileResourceGraph.ID(): "musicxml-4.0/resource-graph",
+		ProfileMXLSource.ID():     "musicxml-4.0/mxl-source",
+		ProfileMXLModel.ID():      "musicxml-4.0/mxl-model",
 	} {
 		if string(got) != want {
 			t.Errorf("profile ID=%q want %q", got, want)
@@ -44,7 +44,7 @@ func TestPackageProfilesExactSelectionAndMetadata(t *testing.T) {
 		validation.PackageCheckFileMetadataAdvice:     validation.PackageSubjectMetadata,
 		validation.PackageCheckSchemaHintPairs:        validation.PackageSubjectResource,
 	}
-	for _, id := range []validation.ProfileID{ProfileResourceGraph, ProfileMXLSource, ProfileMXLModel} {
+	for _, id := range []validation.ProfileID{ProfileResourceGraph.ID(), ProfileMXLSource.ID(), ProfileMXLModel.ID()} {
 		t.Run(string(id), func(t *testing.T) {
 			p, ok := catalog.Profile(id)
 			if !ok || p.ID != id || p.Target != validation.TargetPackage || len(p.SupportedRoots) != 0 || p.RegistryCommit != assessmentRegistryCommit || len(p.CatalogDigest) != 64 {
@@ -123,14 +123,14 @@ func TestPackageProfilesPinCompleteIntrinsicTable(t *testing.T) {
 	}
 	for _, binding := range profiles {
 		want := map[[2]string]validation.ProfileID{
-			{string(validation.AssemblyMusicXML), string(validation.TargetSource)}:  ProfileSourceLinks,
-			{string(validation.AssemblyOpus), string(validation.TargetSource)}:      ProfileSourceLinks,
-			{string(validation.AssemblyContainer), string(validation.TargetSource)}: ProfileSourceContainer,
-			{string(validation.AssemblySounds), string(validation.TargetSource)}:    ProfileSourceSounds,
+			{string(validation.AssemblyMusicXML), string(validation.TargetSource)}:  ProfileSourceLinks.ID(),
+			{string(validation.AssemblyOpus), string(validation.TargetSource)}:      ProfileSourceLinks.ID(),
+			{string(validation.AssemblyContainer), string(validation.TargetSource)}: ProfileSourceContainer.ID(),
+			{string(validation.AssemblySounds), string(validation.TargetSource)}:    ProfileSourceSounds.ID(),
 		}
-		if binding.Profile.ID != ProfileMXLSource {
-			want[[2]string{string(validation.AssemblyMusicXML), string(validation.TargetModel)}] = ProfileModelLinks
-			want[[2]string{string(validation.AssemblyOpus), string(validation.TargetModel)}] = ProfileModelLinks
+		if binding.Profile.ID != ProfileMXLSource.ID() {
+			want[[2]string{string(validation.AssemblyMusicXML), string(validation.TargetModel)}] = ProfileModelLinks.ID()
+			want[[2]string{string(validation.AssemblyOpus), string(validation.TargetModel)}] = ProfileModelLinks.ID()
 		}
 		if len(binding.Intrinsic) != len(want) {
 			t.Errorf("%s intrinsic count=%d want %d", binding.Profile.ID, len(binding.Intrinsic), len(want))
@@ -170,7 +170,7 @@ func TestPackageCatalogDigestIncludesIntrinsicInterpretation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, _ := original.Profile(ProfileResourceGraph)
+	p, _ := original.Profile(ProfileResourceGraph.ID())
 	slices.Reverse(rules)
 	slices.Reverse(profiles)
 	for i := range profiles {
@@ -180,7 +180,7 @@ func TestPackageCatalogDigestIncludesIntrinsicInterpretation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	q, _ := reordered.Profile(ProfileResourceGraph)
+	q, _ := reordered.Profile(ProfileResourceGraph.ID())
 	if p.CatalogDigest != q.CatalogDigest {
 		t.Fatal("construction order changed canonical digest")
 	}
@@ -189,7 +189,7 @@ func TestPackageCatalogDigestIncludesIntrinsicInterpretation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	q, _ = changed.Profile(ProfileResourceGraph)
+	q, _ = changed.Profile(ProfileResourceGraph.ID())
 	if p.CatalogDigest == q.CatalogDigest {
 		t.Fatal("intrinsic interpretation missing from package digest")
 	}
@@ -199,7 +199,7 @@ func TestPackageCatalogDigestIncludesIntrinsicInterpretation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	q, _ = fresh.Profile(ProfileResourceGraph)
+	q, _ = fresh.Profile(ProfileResourceGraph.ID())
 	if p.CatalogDigest != q.CatalogDigest {
 		t.Fatal("fresh catalog affected by caller metadata changes")
 	}
@@ -210,12 +210,12 @@ func TestPackageProfilesRejectWrongEntryPointProfiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, id := range []validation.ProfileID{"", "unknown", ProfileSourceLinks, ProfileModelLinks, ProfileSourceContainer, ProfileSourceSounds, ProfileSourceContext, ProfileModelContext} {
+	for _, id := range []validation.ProfileID{"", "unknown", ProfileSourceLinks.ID(), ProfileModelLinks.ID(), ProfileSourceContainer.ID(), ProfileSourceSounds.ID(), ProfileSourceContext.ID(), ProfileModelContext.ID()} {
 		if _, ok := c.Profile(id); ok {
 			t.Errorf("nonpackage profile accepted: %s", id)
 		}
 	}
-	for _, id := range []validation.ProfileID{ProfileResourceGraph, ProfileMXLSource, ProfileMXLModel} {
+	for _, id := range []validation.ProfileID{ProfileResourceGraph.ID(), ProfileMXLSource.ID(), ProfileMXLModel.ID()} {
 		if _, err := sourceAssessmentEngineForProfile(id); !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Errorf("package profile accepted by source adapter: %s %v", id, err)
 		}
@@ -254,7 +254,7 @@ func TestPackageIntrinsicSourceDiscoveryAvailableForEveryAssembly(t *testing.T) 
 		}
 		t.Run(string(row.Assembly), func(t *testing.T) {
 			source := strings.Replace(sources[row.Assembly], ">", ` xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:a a.xsd trailing">`, 1)
-			report, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: row.Profile})
+			report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(row.Profile)})
 			if err != nil || !report.Satisfied() {
 				t.Fatalf("odd source hint changed intrinsic datatype validity: %v %+v", err, report)
 			}

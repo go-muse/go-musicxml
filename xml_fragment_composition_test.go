@@ -121,7 +121,7 @@ func fragmentCompositionSource(t *testing.T, engine *validation.Engine, profile 
 func fragmentCompositionModel(t *testing.T, engine *validation.Engine, account *validation.Account, documentID string, document Document) fragmentCompositionResource {
 	t.Helper()
 	ctx := context.Background()
-	session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: documentID, Profile: ProfileModelLinks, Account: account})
+	session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: documentID, Profile: ProfileModelLinks.ID(), Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,8 +267,8 @@ func TestXMLFragmentCompositionSourceOrderAndRepeatedAdoption(t *testing.T) {
 	engine := fragmentCompositionEngine(t, false)
 	account := fragmentCompositionAccount(t)
 	const rootXML = `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="target.musicxml#element(/1/4/1/1)"/><score xlink:href="target.musicxml#element(/1/4/1/1)"/></opus>`
-	root := fragmentCompositionSource(t, engine, ProfileSourceLinks, account, "source-order-root", rootXML, false)
-	target := fragmentCompositionSource(t, engine, ProfileSourceLinks, account, "source-order-target", fragmentCompositionScore, false)
+	root := fragmentCompositionSource(t, engine, ProfileSourceLinks.ID(), account, "source-order-root", rootXML, false)
+	target := fragmentCompositionSource(t, engine, ProfileSourceLinks.ID(), account, "source-order-target", fragmentCompositionScore, false)
 	canonicalTarget := target.snapshot.Header()
 	// Node 9 is the part-name scalar leaf. It has neither an ID nor a retained
 	// resource-context projection, so an ID/context-only transport cannot find it.
@@ -374,7 +374,7 @@ func TestXMLFragmentCompositionElementContentIDOwner(t *testing.T) {
 	engine := fragmentCompositionEngine(t, false)
 	account := fragmentCompositionAccount(t)
 	const source = `<score-partwise xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema"><movement-title xsi:type="xs:ID">RootID</movement-title><part-list><score-part id="P1"><part-name>Part</part-name></score-part></part-list><part id="P1"><measure number="1"/></part></score-partwise>`
-	resource := fragmentCompositionSource(t, engine, ProfileSourceLinks, account, "element-id-source", source, false)
+	resource := fragmentCompositionSource(t, engine, ProfileSourceLinks.ID(), account, "element-id-source", source, false)
 	found := false
 	for i := 0; i < resource.snapshot.IDCount(); i++ {
 		id, ok, err := resource.snapshot.IDAt(context.Background(), i)
@@ -403,7 +403,7 @@ func TestXMLFragmentCompositionElementContentIDOwner(t *testing.T) {
 func TestXMLFragmentCompositionURIIsDecodedOnce(t *testing.T) {
 	engine := fragmentCompositionEngine(t, false)
 	account := fragmentCompositionAccount(t)
-	resource := fragmentCompositionSource(t, engine, ProfileSourceLinks, account, "uri-target", fragmentCompositionScore, false)
+	resource := fragmentCompositionSource(t, engine, ProfileSourceLinks.ID(), account, "uri-target", fragmentCompositionScore, false)
 	p := newFragmentCompositionPackage(t, account, resource)
 	_, view := p.adopt(t, p.add(t, resource), resource.pin.CanonicalID, true)
 	for _, tc := range []struct {
@@ -440,7 +440,7 @@ func TestXMLFragmentCompositionSourceAndModelIdentityDomains(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			account := fragmentCompositionAccount(t)
 			xmlSource := `<!DOCTYPE score-partwise [<!ATTLIST measure number ID #IMPLIED>]><score-partwise><part-list><score-part id="P1"><part-name>Part</part-name></score-part></part-list><part id="P1"><measure number="` + number + `">` + bookmarks + `</measure></part></score-partwise>`
-			source := fragmentCompositionSource(t, sourceEngine, ProfileSourceInternalDTDLinks, account, "domain-source", xmlSource, true)
+			source := fragmentCompositionSource(t, sourceEngine, ProfileSourceInternalDTDLinks.ID(), account, "domain-source", xmlSource, true)
 			document, err := Decode(strings.NewReader(xmlSource))
 			if err != nil {
 				t.Fatal(err)
@@ -493,8 +493,8 @@ func TestXMLFragmentCompositionOldProfilesAndIndirectionStayGated(t *testing.T) 
 		infoset  bool
 		selected bool
 	}{
-		{"legacy-source", plainEngine, ProfileSourceLinks, `<opus/>`, false, false},
-		{"joined-shorthand-source", dtdEngine, ProfileSourceInternalDTDLinks, `<!DOCTYPE opus [<!ATTLIST opus version ID #IMPLIED>]><opus version="anchor"/>`, true, true},
+		{"legacy-source", plainEngine, ProfileSourceLinks.ID(), `<opus/>`, false, false},
+		{"joined-shorthand-source", dtdEngine, ProfileSourceInternalDTDLinks.ID(), `<!DOCTYPE opus [<!ATTLIST opus version ID #IMPLIED>]><opus version="anchor"/>`, true, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			account := fragmentCompositionAccount(t)
@@ -522,15 +522,15 @@ func TestXMLFragmentCompositionOldProfilesAndIndirectionStayGated(t *testing.T) 
 		}
 		p.finish(t)
 	})
-	oldProfile, _ := plainEngine.Profile(ProfileSourceLinks)
-	newProfile, _ := electedEngine.Profile(ProfileSourceLinks)
+	oldProfile, _ := plainEngine.Profile(ProfileSourceLinks.ID())
+	newProfile, _ := electedEngine.Profile(ProfileSourceLinks.ID())
 	if oldProfile.CatalogDigest == newProfile.CatalogDigest {
 		t.Fatal("new fragment interpretation did not change the intrinsic catalog digest")
 	}
 	t.Run("nested-compressed-destination", func(t *testing.T) {
 		account := fragmentCompositionAccount(t)
-		root := fragmentCompositionSource(t, electedEngine, ProfileSourceLinks, account, "indirect-root", `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="score.mxl#element(/1/4/1/1)"/></opus>`, false)
-		target := fragmentCompositionSource(t, electedEngine, ProfileSourceLinks, account, "indirect-primary", fragmentCompositionScore, false)
+		root := fragmentCompositionSource(t, electedEngine, ProfileSourceLinks.ID(), account, "indirect-root", `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="score.mxl#element(/1/4/1/1)"/></opus>`, false)
+		target := fragmentCompositionSource(t, electedEngine, ProfileSourceLinks.ID(), account, "indirect-primary", fragmentCompositionScore, false)
 		p := newFragmentCompositionPackage(t, account, root, target)
 		sourceID, sourceView := p.adopt(t, p.add(t, root), root.pin.CanonicalID, true)
 		targetID, targetView := p.adopt(t, p.add(t, target), "nested-primary-view", false)

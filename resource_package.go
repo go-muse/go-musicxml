@@ -88,27 +88,28 @@ func (g *resourceGraphRun) ownArchive(a *mxlAssessmentArchive) error {
 // dictionaries, or a dictionary MXL source profile when
 // options.Graph.Dictionaries is set.
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
-	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLSourceSemantics); ok {
-		options.Graph = graph
-		return inspectMXLWithDictionaries(ctx, reader, mxlDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+	normalized := options.internal()
+	if graph, dictionaries, ok := normalized.Graph.scenario(profileMXLSourceSemantics); ok {
+		normalized.Graph = graph
+		return inspectMXLWithDictionaries(ctx, reader, mxlDictionaryAssessmentOptions{Resources: normalized, Dictionaries: dictionaries})
 	}
 	if nilValue(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
-	if _, err := options.MXL.limits(); err != nil {
+	if _, err := normalized.MXL.limits(); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
 	var g *resourceGraphRun
 	var err error
-	if options.Graph.Profile == ProfileMXLSourceLine {
-		g, err = startSourceLineResourceGraph(ctx, options.linked(), nil)
+	if normalized.Graph.Profile == profileMXLSourceLine {
+		g, err = startSourceLineResourceGraph(ctx, normalized.linked(), nil)
 	} else {
-		g, err = startResourceGraph(ctx, options.linked(), ProfileMXLSource)
+		g, err = startResourceGraph(ctx, normalized.linked(), profileMXLSource)
 	}
 	if err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	g.mxlOptions = options.MXL
+	g.mxlOptions = normalized.MXL
 	return g.inspectRawPackage(reader)
 }
 
@@ -539,7 +540,7 @@ func (g *resourceGraphRun) loadRootfile(p *graphPackage, r *validation.PackageRo
 	}
 	// Validation line 2 assesses only what conversion consumes: a converted
 	// MXLPackage keeps a later rootfile as bytes, which line 3 assesses.
-	if r.Ordinal != 1 && g.profiles.source == ProfileSourceLine {
+	if r.Ordinal != 1 && g.profiles.source == profileSourceLine {
 		return nil
 	}
 	if r.Ordinal != 1 && media.State != validation.EvidenceKnown {

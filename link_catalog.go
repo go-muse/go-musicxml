@@ -9,11 +9,15 @@ import (
 // ProfileSourceLinks selects bounded nonfetching source XSD/local resource
 // context, including exact local attachment and schema-hint discovery. It does
 // not select timeline, package, resolver, graph or external-target assessment.
-const ProfileSourceLinks validation.ProfileID = "musicxml-4.0/source-links"
+const ProfileSourceLinks SourceProfile = "musicxml-4.0/source-links"
+
+const profileSourceLinks = validation.ProfileID(ProfileSourceLinks)
 
 // ProfileModelLinks selects the corresponding current-model XSD/local resource
 // context. It never reconstructs original order or discarded xsi attributes.
-const ProfileModelLinks validation.ProfileID = "musicxml-4.0/model-links"
+const ProfileModelLinks ModelProfile = "musicxml-4.0/model-links"
+
+const profileModelLinks = validation.ProfileID(ProfileModelLinks)
 
 var linkAssessmentEngine = sync.OnceValues(buildLinkAssessmentEngine)
 
@@ -44,13 +48,13 @@ func appendLinkAssessmentDefinitions(d *assessmentDefinitions) (*assessmentDefin
 	// uses fresh definitions and never mutates any frozen catalog or profile.
 	profiles := d.profiles[:0]
 	for _, p := range d.profiles {
-		if p.ID == ProfileModelXSD {
+		if p.ID == profileModelXSD {
 			continue
 		}
 		if p.Target == validation.TargetSource {
-			p.ID = ProfileSourceLinks
+			p.ID = profileSourceLinks
 		} else {
-			p.ID = ProfileModelLinks
+			p.ID = profileModelLinks
 		}
 		p.NormativeClosure = "Bounded nonfetching MusicXML 4.0 source or current-model XSD/local resource context. Reuses typed local references and local Opus version/pagination semantics. Projects exact link/bookmark attachment, XLink effective values and physical/raw evidence, image MIME/dimensions/scaling advice, exact group strings, and independent schema-hint discovery pairs. Missing local attachment is absence, not a mandatory violation. Absent positions, selector/ordinal ambiguities and unavailable enumeration remain explicit. Discarded model xsi attributes are not reconstructed. Optional context gaps do not become normative failures. No URI resolution, I/O, package/graph traversal, timeline, image geometry, external dictionaries or complete MusicXML conformance claim. Existing source syntax, unread-DTD and model representation limits remain active."
 		profiles = append(profiles, p)

@@ -40,7 +40,7 @@ func TestPackageGraphExternalRawMXLAndAliasContexts(t *testing.T) {
 	archive := packageGraphBytes(`<opus/>`, "main.opus", "")
 	source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/a.mxl"/><opus-link xlink:href="https://e.test/b.mxl"/></opus>`
 	resolver := &packageResolverFixture{data: map[string][]byte{"https://e.test/a.mxl": archive, "https://e.test/b.mxl": archive}, canonical: map[string]string{"https://e.test/a.mxl": "same", "https://e.test/b.mxl": "same"}}
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if err != nil || b.Satisfied() || !b.EnumerationComplete() || b.ResourceCount() != 3 || resolver.calls != 2 {
 		t.Fatalf("err=%v resources=%d calls=%d findings=%v", err, b.ResourceCount(), resolver.calls, b.PackageReport().Findings)
 	}
@@ -66,7 +66,7 @@ func TestPackageGraphExternalRawMXLRejectsRevisionConflict(t *testing.T) {
 	archive := packageGraphBytes(`<opus/>`, "main.opus", "")
 	source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/a.mxl"/><opus-link xlink:href="https://e.test/b.mxl"/></opus>`
 	resolver := &packageResolverFixture{data: map[string][]byte{"https://e.test/a.mxl": archive, "https://e.test/b.mxl": archive}, canonical: map[string]string{"https://e.test/a.mxl": "same", "https://e.test/b.mxl": "same"}, revision: map[string]string{"https://e.test/a.mxl": "one", "https://e.test/b.mxl": "two"}}
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if !errors.Is(err, validation.ErrInvalidConfiguration) || b.EnumerationComplete() {
 		t.Fatal("accepted canonical revision conflict", err, b.PackageReport().Findings)
 	}
@@ -80,7 +80,7 @@ func TestPackageGraphExternalRawArchiveSelfReference(t *testing.T) {
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/a.mxl"/></opus>`
 	archive := packageGraphBytes(root, "main.opus", "")
 	resolver := &packageResolverFixture{data: map[string][]byte{"https://e.test/a.mxl": archive}, canonical: map[string]string{"https://e.test/a.mxl": "archive"}}
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if err != nil || b.ResourceCount() != 3 || resolver.calls != 2 {
 		t.Fatalf("archive URI was mistaken for contained XML: %v resources%d calls%d", err, b.ResourceCount(), resolver.calls)
 	}
@@ -95,13 +95,13 @@ func TestPackageGraphExternalRawBodyCloseError(t *testing.T) {
 	boom := errors.New("body close failed")
 	resolver := &packageResolverFixture{data: map[string][]byte{"https://e.test/a.mxl": archive}, canonical: map[string]string{"https://e.test/a.mxl": "archive"}, closeErr: boom}
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/a.mxl"/></opus>`
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if !errors.Is(err, boom) || b.EnumerationComplete() || len(resolver.bodies) != 1 || resolver.bodies[0].closed != 1 {
 		t.Fatal(err, b.PackageReport().Findings)
 	}
 }
 func TestPackageGraphWrongRootRetainsIndependentViolation(t *testing.T) {
-	original, originalErr := InspectXML(context.Background(), strings.NewReader(`<sounds/>`), AssessmentOptions{Profile: ProfileSourceLinks})
+	original, originalErr := InspectXML(context.Background(), strings.NewReader(`<sounds/>`), SourceOptions{Profile: ProfileSourceLinks})
 	if originalErr == nil || original.Terminal == nil {
 		t.Fatalf("missing rejected-root fixture: %+v %v", original, originalErr)
 	}

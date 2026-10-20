@@ -309,7 +309,7 @@ func TestLayoutMatrixNonFiniteCurrentGeometry(t *testing.T) {
 				var err error
 				if target == "source" {
 					source = strings.Replace(source, `default-x="0"`, `default-x="NaN"`, 1)
-					r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 				} else {
 					doc, e := Decode(strings.NewReader(source))
 					if e != nil {
@@ -323,7 +323,7 @@ func TestLayoutMatrixNonFiniteCurrentGeometry(t *testing.T) {
 						words = d.Measure[0].Part[0].Content[0].Direction.DirectionType[0].Content[0].Words
 					}
 					*words.DefaultX = Tenths(math.NaN())
-					r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+					r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -753,9 +753,9 @@ func layoutMatrixMeasures(t *testing.T, header string, bodies []string, check fu
 					if e != nil {
 						t.Fatal(e)
 					}
-					r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+					r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 				} else {
-					r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)

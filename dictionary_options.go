@@ -21,23 +21,23 @@ type DictionaryOptions struct {
 }
 
 // dictionaryAssessmentOptions pairs standalone assessment options with the
-// dictionary capabilities that AssessmentOptions.Dictionaries selected.
+// dictionary capabilities that the Dictionaries field of the options selected.
 type dictionaryAssessmentOptions struct {
-	Assessment   AssessmentOptions
+	Assessment   assessmentOptions
 	Dictionaries DictionaryOptions
 }
 
 // linkedDictionaryAssessmentOptions shares one dictionary set and resource
 // account across the explicitly selected linked assessment graph.
 type linkedDictionaryAssessmentOptions struct {
-	Resources    LinkedAssessmentOptions
+	Resources    linkedAssessmentOptions
 	Dictionaries DictionaryOptions
 }
 
 // mxlDictionaryAssessmentOptions adds pinned capabilities to an MXL assessment.
 // Existing independent archive limits continue to apply.
 type mxlDictionaryAssessmentOptions struct {
-	Resources    MXLAssessmentOptions
+	Resources    mxlAssessmentOptions
 	Dictionaries DictionaryOptions
 }
 
