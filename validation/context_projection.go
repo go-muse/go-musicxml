@@ -247,7 +247,12 @@ func (s *Session) keepValidatedContextResult(ctx context.Context, in ContextResu
 	}
 	if !selected {
 		// Kept for the snapshot only: the session releases it at cleanup,
-		// so it is no part of the projection subtotal.
+		// so it is no part of the projection subtotal. The span rollback
+		// restores only the projection, and spans publish no property a
+		// snapshot copies, so a record kept under its hold is a defect.
+		if s.contextBackingHold {
+			return nil, contract("context projection", "a span evaluation cannot keep a snapshot-only record")
+		}
 		return s.keepHiddenContext(out)
 	}
 	if len(s.contextResults) == cap(s.contextResults) {

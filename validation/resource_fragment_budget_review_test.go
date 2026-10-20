@@ -192,7 +192,7 @@ func TestReviewFragmentIndexSnapshotAdmissionAndReuse(t *testing.T) {
 	p.cleanup()
 	originTransportClean(t, s.account)
 	// The same Account is usable once the package has released its sole owner.
-	again, e := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "reused", Profile: s.profile.ID, Account: s.account})
+	again, e := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{DocumentID: "reused", Profile: s.profile.ID, Account: s.account})
 	if e != nil {
 		t.Fatal(e)
 	}

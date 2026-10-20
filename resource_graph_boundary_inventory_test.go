@@ -49,7 +49,7 @@ func TestReviewGraphBoundaryArchiveInventoryPublic(t *testing.T) {
 				}
 				data, value := reviewBoundaryFixture(t, last, mode == "existing")
 				calls := 0
-				options := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {
+				options := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {
 					calls++
 					return validation.ResourceResult{}, errors.New("archive-local target called resolver")
 				})}
@@ -96,7 +96,7 @@ func reviewBoundaryImported(t *testing.T, ctx context.Context, current, existing
 		profile = ProfileMXLModel.ID()
 	}
 	calls := new(int)
-	options := LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(profile), Budgets: validation.Budgets{MaxDepth: 3, MaxLinkedDocuments: linkedLimit}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {
+	options := LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile), Budgets: validation.Budgets{MaxDepth: 3, MaxLinkedDocuments: linkedLimit}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {
 		(*calls)++
 		return validation.ResourceResult{}, errors.New("archive-local target called resolver")
 	})}
@@ -220,7 +220,7 @@ func TestReviewGraphArchiveInventoryPrerequisiteLookup(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
+			g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -311,7 +311,7 @@ func TestReviewGraphRepeatedEdgesRetainOnlyLiveIndexes(t *testing.T) {
 	var result resourceIntrinsicResult
 	var pin validation.ResourcePin
 	var id string
-	g, result, pin, id = reviewGraphSource(t, context.Background(), source, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	g, result, pin, id = reviewGraphSource(t, context.Background(), source, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	b, err := g.finishPrimary(result, pin, id)
 	if err != nil || !b.EnumerationComplete() || len(bodies) != 3 || b.ResourceCount() != 2 || b.AdoptionCount() != 4 {
 		t.Fatalf("repeated occurrence identities changed: err=%v bodies=%d resources=%d adoptions=%d", err, len(bodies), b.ResourceCount(), b.AdoptionCount())

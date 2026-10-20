@@ -367,7 +367,7 @@ func TestAssessmentRunStartupAndTerminalCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 	a := adapterAccount(t, validation.Budgets{})
-	session, err := engine.Begin(context.Background(), validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: "resource", Profile: ProfileSourceXSDPreview.ID(), Account: a})
+	session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: "resource", Profile: ProfileSourceXSDPreview.ID(), Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}

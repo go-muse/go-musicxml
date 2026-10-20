@@ -30,9 +30,10 @@ type SourceOptions struct {
 	// Context selects the context families kept in Report.Context of every
 	// returned report, including both reports of DecodeAssessed. The zero
 	// value keeps none; validation.ContextFamilyAll keeps the complete
-	// projection. Every decision, count and finding is the same whatever the
-	// selection; an unselected record is computed and checked but not kept,
-	// which lowers the buffered storage the call needs.
+	// projection. An unselected record is computed and checked but not kept,
+	// which lowers the buffered storage the call needs; within budgets that
+	// admit both, every decision, count and finding is the same whatever the
+	// selection.
 	Context validation.ContextFamilies
 }
 

@@ -198,8 +198,9 @@ type bindWork struct {
 	scalarAssessed                               bool
 	// charged is what Complete releases: the work itself, the node's text
 	// and child slice, the witnesses, and the nodes Bind created for
-	// children, which Complete deletes.
-	charged int64
+	// children, which Complete deletes. text is the part for the node's
+	// text, which a kept scalar result may still reference.
+	charged, text int64
 }
 
 // Run contains only run-local state. Compiled schema handles remain immutable.
@@ -374,7 +375,8 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	}
 	r.scalar(int64(len(subject.Text)))
 	r.reserve(boundStateBytes)
-	work := r.context.sum(bindWorkBytes, r.context.builderAllowance(int64(len(subject.Text))), r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
+	text := r.context.builderAllowance(int64(len(subject.Text)))
+	work := r.context.sum(bindWorkBytes, text, r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
 	r.reserve(work)
 	node := r.nodes[subject.ID]
 	if node == nil {
@@ -405,7 +407,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 		node.Children[i] = n
 	}
-	s := &boundState{bindWork: &bindWork{subject: subject, node: node, family: "binding", results: freshResults(), charged: work}, run: r, id: subject.ID}
+	s := &boundState{bindWork: &bindWork{subject: subject, node: node, family: "binding", results: freshResults(), charged: work, text: text}, run: r, id: subject.ID}
 	r.states[subject.ID] = s
 	bound = Binding{r, s}
 	r.context.local = s
@@ -473,6 +475,9 @@ func (r *Run) Results(b Binding) NodeResults {
 	}
 	return b.state.nodeResults()
 }
+
+// Witnesses returns the subject's child witnesses, borrowed until the subject
+// completes. After Complete, which releases them, it returns nil.
 func (r *Run) Witnesses(b Binding) []Witness {
 	if !r.owns(b) || b.state.bindWork == nil {
 		return nil
@@ -626,7 +631,9 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 // operation reads them: only a child's Complete reads its parent's node, as
 // the identity owner. The subject's own node entry stays until its parent
 // completes. The work's charge is released less the copies of nondefault
-// results, which the work's own results and scalar always exceed.
+// results, which the work's own results and scalar always exceed. A kept
+// scalar's lexemes and value may share the node's text buffer, so its charge
+// stays as well.
 func (r *Run) releaseWork(s *boundState) error {
 	w := s.bindWork
 	if w == nil {
@@ -643,7 +650,7 @@ func (r *Run) releaseWork(s *boundState) error {
 	if !isZeroScalar(&w.scalar) {
 		scalar := w.scalar
 		s.finalScalar = &scalar
-		release -= finalScalarSize
+		release -= finalScalarSize + w.text
 	}
 	if n := w.node; n != nil {
 		for _, ch := range n.Children {
@@ -890,18 +897,13 @@ func (c *Context) proveIdentityFailure() {
 
 // A stopped local operation cannot publish its untouched pass defaults as
 // completed evidence. Proved failures and exact scalar facts remain available.
+// Only an operation on a subject that has not completed can stop: a completed
+// subject's results are final.
 func (s *boundState) abort() {
-	var results *NodeResults
-	if s.bindWork != nil {
-		results = &s.results
-	} else {
-		if s.final == nil {
-			fresh := freshResults()
-			s.final = &fresh
-		}
-		results = s.final
+	if s.bindWork == nil {
+		return
 	}
-	for _, result := range []*Result{&results.Binding, &results.Declaration, &results.Attributes, &results.Scalar, &results.Content} {
+	for _, result := range []*Result{&s.results.Binding, &s.results.Declaration, &s.results.Attributes, &s.results.Scalar, &s.results.Content} {
 		result.Complete = false
 	}
 }

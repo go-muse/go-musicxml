@@ -363,13 +363,15 @@ func TestCompleteReleasesTheWorkCharge(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		finals := func(s *boundState) int64 {
+		// A kept scalar keeps the node text's charge: its lexemes may share
+		// the text buffer.
+		finals := func(s *boundState, text int64) int64 {
 			n := int64(0)
 			if s.final != nil {
 				n += finalBytes
 			}
 			if s.finalScalar != nil {
-				n += finalScalarSize
+				n += finalScalarSize + text
 			}
 			return n
 		}
@@ -378,7 +380,7 @@ func TestCompleteReleasesTheWorkCharge(t *testing.T) {
 			if b.state.charged != charged {
 				t.Fatalf("work charged %d, want %d", b.state.charged, charged)
 			}
-			results, scalar := r.Results(b), r.Scalar(b)
+			results, scalar, text := r.Results(b), r.Scalar(b), b.state.text
 			m.releases = nil
 			completion, err := r.Complete(context.Background(), b, children)
 			if err != nil {
@@ -389,8 +391,8 @@ func TestCompleteReleasesTheWorkCharge(t *testing.T) {
 				t.Fatalf("completed results changed: %+v %+v", r.Results(b), r.Scalar(b))
 			}
 			// Operation scratch is released separately.
-			if b.state.bindWork != nil || !slices.Contains(m.releases, charged-finals(b.state)) {
-				t.Fatalf("completion released %v of %d charged (finals %d)", m.releases, charged, finals(b.state))
+			if b.state.bindWork != nil || !slices.Contains(m.releases, charged-finals(b.state, text)) {
+				t.Fatalf("completion released %v of %d charged (finals %d)", m.releases, charged, finals(b.state, text))
 			}
 			return completion, b.state
 		}

@@ -37,7 +37,7 @@ func TestDTDPackageCompositionPreflightBeforeIO(t *testing.T) {
 				resolver := graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {
 					panic("preflight performed resolver I/O")
 				})
-				resources := LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(profile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}
+				resources := LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}
 				d := DictionaryOptions{Source: source, Selections: dictionaryGraphSelection()}
 				e := dtdCompositionRunEntry(ctx, entry.name, r, doc, resources, d, MXLOptions{})
 				if !errors.Is(e, validation.ErrInvalidConfiguration) || calls != 0 || r.reads != 0 {
@@ -53,7 +53,7 @@ func TestDTDPackageCompositionPreflightBeforeIO(t *testing.T) {
 				t.Run(entry.name+"/"+string(profile)+"/"+bad, func(t *testing.T) {
 					calls := 0
 					r := &dictionaryGraphReader{}
-					resources := LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(profile)}}
+					resources := LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}}
 					d := DictionaryOptions{Selections: dictionaryGraphSelection(), Source: dictionaryGraphSourceFunc(func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error) {
 						calls++
 						panic("invalid options imported dictionary")

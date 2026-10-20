@@ -63,16 +63,16 @@ func TestDTDPackageCompositionEntryPoints(t *testing.T) {
 		model   bool
 	}{
 		{"source", dtdGraphProfile, func() (validation.AssessmentBundle, error) {
-			return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(`<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}}.internal()})
+			return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(`<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal()})
 		}, false},
 		{"model", dtdGraphProfile, func() (validation.AssessmentBundle, error) {
-			return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}}.internal()})
+			return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal()})
 		}, true},
 		{"raw MXL", dtdMXLSourceProfile, func() (validation.AssessmentBundle, error) {
-			return inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(dtdMXLSourceProfile)}}.internal()})
+			return inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(dtdMXLSourceProfile)}}.internal()})
 		}, false},
 		{"current MXL", dtdMXLModelProfile, func() (validation.AssessmentBundle, error) {
-			return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(dtdMXLModelProfile)}}.internal()})
+			return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(dtdMXLModelProfile)}}.internal()})
 		}, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

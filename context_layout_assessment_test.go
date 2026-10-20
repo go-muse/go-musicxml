@@ -342,7 +342,7 @@ func TestLayoutFormattingAndGeometryAgainstPinnedSchema(t *testing.T) {
 			{`<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><lyric number="01"><text>la</text><elision smufl="lyricsElisionNarrow"/><text>la</text></lyric></note>`, true},
 		} {
 			source := contextFixtureXML(tc.body, tw)
-			report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
+			report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 			if err != nil {
 				t.Fatal(err)
 			}

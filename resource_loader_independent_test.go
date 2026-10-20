@@ -444,7 +444,7 @@ func TestIndependentResourceIntrinsicPrefixDigestAndStartup(t *testing.T) {
 	}
 	a := adapterAccount(t, validation.Budgets{})
 	engine, _ := sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
-	session, err := engine.Begin(context.Background(), validation.RunOptions{Context: validation.ContextFamilyAll, DocumentID: "startup", Profile: ProfileSourceLinks.ID(), Account: a})
+	session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: "startup", Profile: ProfileSourceLinks.ID(), Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -545,7 +545,7 @@ func TestIndependentResourceOptionsRejectUnusablePinBeforeIO(t *testing.T) {
 	for _, identity := range []ResourceIdentity{
 		{CanonicalID: "line\nbreak"}, {CanonicalID: "line\rbreak"}, {CanonicalID: "tab\tname"}, {Revision: strings.Repeat("r", 1025)},
 	} {
-		_, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: "test-resource"}, Identity: identity}.internal(), "test-resource")
+		_, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: "test-resource"}, Identity: identity}.internal(), "test-resource")
 		if !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Errorf("accepted primary identity incompatible with core ResourcePin: canonical %q revision length %d error %v", identity.CanonicalID, len(identity.Revision), err)
 		}

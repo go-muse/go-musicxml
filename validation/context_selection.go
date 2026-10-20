@@ -7,10 +7,12 @@ import (
 
 // ContextFamilies selects the context families that a run keeps in
 // Report.Context. The zero value keeps none. Providers compute and check every
-// context whatever the selection, and every decision, count and finding is the
-// same; the session only keeps no copy of an unselected record, which saves
-// the storage it would hold. A selection keeps exactly the records of the
-// complete projection whose family it names, in the same order.
+// context whatever the selection; the session only keeps no copy of an
+// unselected record, which saves the storage it would hold. Within budgets
+// that admit both runs, every decision, count and finding is the same, and a
+// selection keeps exactly the records of the complete projection whose family
+// it names, in the same order. A smaller selection can therefore complete
+// where a larger one exceeds MaxBufferedBytes.
 type ContextFamilies uint16
 
 const (

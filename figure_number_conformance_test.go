@@ -58,9 +58,9 @@ func TestFigureNumberUnrestrictedTextPreservesXSDConstraints(t *testing.T) {
 		for _, model := range []bool{false, true} {
 			var report validation.Report
 			if model {
-				report, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
+				report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 			} else {
-				report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
+				report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 			}
 			if err != nil || report.Satisfied() || report.Conformance != validation.ConformanceViolated {
 				t.Fatalf("invalid style-text attribute accepted: model=%t timewise=%t: %v; %s", model, timewise, err, localFindings(report))
@@ -80,7 +80,7 @@ func TestFigureNumberUnrestrictedTextPreservesXSDConstraints(t *testing.T) {
 func TestFigureNumberUnrestrictedTextPreservesSourceDeclaration(t *testing.T) {
 	for _, timewise := range []bool{false, true} {
 		source := contextFixtureXML(`<figured-bass><figure><figure-number xmlns="urn:other">Ⅵ</figure-number></figure></figured-bass>`, timewise)
-		report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
+		report, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 		if err != nil || report.Satisfied() || report.Conformance != validation.ConformanceViolated || report.Counts.Fail == 0 {
 			t.Fatalf("invalid figure-number declaration accepted: %v; %s", err, localFindings(report))
 		}
@@ -91,7 +91,7 @@ func TestFigureNumberUnrestrictedTextPreservesSourceDeclaration(t *testing.T) {
 func TestFigureNumberUnrestrictedTextStrictDecode(t *testing.T) {
 	for _, timewise := range []bool{false, true} {
 		source := contextFixtureXML(`<figured-bass><figure><figure-number>Ⅵ</figure-number></figure></figured-bass>`, timewise)
-		result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLine}})
+		result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}})
 		if err != nil || result.Document == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() {
 			t.Fatalf("valid open notation rejected by strict decode: %v", err)
 		}

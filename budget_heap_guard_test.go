@@ -153,9 +153,9 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 
 // The official scores load within the default buffer: the default empty
 // context selection and the released XSD work charges bring MozartTrio and
-// MozaChloSample, which needed about 75 and 84 MiB with the complete
-// projection, under 64 MiB. They still need more than the default 20 million
-// rule steps.
+// MozaChloSample, which needed about 76 and 84 MiB when the complete
+// projection was the default, under 64 MiB. They still need more than the
+// default 20 million rule steps.
 func TestStrictLoadingOfficialScoresFitTheDefaultBuffer(t *testing.T) {
 	if raceEnabled {
 		t.Skip("slow under the race detector")
@@ -168,6 +168,34 @@ func TestStrictLoadingOfficialScoresFitTheDefaultBuffer(t *testing.T) {
 		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &SourceOptions{Budgets: validation.Budgets{MaxRuleSteps: 40_000_000}}})
 		if err != nil || !result.Accepted {
 			t.Errorf("%s: accepted=%v error=%v", name, result.Accepted, err)
+		}
+	}
+}
+
+// With the default empty context selection, raising only the rule steps lets
+// both context profiles complete on both official samples within the default
+// buffer.
+func TestContextProfilesOfficialSamplesNeedOnlyMoreSteps(t *testing.T) {
+	if raceEnabled || testing.Short() {
+		t.Skip("slow under the race detector")
+	}
+	budgets := validation.Budgets{MaxRuleSteps: 1 << 34}
+	for _, name := range []string{"MozartTrio.musicxml", "MozaChloSample.musicxml"} {
+		raw, err := os.ReadFile(filepath.Join("testdata", "official", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		document, err := Decode(bytes.NewReader(raw))
+		if err != nil {
+			t.Fatal(err)
+		}
+		source, err := InspectXML(context.Background(), bytes.NewReader(reviewBudgetRemoveDOCTYPE(t, raw)), SourceOptions{Profile: ProfileSourceContext, Budgets: budgets})
+		if err != nil || !source.Satisfied() {
+			t.Errorf("%s source: satisfied=%v error=%v", name, source.Satisfied(), err)
+		}
+		model, err := AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelContext, Budgets: budgets})
+		if err != nil || !model.Satisfied() {
+			t.Errorf("%s model: satisfied=%v error=%v", name, model.Satisfied(), err)
 		}
 	}
 }

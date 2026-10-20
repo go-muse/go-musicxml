@@ -188,4 +188,15 @@ func TestResourceSnapshotKeepsHiddenRecordsInOrder(t *testing.T) {
 	if retained <= 0 || s.hiddenContexts != nil || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
 		t.Fatalf("hidden records not released: retained=%d", retained)
 	}
+
+	// A span evaluation's rollback restores only the projection, so it may
+	// not keep a snapshot-only record.
+	s = rationalSession(t, Budgets{})
+	s.contextFamilies, s.resourceSnapshot = ContextFamilySpans, true
+	hold := s.holdContextBacking()
+	if err := s.publishValidatedContextResult(context.Background(), sounds(1)); !errors.Is(err, ErrInvalidConfiguration) || len(s.hiddenContexts) != 0 || s.retained != 0 {
+		t.Fatalf("snapshot-only record kept under a span hold: err=%v hidden=%d retained=%d", err, len(s.hiddenContexts), s.retained)
+	}
+	s.releaseHeldContextBacking(hold, false)
+	s.cleanup()
 }

@@ -21,7 +21,7 @@ func TestResourceGraphPackageQuotaHasNoLifecycleNoise(t *testing.T) {
 				return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "archive", Representation: validation.ResourceRawMXL, Digest: fmt.Sprintf("%x", sha256.Sum256(data))}, RetrievalURI: "https://e.test/book.mxl", Body: &resourceTestBody{Reader: bytes.NewReader(data)}}, nil
 			})
 			source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="book.mxl"/></opus>`
-			opts := LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxLinkedDocuments: limit}}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}
+			opts := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxLinkedDocuments: limit}}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}
 			b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), opts)
 			if calls != 1 {
 				t.Fatalf("calls=%d", calls)
@@ -65,7 +65,7 @@ func TestResourceGraphTerminalCancellationCleanup(t *testing.T) {
 		cancel()
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "archive", Representation: validation.ResourceRawMXL, Digest: fmt.Sprintf("%x", sha256.Sum256(data))}, RetrievalURI: "https://e.test/book.mxl", Body: body}, nil
 	})
-	b, err := finalQAMeasuredXML(t, ctx, `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="book.mxl"/></opus>`, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver})
+	b, err := finalQAMeasuredXML(t, ctx, `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="book.mxl"/></opus>`, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver})
 	r := b.PackageReport()
 	if !errors.Is(err, context.Canceled) || errors.Is(err, validation.ErrInvalidSession) || b.Satisfied() || r.AssessmentComplete || r.Terminal == nil || r.Terminal.Reason != "canceled" || body.closed != 1 {
 		t.Fatalf("err=%v report=%+v closed=%d", err, r, body.closed)

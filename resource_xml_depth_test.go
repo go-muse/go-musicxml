@@ -61,7 +61,7 @@ func TestMXLAssessmentXMLDepthRawPrimaryAndContainer(t *testing.T) {
 }
 func TestMXLAssessmentXMLDepthCurrentScalarLeaf(t *testing.T) {
 	for _, limit := range []int{1, 2} {
-		b, err := AssessMXLPackage(context.Background(), &MXLPackage{Document: depthModel(1, true)}, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel, Budgets: validation.Budgets{MaxDepth: 16}}, MXL: MXLOptions{MaxXMLDepth: limit}})
+		b, err := AssessMXLPackage(context.Background(), &MXLPackage{Document: depthModel(1, true)}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel, Budgets: validation.Budgets{MaxDepth: 16}}, MXL: MXLOptions{MaxXMLDepth: limit}})
 		if limit == 1 {
 			requireXMLDepth(t, b, err, 1)
 		} else if err != nil {
@@ -82,7 +82,7 @@ func TestMXLAssessmentXMLDepthLocalAndNested(t *testing.T) {
 				}
 				var b validation.AssessmentBundle
 				var err error
-				opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 32}}, MXL: MXLOptions{MaxXMLDepth: 3}}
+				opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 32}}, MXL: MXLOptions{MaxXMLDepth: 3}}
 				if current {
 					opts.Graph.Profile = ProfileMXLModel
 					b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: depthModel(1, false), RootFiles: []MXLRootFile{{FullPath: "main.xml"}, {FullPath: name}}, Resources: []MXLResource{{Path: name, Data: extra}}}, opts)
@@ -157,7 +157,7 @@ func TestMXLAssessmentXMLDepthDefaultAndPlainSibling(t *testing.T) {
 		var b validation.AssessmentBundle
 		var err error
 		if current {
-			b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: depthModel(defaultMaxXMLDepth+1, false)}, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel, Budgets: validation.Budgets{MaxDepth: 512}}})
+			b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: depthModel(defaultMaxXMLDepth+1, false)}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel, Budgets: validation.Budgets{MaxDepth: 512}}})
 		} else {
 			opts := packageGraphOptions()
 			opts.Graph.Budgets.MaxDepth = 512
@@ -169,14 +169,14 @@ func TestMXLAssessmentXMLDepthDefaultAndPlainSibling(t *testing.T) {
 	// the later plain XML sibling or mutate the shared graph/account depth limit.
 	r := &xmlDepthResolver{data: map[string][]byte{"https://e.test/a.mxl": packageGraphBytes(`<opus/>`, "main.xml", ""), "https://e.test/deep.xml": []byte(deep)}}
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/a.mxl"/><opus-link xlink:href="https://e.test/deep.xml"/></opus>`
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 512}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: r})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 512}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: r})
 	if err != nil || !b.EnumerationComplete() || b.PackageReport().Counts.Fail != 0 {
 		t.Fatal("MXL cap leaked into plain sibling", err, b.PackageReport())
 	}
 	requireIndirectionContextUnknown(t, b, 1)
 	requireIndirectionIntrinsicSatisfied(t, b)
 	r = &xmlDepthResolver{data: map[string][]byte{"https://e.test/a.mxl": packageGraphBytes(deep, "main.xml", "")}}
-	b, err = InspectXMLWithResources(context.Background(), strings.NewReader(depthLink("https://e.test/a.mxl")), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 512}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: r})
+	b, err = InspectXMLWithResources(context.Background(), strings.NewReader(depthLink("https://e.test/a.mxl")), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 512}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: r})
 	requireXMLDepth(t, b, err, defaultMaxXMLDepth)
 }
 
@@ -186,7 +186,7 @@ func TestMXLAssessmentXMLDepthCountsScalarLeavesInBothTargets(t *testing.T) {
 		for _, limit := range []int{3, 4} {
 			var b validation.AssessmentBundle
 			var err error
-			opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 16}}, MXL: MXLOptions{MaxXMLDepth: limit}}
+			opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 16}}, MXL: MXLOptions{MaxXMLDepth: limit}}
 			if current {
 				opts.Graph.Profile = ProfileMXLModel
 				b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: depthModel(3, true)}, opts)
@@ -206,7 +206,7 @@ func TestMXLAssessmentXMLDepthCountsScalarLeavesInBothTargets(t *testing.T) {
 }
 func TestMXLAssessmentGraphDepthRemainsIndependentlyStricter(t *testing.T) {
 	for _, current := range []bool{false, true} {
-		opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, MXL: MXLOptions{MaxXMLDepth: 4}}
+		opts := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, MXL: MXLOptions{MaxXMLDepth: 4}}
 		var b validation.AssessmentBundle
 		var err error
 		if current {
@@ -261,7 +261,7 @@ func TestMXLAssessmentXMLDepthCachedPlainResourceCannotBypassPackageCap(t *testi
 		"https://e.test/a.mxl":    packageGraphBytes(depthLink("https://e.test/deep.xml"), "main.xml", ""),
 	}}
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/deep.xml"/><opus-link xlink:href="https://e.test/a.mxl"/></opus>`
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 512}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: r})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 512}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: r})
 	var depth *validation.ResourceError
 	if !errors.Is(err, ErrXMLTooDeep) || !errors.As(err, &depth) || depth.Kind != validation.BudgetDepth || depth.Limit != defaultMaxXMLDepth || b.Satisfied() {
 		t.Fatalf("cached plain resource bypassed MXL cap: %v %+v", err, b.PackageReport())

@@ -123,10 +123,10 @@ func TestResourceGraphDirectNoProviderAssociationReason(t *testing.T) {
 					var err error
 					switch mode {
 					case "source":
-						b, err = InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/main.xml"}, Dependencies: dependencies})
+						b, err = InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/main.xml"}, Dependencies: dependencies})
 					case "raw-package":
 						data := packageGraphBytes(source, "main.musicxml", "", assessmentZIPFixture{name: "direct.xml", body: resourceScore("")})
-						b, err = InspectMXL(context.Background(), bytes.NewReader(data), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource}, Dependencies: dependencies})
+						b, err = InspectMXL(context.Background(), bytes.NewReader(data), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}, Dependencies: dependencies})
 					default:
 						var doc Document
 						doc, err = Decode(strings.NewReader(source))
@@ -134,9 +134,9 @@ func TestResourceGraphDirectNoProviderAssociationReason(t *testing.T) {
 							t.Fatal(err)
 						}
 						if mode == "model" {
-							b, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/main.xml"}, Dependencies: dependencies})
+							b, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/main.xml"}, Dependencies: dependencies})
 						} else {
-							b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.musicxml"}}, Resources: []MXLResource{{Path: "direct.xml", Data: []byte(resourceScore(""))}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel}, Dependencies: dependencies})
+							b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.musicxml"}}, Resources: []MXLResource{{Path: "direct.xml", Data: []byte(resourceScore(""))}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}, Dependencies: dependencies})
 						}
 					}
 					if err != nil {

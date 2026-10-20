@@ -51,13 +51,13 @@ func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing
 	document := musicxml.NewOpusDocument()
 	linked := func(profile validation.ProfileID, probe *finalConfigurationIO) musicxml.LinkedAssessmentOptions {
 		return musicxml.LinkedAssessmentOptions{
-			Graph: musicxml.GraphOptions{Context: validation.ContextFamilyAll, Profile: musicxml.GraphProfile(profile)}, Resolver: probe,
+			Graph: musicxml.GraphOptions{Profile: musicxml.GraphProfile(profile)}, Resolver: probe,
 			Dependencies: []musicxml.ResourceDependency{musicxml.ResourceDocuments},
 		}
 	}
 	mxl := func(profile validation.ProfileID, probe *finalConfigurationIO) musicxml.MXLAssessmentOptions {
 		return musicxml.MXLAssessmentOptions{
-			Graph: musicxml.MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: musicxml.MXLProfile(profile)}, Resolver: probe,
+			Graph: musicxml.MXLGraphOptions{Profile: musicxml.MXLProfile(profile)}, Resolver: probe,
 			Dependencies: []musicxml.ResourceDependency{musicxml.ResourceDocuments},
 		}
 	}
@@ -86,7 +86,7 @@ func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing
 			dictionaries := finalConfigurationDictionaries(p)
 			dictionaries.Selections = assessedDecodeDictionarySelections()
 			result, err := musicxml.DecodeAssessed(ctx, p, musicxml.DecodeAssessmentOptions{
-				Assessment: &musicxml.SourceOptions{Context: validation.ContextFamilyAll, Profile: musicxml.SourceProfile(profile), Dictionaries: &dictionaries},
+				Assessment: &musicxml.SourceOptions{Profile: musicxml.SourceProfile(profile), Dictionaries: &dictionaries},
 			})
 			if result.Document != nil || result.SourceLine.Requested || result.ModelLine.Requested || result.Conversion.State != validation.ConversionIncomplete {
 				t.Fatalf("invalid configuration exposed a converted or assessed document: %+v", result)
@@ -214,7 +214,7 @@ func TestFinalConfigurationSelectedNilResolverDictionaryGraph(t *testing.T) {
 	}{{"nil", nil}, {"typed-nil", (*finalConfigurationNilResolver)(nil)}} {
 		t.Run(provider.name, func(t *testing.T) {
 			bundle, err := musicxml.InspectXMLWithResources(context.Background(), strings.NewReader(input), musicxml.LinkedAssessmentOptions{
-				Graph:        musicxml.GraphOptions{Context: validation.ContextFamilyAll, Profile: musicxml.ProfileResourceGraphDictionaries, Dictionaries: &musicxml.DictionaryOptions{}},
+				Graph:        musicxml.GraphOptions{Profile: musicxml.ProfileResourceGraphDictionaries, Dictionaries: &musicxml.DictionaryOptions{}},
 				Dependencies: []musicxml.ResourceDependency{musicxml.ResourceDocuments}, Resolver: provider.resolver,
 			})
 			if err != nil || bundle.Satisfied() || bundle.ResourceCount() != 1 {

@@ -64,7 +64,7 @@ func TestSourceDeclarationCompositionReachedEntity(t *testing.T) {
 			if tc.declaration != "" {
 				input = "<!DOCTYPE score-partwise [" + tc.declaration + "]>" + input
 			}
-			report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile)})
+			report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: SourceProfile(profile)})
 			if err != nil || report.Conformance != tc.conformance || report.Syntax != validation.SyntaxWellFormed || !report.InputComplete {
 				t.Fatalf("error=%v conformance=%s want=%s syntax=%s findings=%+v", err, report.Conformance, tc.conformance, report.Syntax, report.Findings)
 			}

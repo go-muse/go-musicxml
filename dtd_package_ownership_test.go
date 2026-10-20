@@ -16,7 +16,7 @@ func TestDTDPackageCompositionTransferIdentityAndCallerOwnership(t *testing.T) {
 	ctx := context.Background()
 	for _, mode := range []string{"exact", "legacy profile", "different digest", "different account", "wrong target"} {
 		t.Run(mode, func(t *testing.T) {
-			cfg, err := validateLinkedAssessmentOptions(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}}.internal(), dtdGraphProfile)
+			cfg, err := validateLinkedAssessmentOptions(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal(), dtdGraphProfile)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -102,7 +102,7 @@ func TestDTDPackageCompositionExplicitSoundsAdoption(t *testing.T) {
 		calls++
 		return DictionaryComponentResult{Request: q, State: validation.EvidenceKnown, Body: body}, nil
 	})}
-	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile)}}.internal(), dictionaries, ProfileResourceGraphDictionaries.ID())
+	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal(), dictionaries, ProfileResourceGraphDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,7 +208,7 @@ func TestDTDPackageCompositionCacheProfilesAndCapabilitiesStayDistinct(t *testin
 func TestDTDPackageCompositionBudgetsAndCancellationCleanup(t *testing.T) {
 	input := `<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`
 	run := func(ctx context.Context, budgets validation.Budgets) (*resourceGraphRun, validation.AssessmentBundle, error) {
-		g, e := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(dtdGraphProfile), Budgets: budgets}}.internal(), DictionaryOptions{}, ProfileResourceGraphDictionaries.ID())
+		g, e := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile), Budgets: budgets}}.internal(), DictionaryOptions{}, ProfileResourceGraphDictionaries.ID())
 		if g == nil {
 			return nil, validation.AssessmentBundle{}, e
 		}

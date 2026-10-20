@@ -93,7 +93,7 @@ func TestSourceRound1UnresolvedAttributeDeclaration(t *testing.T) {
 }
 
 func TestSourceRound1UnresolvedOriginEnumeration(t *testing.T) {
-	report, err := InspectXML(context.Background(), strings.NewReader(`<!DOCTYPE opus SYSTEM "opus.dtd"><opus version="4.0"/>`), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(`<!DOCTYPE opus SYSTEM "opus.dtd"><opus version="4.0"/>`), SourceOptions{Profile: ProfileSourceInternalDTD})
 	if err != nil {
 		t.Fatal(err)
 	}

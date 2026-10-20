@@ -326,9 +326,9 @@ backing array exactly for its capacity, including the moment it grows.
 `TestContextProjectionAccountingCoversItsHeap` checks on corpus documents that
 the charge never falls below the measured heap. `Report.Context` is empty
 unless the caller selects context families (the `Context` field of every
-options type), and every decision, count and finding is the same whatever the
-selection; the default empty selection needs a third to a half of the buffer
-of the complete projection (table above). A graph's resource snapshots keep
+options type). Within budgets that admit both runs, every decision, count and
+finding is the same whatever the selection; the default empty selection needs
+about a third of the buffer of the complete projection (table above). A graph's resource snapshots keep
 the records their package rules read whatever the selection.
 
 ### Low-level retained-report ownership

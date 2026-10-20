@@ -107,7 +107,7 @@ func TestReviewGraphDepthDoesNotInferExternalIdentityFromURI(t *testing.T) {
 	source := depthLink("child.opus")
 	child := depthLink("root.opus")
 	resolver := &graphFixtureResolver{resources: map[string]string{"https://e.test/child.opus": child, "https://e.test/root.opus": source}, pins: map[string]string{"https://e.test/child.opus": "child", "https://e.test/root.opus": "different-canonical-root"}}
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 2}}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 2}}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if !errors.Is(err, validation.ErrResourceLimit) || resolver.calls != 1 || b.ResourceCount() != 2 {
 		t.Fatalf("unknown same-URI target crossed depth boundary: %v calls=%d resources=%d", err, resolver.calls, b.ResourceCount())
 	}
@@ -163,7 +163,7 @@ func TestReviewGraphAliasMXLReleasesUnusedOwnership(t *testing.T) {
 
 func TestReviewGraphQueueCancellationBeforeWorkCharge(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
+	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +180,7 @@ func TestReviewGraphQueueCancellationBeforeWorkCharge(t *testing.T) {
 }
 
 func TestReviewGraphFinishDoesNotDuplicateCause(t *testing.T) {
-	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
+	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +193,7 @@ func TestReviewGraphFinishDoesNotDuplicateCause(t *testing.T) {
 }
 
 func TestReviewGraphCanonicalRevisionReasonAndDepthWitness(t *testing.T) {
-	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
+	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -228,7 +228,7 @@ func TestReviewGraphDepthLocalSelectionAndKnownArchiveCycle(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			g, err := startResourceGraph(context.Background(), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel, Budgets: validation.Budgets{MaxDepth: 3}}}.internal().linked(), ProfileMXLModel.ID())
+			g, err := startResourceGraph(context.Background(), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel, Budgets: validation.Budgets{MaxDepth: 3}}}.internal().linked(), ProfileMXLModel.ID())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -267,7 +267,7 @@ func TestReviewGraphDepthLocalSelectionAndKnownArchiveCycle(t *testing.T) {
 func TestReviewGraphJoinPreservesUnrelatedTransportCauses(t *testing.T) {
 	one, two := errors.New("first unique cause"), errors.New("second unique cause")
 	for _, input := range []error{one, errors.Join(one, two)} {
-		_, err := InspectXMLWithResources(context.Background(), &resourceReadError{data: []byte(`<opus>`), err: input}, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}})
+		_, err := InspectXMLWithResources(context.Background(), &resourceReadError{data: []byte(`<opus>`), err: input}, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 		if !errors.Is(err, one) || strings.Count(err.Error(), one.Error()) != 1 {
 			t.Errorf("first cause repeated/lost: %v", err)
 		}

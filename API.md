@@ -1129,9 +1129,11 @@ families with the `Context` field of `SourceOptions`, `ModelOptions`,
 
 `ContextFamilyAll` keeps the complete projection, and
 `ContextResult.Family` returns a record's family. Providers compute and check
-every context whatever the selection, so every decision, count and finding is
-the same; a selection keeps exactly the records of the complete projection in
-its families, in the same order. An unselected record costs no storage. A
+every context whatever the selection, so within budgets that admit both runs
+every decision, count and finding is the same; a selection keeps exactly the
+records of the complete projection in its families, in the same order. An
+unselected record costs no storage, so a smaller selection can complete where
+a larger one exceeds `MaxBufferedBytes`. A
 graph's resource snapshots keep the records their package rules read whatever
 the selection.
 
@@ -1200,10 +1202,11 @@ and context profiles with documented larger finite budgets; it does not close
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
 and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
-profile under the default budgets. Both stop at the 20,000,000-step limit;
-raising work alone still reaches the default 64 MiB buffered-byte limit.
-Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
-complete the measured source/current-model cases. Source measurements remove
+profile under the default budgets. Both stop at the 20,000,000-step limit.
+Raising only the work, to `MaxRuleSteps: 1 << 34`, completes both profiles on
+both samples within the default 64 MiB buffer when no context family is
+selected (the default); with `validation.ContextFamilyAll` the MozaChlo source
+still exceeds it, and `MaxBufferedBytes: 512 << 20` completes every case. Source measurements remove
 only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
 are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
 source assessment contract.
@@ -1518,8 +1521,8 @@ import cost][loading-cost] for details and the measured budgets.
 
 `Report.Context` is empty unless `SourceOptions.Context` selects context
 families (see [Context projection](#context-projection)); the default keeps
-every decision, count and finding and roughly halves the buffer strict
-loading needs.
+every decision, count and finding and needs about a third of the buffer of the
+complete projection for strict loading.
 
 The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
 64 MiB file or one million nodes can be assessed. The historical `d336f089`

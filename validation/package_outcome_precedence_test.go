@@ -23,7 +23,7 @@ func packageHintPrecedenceFixture(t *testing.T, values ...Evidence[bool]) (*Pack
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package", Account: intrinsic.account})
+	s, err := catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: intrinsic.account})
 	if err != nil {
 		t.Fatal(err)
 	}

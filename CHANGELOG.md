@@ -25,9 +25,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   caller selects context families with the new `Context` field of
   `SourceOptions`, `ModelOptions`, `GraphOptions`, `MXLGraphOptions` and
   `validation.RunOptions` (`validation.ContextFamilies`, such as
-  `ContextFamilyTiming | ContextFamilySpans`). Every decision, count and
-  finding is the same whatever the selection, and a selection keeps exactly
-  the records of the complete projection in its families, in order. The
+  `ContextFamilyTiming | ContextFamilySpans`). Within budgets that admit
+  both, every decision, count and finding is the same whatever the selection,
+  and a selection keeps exactly the records of the complete projection in its
+  families, in order. The
   default saves the storage of the projection, more than half of what
   assessment held. Migration: set `Context: validation.ContextFamilyAll` to
   keep the previous report.

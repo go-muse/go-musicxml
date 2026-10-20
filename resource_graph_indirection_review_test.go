@@ -43,10 +43,10 @@ func TestResourceGraphArchivePrimaryIndirectionPublic(t *testing.T) {
 						var doc Document
 						doc, err = Decode(strings.NewReader(source))
 						if err == nil {
-							bundle, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}}, Resources: []MXLResource{{Path: "inner.mxl", Data: archive}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel}})
+							bundle, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}}, Resources: []MXLResource{{Path: "inner.mxl", Data: archive}}}, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 						}
 					default:
-						options := LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/main.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}
+						options := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/main.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}
 						if mode == "external-source" {
 							bundle, err = InspectXMLWithResources(context.Background(), strings.NewReader(source), options)
 						} else {

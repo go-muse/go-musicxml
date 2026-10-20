@@ -155,7 +155,7 @@ func contextReviewSameTypeFixture(t *testing.T, limits ...Budgets) (*Session, *c
 	if err != nil {
 		t.Fatal(err)
 	}
-	opts := RunOptions{Context: ContextFamilyAll, DocumentID: "source", Profile: "source-schema-test"}
+	opts := RunOptions{DocumentID: "source", Profile: "source-schema-test"}
 	if len(limits) != 0 {
 		opts.Budgets = limits[0]
 	}

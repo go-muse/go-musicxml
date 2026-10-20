@@ -14,13 +14,18 @@ type outcomeBits struct {
 // index may reach.
 const outcomeDenseSlack = 4096
 
+// get reads the dense table first. An ID stored in the overflow map while it
+// was beyond the table keeps its entry there after the table grows over it,
+// so an empty dense slot falls back to the map.
 func (b *outcomeBits) get(id NodeID) successfulOutcome {
 	if b == nil || id == 0 {
 		return 0
 	}
 	i := uint64(id - 1)
 	if w := i / 32; w < uint64(len(b.words)) {
-		return successfulOutcome(b.words[w] >> (2 * (i % 32)) & 3)
+		if v := successfulOutcome(b.words[w] >> (2 * (i % 32)) & 3); v != 0 {
+			return v
+		}
 	}
 	return b.overflow[id]
 }
@@ -42,7 +47,8 @@ func (b *outcomeBits) set(s *Session, id NodeID, v successfulOutcome) error {
 		}
 	}
 	if id != 0 && w < uint64(len(b.words)) {
-		b.words[w] |= uint64(v) << (2 * (i % 32))
+		shift := 2 * (i % 32)
+		b.words[w] = b.words[w]&^(3<<shift) | uint64(v)<<shift
 		return nil
 	}
 	if err := s.retain(32); err != nil { // NodeID, outcome byte and map allowance.

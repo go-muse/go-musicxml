@@ -126,7 +126,7 @@ func TestQAPrimaryPostExportBufferRefusalPreservesKnownChildReport(t *testing.T)
 }
 func TestQANestedSourcePostExportAdmissionPreservesKnownChildReport(t *testing.T) {
 	ctx := &qaPostExportBufferContext{Context: context.Background(), stage: "AddResource"}
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
+	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,7 +155,7 @@ func TestQANestedSourcePostExportAdmissionPreservesKnownChildReport(t *testing.T
 
 func TestQACurrentPackagePostExportAdmissionPreservesKnownChildReport(t *testing.T) {
 	ctx := &qaPostExportBufferContext{Context: context.Background(), stage: "AddResource"}
-	g, err := startResourceGraph(ctx, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel}}.internal().linked(), ProfileMXLModel.ID())
+	g, err := startResourceGraph(ctx, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}}.internal().linked(), ProfileMXLModel.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +167,7 @@ func TestQACurrentPackagePostExportAdmissionPreservesKnownChildReport(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	control, err := AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelLinks})
+	control, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLinks})
 	if err != nil || control.Counts.Fail == 0 {
 		t.Fatalf("model fixture not independently invalid: %v %+v", err, control.Counts)
 	}

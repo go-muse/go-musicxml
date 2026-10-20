@@ -153,7 +153,7 @@ func TestBundledDictionaryCacheConcurrentLoaders(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			result, err := DecodeAssessed(context.Background(), strings.NewReader(mandatoryDictionaryScore()), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll}})
+			result, err := DecodeAssessed(context.Background(), strings.NewReader(mandatoryDictionaryScore()), DecodeAssessmentOptions{})
 			if err == nil && !result.Accepted {
 				err = errors.New("not accepted")
 			}
@@ -188,8 +188,8 @@ func TestBundledDictionaryCacheReportsMatchAFreshImport(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, lenient := range []bool{false, true} {
-			cached, cachedErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll}, Lenient: lenient})
-			fresh, freshErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient, Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: &bundledPassThroughSource{}, Selections: requiredDictionarySelections()}}})
+			cached, cachedErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient})
+			fresh, freshErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient, Assessment: &SourceOptions{Dictionaries: &DictionaryOptions{Source: &bundledPassThroughSource{}, Selections: requiredDictionarySelections()}}})
 			if (cachedErr == nil) != (freshErr == nil) || cached.Accepted != fresh.Accepted || !reflect.DeepEqual(cached.SourceLine, fresh.SourceLine) || !reflect.DeepEqual(cached.ModelLine, fresh.ModelLine) || !reflect.DeepEqual(cached.Conversion, fresh.Conversion) {
 				t.Errorf("%s lenient=%v: cached and fresh loads differ: errors %v / %v", filepath.Base(names[i]), lenient, cachedErr, freshErr)
 			}
@@ -219,7 +219,7 @@ func TestStrictLoadingImportsDictionariesAfterLineTwo(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			source := &bundledPassThroughSource{}
-			result, err := DecodeAssessed(context.Background(), strings.NewReader(tc.input), DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
+			result, err := DecodeAssessed(context.Background(), strings.NewReader(tc.input), DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &SourceOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
 			if source.count() != tc.calls || result.ModelLine.Requested != tc.model || !result.SourceLine.Requested {
 				t.Fatalf("provider calls=%d want %d; model requested=%v want %v; source requested=%v; error=%v", source.count(), tc.calls, result.ModelLine.Requested, tc.model, result.SourceLine.Requested, err)
 			}
@@ -237,7 +237,7 @@ func TestStrictLoadingCancellationDuringImport(t *testing.T) {
 	defer cancel()
 	source := &bundledPassThroughSource{open: func(context.Context, DictionaryComponentRequest) { cancel() }}
 	for _, lenient := range []bool{false, true} {
-		result, err := DecodeAssessed(ctx, strings.NewReader(mandatoryDictionaryScore()), DecodeAssessmentOptions{Lenient: lenient, Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
+		result, err := DecodeAssessed(ctx, strings.NewReader(mandatoryDictionaryScore()), DecodeAssessmentOptions{Lenient: lenient, Assessment: &SourceOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
 		if !errors.Is(err, context.Canceled) || result.Document != nil || result.Accepted || result.ModelLine.Requested || !result.SourceLine.Satisfied() {
 			t.Fatalf("lenient=%v: document=%T accepted=%v model requested=%v source satisfied=%v error=%v", lenient, result.Document, result.Accepted, result.ModelLine.Requested, result.SourceLine.Satisfied(), err)
 		}
@@ -297,7 +297,8 @@ func TestStrictLoadingNonTerminalImportFailureAfterLineTwo(t *testing.T) {
 				}
 				return DictionaryComponentResult{}, providerFailure
 			})
-			result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
+			// The test reads the dictionary evidence of the model line.
+			result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &SourceOptions{Context: validation.ContextFamilyDictionaries, Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}}})
 			if int(calls.Load()) != tc.calls || openedBeforeEOF.Load() {
 				t.Fatalf("provider calls=%d want %d; opened before the source end=%v", calls.Load(), tc.calls, openedBeforeEOF.Load())
 			}
@@ -354,7 +355,6 @@ func TestStrictLoadingTerminalImportFailureAfterLineTwo(t *testing.T) {
 			// Line 2 charges no external bytes; the first dictionary body
 			// exceeds this limit.
 			result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Lenient: tc.lenient, Assessment: &SourceOptions{
-				Context:      validation.ContextFamilyAll,
 				Budgets:      validation.Budgets{MaxExternalBytes: 1024},
 				Dictionaries: &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()},
 			}})
@@ -431,7 +431,7 @@ func TestStrictLoadingCancellationBetweenLines(t *testing.T) {
 			defer cancel()
 			ctx := &cancelAtImportContext{Context: base, cancel: cancel}
 			source := &bundledPassThroughSource{}
-			assessment := &SourceOptions{Context: validation.ContextFamilyAll}
+			assessment := &SourceOptions{}
 			if tc.caller {
 				assessment.Dictionaries = &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}
 			}
@@ -615,12 +615,28 @@ func TestBundledDictionaryCacheDoesNotCacheFailure(t *testing.T) {
 	_ = set.Close()
 }
 
-// bundleView is everything an assessment bundle returns except resource IDs,
-// which are random per run.
+// bundleView is everything an assessment bundle returns, including the views
+// that index resource snapshot contexts, except resource IDs, which are random
+// per run.
 func bundleView(b validation.AssessmentBundle) []any {
 	view := []any{b.Satisfied(), b.EnumerationComplete(), b.AdoptionCount(), b.PackageReport()}
 	for _, report := range b.Resources() {
 		view = append(view, report)
+	}
+	for adoption := range b.AdoptionContexts() {
+		view = append(view, adoption)
+	}
+	for i := range b.ImageAdviceCount() {
+		advice, _ := b.ImageAdviceAt(i)
+		view = append(view, advice)
+	}
+	for i := range b.FileMetadataCount() {
+		metadata, _ := b.FileMetadataAt(i)
+		view = append(view, metadata)
+	}
+	for i := range b.MimetypeCount() {
+		mimetype, _ := b.MimetypeAt(i)
+		view = append(view, mimetype)
 	}
 	if failure, ok := b.FailureReport(); ok {
 		view = append(view, failure)
@@ -629,7 +645,7 @@ func bundleView(b validation.AssessmentBundle) []any {
 }
 
 // narrowView narrows the projection of every report in view to families and
-// replaces the random run identity in its document IDs.
+// replaces the random run identity in every string.
 func narrowView(view []any, families validation.ContextFamilies) []any {
 	out := append([]any{}, view...)
 	for i, v := range out {
@@ -638,21 +654,24 @@ func narrowView(view []any, families validation.ContextFamilies) []any {
 			if len(report.Context) == 0 {
 				report.Context = nil
 			}
-			scrubRunIdentity(reflect.ValueOf(&report).Elem())
-			out[i] = report
+			v = report
 		}
+		copied := reflect.New(reflect.TypeOf(v)).Elem()
+		copied.Set(reflect.ValueOf(v))
+		scrubRunIdentity(copied)
+		out[i] = copied.Interface()
 	}
 	return out
 }
 
-var runIdentity = regexp.MustCompile(`resource-run-[0-9a-f]{32}`)
+var runIdentity = regexp.MustCompile(`(resource-run|mxl-entry)-[0-9a-f]{32,64}`)
 
 // scrubRunIdentity rewrites, in place, every settable string under v.
 func scrubRunIdentity(v reflect.Value) {
 	switch v.Kind() {
 	case reflect.String:
 		if v.CanSet() {
-			v.SetString(runIdentity.ReplaceAllString(v.String(), "resource-run"))
+			v.SetString(runIdentity.ReplaceAllString(v.String(), "$1"))
 		}
 	case reflect.Pointer, reflect.Interface:
 		if !v.IsNil() {
@@ -711,6 +730,49 @@ func TestGraphContextSelectionKeepsEveryVerdict(t *testing.T) {
 			if !reflect.DeepEqual(narrowView(all[name], families), narrowView(view, validation.ContextFamilyAll)) {
 				t.Errorf("context=%b: %s differs from the selected projection", families, name)
 			}
+		}
+	}
+}
+
+// Every entry point rejects a context selection with an unknown family as an
+// invalid configuration.
+func TestUnknownContextFamilyIsRejected(t *testing.T) {
+	unknown := validation.ContextFamilyAll + 1
+	ctx := context.Background()
+	score := `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>P</part-name></score-part></part-list><part id="P1"><measure number="1"/></part></score-partwise>`
+	document, err := Decode(strings.NewReader(score))
+	if err != nil {
+		t.Fatal(err)
+	}
+	archive, err := os.ReadFile(filepath.Join("testdata", "corpus", "musicxml-test-suite", "90a-Compressed-MusicXML.mxl"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	calls := map[string]func() error{
+		"InspectXML": func() error {
+			_, err := InspectXML(ctx, strings.NewReader(score), SourceOptions{Context: unknown})
+			return err
+		},
+		"AssessModel": func() error {
+			_, err := AssessModel(ctx, document, ModelOptions{Context: unknown})
+			return err
+		},
+		"DecodeAssessed": func() error {
+			_, err := DecodeAssessed(ctx, strings.NewReader(score), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: unknown}})
+			return err
+		},
+		"InspectXMLWithResources": func() error {
+			_, err := InspectXMLWithResources(ctx, strings.NewReader(score), LinkedAssessmentOptions{Graph: GraphOptions{Context: unknown}})
+			return err
+		},
+		"InspectMXL": func() error {
+			_, err := InspectMXL(ctx, bytes.NewReader(archive), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: unknown}})
+			return err
+		},
+	}
+	for name, call := range calls {
+		if err := call(); !errors.Is(err, ErrInvalidConfiguration) {
+			t.Errorf("%s: %v", name, err)
 		}
 	}
 }

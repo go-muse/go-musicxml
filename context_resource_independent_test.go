@@ -42,9 +42,9 @@ func TestIndependentContextDefaultResourceMatrix(t *testing.T) {
 				begin := time.Now()
 				var report validation.Report
 				if model {
-					report, err = AssessModel(context.Background(), doc, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelContext})
+					report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 				} else {
-					report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceContext})
+					report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 				}
 				t.Logf("model=%t input_bytes=%d elapsed=%s complete=%t satisfied=%t conformance=%s records=%d findings=%d error=%v", model, len(source), time.Since(begin), report.AssessmentComplete, report.Satisfied(), report.Conformance, len(report.Context), len(report.Findings), err)
 				if errors.Is(err, validation.ErrResourceLimit) {

@@ -140,7 +140,7 @@ func TestFinalQACompressedLinkFamilyBases(t *testing.T) {
 						t.Fatal(x)
 					}
 					p := &MXLPackage{Document: d, RootFiles: []MXLRootFile{{FullPath: tc.path}}, Resources: []MXLResource{{Path: tc.correct, Data: []byte(score)}, {Path: tc.decoy, Data: []byte(`<unexpected/>`)}}}
-					b, e = AssessMXLPackage(context.Background(), p, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLModel}})
+					b, e = AssessMXLPackage(context.Background(), p, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 				}
 				want := 2
 				if mode == "raw-mxl" {

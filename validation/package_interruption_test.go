@@ -134,7 +134,7 @@ func TestPackageEstablishedAdviceFailureSurvivesCancellation(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					s, err = catalog.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package"})
+					s, err = catalog.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -204,7 +204,7 @@ func TestPackageMimetypeAdviceRequiresKnownOrderForPass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s, err := c.begin(context.Background(), RunOptions{Context: ContextFamilyAll, DocumentID: "package", Profile: "test.package"})
+	s, err := c.begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package"})
 	if err != nil {
 		t.Fatal(err)
 	}

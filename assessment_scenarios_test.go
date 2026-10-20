@@ -75,38 +75,38 @@ func TestEmptyProfileSelectsSemanticProfile(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	report, err := InspectXML(ctx, strings.NewReader(scenarioValid), SourceOptions{Context: validation.ContextFamilyAll})
+	report, err := InspectXML(ctx, strings.NewReader(scenarioValid), SourceOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, ProfileSourceSemantics.ID(), report.Profile.ID)
 	assert.True(t, report.Satisfied())
 
 	document, err := Decode(strings.NewReader(scenarioValid))
 	require.NoError(t, err)
-	report, err = AssessModel(ctx, document, ModelOptions{Context: validation.ContextFamilyAll})
+	report, err = AssessModel(ctx, document, ModelOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, ProfileModelSemantics.ID(), report.Profile.ID)
 	assert.True(t, report.Satisfied())
 
-	bundle, err := InspectXMLWithResources(ctx, strings.NewReader(scenarioValid), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll}})
+	bundle, err := InspectXMLWithResources(ctx, strings.NewReader(scenarioValid), LinkedAssessmentOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, ProfileResourceGraphSemantics.ID(), bundle.PackageReport().Profile.ID)
-	bundle, err = AssessModelWithResources(ctx, document, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll}})
+	bundle, err = AssessModelWithResources(ctx, document, LinkedAssessmentOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, ProfileResourceGraphSemantics.ID(), bundle.PackageReport().Profile.ID)
 
 	archive := scenarioMXL(t, scenarioValid)
-	bundle, err = InspectMXL(ctx, bytes.NewReader(archive), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}})
+	bundle, err = InspectMXL(ctx, bytes.NewReader(archive), MXLAssessmentOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, ProfileMXLSourceSemantics.ID(), bundle.PackageReport().Profile.ID)
 	assert.True(t, bundle.Satisfied())
 	pkg, err := DecodeMXLPackage(bytes.NewReader(archive))
 	require.NoError(t, err)
-	bundle, err = AssessMXLPackage(ctx, pkg, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}})
+	bundle, err = AssessMXLPackage(ctx, pkg, MXLAssessmentOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, ProfileMXLModelSemantics.ID(), bundle.PackageReport().Profile.ID)
 
 	// An explicit profile without dictionaries keeps its old behaviour.
-	report, err = InspectXML(ctx, strings.NewReader(scenarioValid), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLocal})
+	report, err = InspectXML(ctx, strings.NewReader(scenarioValid), SourceOptions{Profile: ProfileSourceLocal})
 	require.NoError(t, err)
 	assert.Equal(t, ProfileSourceLocal.ID(), report.Profile.ID)
 }
@@ -116,17 +116,17 @@ func TestScenarioThreeMatchesStrictLoadingModel(t *testing.T) {
 
 	ctx := context.Background()
 	for name, source := range map[string]string{"valid": scenarioValid, "model violated": scenarioModelViolated} {
-		result, err := DecodeAssessed(ctx, strings.NewReader(source), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll}, Lenient: true})
+		result, err := DecodeAssessed(ctx, strings.NewReader(source), DecodeAssessmentOptions{Lenient: true})
 		require.NoError(t, err, name)
 		require.NotNil(t, result.Document, name)
-		report, err := AssessModel(ctx, result.Document, ModelOptions{Context: validation.ContextFamilyAll})
+		report, err := AssessModel(ctx, result.Document, ModelOptions{})
 		require.NoError(t, err, name)
 		assert.True(t, reflect.DeepEqual(result.ModelLine, report), "%s: AssessModel equals the model stage of DecodeAssessed", name)
 
-		mxl, err := DecodeMXLAssessed(ctx, bytes.NewReader(scenarioMXL(t, source)), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: true})
+		mxl, err := DecodeMXLAssessed(ctx, bytes.NewReader(scenarioMXL(t, source)), DecodeMXLAssessmentOptions{Lenient: true})
 		require.NoError(t, err, name)
 		require.NotNil(t, mxl.Package, name)
-		bundle, err := AssessMXLPackage(ctx, mxl.Package, MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}})
+		bundle, err := AssessMXLPackage(ctx, mxl.Package, MXLAssessmentOptions{})
 		require.NoError(t, err, name)
 		assert.Equal(t, summarizeBundle(bundle), summarizeBundle(mxl.ModelLine), "%s: AssessMXLPackage equals the model stage of DecodeMXLAssessed", name)
 		assert.Equal(t, name == "valid", mxl.ModelLine.Satisfied(), "%s: an unedited valid package satisfies its current-state assessment", name)
@@ -155,8 +155,8 @@ func TestLenientAssessedLoading(t *testing.T) {
 		{name: "resource limit", ctx: context.Background(), source: scenarioValid, budgets: validation.Budgets{MaxInputBytes: 32}, strictErr: validation.ErrResourceLimit, operational: true},
 		{name: "conversion failure", ctx: context.Background(), source: `<unknown-root/>`, operational: true},
 	} {
-		strict, strictErr := DecodeAssessed(tc.ctx, strings.NewReader(tc.source), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Budgets: tc.budgets}})
-		lenient, lenientErr := DecodeAssessed(tc.ctx, strings.NewReader(tc.source), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Budgets: tc.budgets}, Lenient: true})
+		strict, strictErr := DecodeAssessed(tc.ctx, strings.NewReader(tc.source), DecodeAssessmentOptions{Assessment: &SourceOptions{Budgets: tc.budgets}})
+		lenient, lenientErr := DecodeAssessed(tc.ctx, strings.NewReader(tc.source), DecodeAssessmentOptions{Assessment: &SourceOptions{Budgets: tc.budgets}, Lenient: true})
 
 		// Strict: the document is returned exactly when the result is accepted.
 		assert.Equal(t, strict.Accepted, strict.Document != nil, tc.name)
@@ -186,9 +186,9 @@ func TestLenientAssessedLoading(t *testing.T) {
 		}
 	}
 	var syntax *xml.SyntaxError
-	_, err := DecodeAssessed(context.Background(), strings.NewReader(scenarioValid+"<"), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll}, Lenient: true})
+	_, err := DecodeAssessed(context.Background(), strings.NewReader(scenarioValid+"<"), DecodeAssessmentOptions{Lenient: true})
 	assert.ErrorAs(t, err, &syntax)
-	_, err = DecodeAssessed(context.Background(), strings.NewReader(`<unknown-root/>`), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll}, Lenient: true})
+	_, err = DecodeAssessed(context.Background(), strings.NewReader(`<unknown-root/>`), DecodeAssessmentOptions{Lenient: true})
 	var conversion *ConversionError
 	assert.ErrorAs(t, err, &conversion)
 }
@@ -199,7 +199,7 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	ctx := context.Background()
 	valid := scenarioMXL(t, scenarioValid)
 	owned := &assessmentCountingReader{source: bytes.NewReader(valid)}
-	result, err := DecodeMXLAssessed(ctx, owned, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
+	result, err := DecodeMXLAssessed(ctx, owned, DecodeMXLAssessmentOptions{})
 	require.NoError(t, err)
 	assert.False(t, owned.closed, "the reader is never closed")
 	require.NotNil(t, result.Package)
@@ -210,47 +210,47 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	assert.Equal(t, ProfileMXLSourceLine.ID(), result.SourceLine.PackageReport().Profile.ID)
 	assert.Equal(t, ProfileMXLModelSemantics.ID(), result.ModelLine.PackageReport().Profile.ID)
 
-	explicit, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSourceLine}}})
+	explicit, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSourceLine}}})
 	require.NoError(t, err)
 	assert.True(t, explicit.Accepted)
 	// The full source semantics is a diagnostic profile of InspectMXL, not
 	// line 2.
-	_, err = DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSourceSemantics}}})
+	_, err = DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSourceSemantics}}})
 	assert.ErrorIs(t, err, validation.ErrInvalidConfiguration)
 
 	violated := scenarioMXL(t, scenarioSourceViolated)
-	strict, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
+	strict, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrInvalidDocument)
 	assert.Nil(t, strict.Package)
 	assert.False(t, strict.Accepted)
 	assert.False(t, strict.ModelLine.PackageReport().Requested, "strict mode assesses the package only after an accepted archive")
-	lenient, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: true})
+	lenient, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Lenient: true})
 	require.NoError(t, err)
 	require.NotNil(t, lenient.Package)
 	assert.False(t, lenient.Accepted)
 	assert.True(t, lenient.ModelLine.PackageReport().Requested)
 
 	modelViolated := scenarioMXL(t, scenarioModelViolated)
-	strict, err = DecodeMXLAssessed(ctx, bytes.NewReader(modelViolated), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
+	strict, err = DecodeMXLAssessed(ctx, bytes.NewReader(modelViolated), DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrInvalidDocument)
 	assert.Nil(t, strict.Package)
 
 	// Configuration is checked before any read.
 	reader := &assessmentCountingReader{source: bytes.NewReader(valid)}
 	for name, options := range map[string]DecodeMXLAssessmentOptions{
-		"narrow profile":       {Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource}}},
-		"missing dictionaries": {Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: BundledDictionarySource(), Selections: mandatoryDictionarySelections()[:1]}}}},
-		"invalid MXL limits":   {Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}, MXL: MXLOptions{MaxArchiveBytes: -1}}},
-		"typed-nil source":     {Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: DictionarySourceFunc(nil)}}}},
+		"narrow profile":       {Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}}},
+		"missing dictionaries": {Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Dictionaries: &DictionaryOptions{Source: BundledDictionarySource(), Selections: mandatoryDictionarySelections()[:1]}}}},
+		"invalid MXL limits":   {Assessment: MXLAssessmentOptions{MXL: MXLOptions{MaxArchiveBytes: -1}}},
+		"typed-nil source":     {Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Dictionaries: &DictionaryOptions{Source: DictionarySourceFunc(nil)}}}},
 	} {
 		_, err := DecodeMXLAssessed(ctx, reader, options)
 		assert.ErrorIs(t, err, ErrInvalidConfiguration, name)
 	}
 	assert.Zero(t, reader.reads)
-	_, err = DecodeAssessed(ctx, reader, DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: DictionarySourceFunc(nil)}}})
+	_, err = DecodeAssessed(ctx, reader, DecodeAssessmentOptions{Assessment: &SourceOptions{Dictionaries: &DictionaryOptions{Source: DictionarySourceFunc(nil)}}})
 	assert.ErrorIs(t, err, ErrInvalidConfiguration, "a typed-nil source is an explicit override, not a request for defaults")
 	assert.Zero(t, reader.reads)
-	_, err = DecodeMXLAssessed(ctx, nil, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
+	_, err = DecodeMXLAssessed(ctx, nil, DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrNilReader)
 
 	// Both stages share one account.
@@ -268,11 +268,11 @@ func TestDecodeMXLAssessed(t *testing.T) {
 		return low
 	}
 	inspectMinimum := minimum(func(b validation.Budgets) error {
-		_, err := InspectMXL(ctx, bytes.NewReader(valid), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSourceLine, Budgets: b}})
+		_, err := InspectMXL(ctx, bytes.NewReader(valid), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSourceLine, Budgets: b}})
 		return err
 	})
 	loadMinimum := minimum(func(b validation.Budgets) error {
-		_, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Budgets: b}}, Lenient: true})
+		_, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: b}}, Lenient: true})
 		return err
 	})
 	assert.GreaterOrEqual(t, loadMinimum, inspectMinimum, "the loader does at least the source stage's work on one account")
@@ -280,11 +280,11 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	// Operational failures.
 	canceled, cancel := context.WithCancel(ctx)
 	cancel()
-	_, err = DecodeMXLAssessed(canceled, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: true})
+	_, err = DecodeMXLAssessed(canceled, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Lenient: true})
 	assert.ErrorIs(t, err, context.Canceled)
-	_, err = DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}, MXL: MXLOptions{MaxDocumentBytes: 16}}, Lenient: true})
+	_, err = DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{MXL: MXLOptions{MaxDocumentBytes: 16}}, Lenient: true})
 	assert.ErrorIs(t, err, ErrInvalidMXL, "the MXL limits bound the archive and its conversion")
-	corrupt, err := DecodeMXLAssessed(ctx, strings.NewReader("not a zip"), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: true})
+	corrupt, err := DecodeMXLAssessed(ctx, strings.NewReader("not a zip"), DecodeMXLAssessmentOptions{Lenient: true})
 	assert.Error(t, err)
 	assert.Nil(t, corrupt.Package)
 
@@ -295,9 +295,9 @@ func TestDecodeMXLAssessed(t *testing.T) {
 		calls.Add(1)
 		return validation.ResourceResult{}, errors.New("unavailable")
 	})
-	resources := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{CanonicalID: "urn:test:score"}}
+	resources := MXLAssessmentOptions{Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{CanonicalID: "urn:test:score"}}
 	loaded, loadErr := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: resources, Lenient: true})
-	resources.Graph = MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSourceLine}
+	resources.Graph = MXLGraphOptions{Profile: ProfileMXLSourceLine}
 	inspected, inspectErr := InspectMXL(ctx, bytes.NewReader(valid), resources)
 	assert.Equal(t, inspectErr, loadErr)
 	assert.Equal(t, summarizeBundle(inspected), summarizeBundle(loaded.SourceLine))
@@ -306,7 +306,7 @@ func TestDecodeMXLAssessed(t *testing.T) {
 func TestValidationIssueSemantics(t *testing.T) {
 	t.Parallel()
 
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(scenarioSourceViolated), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll}})
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(scenarioSourceViolated), DecodeAssessmentOptions{})
 	var invalid *ValidationError
 	require.ErrorAs(t, err, &invalid)
 	require.NotEmpty(t, invalid.Issues)
@@ -356,7 +356,7 @@ func TestErrInvalidConfigurationMatchesOptionSentinels(t *testing.T) {
 	_, err = DecodeMXLWithOptions(bytes.NewReader(nil), MXLOptions{MaxArchiveBytes: -1})
 	assert.ErrorIs(t, err, ErrInvalidMXLOptions)
 	assert.ErrorIs(t, err, ErrInvalidConfiguration)
-	_, err = InspectXML(context.Background(), strings.NewReader(scenarioValid), SourceOptions{Context: validation.ContextFamilyAll, Profile: "unknown"})
+	_, err = InspectXML(context.Background(), strings.NewReader(scenarioValid), SourceOptions{Profile: "unknown"})
 	assert.ErrorIs(t, err, ErrInvalidConfiguration)
 }
 
@@ -370,15 +370,15 @@ func TestAssessmentFuncAdapters(t *testing.T) {
 		opened.Add(1)
 		return bundled.Open(ctx, request)
 	})
-	result, err := DecodeAssessed(ctx, strings.NewReader(mandatoryDictionaryScore()), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: source, Selections: mandatoryDictionarySelections()}}})
+	result, err := DecodeAssessed(ctx, strings.NewReader(mandatoryDictionaryScore()), DecodeAssessmentOptions{Assessment: &SourceOptions{Dictionaries: &DictionaryOptions{Source: source, Selections: mandatoryDictionarySelections()}}})
 	require.NoError(t, err)
 	assert.True(t, result.Accepted)
 	assert.Positive(t, opened.Load())
 
 	// A nil DictionarySourceFunc is an absent source.
 	var none DictionarySourceFunc
-	withNil, errNil := InspectXML(ctx, strings.NewReader(mandatoryDictionaryScore()), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceDictionaries, Dictionaries: &DictionaryOptions{Source: none, Selections: mandatoryDictionarySelections()}})
-	without, errWithout := InspectXML(ctx, strings.NewReader(mandatoryDictionaryScore()), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceDictionaries, Dictionaries: &DictionaryOptions{Selections: mandatoryDictionarySelections()}})
+	withNil, errNil := InspectXML(ctx, strings.NewReader(mandatoryDictionaryScore()), SourceOptions{Profile: ProfileSourceDictionaries, Dictionaries: &DictionaryOptions{Source: none, Selections: mandatoryDictionarySelections()}})
+	without, errWithout := InspectXML(ctx, strings.NewReader(mandatoryDictionaryScore()), SourceOptions{Profile: ProfileSourceDictionaries, Dictionaries: &DictionaryOptions{Selections: mandatoryDictionarySelections()}})
 	assert.Equal(t, errWithout, errNil)
 	assert.True(t, reflect.DeepEqual(without, withNil))
 
@@ -439,18 +439,18 @@ func TestAssessedLoadingOperationalFailures(t *testing.T) {
 	})
 	for name, run := range map[string]func(lenient bool) (DecodeResult, error){
 		"I/O failure": func(lenient bool) (DecodeResult, error) {
-			return DecodeAssessed(ctx, &failingAfterReader{source: strings.NewReader(scenarioValid), after: 64}, DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll}, Lenient: lenient})
+			return DecodeAssessed(ctx, &failingAfterReader{source: strings.NewReader(scenarioValid), after: 64}, DecodeAssessmentOptions{Lenient: lenient})
 		},
 		"cancellation during the read": func(lenient bool) (DecodeResult, error) {
 			canceled, cancel := context.WithCancel(ctx)
 			defer cancel()
-			return DecodeAssessed(canceled, &failingAfterReader{source: strings.NewReader(scenarioValid), after: 64, cancel: cancel}, DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll}, Lenient: lenient})
+			return DecodeAssessed(canceled, &failingAfterReader{source: strings.NewReader(scenarioValid), after: 64, cancel: cancel}, DecodeAssessmentOptions{Lenient: lenient})
 		},
 		"dictionary import failure": func(lenient bool) (DecodeResult, error) {
-			return DecodeAssessed(ctx, strings.NewReader(scenarioValid), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{Source: failing, Selections: mandatoryDictionarySelections()}}, Lenient: lenient})
+			return DecodeAssessed(ctx, strings.NewReader(scenarioValid), DecodeAssessmentOptions{Assessment: &SourceOptions{Dictionaries: &DictionaryOptions{Source: failing, Selections: mandatoryDictionarySelections()}}, Lenient: lenient})
 		},
 		"invalid configuration": func(lenient bool) (DecodeResult, error) {
-			return DecodeAssessed(ctx, strings.NewReader(scenarioValid), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: validation.ContextFamilyAll, Profile: "unknown"}, Lenient: lenient})
+			return DecodeAssessed(ctx, strings.NewReader(scenarioValid), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: "unknown"}, Lenient: lenient})
 		},
 	} {
 		for _, lenient := range []bool{false, true} {
@@ -466,7 +466,7 @@ func TestAssessedLoadingOperationalFailures(t *testing.T) {
 	unrepresentable := rawMXL(t, `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>`+
 		`<part id="P1"><measure number="1"><attributes><divisions>1</divisions><staves>99999999999999999999</staves></attributes><note><rest/><duration>1</duration></note></measure></part></score-partwise>`)
 	for _, lenient := range []bool{false, true} {
-		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(unrepresentable), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: lenient})
+		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(unrepresentable), DecodeMXLAssessmentOptions{Lenient: lenient})
 		assert.False(t, result.SourceLine.Satisfied(), "the source line reports the unrepresentable value")
 		assert.NotEmpty(t, result.SourceLine.Failures().Findings)
 		assert.True(t, result.SourceLine.Failures().Violated)
@@ -489,7 +489,7 @@ func TestDecodeMXLAssessedReview(t *testing.T) {
 
 	// Graph.DTD reaches conversion as it reaches the source stage.
 	house := &DTDOptions{Source: mapDTDSource{"house.dtd": `<!ENTITY house "H">`}}
-	result, err := DecodeMXLAssessed(ctx, bytes.NewReader(houseDTDArchive(t)), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, DTD: house}}})
+	result, err := DecodeMXLAssessed(ctx, bytes.NewReader(houseDTDArchive(t)), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{DTD: house}}})
 	require.NoError(t, err)
 	require.NotNil(t, result.Package)
 	score, ok := AsScorePartwise(result.Package.Document)
@@ -513,7 +513,7 @@ func TestDecodeMXLAssessedReview(t *testing.T) {
 		validation.BudgetBufferedBytes: {MaxBufferedBytes: 100},
 	} {
 		reader := &assessmentCountingReader{source: bytes.NewReader(valid)}
-		_, err := DecodeMXLAssessed(ctx, reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Budgets: budgets}}})
+		_, err := DecodeMXLAssessed(ctx, reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: budgets}}})
 		var resource *validation.ResourceError
 		require.ErrorAs(t, err, &resource, kind)
 		assert.Equal(t, kind, resource.Kind)
@@ -522,7 +522,7 @@ func TestDecodeMXLAssessedReview(t *testing.T) {
 
 	// A corrupt archive is an invalid MXL, not an assessment rejection.
 	for _, lenient := range []bool{false, true} {
-		_, err := DecodeMXLAssessed(ctx, strings.NewReader("not a zip"), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: lenient})
+		_, err := DecodeMXLAssessed(ctx, strings.NewReader("not a zip"), DecodeMXLAssessmentOptions{Lenient: lenient})
 		assert.ErrorIs(t, err, ErrInvalidMXL)
 		assert.NotErrorIs(t, err, ErrIncompleteAssessment)
 	}
@@ -531,13 +531,13 @@ func TestDecodeMXLAssessedReview(t *testing.T) {
 	// as in DecodeAssessed. The score uses both dictionaries.
 	document, err := Decode(strings.NewReader(mandatoryDictionaryScore()))
 	require.NoError(t, err)
-	zero, err := AssessModel(ctx, document, ModelOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{}})
+	zero, err := AssessModel(ctx, document, ModelOptions{Dictionaries: &DictionaryOptions{}})
 	require.NoError(t, err)
-	plain, err := AssessModel(ctx, document, ModelOptions{Context: validation.ContextFamilyAll})
+	plain, err := AssessModel(ctx, document, ModelOptions{})
 	require.NoError(t, err)
 	assert.True(t, reflect.DeepEqual(plain, zero))
 	assert.True(t, zero.Satisfied())
-	inspected, err := InspectXML(ctx, strings.NewReader(mandatoryDictionaryScore()), SourceOptions{Context: validation.ContextFamilyAll, Dictionaries: &DictionaryOptions{}})
+	inspected, err := InspectXML(ctx, strings.NewReader(mandatoryDictionaryScore()), SourceOptions{Dictionaries: &DictionaryOptions{}})
 	require.NoError(t, err)
 	assert.True(t, inspected.Satisfied())
 }
@@ -558,6 +558,7 @@ func TestDecodeMXLAssessedRetainsSourceBundle(t *testing.T) {
 	}
 	t.Cleanup(func() { decodeMXLStageHook = nil })
 
+	// The source bundle keeps the projection the test measures.
 	result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
 	require.NoError(t, err)
 	require.True(t, result.Accepted)
@@ -582,7 +583,7 @@ func TestDecodeMXLAssessedRetainsSourceBundle(t *testing.T) {
 			cancel()
 		}
 	}
-	result, err = DecodeMXLAssessed(canceled, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: true})
+	result, err = DecodeMXLAssessed(canceled, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Lenient: true})
 	assert.ErrorIs(t, err, context.Canceled)
 	assert.Nil(t, result.Package)
 	used, err = account.Usage(validation.BudgetBufferedBytes)
@@ -596,7 +597,7 @@ func TestDecodeMXLAssessedClassifiesTruncatedViolations(t *testing.T) {
 	ctx := context.Background()
 	// A violation whose diagnostics are truncated is still a violation.
 	violated := scenarioMXL(t, scenarioSourceViolated)
-	_, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Budgets: validation.Budgets{MaxDiagnosticBytes: 1}}}})
+	_, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: validation.Budgets{MaxDiagnosticBytes: 1}}}})
 	assert.ErrorIs(t, err, ErrInvalidDocument)
 	assert.NotErrorIs(t, err, ErrIncompleteAssessment)
 	assert.Contains(t, err.Error(), "diagnostic details were truncated")
@@ -606,12 +607,12 @@ func TestDecodeMXLAssessedClassifiesTruncatedViolations(t *testing.T) {
 	// independent incompleteness of a line-3 rule next to the violation.
 	both := rawMXL(t, mandatoryScore("0", `<note time-only="1,1"><rest/><duration>1</duration></note>`))
 	for _, budgets := range []validation.Budgets{{}, {MaxDiagnosticBytes: 1}} {
-		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(both), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Budgets: budgets}}})
+		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(both), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: budgets}}})
 		assert.ErrorIs(t, err, ErrInvalidDocument, "%+v", budgets)
 		assert.NotErrorIs(t, err, ErrIncompleteAssessment, "%+v", budgets)
 		// A strict rejection comes before conversion.
 		assert.Equal(t, validation.ConversionIncomplete, result.Conversion.State, "%+v", budgets)
-		lenient, err := DecodeMXLAssessed(ctx, bytes.NewReader(both), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Budgets: budgets}}, Lenient: true})
+		lenient, err := DecodeMXLAssessed(ctx, bytes.NewReader(both), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: budgets}}, Lenient: true})
 		require.NoError(t, err)
 		assert.False(t, lenient.Accepted)
 		assert.True(t, lenient.SourceLine.Failures().Violated, "%+v", budgets)
@@ -625,12 +626,12 @@ func TestDecodeMXLAssessedConvertsOnlyAfterAcceptance(t *testing.T) {
 
 	ctx := context.Background()
 	violated := scenarioMXL(t, scenarioSourceViolated)
-	result, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
+	result, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrInvalidDocument)
 	assert.Equal(t, validation.ConversionIncomplete, result.Conversion.State, "strict: a rejected archive is not converted")
 	assert.Nil(t, result.Package)
 
-	result, err = DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: true})
+	result, err = DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Lenient: true})
 	require.NoError(t, err)
 	assert.Equal(t, validation.ConversionConverted, result.Conversion.State, "lenient: the rejected archive is converted")
 	assert.NotNil(t, result.Package)
@@ -640,7 +641,7 @@ func TestDecodeMXLAssessedConvertsOnlyAfterAcceptance(t *testing.T) {
 	// conversion in both modes.
 	valid := scenarioMXL(t, scenarioValid)
 	for _, lenient := range []bool{false, true} {
-		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Lenient: lenient, Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Budgets: validation.Budgets{MaxRuleSteps: 20000}}}})
+		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Lenient: lenient, Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: validation.Budgets{MaxRuleSteps: 20000}}}})
 		var resource *validation.ResourceError
 		require.ErrorAs(t, err, &resource, "lenient=%v", lenient)
 		assert.Equal(t, validation.BudgetRuleSteps, resource.Kind)
@@ -655,7 +656,7 @@ func TestDecodeMXLAssessedOpenErrors(t *testing.T) {
 	valid := scenarioMXL(t, scenarioValid)
 	// A reader failure matches ErrInvalidMXL and keeps its cause, as in
 	// DecodeMXL; Source is the zero bundle.
-	result, err := DecodeMXLAssessed(ctx, &failingAfterReader{source: bytes.NewReader(valid), after: 64}, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
+	result, err := DecodeMXLAssessed(ctx, &failingAfterReader{source: bytes.NewReader(valid), after: 64}, DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrInvalidMXL)
 	assert.ErrorContains(t, err, "disk failure")
 	assert.Equal(t, validation.AssessmentBundle{}, result.SourceLine)
@@ -663,17 +664,17 @@ func TestDecodeMXLAssessedOpenErrors(t *testing.T) {
 	assert.ErrorIs(t, err, ErrInvalidMXL, "DecodeMXL classifies the same failure alike")
 
 	// A reader that makes no progress is a reader failure too.
-	_, err = DecodeMXLAssessed(ctx, &emptyReads{}, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
+	_, err = DecodeMXLAssessed(ctx, &emptyReads{}, DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrInvalidMXL)
 	assert.ErrorIs(t, err, io.ErrNoProgress)
 
 	// Cancellation and budgets keep their own errors.
 	canceled, cancel := context.WithCancel(ctx)
 	defer cancel()
-	_, err = DecodeMXLAssessed(canceled, &failingAfterReader{source: bytes.NewReader(valid), after: 64, cancel: cancel}, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}})
+	_, err = DecodeMXLAssessed(canceled, &failingAfterReader{source: bytes.NewReader(valid), after: 64, cancel: cancel}, DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, context.Canceled)
 	assert.NotErrorIs(t, err, ErrInvalidMXL)
-	_, err = DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Budgets: validation.Budgets{MaxInputBytes: 100}}}})
+	_, err = DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: validation.Budgets{MaxInputBytes: 100}}}})
 	var resource *validation.ResourceError
 	assert.ErrorAs(t, err, &resource)
 	assert.NotErrorIs(t, err, ErrInvalidMXL)
@@ -697,11 +698,11 @@ func TestDecodeMXLAssessedOpenErrors(t *testing.T) {
 	require.NoError(t, writer.Close())
 	_, err = DecodeMXL(bytes.NewReader(preamble.Bytes()))
 	require.NoError(t, err, "DecodeMXL accepts the preamble")
-	inspected, err := InspectMXL(ctx, bytes.NewReader(preamble.Bytes()), MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}})
+	inspected, err := InspectMXL(ctx, bytes.NewReader(preamble.Bytes()), MXLAssessmentOptions{})
 	require.ErrorIs(t, err, ErrIncompleteAssessment)
 	require.NotNil(t, inspected.PackageReport().Terminal)
 	for _, lenient := range []bool{false, true} {
-		result, err = DecodeMXLAssessed(ctx, bytes.NewReader(preamble.Bytes()), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll}}, Lenient: lenient})
+		result, err = DecodeMXLAssessed(ctx, bytes.NewReader(preamble.Bytes()), DecodeMXLAssessmentOptions{Lenient: lenient})
 		assert.ErrorIs(t, err, ErrIncompleteAssessment, "lenient=%v", lenient)
 		assert.NotErrorIs(t, err, ErrInvalidMXL, "lenient=%v", lenient)
 		assert.Equal(t, inspected.PackageReport().Terminal, result.SourceLine.PackageReport().Terminal, "lenient=%v: the source stage reports the archive as InspectMXL does", lenient)
@@ -725,7 +726,7 @@ func TestDecodeMXLAssessedMetersArchiveReads(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	reader := &emptyReads{}
-	_, err := DecodeMXLAssessed(ctx, reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Budgets: validation.Budgets{MaxRuleSteps: 10}}}})
+	_, err := DecodeMXLAssessed(ctx, reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: validation.Budgets{MaxRuleSteps: 10}}}})
 	var resource *validation.ResourceError
 	require.ErrorAs(t, err, &resource)
 	assert.Equal(t, validation.BudgetRuleSteps, resource.Kind)
@@ -766,7 +767,7 @@ func TestDecodeMXLAssessedMetersZIPInventory(t *testing.T) {
 	for budget := int64(len(data)); budget < 16*int64(len(data)); budget += 256 {
 		reader := &assessmentCountingReader{source: bytes.NewReader(data)}
 		opened.Store(0)
-		result, err := DecodeMXLAssessed(context.Background(), reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Dictionaries: dictionaries, Budgets: validation.Budgets{MaxBufferedBytes: budget}}}})
+		result, err := DecodeMXLAssessed(context.Background(), reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Dictionaries: dictionaries, Budgets: validation.Budgets{MaxBufferedBytes: budget}}}})
 		var resource *validation.ResourceError
 		require.ErrorAs(t, err, &resource, "budget %d", budget)
 		require.Equal(t, validation.BudgetBufferedBytes, resource.Kind, "budget %d", budget)
@@ -776,7 +777,7 @@ func TestDecodeMXLAssessedMetersZIPInventory(t *testing.T) {
 		assert.Zero(t, opened.Load(), "budget %d: the inventory is admitted before the dictionary import", budget)
 		assert.Equal(t, validation.ConversionIncomplete, result.Conversion.State, "budget %d: the inventory is admitted before conversion", budget)
 		allocs := testing.AllocsPerRun(3, func() {
-			_, _ = DecodeMXLAssessed(context.Background(), bytes.NewReader(data), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Dictionaries: dictionaries, Budgets: validation.Budgets{MaxBufferedBytes: budget}}}})
+			_, _ = DecodeMXLAssessed(context.Background(), bytes.NewReader(data), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Dictionaries: dictionaries, Budgets: validation.Budgets{MaxBufferedBytes: budget}}}})
 		})
 		// Parsing the inventory allocates about four times per entry; a
 		// refusal before it allocates a few dozen times in all.

@@ -68,7 +68,7 @@ func TestMandatoryAssessedLoadingRejectsNarrowProfilesBeforeRead(t *testing.T) {
 		} {
 			t.Run(mandatoryLoaderName(explicit)+"/"+string(profile), func(t *testing.T) {
 				reader := &assessmentCountingReader{source: strings.NewReader(`<opus/>`)}
-				result, err := mandatoryDecode(explicit, context.Background(), reader, &SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile)})
+				result, err := mandatoryDecode(explicit, context.Background(), reader, &SourceOptions{Profile: SourceProfile(profile)})
 				if !errors.Is(err, validation.ErrInvalidConfiguration) || result.Document != nil || reader.reads != 0 || reader.closed {
 					t.Fatalf("profile preflight: profile=%s document=%T reads=%d closed=%v error=%v", profile, result.Document, reader.reads, reader.closed, err)
 				}
@@ -95,7 +95,7 @@ func TestMandatoryAssessedLoadingCannotReturnDocumentAfterIncompleteSource(t *te
 			{name: "normative-unknown", ctx: context.Background(), source: mandatoryScore("1", `<note time-only="1,1"><rest/><duration>1</duration></note>`), want: ErrIncompleteAssessment},
 		} {
 			t.Run(mandatoryLoaderName(explicit)+"/"+tc.name, func(t *testing.T) {
-				result, err := mandatoryDecode(explicit, tc.ctx, strings.NewReader(tc.source), &SourceOptions{Context: validation.ContextFamilyAll, Budgets: tc.budgets})
+				result, err := mandatoryDecode(explicit, tc.ctx, strings.NewReader(tc.source), &SourceOptions{Budgets: tc.budgets})
 				if err == nil || result.Document != nil || (tc.want != nil && !errors.Is(err, tc.want)) {
 					t.Fatalf("incomplete source accepted: document=%T error=%v want=%v", result.Document, err, tc.want)
 				}
@@ -128,7 +128,7 @@ func TestMandatoryAssessedLoadingRejectsDecimalUnderflowInTheSourceLine(t *testi
 	// unrepresentable; the source stays conformant.
 	tiny := "0." + strings.Repeat("0", 399) + "1"
 	source := mandatoryScore(tiny, `<note><rest/><duration>`+tiny+`</duration></note>`)
-	sourceReport, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceLine})
+	sourceReport, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLine})
 	if err != nil || sourceReport.Satisfied() || sourceReport.Conformance != validation.ConformanceConformant || !hasRepresentabilityFailure(sourceReport) {
 		t.Fatalf("source line must reject the unrepresentable values: conformance=%s error=%v findings=%s", sourceReport.Conformance, err, localFindings(sourceReport))
 	}
@@ -137,7 +137,7 @@ func TestMandatoryAssessedLoadingRejectsDecimalUnderflowInTheSourceLine(t *testi
 	if err != nil || document == nil {
 		t.Fatalf("fixture must convert successfully: document=%T error=%v", document, err)
 	}
-	modelReport, err := AssessModel(context.Background(), document, ModelOptions{Context: validation.ContextFamilyAll, Profile: ProfileModelSemantics})
+	modelReport, err := AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics})
 	if err != nil || modelReport.Conformance != validation.ConformanceViolated {
 		t.Fatalf("fixture model must violate semantics: conformance=%s error=%v findings=%s", modelReport.Conformance, err, localFindings(modelReport))
 	}

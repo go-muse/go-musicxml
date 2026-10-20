@@ -237,7 +237,7 @@ func TestDTDPkgIndependentAllEntryPointsRejectBeforeIO(t *testing.T) {
 				if entry == "current-mxl" {
 					profile = independentDTDCurrentMXLProfile
 				}
-				o := mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(profile)}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{{Manifest: validation.DictionaryManifestStandardSounds40, Relations: []validation.DictionaryRelation{validation.DictionaryRelationStandardSound}}}, Source: independentDTDPanicDictionary{}}}
+				o := mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(profile)}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{{Manifest: validation.DictionaryManifestStandardSounds40, Relations: []validation.DictionaryRelation{validation.DictionaryRelationStandardSound}}}, Source: independentDTDPanicDictionary{}}}
 				switch invalid {
 				case "empty":
 					o.Resources.Graph.Profile = ""
@@ -310,7 +310,7 @@ func TestDTDPkgIndependentDefaultedLinksSurviveOriginIndexShift(t *testing.T) {
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "child", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(child)))}, RetrievalURI: "https://example.test/child.opus", Body: b}, nil
 	})
 	// Use the real starter while preserving visibility of the root account.
-	g, err := startDictionaryResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(independentDTDGraphProfile)}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}.internal(), DictionaryOptions{}, ProfileResourceGraphDictionaries.ID())
+	g, err := startDictionaryResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(independentDTDGraphProfile)}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}.internal(), DictionaryOptions{}, ProfileResourceGraphDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -460,13 +460,13 @@ func TestDTDPkgIndependentOrdinaryWrappersDoNotGrantDTD(t *testing.T) {
 			if entry == "current-mxl" {
 				profile = independentDTDCurrentMXLProfile
 			}
-			o := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: MXLProfile(profile)}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}
+			o := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(profile)}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}
 			var err error
 			switch entry {
 			case "source":
-				_, err = InspectXMLWithResources(context.Background(), independentDTDPanicReader{}, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(o.Graph.Profile), Budgets: o.Graph.Budgets, DTD: o.Graph.DTD, Dictionaries: o.Graph.Dictionaries}, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies})
+				_, err = InspectXMLWithResources(context.Background(), independentDTDPanicReader{}, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(o.Graph.Profile), Budgets: o.Graph.Budgets, DTD: o.Graph.DTD, Dictionaries: o.Graph.Dictionaries}, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies})
 			case "model":
-				_, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: GraphProfile(o.Graph.Profile), Budgets: o.Graph.Budgets, DTD: o.Graph.DTD, Dictionaries: o.Graph.Dictionaries}, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies})
+				_, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(o.Graph.Profile), Budgets: o.Graph.Budgets, DTD: o.Graph.DTD, Dictionaries: o.Graph.Dictionaries}, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies})
 			case "raw-mxl":
 				_, err = InspectMXL(context.Background(), independentDTDPanicReader{}, o)
 			case "current-mxl":

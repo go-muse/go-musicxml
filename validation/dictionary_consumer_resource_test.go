@@ -154,6 +154,7 @@ func TestDictionaryKnownNonmembershipSurvivesProjectionRefusal(t *testing.T) {
 func TestDictionaryInheritedAttributeUsesOriginalDeclaration(t *testing.T) {
 	s, _ := contextReviewSameTypeFixture(t)
 	defer s.cleanup()
+	s.contextFamilies = ContextFamilyDictionaries // the test reads the dictionary record
 	b, err := compileContextBindingSpecs(s.schema.active, []contextBindingSpec{{Role: "dictionary.smufl.required", Owner: "A", Name: "required", Type: "xs:string", Attribute: true, Count: 1}})
 	if err != nil {
 		t.Fatal(err)

@@ -7,8 +7,10 @@ XSD, local-rule, typed-reference and timeline contracts. Ordinary `Decode`,
 
 ## Meaning of the result
 
-`Report.Context` contains caller-owned snapshots. It is produced before session
-cleanup, under the session's work, fact and retention budgets. Editing a returned
+`Report.Context` contains caller-owned snapshots of the context families the
+caller selects with the `Context` field of the options; it is empty by default,
+and `validation.ContextFamilyAll` keeps every family. It is produced before
+session cleanup, under the session's work, fact and retention budgets. Editing a returned
 record cannot change its producer or another assessment. Like the rest of
 `Report`, the exported fields are editable; they are not a signed certificate.
 
@@ -114,10 +116,11 @@ from the unchanged timeline endpoint/frame contract.
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
 and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
-profile under the default budgets. Both stop at the 20,000,000-step limit;
-raising work alone still reaches the default 64 MiB buffered-byte limit.
-Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
-complete the measured source/current-model cases. Source measurements remove
+profile under the default budgets. Both stop at the 20,000,000-step limit.
+Raising only the work, to `MaxRuleSteps: 1 << 34`, completes both profiles on
+both samples within the default 64 MiB buffer when no context family is
+selected (the default); with `validation.ContextFamilyAll` the MozaChlo source
+still exceeds it, and `MaxBufferedBytes: 512 << 20` completes every case. Source measurements remove
 only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
 are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
 source assessment contract.

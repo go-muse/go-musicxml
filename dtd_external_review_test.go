@@ -77,23 +77,23 @@ func TestExternalDTDHonoursAssessmentBudgets(t *testing.T) {
 	require.Greater(t, prepared.longest, int64(128))
 	for _, internal := range []string{"", ` [<!ENTITY % local "x">]`} {
 		input := dtdTestScore(strings.TrimSuffix(partwiseDOCTYPE, ">")+internal+">", "T", "")
-		_, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: 128}})
+		_, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: 128}})
 		requireResourceKind(t, err, validation.BudgetScalarBytes, "bundled closure under MaxScalarBytes 128: "+internal)
 	}
 	// Importing needs exactly the scalar limit that parsing for internal
 	// parameter entities needs: the longest string, a PE literal included.
 	for _, internal := range []string{"", ` [<!ENTITY % local "x">]`} {
 		input := dtdTestScore(strings.TrimSuffix(partwiseDOCTYPE, ">")+internal+">", "T", "")
-		_, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: prepared.longest}})
+		_, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: prepared.longest}})
 		require.NoError(t, err, internal)
-		_, err = InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: prepared.longest - 1}})
+		_, err = InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: prepared.longest - 1}})
 		requireResourceKind(t, err, validation.BudgetScalarBytes, "one byte below the longest closure string: "+internal)
 	}
 
 	// The partwise closure nests seven deep; the document itself only three.
 	require.Equal(t, int64(7), prepared.depth)
 	for limit, fails := range map[int64]bool{6: true, 7: false} {
-		_, err := InspectXML(context.Background(), strings.NewReader(dtdTestScore(partwiseDOCTYPE, "T", "")), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxDepth: limit}})
+		_, err := InspectXML(context.Background(), strings.NewReader(dtdTestScore(partwiseDOCTYPE, "T", "")), SourceOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxDepth: limit}})
 		if fails {
 			requireResourceKind(t, err, validation.BudgetDepth, "bundled closure under MaxDepth 6")
 		} else {
@@ -158,7 +158,7 @@ func TestExternalDTDDefaultReferenceOrder(t *testing.T) {
 	// The same order check covers the imported bundled closure: eacute is
 	// declared by isolat1.ent, after the internal subset.
 	input := dtdTestScore(strings.TrimSuffix(partwiseDOCTYPE, ">")+` [<!ATTLIST score-partwise version CDATA "&eacute;">]>`, "T", "")
-	_, err = InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD})
+	_, err = InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
 	assert.ErrorAs(t, err, &syntax)
 }
 
@@ -474,7 +474,7 @@ func TestExternalDTDTextIsBuffered(t *testing.T) {
 	comment := `<!--` + strings.Repeat("x", 1_000_000) + `-->`
 	inspect := func(source mapDTDSource, internal string, limit int64) error {
 		_, err := InspectXML(context.Background(), strings.NewReader(houseDTDInput(internal, "&x;")),
-			SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxBufferedBytes: limit}, DTD: &DTDOptions{Source: source}})
+			SourceOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxBufferedBytes: limit}, DTD: &DTDOptions{Source: source}})
 		return err
 	}
 	small := mapDTDSource{"house.dtd": `<!ENTITY x "X">`}
