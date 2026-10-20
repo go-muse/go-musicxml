@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"reflect"
 	"strings"
 	"unsafe"
 )
@@ -152,12 +153,22 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 			}
 		}
 	}()
-	// The record itself lives in the backing array; its three cloned strings
-	// are separate allocations.
-	cost := allocationSlack(int64(len(in.Provider.ID))) + allocationSlack(int64(len(in.Subject.DocumentID))) + allocationSlack(int64(len(in.Property))) + contextAtomicBytes(in.Value.Value) + evidenceLogicalBytes(in.Value)
 	if err = s.account.Check(BudgetScalarBytes, atomicLogicalBytes(in.Value.Value)); err != nil {
 		return err
 	}
+	// The record itself lives in the backing array. Its cloned strings, the
+	// value's strings, cause and numbers, and the origins' backing array,
+	// strings and positions are separate allocations, each rounded up as the
+	// allocator does. The walks below copy nothing; work is charged next.
+	value, err := measureRetained(reflect.ValueOf(in.Value), true)
+	if err != nil {
+		return err
+	}
+	origins, err := measureRetained(reflect.ValueOf(in.Origins), true)
+	if err != nil {
+		return err
+	}
+	cost := ownedStringBytes(string(in.Provider.ID)) + ownedStringBytes(in.Subject.DocumentID) + ownedStringBytes(string(in.Property)) + value.bytes + origins.bytes
 	work := int64(16+len(in.Provider.ID)+len(in.Subject.DocumentID)+len(in.Property)) + atomicLogicalBytes(in.Value.Value) + evidenceLogicalBytes(in.Value)
 	if err = s.step(ctx, work); err != nil {
 		return err
@@ -175,19 +186,8 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	out.Property = ContextProperty(strings.Clone(string(in.Property)))
 	out.Value = cloneEvidence(in.Value)
 	out.Value.Value = cloneAtomic(in.Value.Value)
-	originBytes, e := rationalCheckedMul(BudgetBufferedBytes, int64(len(in.Origins)), int64(unsafe.Sizeof(Location{})))
-	if e != nil {
-		return e
-	}
-	if err = s.retain(allocationSlack(originBytes)); err != nil {
-		return err
-	}
 	for _, origin := range in.Origins {
-		n := locationLogicalBytes(origin)
-		if err = s.step(ctx, n); err != nil {
-			return err
-		}
-		if err = s.retain(n); err != nil {
+		if err = s.step(ctx, locationLogicalBytes(origin)); err != nil {
 			return err
 		}
 	}

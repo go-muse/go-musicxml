@@ -154,8 +154,9 @@ func TestDictionaryProjectionRejectsMixedPayloadAndChargesEveryString(t *testing
 	if _, err := cloneDictionaryContext(context.Background(), s, &large); err != nil {
 		t.Fatal(err)
 	}
-	if delta := s.retained - before - base; delta != 998 {
-		t.Fatalf("owned string storage delta=%d", delta)
+	// The longer row ID is charged as the allocator rounds it.
+	if delta, want := s.retained-before-base, ownedStringBytes(large.Spans[0].RowID)-ownedStringBytes(small.Spans[0].RowID); delta != want {
+		t.Fatalf("owned string storage delta=%d, want %d", delta, want)
 	}
 }
 

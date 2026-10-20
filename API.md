@@ -2283,11 +2283,11 @@ Default-buffer capacity is limited for source-origin graph compositions: every
 selected origin row has two independently owned snapshot copies while session
 storage still overlaps. On Go 1.27.2 linux/amd64, the single-note-per-measure
 `reviewBudgetScore` fixture with `ProfileResourceGraphInternalDTDDictionaries`
-now admits 610 measures (81,783 source bytes) with defaults; 611 measures
-(81,917 bytes) refuse the 64 MiB live-buffer allowance. The earlier published
+now admits 613 measures (82,185 source bytes) with defaults; 614 measures
+(82,319 bytes) refuse the 64 MiB live-buffer allowance. The earlier published
 531/532, PR 43 568/569 and 576/577 boundaries are historical; all of these
-cases now complete. Exact/one-short snapshot controls pin 62,617,598 bytes for
-569 measures and 67,175,452 bytes for 611 measures.
+cases now complete. Exact/one-short snapshot controls pin 62,320,260 bytes for
+569 measures and 67,163,891 bytes for 614 measures.
 The review reported the
 500-measure case at approximately 62.9 MB of the 67.1 MB allowance, a
 previous boundary of 494 measures (about 66 KB), and comparison boundaries of

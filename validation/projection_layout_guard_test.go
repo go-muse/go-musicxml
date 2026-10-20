@@ -111,31 +111,39 @@ func layoutGuardHeap(v reflect.Value, seen map[uintptr]bool) int64 {
 	return n
 }
 
-// layoutGuardFill populates every settable field: strings of width bytes,
-// slices of elems elements, the admitted pointer types and exact numbers.
-func layoutGuardFill(t *testing.T, v reflect.Value, width, elems int, depth int) {
+// layoutGuardShape describes a filled value: strings of width bytes, outer
+// slices of elems elements, exact numbers of about bits binary digits, and
+// whether every pointer, rather than only the admitted state pointers, is set.
+type layoutGuardShape struct {
+	width, elems, bits int
+	anyPointer         bool
+}
+
+// layoutGuardFill populates every settable field of v as shape describes.
+func layoutGuardFill(t *testing.T, v reflect.Value, shape layoutGuardShape, depth int) {
 	t.Helper()
 	if depth > 6 || !v.CanSet() {
 		return
 	}
+	magnitude := new(big.Int).Lsh(big.NewInt(1), uint(max(shape.bits, 1)))
+	magnitude.Add(magnitude, big.NewInt(12345))
 	switch v.Type() {
 	case reflect.TypeFor[Integer]():
-		n, _ := new(big.Int).SetString("123456789012345678901234567890", 10)
-		i, err := NewInteger(n)
+		i, err := NewInteger(magnitude)
 		if err != nil {
 			t.Fatal(err)
 		}
 		v.Set(reflect.ValueOf(i))
 		return
 	case reflect.TypeFor[Decimal]():
-		d, err := NewDecimal(big.NewRat(98765432101234567, 8))
+		d, err := NewDecimal(new(big.Rat).SetFrac(magnitude, big.NewInt(8)))
 		if err != nil {
 			t.Fatal(err)
 		}
 		v.Set(reflect.ValueOf(d))
 		return
 	case reflect.TypeFor[Rational]():
-		r, err := NewRational(big.NewRat(123456789012345, 7))
+		r, err := NewRational(new(big.Rat).SetFrac(magnitude, big.NewInt(7)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -144,7 +152,7 @@ func layoutGuardFill(t *testing.T, v reflect.Value, width, elems int, depth int)
 	}
 	switch v.Kind() {
 	case reflect.String:
-		v.SetString(strings.Repeat("s", width))
+		v.SetString(strings.Repeat("s", shape.width))
 	case reflect.Bool:
 		v.SetBool(true)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -153,71 +161,125 @@ func layoutGuardFill(t *testing.T, v reflect.Value, width, elems int, depth int)
 		v.SetUint(7)
 	case reflect.Struct:
 		for i := 0; i < v.NumField(); i++ {
-			layoutGuardFill(t, v.Field(i), width, elems, depth+1)
+			layoutGuardFill(t, v.Field(i), shape, depth+1)
 		}
 	case reflect.Slice:
 		// Only the outermost slices take the requested length; nested ones
 		// stay short, so that the filled graph stays small.
-		n := elems
+		n := shape.elems
 		if depth > 1 {
-			n = min(elems, 3)
+			n = min(shape.elems, 3)
 		}
 		v.Set(reflect.MakeSlice(v.Type(), n, n))
 		for i := 0; i < n; i++ {
-			layoutGuardFill(t, v.Index(i), width, elems, depth+1)
+			layoutGuardFill(t, v.Index(i), shape, depth+1)
 		}
 	case reflect.Pointer:
 		switch v.Type() {
 		case reflect.TypeFor[*DecisionRef](), reflect.TypeFor[*Evidence[string]](), reflect.TypeFor[*musicalPosition]():
-			v.Set(reflect.New(v.Type().Elem()))
-			layoutGuardFill(t, v.Elem(), width, elems, depth+1)
+		default:
+			if !shape.anyPointer {
+				return
+			}
 		}
+		v.Set(reflect.New(v.Type().Elem()))
+		layoutGuardFill(t, v.Elem(), shape, depth+1)
 	}
 }
 
-// Every payload measured by retainedLayoutBytes, the projections copied
-// through contextRetainProjection and the timeline state records, is charged
-// at no less than the heap its owned copy occupies, for short and long
-// strings alike; so is the layout payload measured by layoutContextSize.
+// Every payload copy is charged at no less than the heap the copy occupies:
+// the projections copied through contextRetainProjection, the timeline state
+// records and repeat/navigation results measured by retainedLayoutBytes, the
+// resource, dictionary and source-origin results measured by
+// retainedProjectionBytes, and the layout payload measured by
+// layoutContextSize. Shapes cover short and long strings, slices past 32 KiB
+// and exact numbers of about 32,768 bits, whose limb arrays and text dominate.
 func TestRetainedLayoutBytesCoverTheCopyHeap(t *testing.T) {
-	// 2100 elements put slices of 16-byte and larger elements past 32 KiB,
-	// where the page rounding applies.
-	for _, shape := range []struct{ width, elems int }{{1, 3}, {7, 3}, {40, 3}, {1000, 3}, {0, 64}, {0, 2100}} {
-		width := shape.width
-		for _, typ := range []reflect.Type{
-			reflect.TypeFor[SpanContextResult](),
-			reflect.TypeFor[TimingContextResult](),
-			reflect.TypeFor[SoundMappingContextResult](),
-			reflect.TypeFor[ContainerContextResult](),
-			reflect.TypeFor[DictionarySpan](),
-			reflect.TypeFor[musicalPosition](),
-			reflect.TypeFor[DecisionRef](),
-		} {
-			value := reflect.New(typ).Elem()
-			layoutGuardFill(t, value, width, shape.elems, 0)
-			s := rationalSession(t, Budgets{MaxBufferedBytes: 1 << 40, MaxRuleSteps: 1 << 40, MaxScalarBytes: 1 << 30})
-			charged, err := retainedLayoutBytes(context.Background(), s, value)
-			if err != nil {
-				t.Fatalf("%s width %d: %v", typ, width, err)
+	shapes := []layoutGuardShape{{1, 3, 64, false}, {7, 3, 64, false}, {40, 3, 64, false}, {1000, 3, 64, false}, {8193, 1, 64, false}, {100000, 1, 64, false}, {0, 64, 64, false}, {0, 2100, 64, false}, {1, 2, 32768, false}}
+	layoutTypes := []reflect.Type{
+		reflect.TypeFor[SpanContextResult](),
+		reflect.TypeFor[TimingContextResult](),
+		reflect.TypeFor[SoundMappingContextResult](),
+		reflect.TypeFor[ContainerContextResult](),
+		reflect.TypeFor[RepeatContextResult](),
+		reflect.TypeFor[NavigationContextResult](),
+		reflect.TypeFor[DictionarySpan](),
+		reflect.TypeFor[musicalPosition](),
+		reflect.TypeFor[DecisionRef](),
+	}
+	projectionTypes := []reflect.Type{
+		reflect.TypeFor[ResourceContextResult](),
+		reflect.TypeFor[DictionaryContextResult](),
+		reflect.TypeFor[SourceOriginContextResult](),
+		reflect.TypeFor[Evidence[Atomic]](),
+		reflect.TypeFor[Location](),
+	}
+	for _, shape := range shapes {
+		for _, anyPointer := range []bool{false, true} {
+			types := layoutTypes
+			if anyPointer {
+				types = projectionTypes
 			}
-			copied := stateCopy(value)
-			holder := reflect.New(typ)
-			holder.Elem().Set(copied)
-			real := layoutGuardHeap(holder, map[uintptr]bool{})
-			if charged < real {
-				t.Errorf("%s width %d: charged %d, the copy occupies %d", typ, width, charged, real)
+			shape.anyPointer = anyPointer
+			for _, typ := range types {
+				value := reflect.New(typ).Elem()
+				layoutGuardFill(t, value, shape, 0)
+				s := rationalSession(t, Budgets{MaxBufferedBytes: 1 << 40, MaxRuleSteps: 1 << 40, MaxScalarBytes: 1 << 30})
+				measure := retainedLayoutBytes
+				if anyPointer {
+					measure = retainedProjectionBytes
+				}
+				charged, err := measure(context.Background(), s, value)
+				if err != nil {
+					t.Fatalf("%s %+v: %v", typ, shape, err)
+				}
+				holder := reflect.New(typ)
+				holder.Elem().Set(stateCopy(value))
+				if real := layoutGuardHeap(holder, map[uintptr]bool{}); charged < real {
+					t.Errorf("%s %+v: charged %d, the copy occupies %d", typ, shape, charged, real)
+				}
 			}
 		}
 		var layout LayoutContextResult
-		layoutGuardFill(t, reflect.ValueOf(&layout).Elem(), width, shape.elems, 0)
+		shape.anyPointer = false
+		layoutGuardFill(t, reflect.ValueOf(&layout).Elem(), shape, 0)
 		charged, _, err := layoutContextSize(layout)
 		if err != nil {
 			t.Fatal(err)
 		}
 		copied := cloneLayoutContextValue(layout)
 		if real := layoutGuardHeap(reflect.ValueOf(&copied), map[uintptr]bool{}); charged < real {
-			t.Errorf("layout width %d: charged %d, the copy occupies %d", width, charged, real)
+			t.Errorf("layout %+v: charged %d, the copy occupies %d", shape, charged, real)
 		}
+	}
+}
+
+// A published record is charged at no less than the heap its copy occupies,
+// with a long scalar string, a long origin path, and a long exact number in
+// the value: eight such records leave the projection subtotal at or above the
+// measured heap of Report.Context.
+func TestContextRecordValueAndOriginsCoverTheirHeap(t *testing.T) {
+	long := strings.Repeat("x", 8193)
+	huge, err := NewInteger(new(big.Int).Lsh(big.NewInt(1), 32768))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, row := range map[string]ContextResult{
+		"long scalar": {Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: long}}, Origins: []Location{{Target: TargetSource, DocumentID: "source"}}},
+		"long origin": {Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "x"}}, Origins: []Location{{Target: TargetSource, DocumentID: "source", Path: long}}},
+		"long number": {Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: huge}}, Origins: []Location{{Target: TargetSource, DocumentID: "source"}}},
+	} {
+		row.Provider, row.Subject, row.Property = RuleKey{"record", 1}, NodeRef{"source", 1}, ContextPropertySpanHammerMarking
+		s := rationalSession(t, Budgets{})
+		for range 8 {
+			if err := s.publishContextResult(context.Background(), row); err != nil {
+				t.Fatalf("%s: %v", name, err)
+			}
+		}
+		if real := layoutGuardHeap(reflect.ValueOf(s.contextResults), map[uintptr]bool{}); s.contextReportRetained < real {
+			t.Errorf("%s: subtotal %d, the projection occupies %d", name, s.contextReportRetained, real)
+		}
+		s.cleanup()
 	}
 }
 
@@ -396,6 +458,75 @@ func TestSpanEvaluationHoldsReplacedBacking(t *testing.T) {
 		_, _, err := evaluateContextSpans(context.Background(), r.s, note, RuleKey{"spans", 1}, &contextPlan{Bindings: r.b}, true)
 		if spare < 0 && !errors.Is(err, ErrResourceLimit) || spare == 0 && err != nil {
 			t.Fatalf("buffer %d: err=%v", peak+spare, err)
+		}
+	}
+}
+
+// The retained storage of an exact number, its big value with the limb array
+// at its actual capacity and its canonical text, is bounded by
+// numericRetainedBytes at every magnitude.
+func TestNumericRetainedBytesCoverTheirStorage(t *testing.T) {
+	for _, bits := range []uint{1, 64, 4096, 32768, 200000} {
+		magnitude := new(big.Int).Lsh(big.NewInt(1), bits)
+		magnitude.Add(magnitude, big.NewInt(12345))
+		integer, err := NewInteger(magnitude)
+		if err != nil {
+			t.Fatal(err)
+		}
+		decimal, err := NewDecimal(new(big.Rat).SetFrac(magnitude, big.NewInt(8)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		rational, err := NewRational(new(big.Rat).SetFrac(magnitude, big.NewInt(7)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, n := range []any{integer, decimal, rational} {
+			charged, ok := numericRetainedBytes(n)
+			real := layoutGuardHeap(reflect.ValueOf(n), map[uintptr]bool{})
+			if !ok || charged < real {
+				t.Errorf("%T of %d bits: charged %d, retains %d", n, bits, charged, real)
+			}
+		}
+	}
+}
+
+// The resource, dictionary and source-origin clones charge at no less than
+// the heap of the copies they return, for short, long and very long strings
+// and long exact numbers.
+func TestProjectionClonesChargeTheirCopies(t *testing.T) {
+	for _, shape := range []layoutGuardShape{{1, 3, 64, true}, {1000, 3, 64, true}, {8193, 1, 64, true}, {100000, 1, 64, true}, {1, 2, 32768, true}} {
+		limits := Budgets{MaxBufferedBytes: 1 << 40, MaxRuleSteps: 1 << 40, MaxScalarBytes: 1 << 30}
+		var resource ResourceContextResult
+		layoutGuardFill(t, reflect.ValueOf(&resource).Elem(), shape, 0)
+		s := rationalSession(t, limits)
+		charged, err := resourceContextSize(context.Background(), s, &resource)
+		if err != nil {
+			t.Fatalf("resource %+v: %v", shape, err)
+		}
+		if real := layoutGuardHeap(reflect.ValueOf(cloneResourceContextValue(&resource)), map[uintptr]bool{}); charged < real {
+			t.Errorf("resource %+v: charged %d, the copy occupies %d", shape, charged, real)
+		}
+		for name, clone := range map[string]func(*Session) (any, error){
+			"dictionary": func(s *Session) (any, error) {
+				var p DictionaryContextResult
+				layoutGuardFill(t, reflect.ValueOf(&p).Elem(), shape, 0)
+				return cloneDictionaryContext(context.Background(), s, &p)
+			},
+			"source origin": func(s *Session) (any, error) {
+				var p SourceOriginContextResult
+				layoutGuardFill(t, reflect.ValueOf(&p).Elem(), shape, 0)
+				return cloneSourceOriginContext(context.Background(), s, &p)
+			},
+		} {
+			s := rationalSession(t, limits)
+			copied, err := clone(s)
+			if err != nil {
+				t.Fatalf("%s %+v: %v", name, shape, err)
+			}
+			if real := layoutGuardHeap(reflect.ValueOf(copied), map[uintptr]bool{}); s.retained < real {
+				t.Errorf("%s %+v: charged %d, the copy occupies %d", name, shape, s.retained, real)
+			}
 		}
 	}
 }

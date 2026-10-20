@@ -190,15 +190,15 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 		// strict-loading source line only, this internal-DTD graph profile no
 		// longer carries it, and the boundary is 576/577 again. The structural
 		// score/part role wording adds 59 live bytes. Accounting the context
-		// projection by its real layout moves the boundary to 610/611.
+		// projection by its real layout moves the boundary to 613/614.
 		{568, 76155, false, 0, 0},
 		{569, 76289, false, 0, 0},
 		{571, 76557, false, 0, 0},
 		{572, 76691, false, 0, 0},
 		{576, 77227, false, 0, 0},
 		{577, 77361, false, 0, 0},
-		{610, 81783, false, 0, 0},
-		{611, 81917, true, 40638133, 26537319},
+		{613, 82185, false, 0, 0},
+		{614, 82319, true, 40496624, 26667267},
 	} {
 		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
 			source := reviewBudgetScore(tc.measures)
@@ -233,8 +233,8 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	// source representability rule added its definitions and node results
 	// until it moved to the strict-loading source line. The structural
 	// score/part role wording adds 59 live bytes. Real-layout projection
-	// accounting lowers the live side to 49,054,699.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 49054699, 34741296)
+	// accounting lowers the live side to 48,656,055.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 48656055, 34741296)
 	t.Logf("source bytes=%d err=%v", len(source), err)
 }
 
@@ -242,15 +242,15 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 	if runtime.GOARCH != "amd64" {
 		t.Skip("documented amd64 capacity witness")
 	}
-	// Retain the historical 569-measure fixture and the current 611-measure
+	// Retain the historical 569-measure fixture and the current 614-measure
 	// default refusal. Their measured final-snapshot overlaps establish exact
 	// and one-short admission controls, without changing production defaults.
 	for _, tc := range []struct {
 		measures, bytes int
 		used, requested int64
 	}{
-		{569, 76289, 37899551, 24718047},
-		{611, 81917, 40638133, 26537319},
+		{569, 76289, 37602213, 24718047},
+		{614, 82319, 40496624, 26667267},
 	} {
 		for _, short := range []int64{0, 1} {
 			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {

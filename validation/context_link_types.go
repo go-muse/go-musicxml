@@ -157,65 +157,15 @@ func resourcePayloadValid(p ContextProperty, v *ResourceContextResult) bool {
 	}
 	return false
 }
+
+// resourceContextSize measures the deep copy cloneResourceContextValue makes:
+// the record and every link, image, group, instrument and schema-hint payload
+// with their strings, origins and numbers, rounded as the allocator does.
 func resourceContextSize(ctx context.Context, s *Session, p *ResourceContextResult) (int64, error) {
 	if p == nil {
 		return 0, nil
 	}
-	base := *p
-	base.Link, base.Image, base.SchemaHints, base.Group, base.Instrument = nil, nil, nil, nil, nil
-	size, err := stateMeasure(ctx, s, reflect.ValueOf(base))
-	if err != nil {
-		return 0, err
-	}
-	add := func(value any) error {
-		n, e := stateMeasure(ctx, s, reflect.ValueOf(value))
-		if e != nil {
-			return e
-		}
-		size, e = rationalCheckedAdd(BudgetBufferedBytes, size, n)
-		return e
-	}
-	if p.Link != nil {
-		if err = add(*p.Link); err != nil {
-			return 0, err
-		}
-	}
-	if p.Image != nil {
-		if err = add(*p.Image); err != nil {
-			return 0, err
-		}
-	}
-	if p.Group != nil {
-		if err = add(*p.Group); err != nil {
-			return 0, err
-		}
-	}
-	if p.Instrument != nil {
-		if err = add(*p.Instrument); err != nil {
-			return 0, err
-		}
-	}
-	if p.SchemaHints != nil {
-		hints := *p.SchemaHints
-		hints.Pairs = nil
-		if err = add(hints); err != nil {
-			return 0, err
-		}
-		for _, pair := range p.SchemaHints.Pairs {
-			if err = add(struct{ Namespace, Location Evidence[string] }{pair.Namespace, pair.Location}); err != nil {
-				return 0, err
-			}
-			n := locationLogicalBytes(pair.Origin) + 384
-			if err = s.step(ctx, n); err != nil {
-				return 0, err
-			}
-			size, err = rationalCheckedAdd(BudgetBufferedBytes, size, n)
-			if err != nil {
-				return 0, err
-			}
-		}
-	}
-	return size, nil
+	return retainedProjectionBytes(ctx, s, reflect.ValueOf(*p))
 }
 func cloneResourceContextValue(p *ResourceContextResult) *ResourceContextResult {
 	if p == nil {

@@ -2,7 +2,10 @@ package validation
 
 import (
 	"context"
+	"math/big"
+	"math/bits"
 	"reflect"
+	"unsafe"
 )
 
 // contextRetainProjection admits one standalone, exact-length owned graph.
@@ -23,28 +26,47 @@ func contextRetainProjection(ctx context.Context, s *Session, value any) error {
 
 // retainedLayoutBytes measures what an owned copy of v keeps live: one
 // allocation of v's type plus every string, slice backing array and pointer
-// target the copy owns, and the immutable numeric storage it shares. Each
-// allocation is rounded up by allocationSlack, so the result bounds the heap
-// the copy occupies. It admits the same closed private value graph as
-// stateMeasure and rejects any other pointer or payload. Work is charged as
-// the walk proceeds: every string byte the copy will duplicate, one step per
-// 64 visited items and 16 for the call.
+// target the copy owns, and the numeric storage it shares (see
+// retainedShape). It admits the same closed private value graph as
+// stateMeasure and rejects any other pointer or payload.
 func retainedLayoutBytes(ctx context.Context, s *Session, v reflect.Value) (int64, error) {
-	if err := s.step(ctx, 16); err != nil || !v.IsValid() {
-		return 0, err
+	return retainedBytes(ctx, s, v, false)
+}
+
+// retainedProjectionBytes measures a copy of a public context payload like
+// retainedLayoutBytes, but follows any pointer: the payload types are a
+// closed public vocabulary rather than private timeline state.
+func retainedProjectionBytes(ctx context.Context, s *Session, v reflect.Value) (int64, error) {
+	return retainedBytes(ctx, s, v, true)
+}
+
+func retainedBytes(ctx context.Context, s *Session, v reflect.Value, anyPointer bool) (int64, error) {
+	if !v.IsValid() {
+		return 0, s.step(ctx, 16)
 	}
-	w := retainedLayoutWalk{ctx: ctx, s: s}
-	external, err := w.external(v)
+	shape, err := measureRetained(v, anyPointer)
 	if err != nil {
 		return 0, err
 	}
-	return rationalCheckedAdd(BudgetBufferedBytes, allocationSlack(int64(v.Type().Size())), external)
+	if err = shape.charge(ctx, s); err != nil {
+		return 0, err
+	}
+	return rationalCheckedAdd(BudgetBufferedBytes, allocationSlack(int64(v.Type().Size())), shape.bytes)
 }
 
-type retainedLayoutWalk struct {
-	ctx     context.Context
-	s       *Session
-	visited int64
+// retainedShape is the storage a copy of a value owns outside the value
+// itself: every nonempty string, slice backing array and pointer target, each
+// rounded up by allocationSlack, plus the retained storage of every exact
+// number (numericRetainedBytes). text counts the string bytes a copy
+// duplicates and visited the items walked.
+type retainedShape struct {
+	bytes, text, visited int64
+}
+
+// charge admits the work of measuring and copying: every string byte the copy
+// duplicates, one step per 64 visited items and 16 for the call.
+func (r retainedShape) charge(ctx context.Context, s *Session) error {
+	return s.step(ctx, 16+r.text+r.visited/64)
 }
 
 // allocationSlack bounds the heap an n-byte allocation occupies. Small objects
@@ -59,20 +81,60 @@ func allocationSlack(n int64) int64 {
 	return n + n/4 + 24
 }
 
-func (w *retainedLayoutWalk) external(v reflect.Value) (int64, error) {
-	if w.visited++; w.visited%64 == 0 {
-		if err := w.s.step(w.ctx, 1); err != nil {
-			return 0, err
-		}
+// ownedStringBytes is the heap of a copied string.
+func ownedStringBytes(s string) int64 { return allocationSlack(int64(len(s))) }
+
+const bigWordBytes = int64(bits.UintSize / 8)
+
+// bigIntRetainedBytes is the heap of a big.Int object and its limb array at
+// its actual capacity.
+func bigIntRetainedBytes(x *big.Int) int64 {
+	if x == nil {
+		return 0
 	}
+	return allocationSlack(int64(unsafe.Sizeof(*x))) + allocationSlack(int64(cap(x.Bits()))*bigWordBytes)
+}
+
+// bigRatRetainedBytes is the heap of a big.Rat object and both limb arrays.
+func bigRatRetainedBytes(x *big.Rat) int64 {
+	if x == nil {
+		return 0
+	}
+	return allocationSlack(int64(unsafe.Sizeof(*x))) + allocationSlack(int64(cap(x.Num().Bits()))*bigWordBytes) + allocationSlack(int64(cap(x.Denom().Bits()))*bigWordBytes)
+}
+
+// numericRetainedBytes is the storage an exact number keeps live outside its
+// wrapper: the big value with its limb capacity and the canonical text. A copy
+// shares this immutable storage with its source; it is still charged, since
+// the copy keeps it reachable.
+func numericRetainedBytes(v any) (int64, bool) {
+	switch n := v.(type) {
+	case Integer:
+		return bigIntRetainedBytes(n.value) + ownedStringBytes(n.text), true
+	case Decimal:
+		return bigRatRetainedBytes(n.value) + ownedStringBytes(n.text), true
+	case Rational:
+		return bigRatRetainedBytes(n.value) + ownedStringBytes(n.text), true
+	}
+	return 0, false
+}
+
+func measureRetained(v reflect.Value, anyPointer bool) (retainedShape, error) {
+	w := retainedLayoutWalk{anyPointer: anyPointer}
+	bytes, err := w.external(v)
+	return retainedShape{bytes: bytes, text: w.text, visited: w.visited}, err
+}
+
+type retainedLayoutWalk struct {
+	anyPointer    bool
+	text, visited int64
+}
+
+func (w *retainedLayoutWalk) external(v reflect.Value) (int64, error) {
+	w.visited++
 	if v.CanInterface() && v.Kind() == reflect.Struct {
-		switch n := v.Interface().(type) {
-		case Integer:
-			return n.ByteSize() + 64, nil
-		case Decimal:
-			return n.ByteSize() + 64, nil
-		case Rational:
-			return n.ByteSize() + 64, nil
+		if n, ok := numericRetainedBytes(v.Interface()); ok {
+			return n, nil
 		}
 	}
 	var n int64
@@ -109,7 +171,7 @@ func (w *retainedLayoutWalk) external(v reflect.Value) (int64, error) {
 		}
 	case reflect.Pointer:
 		if !v.IsNil() {
-			if v.Type() != reflect.TypeFor[*DecisionRef]() && v.Type() != reflect.TypeFor[*Evidence[string]]() && v.Type() != reflect.TypeFor[*musicalPosition]() {
+			if !w.anyPointer && v.Type() != reflect.TypeFor[*DecisionRef]() && v.Type() != reflect.TypeFor[*Evidence[string]]() && v.Type() != reflect.TypeFor[*musicalPosition]() {
 				return 0, contract("timeline state", "unexpected mutable pointer")
 			}
 			if e := add(allocationSlack(int64(v.Type().Elem().Size())), nil); e != nil {
@@ -120,9 +182,7 @@ func (w *retainedLayoutWalk) external(v reflect.Value) (int64, error) {
 			}
 		}
 	case reflect.String:
-		if e := w.s.step(w.ctx, int64(v.Len())); e != nil {
-			return 0, e
-		}
+		w.text += int64(v.Len())
 		if e := add(allocationSlack(int64(v.Len())), nil); e != nil {
 			return 0, e
 		}
