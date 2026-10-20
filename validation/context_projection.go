@@ -168,11 +168,21 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	// value's strings, cause and numbers, and the origins' backing array,
 	// strings and positions are separate allocations, each rounded up as the
 	// allocator does. The walks copy nothing. The value's strings are in the
-	// work charged above; the variable-length origins are charged as they are
-	// walked, which also checks the context every 64 items.
+	// work charged above. Each origin is charged its fixed 96 steps, plus 64
+	// for a position, before the origins are walked; the walk charges their
+	// strings, checking the context at every string and every 64 items.
 	value, err := measureRetainedMetered(ctx, s, reflect.ValueOf(in.Value), true, false)
 	if err != nil {
 		return err
+	}
+	for _, origin := range in.Origins {
+		fixed := int64(96)
+		if origin.Position != nil {
+			fixed += 64
+		}
+		if err = s.step(ctx, fixed); err != nil {
+			return err
+		}
 	}
 	origins, err := measureRetainedMetered(ctx, s, reflect.ValueOf(in.Origins), true, true)
 	if err != nil {

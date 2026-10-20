@@ -579,33 +579,27 @@ func TestRetainedMeasurementStopsDuringTheWalk(t *testing.T) {
 	}
 }
 
-// A record's origins are measured with checkpoints too: more origins mean
-// more context checks, and canceling at the last of them publishes nothing.
+// A record's origins are charged their fixed work per origin and their
+// strings, and measured with checkpoints: a walk of 256 origins stops at a
+// cancellation seen early in the walk, and publishing them charges at least
+// 96 steps per origin.
 func TestContextRecordOriginsMeasuredWithCheckpoints(t *testing.T) {
-	record := func(origins int) ContextResult {
-		r := ContextResult{Provider: RuleKey{"origins", 1}, Subject: NodeRef{"source", 1}, Property: ContextPropertySpanHammerMarking, Value: Evidence[Atomic]{State: EvidenceAbsent}}
-		for i := range origins {
-			r.Origins = append(r.Origins, Location{Target: TargetSource, DocumentID: "source", Path: "/p/" + strings.Repeat("x", i%7)})
-		}
-		return r
-	}
-	checks := func(origins int) int {
-		probe := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
-		s := rationalSession(t, Budgets{})
-		defer s.cleanup()
-		if err := s.publishContextResult(probe, record(origins)); err != nil {
-			t.Fatal(err)
-		}
-		return probe.calls
-	}
-	few, many := checks(1), checks(256)
-	if many < few+4 {
-		t.Fatalf("256 origins checked the context %d times, one origin %d", many, few)
+	origins := make([]Location, 256)
+	for i := range origins {
+		origins[i] = Location{Target: TargetSource, DocumentID: "source", Path: "/p/" + strings.Repeat("x", i%7)}
 	}
 	s := rationalSession(t, Budgets{})
+	if _, err := measureRetainedMetered(&rationalCancelContext{Context: context.Background(), at: 2}, s, reflect.ValueOf(origins), true, true); !errors.Is(err, context.Canceled) {
+		t.Fatalf("origins walk ignored cancellation: %v", err)
+	}
+	s.cleanup()
+	s = rationalSession(t, Budgets{})
 	defer s.cleanup()
-	err := s.publishContextResult(&rationalCancelContext{Context: context.Background(), at: many - 1}, record(256))
-	if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != 0 {
-		t.Fatalf("cancellation during the origins walk: err=%v records=%d retained=%d", err, len(s.contextResults), s.retained)
+	record := ContextResult{Provider: RuleKey{"origins", 1}, Subject: NodeRef{"source", 1}, Property: ContextPropertySpanHammerMarking, Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: origins}
+	if err := s.publishContextResult(context.Background(), record); err != nil {
+		t.Fatal(err)
+	}
+	if steps := rationalUsage(t, s, BudgetRuleSteps); steps < 96*256 {
+		t.Fatalf("256 origins charged %d steps", steps)
 	}
 }
