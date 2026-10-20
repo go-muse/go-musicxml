@@ -18877,7 +18877,7 @@
       "anchors": [
         {
           "file": "resource_graph_boundary_inventory_test.go",
-          "text": "for _, current := range []bool{false, true} {\n\t\tfor _, mode := range []string{\"absent\", \"existing\", \"cycle\"} {\n\t\t\tt.Run(fmt.Sprintf(\"current=%t/%s\", current, mode), func(t *testing.T) {\n\t\t\t\tlast := \"missing.opus\"\n\t\t\t\tif mode == \"cycle\" {\n\t\t\t\t\tlast = \"one.opus\"\n\t\t\t\t}\n\t\t\t\tdata, value := reviewBoundaryFixture(t, last, mode == \"existing\")\n\t\t\t\tcalls := 0\n\t\t\t\toptions := MXLAssessmentOptions{Graph: MXLGraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {\n\t\t\t\t\tcalls++"
+          "text": "for _, current := range []bool{false, true} {\n\t\tfor _, mode := range []string{\"absent\", \"existing\", \"cycle\"} {\n\t\t\tt.Run(fmt.Sprintf(\"current=%t/%s\", current, mode), func(t *testing.T) {\n\t\t\t\tlast := \"missing.opus\"\n\t\t\t\tif mode == \"cycle\" {\n\t\t\t\t\tlast = \"one.opus\"\n\t\t\t\t}\n\t\t\t\tdata, value := reviewBoundaryFixture(t, last, mode == \"existing\")\n\t\t\t\tcalls := 0\n\t\t\t\toptions := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {\n\t\t\t\t\tcalls++"
         },
         {
           "file": "resource_graph_boundary_inventory_test.go",
