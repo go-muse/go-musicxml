@@ -49,7 +49,7 @@ func (e *SessionError) Error() string {
 	if e == nil {
 		return "validation: nil session error"
 	}
-	return fmt.Sprintf("%s: %s: %s", ErrInvalidSession, e.Operation, e.Reason)
+	return joinErrorText(ErrInvalidSession.Error(), e.Operation, e.Reason, causeText(e.Cause))
 }
 
 // Unwrap preserves the lifecycle sentinel and the original cause.

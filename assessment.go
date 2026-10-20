@@ -97,12 +97,16 @@ type ConversionError struct {
 	Cause error
 }
 
-// Error describes the conversion state. Inspect Cause for the mapper's details.
+// Error describes the conversion state and, when present, its cause.
 func (e *ConversionError) Error() string {
 	if e == nil {
 		return "musicxml: nil conversion error"
 	}
-	return "musicxml: model conversion " + string(e.State)
+	message := "musicxml: model conversion " + string(e.State)
+	if e.Cause != nil {
+		message += ": " + e.Cause.Error()
+	}
+	return message
 }
 
 // Unwrap preserves the original conversion cause for errors.Is and errors.As.

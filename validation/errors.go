@@ -3,6 +3,7 @@ package validation
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // ErrIncompleteAssessment identifies an assessment that could not be completed.
@@ -68,7 +69,29 @@ func (e *ConfigurationError) Error() string {
 	if e == nil {
 		return "validation: nil configuration error"
 	}
-	return fmt.Sprintf("%s: %s: %s", ErrInvalidConfiguration, e.Field, e.Reason)
+	return joinErrorText(ErrInvalidConfiguration.Error(), e.Field, e.Reason)
+}
+
+// joinErrorText joins the nonempty parts of an error message with ": ".
+func joinErrorText(parts ...string) string {
+	var b strings.Builder
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+		if b.Len() != 0 {
+			b.WriteString(": ")
+		}
+		b.WriteString(part)
+	}
+	return b.String()
+}
+
+func causeText(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
 }
 
 // Unwrap preserves ErrInvalidConfiguration.
