@@ -61,15 +61,19 @@ func TestReviewDefaultBudgetOfficialSourceComposition(t *testing.T) {
 			r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: profile})
 			if profile == ProfileSourceSemantics && err != nil {
 				// Historically this input reached the 20M work limit before layout
-				// publication. Reduced repeated work now reaches a later buffer
-				// refusal after the same complete input. Matched-phase diagnostics
-				// show lower live storage and identical complete reports; neither
+				// publication; reduced repeated work then moved the refusal to the
+				// buffer. With real-layout projection accounting the buffer and the
+				// work limit are both close to exhaustion at the end of the same
+				// complete input, so either may refuse first. Neither
 				// default-budget refusal is a completed or satisfied assessment.
 				var limit *validation.ResourceError
-				if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
+				if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes && limit.Kind != validation.BudgetRuleSteps || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
 					t.Fatalf("unexpected default-budget failure: %v", err)
 				}
 				wantLimit := validation.DefaultBudgets().MaxBufferedBytes
+				if limit.Kind == validation.BudgetRuleSteps {
+					wantLimit = validation.DefaultBudgets().MaxRuleSteps
+				}
 				if limit.Limit != wantLimit {
 					t.Fatalf("resource refusal did not use the default limit: %v", err)
 				}
@@ -90,11 +94,12 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 	}
 	_, err = InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: ProfileSourceSemantics})
 	if err != nil {
+		// The default buffer or work limit refuses, whichever comes first.
 		var limit *validation.ResourceError
-		if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes {
+		if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes && limit.Kind != validation.BudgetRuleSteps {
 			t.Fatalf("unexpected original-byte limit: %v", err)
 		}
-		t.Logf("original UTF-16 sample default buffer: %v", err)
+		t.Logf("original UTF-16 sample default limit: %v", err)
 	}
 	// With configured capacity the original bytes complete: the external
 	// subset comes from the bundled official MusicXML DTD.

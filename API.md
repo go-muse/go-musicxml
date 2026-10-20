@@ -1487,7 +1487,9 @@ before the shared absent-attribute optimization.
 Composition costs differ from that XSD-only table. In the historical
 linux/amd64 receipt below, the original 223,068-byte UTF-16BE
 `MozaChloSample.musicxml` with `ProfileSourceSemantics` exhausts the default
-64 MiB buffer. Its external subset is now read from the bundled official DTD, so
+64 MiB buffer; with real-layout projection accounting the default buffer and the
+default 20 million rule steps are both near exhaustion, and either may refuse
+first. Its external subset is now read from the bundled official DTD, so
 the assessment does its full work: with `MaxBufferedBytes: 256 << 20` and
 `MaxRuleSteps: 100_000_000` this particular fixture completes and is satisfied.
 This is a measured finite allowance for that exact input and profile, not a new
