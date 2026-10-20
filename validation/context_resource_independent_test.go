@@ -132,7 +132,7 @@ func TestIndependentContextEveryPayloadAdmissionBoundaries(t *testing.T) {
 				} // zero selects default, not zero allowance.
 				s := rationalSession(t, limits)
 				err := s.publishContextResult(context.Background(), in)
-				if !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 0 || s.retained != 0 {
+				if !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 					t.Fatalf("failed admission published/retained: %+v err=%v records=%d bytes=%d", limits, err, len(s.contextResults), s.retained)
 				}
 				s.cleanup()
@@ -145,7 +145,7 @@ func TestIndependentContextEveryPayloadAdmissionBoundaries(t *testing.T) {
 			for at := 1; at <= polls; at++ {
 				s := rationalSession(t, Budgets{})
 				err := s.publishContextResult(&rationalCancelContext{Context: context.Background(), at: at}, in)
-				if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != 0 {
+				if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 					t.Fatalf("poll %d: error=%v visible=%d bytes=%d", at, err, len(s.contextResults), s.retained)
 				}
 				s.cleanup()

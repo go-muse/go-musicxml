@@ -194,7 +194,7 @@ func TestResourceSnapshotKeepsHiddenRecordsInOrder(t *testing.T) {
 	s = rationalSession(t, Budgets{})
 	s.contextFamilies, s.resourceSnapshot = ContextFamilySpans, true
 	hold := s.holdContextBacking()
-	if err := s.publishValidatedContextResult(context.Background(), sounds(1)); !errors.Is(err, ErrInvalidConfiguration) || len(s.hiddenContexts) != 0 || s.retained != 0 {
+	if err := s.publishValidatedContextResult(context.Background(), sounds(1)); !errors.Is(err, ErrInvalidConfiguration) || len(s.hiddenContexts) != 0 || s.retained != internCharge(s) {
 		t.Fatalf("snapshot-only record kept under a span hold: err=%v hidden=%d retained=%d", err, len(s.hiddenContexts), s.retained)
 	}
 	s.releaseHeldContextBacking(hold, false)

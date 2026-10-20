@@ -42,17 +42,20 @@ func (s *Session) own(v string) string {
 	if owned, ok := s.strings[v]; ok {
 		return owned
 	}
-	// Every caller has charged this use's string as a private copy. A new
-	// table entry is charged its slot as well; when the account cannot admit
-	// it, the value is copied without an entry, as before interning.
+	// The table owns its copy beyond any one publication, so a new entry is
+	// charged its slot and string as session retention that rollbacks keep
+	// (internRetained): a publication or span evaluation that rolls back
+	// leaves the entry and its charge until cleanup. When the account cannot
+	// admit the entry, the value is copied without one, as before interning.
 	owned := strings.Clone(v)
-	slot := internSlotBytes
+	charge := internSlotBytes + ownedStringBytes(owned)
 	if s.strings == nil {
-		slot += internTableBytes
+		charge += internTableBytes
 	}
-	if s.account == nil || s.retain(slot) != nil {
+	if s.account == nil || s.retain(charge) != nil {
 		return owned
 	}
+	s.internRetained += charge
 	if s.strings == nil {
 		s.strings = make(map[string]string)
 	}
@@ -66,6 +69,23 @@ const (
 	internSlotBytes  int64 = 96
 	internTableBytes int64 = 256
 )
+
+// retainedMark is the rollback point of a transactional operation.
+type retainedMark struct{ retained, intern int64 }
+
+func (s *Session) markRetained() retainedMark {
+	return retainedMark{s.retained, s.internRetained}
+}
+
+// rollbackRetained releases what the session retained since m, except the
+// intern table's new entries, which stay owned and charged until cleanup.
+func (s *Session) rollbackRetained(m retainedMark) {
+	kept := s.internRetained - m.intern
+	if delta := s.retained - m.retained - kept; delta > 0 {
+		_ = s.account.Release(BudgetBufferedBytes, delta)
+		s.retained -= delta
+	}
+}
 
 // ownKey returns the catalog's own copy of a catalog rule key.
 func (s *Session) ownKey(k RuleKey) RuleKey {

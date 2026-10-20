@@ -1,6 +1,9 @@
 package validation
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 // Outcomes of densely numbered nodes live in the bit table; an ID far beyond
 // the admitted nodes goes to the overflow map. Both read back as stored and
@@ -54,5 +57,45 @@ func TestOutcomeBitsOverflowSurvivesGrowth(t *testing.T) {
 	}
 	if got := b.get(4097); got != successfulNotApplicable {
 		t.Fatalf("replaced outcome reads %d", got)
+	}
+}
+
+// Growth admits the new backing array whole, since it and the old one coexist
+// during the copy: a buffer that holds the final array but not the pair
+// refuses the growth, and one that holds the pair admits it, leaving only
+// the final array charged.
+func TestOutcomeBitsGrowthAdmitsTheOverlappingArrays(t *testing.T) {
+	first, second := allocationSlack(8*16), allocationSlack(8*32)
+	for _, limit := range []int64{first + second - 1, first + second} {
+		s := rationalSession(t, Budgets{MaxBufferedBytes: limit})
+		s.sequence = make([]NodeID, 1000)
+		var b outcomeBits
+		if err := b.set(s, 1, successfulPass); err != nil || cap(b.words) != 16 || s.retained != first {
+			t.Fatalf("first table: %v cap=%d retained=%d", err, cap(b.words), s.retained)
+		}
+		err := b.set(s, 513, successfulPass)
+		if limit < first+second {
+			if !errors.Is(err, ErrResourceLimit) || cap(b.words) != 16 || s.retained != first || b.get(1) != successfulPass {
+				t.Fatalf("growth into %d bytes: err=%v cap=%d retained=%d", limit, err, cap(b.words), s.retained)
+			}
+		} else if err != nil || cap(b.words) != 32 || s.retained != second || b.get(513) != successfulPass || b.get(1) != successfulPass {
+			t.Fatalf("growth into %d bytes: err=%v cap=%d retained=%d", limit, err, cap(b.words), s.retained)
+		}
+		s.cleanup()
+	}
+}
+
+// The overflow map is charged its header and first group with the first
+// entry, then an entry with its share of growth for each later one.
+func TestOutcomeBitsOverflowCharge(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	var b outcomeBits
+	sparse := NodeID(outcomeDenseSlack + 100)
+	if err := b.set(s, sparse, successfulPass); err != nil || s.retained != outcomeOverflowHeaderBytes+outcomeOverflowEntryBytes {
+		t.Fatalf("first overflow entry charged %d: %v", s.retained, err)
+	}
+	if err := b.set(s, sparse+1, successfulPass); err != nil || s.retained != outcomeOverflowHeaderBytes+2*outcomeOverflowEntryBytes {
+		t.Fatalf("second overflow entry charged %d: %v", s.retained, err)
 	}
 }

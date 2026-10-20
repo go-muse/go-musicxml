@@ -228,13 +228,10 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 	} else if location.Position != nil && (in.Kind != SourceOriginUnavailable || in.Physical.State == EvidenceAbsent || in.Specified.State == EvidenceKnown && !in.Specified.Value) {
 		return s.fail(contract("source origin physical", "synthetic occurrence must not carry source coordinates"))
 	}
-	before := s.retained
+	mark := s.markRetained()
 	defer func() {
 		if err != nil {
-			if delta := s.retained - before; delta > 0 {
-				_ = s.account.Release(BudgetBufferedBytes, delta)
-				s.retained = before
-			}
+			s.rollbackRetained(mark)
 			s.fail(err)
 		}
 	}()

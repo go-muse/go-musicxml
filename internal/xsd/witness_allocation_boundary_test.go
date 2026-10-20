@@ -402,7 +402,7 @@ func TestCompleteReleasesTheWorkCharge(t *testing.T) {
 			t.Fatal(err)
 		}
 		pointer := int64(unsafe.Sizeof((*Node)(nil)))
-		rootWork := bindWorkBytes + 9*pointer + 9*nodeBytes + 9*int64(unsafe.Sizeof(Witness{}))
+		rootWork := bindWorkBytes + 9*pointer + 9*nodeObjectBytes + 9*int64(unsafe.Sizeof(Witness{}))
 		var completions []Completion
 		for _, w := range r.Witnesses(b) {
 			child, err := r.Bind(context.Background(), w.Use, Subject{ID: w.Child, Parent: 1, Name: QName{Local: "child"}, Path: "/root/child", Text: "ok", TextKnown: true, AttributesComplete: true, ChildrenComplete: true})

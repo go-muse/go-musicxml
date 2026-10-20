@@ -150,14 +150,10 @@ func (s *Session) keepValidatedContextResult(ctx context.Context, in ContextResu
 	if err = s.account.Charge(BudgetContextFacts, 1); err != nil {
 		return nil, err
 	}
-	before := s.retained
+	mark := s.markRetained()
 	defer func() {
 		if err != nil {
-			delta := s.retained - before
-			if delta > 0 {
-				_ = s.account.Release(BudgetBufferedBytes, delta)
-				s.retained = before
-			}
+			s.rollbackRetained(mark)
 		}
 	}()
 	if err = s.account.Check(BudgetScalarBytes, atomicLogicalBytes(in.Value.Value)); err != nil {
@@ -264,7 +260,8 @@ func (s *Session) keepValidatedContextResult(ctx context.Context, in ContextResu
 	// The projection owns these charges independently of intrinsic facts and
 	// provider scratch. A retained-report finalizer can transfer the admitted
 	// subtotal without copying or temporarily releasing the live projection.
-	s.contextReportRetained += s.retained - before
+	// New intern table entries stay with the session, not the report.
+	s.contextReportRetained += s.retained - mark.retained - (s.internRetained - mark.intern)
 	return &s.contextResults[len(s.contextResults)-1], nil
 }
 

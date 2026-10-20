@@ -29,7 +29,7 @@ func TestContainerMetadataOwnedPayloadAndAdmission(t *testing.T) {
 	probe.cleanup()
 	for _, limits := range []Budgets{{MaxBufferedBytes: bytes - 1}, {MaxRuleSteps: steps - 1}} {
 		s := rationalSession(t, limits)
-		if err := s.publishContextResult(context.Background(), in); !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 0 || s.retained != 0 {
+		if err := s.publishContextResult(context.Background(), in); !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 			t.Fatalf("one-under admission: %v bytes=%d", err, s.retained)
 		}
 		s.cleanup()
@@ -41,7 +41,7 @@ func TestContainerMetadataOwnedPayloadAndAdmission(t *testing.T) {
 	exact.cleanup()
 	for at := 1; at <= polls; at++ {
 		s := rationalSession(t, Budgets{})
-		if err := s.publishContextResult(&rationalCancelContext{Context: context.Background(), at: at}, in); !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != 0 {
+		if err := s.publishContextResult(&rationalCancelContext{Context: context.Background(), at: at}, in); !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 			t.Fatalf("poll %d: %v bytes=%d", at, err, s.retained)
 		}
 		s.cleanup()

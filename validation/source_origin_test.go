@@ -384,7 +384,7 @@ func TestSourceOriginPublicationExactBudgetsAndCancellation(t *testing.T) {
 				if err != nil || len(s.contextResults) != 1 {
 					t.Fatalf("exact %s: %v", kind, err)
 				}
-			} else if !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 0 || s.retained != 0 {
+			} else if !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 				t.Fatalf("one-under %s: %v results=%d retained=%d", kind, err, len(s.contextResults), s.retained)
 			}
 			s.cleanup()
@@ -394,7 +394,7 @@ func TestSourceOriginPublicationExactBudgetsAndCancellation(t *testing.T) {
 		s := rationalSession(t, Budgets{})
 		c := &rationalCancelContext{Context: ctx, at: at}
 		err := s.publishContextResult(c, in)
-		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != 0 {
+		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 			t.Fatalf("cancel %d/%d: %v results=%d retained=%d", at, calls, err, len(s.contextResults), s.retained)
 		}
 		s.cleanup()
@@ -501,9 +501,9 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 		if err := s.OpenNode(context.Background(), h); err != nil {
 			t.Fatal(err)
 		}
-		before := s.retained
+		before, interned := s.retained, internCharge(s)
 		err := s.sourceOrigin(&rationalCancelContext{Context: context.Background(), at: at}, key, sourceOriginPhysical())
-		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || len(s.sourceOriginSeen) != 0 || s.retained != before {
+		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || len(s.sourceOriginSeen) != 0 || s.retained != before+internCharge(s)-interned {
 			t.Fatalf("ingress cancel %d/%d: %v retained %d/%d", at, calls, err, s.retained, before)
 		}
 		s.cleanup()

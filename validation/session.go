@@ -143,6 +143,7 @@ type Session struct {
 	// contextSharedTableBytes sums the charges of the shared attribute tables.
 	contextSharedTableBytes int64
 	contextResults          []ContextResult
+	internRetained          int64
 	contextFamilies         ContextFamilies
 	resourceSnapshot        bool
 	hiddenContexts          []hiddenContext
@@ -783,6 +784,7 @@ func (s *Session) cleanup() {
 		_ = s.account.Release(BudgetBufferedBytes, s.retained)
 		s.retained = 0
 	}
+	s.internRetained = 0 // released with s.retained above
 	s.strings = nil
 	s.nodes = nil
 	s.facts = nil

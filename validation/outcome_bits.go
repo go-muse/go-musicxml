@@ -6,13 +6,22 @@ package validation
 // nodes (a sparse caller numbering) goes to the overflow map instead, so the
 // dense table never exceeds a constant factor of the node count.
 type outcomeBits struct {
-	words    []uint64
+	words []uint64
+	// charged is the admitted size of the words backing array.
+	charged  int64
 	overflow map[NodeID]successfulOutcome
 }
 
 // outcomeDenseSlack bounds how far beyond the admitted node count a dense
 // index may reach.
 const outcomeDenseSlack = 4096
+
+// The overflow map measures about 192 bytes with one entry and 36–42 bytes
+// per entry at larger sizes; old and new tables coexist while it grows.
+const (
+	outcomeOverflowHeaderBytes int64 = 256
+	outcomeOverflowEntryBytes  int64 = 64
+)
 
 // get reads the dense table first. An ID stored in the overflow map while it
 // was beyond the table keeps its entry there after the table grows over it,
@@ -37,13 +46,22 @@ func (b *outcomeBits) set(s *Session, id NodeID, v successfulOutcome) error {
 		if w < uint64(cap(b.words)) {
 			b.words = b.words[:w+1]
 		} else if i < 2*uint64(len(s.sequence))+outcomeDenseSlack {
+			// The new array is admitted whole before allocation: it and
+			// the old one coexist during the copy. The old array's charge
+			// is released once it is replaced.
 			grown := max(uint64(16), 2*uint64(cap(b.words)), w+1)
-			if err := s.retain(int64(8 * (grown - uint64(cap(b.words))))); err != nil {
+			size := allocationSlack(int64(8 * grown))
+			if err := s.retain(size); err != nil {
 				return err
 			}
 			next := make([]uint64, w+1, grown)
 			copy(next, b.words)
 			b.words = next
+			if b.charged != 0 {
+				_ = s.account.Release(BudgetBufferedBytes, b.charged)
+				s.retained -= b.charged
+			}
+			b.charged = size
 		}
 	}
 	if id != 0 && w < uint64(len(b.words)) {
@@ -51,7 +69,13 @@ func (b *outcomeBits) set(s *Session, id NodeID, v successfulOutcome) error {
 		b.words[w] = b.words[w]&^(3<<shift) | uint64(v)<<shift
 		return nil
 	}
-	if err := s.retain(32); err != nil { // NodeID, outcome byte and map allowance.
+	// A map entry with its share of growth, plus the map header and first
+	// group on the first entry.
+	charge := outcomeOverflowEntryBytes
+	if b.overflow == nil {
+		charge += outcomeOverflowHeaderBytes
+	}
+	if err := s.retain(charge); err != nil {
 		return err
 	}
 	if b.overflow == nil {

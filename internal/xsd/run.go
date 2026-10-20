@@ -158,12 +158,15 @@ func isZeroScalar(v *ScalarResult) bool {
 }
 
 // Retention charges of one subject. A bound state and its Run.states entry
-// live until Close; a node and its Run.nodes entry live until the parent
-// completes; the work and everything Bind charges to it live until the
-// subject completes.
+// live until Close. A node object lives until the parent completes and
+// deletes it. Deleting map entries does not free the map's backing storage,
+// which follows the most entries ever live at once, so Run.nodes is charged
+// one entry per new high-water mark and keeps that charge until Close. The
+// work and everything Bind charges to it live until the subject completes.
 var (
 	boundStateBytes = int64(unsafe.Sizeof(boundState{})) + runMapEntryBytes
-	nodeBytes       = int64(unsafe.Sizeof(Node{})) + runMapEntryBytes
+	// A node is rounded up to the allocator's 16-byte size classes.
+	nodeObjectBytes = (int64(unsafe.Sizeof(Node{})) + 15) &^ 15
 	bindWorkBytes   = int64(unsafe.Sizeof(bindWork{}))
 	finalBytes      = int64(unsafe.Sizeof(NodeResults{}))
 	finalScalarSize = int64(unsafe.Sizeof(ScalarResult{}))
@@ -209,6 +212,7 @@ type Run struct {
 	meter                 Meter
 	context               Context
 	nodes                 map[SubjectID]*Node
+	nodesPeak             int
 	states                map[SubjectID]*boundState
 	retained              int64
 	scratchRetained       int64
@@ -264,6 +268,17 @@ func (r *Run) reserve(n int64) {
 		panic(runAbort{err})
 	}
 	r.retained += n
+}
+
+// reserveNode admits a node object about to be inserted into Run.nodes, and
+// a map entry when the insertion raises the most entries ever live.
+func (r *Run) reserveNode() {
+	if len(r.nodes) < r.nodesPeak {
+		r.reserve(nodeObjectBytes)
+		return
+	}
+	r.reserve(nodeObjectBytes + runMapEntryBytes)
+	r.nodesPeak++
 }
 func (r *Run) step(n int64) {
 	if err := r.current.Err(); err != nil {
@@ -380,7 +395,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	r.reserve(work)
 	node := r.nodes[subject.ID]
 	if node == nil {
-		r.reserve(nodeBytes)
+		r.reserveNode()
 		node = &Node{}
 		r.nodes[subject.ID] = node
 	}
@@ -398,8 +413,8 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 		n := r.nodes[ch.ID]
 		if n == nil {
-			r.reserve(nodeBytes)
-			work += nodeBytes
+			r.reserveNode()
+			work += nodeObjectBytes
 			n = &Node{ID: ch.ID, Name: ch.Name}
 			r.nodes[ch.ID] = n
 		} else if n.Name != ch.Name {

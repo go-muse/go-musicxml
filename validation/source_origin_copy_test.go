@@ -144,7 +144,7 @@ func TestSourceOriginTypedRetentionRichExactAdmissionAndCancellation(t *testing.
 				if err != nil || len(s.contextResults) != 1 {
 					t.Errorf("exact %s rejected: %v", kind, err)
 				}
-			} else if !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 0 || s.retained != 0 {
+			} else if !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 				t.Errorf("one-under %s: err=%v retained=%d rows=%d", kind, err, s.retained, len(s.contextResults))
 			}
 			s.cleanup()
@@ -153,7 +153,7 @@ func TestSourceOriginTypedRetentionRichExactAdmissionAndCancellation(t *testing.
 	for at := 1; at <= calls; at++ {
 		s := rationalSession(t, Budgets{})
 		err := s.publishContextResult(&rationalCancelContext{Context: ctx, at: at}, in)
-		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != 0 {
+		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.retained != internCharge(s) {
 			t.Errorf("cancel %d/%d: err=%v retained=%d rows=%d", at, calls, err, s.retained, len(s.contextResults))
 		}
 		s.cleanup()

@@ -299,7 +299,7 @@ type identityOwnerStopMeter struct {
 }
 
 func (m *identityOwnerStopMeter) Reserve(n int64) error {
-	if m.stopOwner && n == 32+nodeBytes { // the owner entry and its node
+	if m.stopOwner && n == 32+nodeObjectBytes { // the owner entry and its node object
 		return errors.New("owner entry storage exhausted")
 	}
 	return m.testMeter.Reserve(n)
