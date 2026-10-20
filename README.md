@@ -101,7 +101,7 @@ construction and compressed `.mxl` round trips in
 | Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
 | Compose DTD declarations with standalone local/link/dictionary assessment | `ProfileSourceInternalDTDLocal`, `ProfileSourceInternalDTDLinks`, `ProfileSourceInternalDTDDictionaries` |
 | Assess local links without fetching | `ProfileSourceLinks`, `ProfileModelLinks` |
-| Inspect or assess explicitly supplied pinned dictionaries | `AssessmentOptions.Dictionaries`, or `Graph.Dictionaries` of the resource and MXL options |
+| Inspect or assess explicitly supplied pinned dictionaries | `SourceOptions.Dictionaries` or `ModelOptions.Dictionaries`, or `Graph.Dictionaries` of the resource and MXL options |
 | Assess original auxiliary XML | `ProfileSourceContainer`, `ProfileSourceSounds` |
 | Assess a selected resource graph | `InspectXMLWithResources`, `AssessModelWithResources`, `ProfileResourceGraph` |
 | Assess original or current MXL packages | `InspectMXL`, `AssessMXLPackage`, `ProfileMXLSource`, `ProfileMXLModel` |
@@ -164,7 +164,7 @@ exactly one recognized child.
 
 ### Explicit assessment profiles
 
-`AssessModel(ctx, document, AssessmentOptions{Profile: ProfileModelLocal})`
+`AssessModel(ctx, document, ModelOptions{Profile: ProfileModelLocal})`
 checks the current model's XSD/representation contract and a bounded selection of
 local musical clauses, including accordion register presence, beam-number
 uniqueness and typed same-part references. Select `ProfileModelXSD` for the

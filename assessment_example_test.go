@@ -10,7 +10,7 @@ import (
 )
 
 func ExampleInspectXML() {
-	report, err := musicxml.InspectXML(context.Background(), strings.NewReader(`<score-partwise/>`), musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceXSDPreview})
+	report, err := musicxml.InspectXML(context.Background(), strings.NewReader(`<score-partwise/>`), musicxml.SourceOptions{Profile: musicxml.ProfileSourceXSDPreview})
 	fmt.Println(report.InputComplete, report.Conformance, err)
 	// Output: true violated <nil>
 }
@@ -42,7 +42,7 @@ func ExampleAssessModel_scenario() {
 	measure := musicxml.NewScorePartwiseMeasure("1")
 	measure.AddNote(musicxml.NewRestNote(1))
 	score.Part[0].Measure = append(score.Part[0].Measure, measure)
-	report, err := musicxml.AssessModel(context.Background(), score, musicxml.AssessmentOptions{})
+	report, err := musicxml.AssessModel(context.Background(), score, musicxml.ModelOptions{})
 	fmt.Println(report.Profile.ID, report.Satisfied(), err)
 	// Output: musicxml-4.0/model-semantics true <nil>
 }

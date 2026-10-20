@@ -84,29 +84,29 @@ func (c assessmentRunConfig) validate(target validation.Target) error {
 
 func sourceAssessmentEngineForProfile(profile validation.ProfileID) (*validation.Engine, error) {
 	switch profile {
-	case ProfileSourceLine:
+	case profileSourceLine:
 		return sourceLineEngine()
-	case ProfileSourceSemantics:
+	case profileSourceSemantics:
 		return sourceSemanticEngine()
-	case ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries:
+	case profileSourceInternalDTDContainer, profileSourceInternalDTDSoundsDictionaries:
 		return sourceAuxiliaryCompositionEngine()
-	case ProfileSourceInternalDTDLocal, ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries:
+	case profileSourceInternalDTDLocal, profileSourceInternalDTDLinks, profileSourceInternalDTDDictionaries:
 		return sourceCompositionEngine()
-	case ProfileSourceDictionaries, ProfileSourceSoundsDictionaries:
+	case profileSourceDictionaries, profileSourceSoundsDictionaries:
 		return newDictionaryAssessmentEngine()
-	case ProfileSourceContainer, ProfileSourceSounds:
+	case profileSourceContainer, profileSourceSounds:
 		return newAuxiliarySourceAssessmentEngine()
-	case ProfileSourceXSDPreview:
+	case profileSourceXSDPreview:
 		return newSourceAssessmentEngine()
-	case ProfileSourceInternalDTD:
+	case profileSourceInternalDTD:
 		return sourceInternalDTDEngine()
-	case ProfileSourceLocal:
+	case profileSourceLocal:
 		return newModelAssessmentEngine()
-	case ProfileSourceTimeline:
+	case profileSourceTimeline:
 		return newTimelineAssessmentEngine()
-	case ProfileSourceLinks:
+	case profileSourceLinks:
 		return newLinkAssessmentEngine()
-	case ProfileSourceContext:
+	case profileSourceContext:
 		return newContextAssessmentEngine()
 	default:
 		return nil, &validation.ConfigurationError{Field: "profile", Reason: "unknown or empty explicit source profile"}
@@ -115,17 +115,17 @@ func sourceAssessmentEngineForProfile(profile validation.ProfileID) (*validation
 
 func modelAssessmentEngineForProfile(profile validation.ProfileID) (*validation.Engine, error) {
 	switch profile {
-	case ProfileModelSemantics:
+	case profileModelSemantics:
 		return modelSemanticEngine()
-	case ProfileModelDictionaries:
+	case profileModelDictionaries:
 		return newDictionaryAssessmentEngine()
-	case ProfileModelXSD, ProfileModelLocal:
+	case profileModelXSD, profileModelLocal:
 		return newModelAssessmentEngine()
-	case ProfileModelTimeline:
+	case profileModelTimeline:
 		return newTimelineAssessmentEngine()
-	case ProfileModelLinks:
+	case profileModelLinks:
 		return newLinkAssessmentEngine()
-	case ProfileModelContext:
+	case profileModelContext:
 		return newContextAssessmentEngine()
 	default:
 		return nil, &validation.ConfigurationError{Field: "profile", Reason: "unknown, empty or incompatible explicit model profile"}

@@ -41,8 +41,9 @@ returns the text that `Report.Format` writes.
 ### Comparable structs
 
 Several option and value structs are comparable today, including
-`DecodeOptions`, `EncodeOptions`, `MXLOptions`, `AssessmentOptions`,
-`DecodeAssessmentOptions`, `PartDefinition`, `MXLRootFile`, and
+`DecodeOptions`, `EncodeOptions`, `MXLOptions`, `SourceOptions`,
+`ModelOptions`, `GraphOptions`, `MXLGraphOptions`, `DecodeAssessmentOptions`,
+`PartDefinition`, `MXLRootFile`, and
 `ValidationIssue`. New fields added to these structs are kept comparable
 (scalars or pointers), so `==` on them keeps compiling. Comparability of
 other structs, in particular generated model types, is not guaranteed; see
@@ -213,7 +214,7 @@ if !result.Accepted {
 }
 
 // Scenario 3: check a model built or edited in Go.
-report, err := musicxml.AssessModel(ctx, score, musicxml.AssessmentOptions{})
+report, err := musicxml.AssessModel(ctx, score, musicxml.ModelOptions{})
 ```
 
 **Lenient mode.** `DecodeAssessmentOptions.Lenient` and
@@ -225,10 +226,29 @@ no document: malformed XML, I/O, cancellation, resource limits, conversion
 failure, dictionary import failure and invalid configuration. In the default
 strict mode the document is returned exactly when `Accepted` is true.
 
-**Options.** Everything else is a field of the options:
+**Options.** Everything else is a field of the options. Each kind of entry
+point has its own options type, whose `Profile` field has its own profile type:
 
-- `AssessmentOptions.Profile` selects a narrower profile. An empty `Profile`
-  selects the full semantic profile of each entry point:
+| Entry points | Options | Profile type | Constants |
+| --- | --- | --- | --- |
+| `InspectXML`, `DecodeAssessed` (`Assessment`) | `SourceOptions` | `SourceProfile` | `ProfileSource*` |
+| `AssessModel` | `ModelOptions` | `ModelProfile` | `ProfileModel*` |
+| `InspectXMLWithResources`, `AssessModelWithResources` (`LinkedAssessmentOptions.Graph`) | `GraphOptions` | `GraphProfile` | `ProfileResourceGraph*` |
+| `InspectMXL`, `AssessMXLPackage`, `DecodeMXLAssessed` (`MXLAssessmentOptions.Graph`) | `MXLGraphOptions` | `MXLProfile` | `ProfileMXL*` |
+
+Passing a profile of another kind, such as `SourceOptions{Profile:
+ProfileModelXSD}`, does not compile. Within a kind the entry point still checks
+the rest when it runs: an MXL source profile for `AssessMXLPackage`, a
+dictionary-free profile with `Dictionaries`, a dictionary or semantic graph or
+MXL profile without `Dictionaries`, a profile other than the line-2 profile for
+the loaders. `ModelOptions` has no `DTD`, which model assessment
+never read, and the graph options have no `OmitContext`, since a graph's
+resource snapshots read the projection. Every profile type has
+`ID() validation.ProfileID`, the identity a report carries:
+`report.Profile.ID == musicxml.ProfileSourceLine.ID()`.
+
+- `Profile` selects a narrower profile. An empty `Profile` selects the full
+  semantic profile of each entry point:
   - `ProfileSourceSemantics` for `InspectXML`;
   - `ProfileModelSemantics` for `AssessModel`;
   - `ProfileResourceGraphSemantics` for `InspectXMLWithResources` and
@@ -241,11 +261,11 @@ strict mode the document is returned exactly when `Accepted` is true.
   empty profile was a configuration error for these functions.
   `DecodeAssessed` and `DecodeMXLAssessed` accept only an empty profile or
   their line-2 profile, `ProfileSourceLine` or `ProfileMXLSourceLine`.
-- `AssessmentOptions.Dictionaries` selects pinned dictionary capabilities. It
-  replaces the bundled required data of an empty profile, and with an explicit
-  profile it requires a dictionary or semantic one.
-- `AssessmentOptions.Budgets`, `AssessmentOptions.DTD`, and the resource fields
-  of `LinkedAssessmentOptions` and `MXLAssessmentOptions` keep their meaning.
+- `Dictionaries` selects pinned dictionary capabilities. It replaces the
+  bundled required data of an empty profile, and with an explicit profile it
+  requires a dictionary or semantic one.
+- `Budgets`, `DTD`, and the resource fields of `LinkedAssessmentOptions` and
+  `MXLAssessmentOptions` keep their meaning.
 
 **Advanced tools.**
 
@@ -305,7 +325,9 @@ so the converted package is bounded by the MXL limits, as for
 `DictionaryAssessmentOptions`, `DecodeDictionaryAssessmentOptions`,
 `LinkedDictionaryAssessmentOptions` and `MXLDictionaryAssessmentOptions` were
 removed: they duplicated the entry points above. The replacement gives the same
-result for every profile the removed function accepted.
+result for every profile the removed function accepted. In the table `a` is
+now a `SourceOptions` for the source functions and a `ModelOptions` for
+`AssessModel`.
 
 | Removed | Replacement |
 | --- | --- |
@@ -563,9 +585,9 @@ resolved, never fetched:
 - Any other identifier leaves the external subset unread, as before.
 
 The source is configured through `DecodeOptions.DTD` for ordinary and assessed
-decoding, `MXLOptions.DTD` for MXL decoding and `AssessmentOptions.DTD` for
-assessments. Where two of them apply, the narrower one wins:
-`DecodeAssessmentOptions.Decode.DTD` over `AssessmentOptions.DTD`, and
+decoding, `MXLOptions.DTD` for MXL decoding and the `DTD` field of `SourceOptions`,
+`GraphOptions` and `MXLGraphOptions` for assessments. Where two of them apply, the narrower one wins:
+`DecodeAssessmentOptions.Decode.DTD` over `SourceOptions.DTD`, and
 `MXLAssessmentOptions.Graph.DTD` over `MXLAssessmentOptions.MXL.DTD`. The
 bundled closure is parsed once per process; an external subset supplied by the
 source is parsed for every document that names it, under the assessment's
@@ -748,12 +770,12 @@ string unchanged and does not check resource existence or accessibility.
 ## Direct current-model assessment
 
 ```go
-func AssessModel(ctx context.Context, document Document, options AssessmentOptions) (validation.Report, error)
+func AssessModel(ctx context.Context, document Document, options ModelOptions) (validation.Report, error)
 ```
 
 The name is deliberately `AssessModel`: `Assess` is already an exported generated
-MusicXML model type and remains unchanged. `AssessmentOptions` retains its
-`Profile` and `Budgets` fields. `AssessModel` accepts `*ScorePartwise`,
+MusicXML model type and remains unchanged. `ModelOptions` carries its
+`Profile`, `Budgets`, `Dictionaries` and `OmitContext` fields. `AssessModel` accepts `*ScorePartwise`,
 `*ScoreTimewise` and `*OpusDocument`; it rejects nil/typed-nil documents and
 unsupported concrete implementations. A nonnil context is required; an empty
 profile selects `ProfileModelSemantics` (see [Scenarios](#scenarios)). Unknown
@@ -1406,7 +1428,7 @@ DOCTYPE changes the input and is not equivalent assessment of the original
 file. `Decode` and `DecodeWithOptions` remain transport/conversion only; those
 APIs do not validate the source or replace successful assessed loading.
 
-`InspectXML(ctx, reader, AssessmentOptions{Profile: ProfileSourceXSDPreview})`
+`InspectXML(ctx, reader, SourceOptions{Profile: ProfileSourceXSDPreview})`
 assesses original XML without creating a Go document. Use `ProfileSourceLocal`
 to add the frozen local clauses, or `ProfileSourceTimeline` to add the bounded
 timeline provider and consumers described above. An empty/unknown profile,
@@ -1467,7 +1489,7 @@ selection is imported on every call, at the caller's expense (about 3.3 million
 rule steps for the required bundled pair at an earlier head). See the [dictionary
 import cost][loading-cost] for details and the measured budgets.
 
-`AssessmentOptions.OmitContext` leaves `Report.Context` empty in both reports
+`SourceOptions.OmitContext` leaves `Report.Context` empty in both reports
 and keeps every decision, count and finding, which roughly halves the buffer
 strict loading needs.
 
@@ -1480,7 +1502,7 @@ node, or roughly 9,000 such nodes under the default buffer allowance. Those
 baseline-derived estimates are not current-head capacities. They are
 logical accounting estimates, not heap/RSS measurements or a universal element
 limit. Ordinary larger scores can exceed the default. Set informed finite
-overrides in `AssessmentOptions.Budgets`; all other limits still apply. Earlier
+overrides in `SourceOptions.Budgets`; all other limits still apply. Earlier
 source-scope measurements remain historical evidence for their stated revision,
 before the shared absent-attribute optimization.
 
@@ -1695,7 +1717,7 @@ single-goroutine lifecycle; independent sessions own separate declaration facts.
 
 ## Opt-in pinned dictionaries
 
-Dictionaries are selected with `AssessmentOptions.Dictionaries`, directly or as
+Dictionaries are selected with the `Dictionaries` field of the options, directly or as
 `Graph.Dictionaries` of the resource options (see [Scenarios](#scenarios)). An
 empty profile uses the bundled required data; an explicit profile without
 dictionaries keeps its dictionary-free behaviour. This does not change
@@ -1726,9 +1748,9 @@ implicitly select or open the canonical-name component.
 | `InspectMXL` (via `Graph.Dictionaries`) | `ProfileMXLSourceDictionaries` or its compositions; `ProfileMXLSourceLine` reads no dictionaries and rejects them | `validation.AssessmentBundle` |
 | `AssessMXLPackage` (via `Graph.Dictionaries`) | `ProfileMXLModelDictionaries` or its compositions | `validation.AssessmentBundle` |
 
-All entry points also return an operation error. `AssessmentOptions` carries
-`Dictionaries *DictionaryOptions`; `LinkedAssessmentOptions` and
-`MXLAssessmentOptions` carry it in `Graph`. In `DecodeAssessed` a nil
+All entry points also return an operation error. `SourceOptions` and
+`ModelOptions` carry `Dictionaries *DictionaryOptions`; `LinkedAssessmentOptions`
+and `MXLAssessmentOptions` carry it in `Graph`. In `DecodeAssessed` a nil
 `Assessment` uses the mandatory source/model pipeline with the bundled
 defaults. A `Dictionaries` value with nil `Source` and no selections also
 selects defaults:
@@ -2157,7 +2179,7 @@ Each profile admits only its no-namespace root (`container` or `sounds`) and
 uses separately generated, pinned XSD metadata with exact assembly-qualified
 bindings. They do not add `Document` implementations or change `Decode`,
 `DecodeAssessed` conversion, `AssessModel`, `Validate`, or existing profile
-identities and digests. `AssessmentOptions` and `validation.Report` retain their
+identities and digests. The option structs and `validation.Report` retain their
 existing fields. A foreign or wrong root is a profile-admission error; ordinary
 in-scope schema violations appear in the report with a nil operation error.
 

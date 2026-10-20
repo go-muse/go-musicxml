@@ -6,13 +6,13 @@ import (
 )
 
 func TestIndependentContextFrozenProfileDigests(t *testing.T) {
-	for _, p := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal, ProfileModelTimeline, ProfileSourceXSDPreview, ProfileSourceLocal, ProfileSourceTimeline} {
+	for _, p := range []validation.ProfileID{ProfileModelXSD.ID(), ProfileModelLocal.ID(), ProfileModelTimeline.ID(), ProfileSourceXSDPreview.ID(), ProfileSourceLocal.ID(), ProfileSourceTimeline.ID()} {
 		var e *validation.Engine
 		var err error
 		switch p {
-		case ProfileSourceXSDPreview:
+		case ProfileSourceXSDPreview.ID():
 			e, err = buildSourceAssessmentEngine()
-		case ProfileModelTimeline, ProfileSourceTimeline:
+		case ProfileModelTimeline.ID(), ProfileSourceTimeline.ID():
 			e, err = buildTimelineAssessmentEngine()
 		default:
 			e, err = buildModelAssessmentEngine()
@@ -22,7 +22,7 @@ func TestIndependentContextFrozenProfileDigests(t *testing.T) {
 		}
 		profile := catalogProfile(t, e, p)
 		want := map[validation.ProfileID]string{
-			ProfileModelXSD: decimalContractCatalogAfter, ProfileModelLocal: decimalContractCatalogAfter, ProfileSourceLocal: decimalContractCatalogAfter, ProfileSourceXSDPreview: "e6139cbdde4b7eeb977fab3c4c33213300c536a902b5bb313ffa3483ff880760", ProfileModelTimeline: "cf62be51ed16c6a08609a30d78ae513e22f4f3dd3398ce4213251dd80ac043ad", ProfileSourceTimeline: "cf62be51ed16c6a08609a30d78ae513e22f4f3dd3398ce4213251dd80ac043ad"}[p]
+			ProfileModelXSD.ID(): decimalContractCatalogAfter, ProfileModelLocal.ID(): decimalContractCatalogAfter, ProfileSourceLocal.ID(): decimalContractCatalogAfter, ProfileSourceXSDPreview.ID(): "e6139cbdde4b7eeb977fab3c4c33213300c536a902b5bb313ffa3483ff880760", ProfileModelTimeline.ID(): "cf62be51ed16c6a08609a30d78ae513e22f4f3dd3398ce4213251dd80ac043ad", ProfileSourceTimeline.ID(): "cf62be51ed16c6a08609a30d78ae513e22f4f3dd3398ce4213251dd80ac043ad"}[p]
 		want = migrateStructuralRolesCatalog(migrateValidationLinesCatalog(migrateDecimalContractCatalog(want)))
 		if profile.CatalogDigest != want {
 			t.Fatalf("frozen profile %s changed from independently measured d605a63 baseline: got %s want %s", p, profile.CatalogDigest, want)

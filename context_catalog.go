@@ -11,11 +11,15 @@ import (
 // ProfileModelContext selects the bounded current-model context extension of
 // the frozen timeline profile. Context facts are caller-owned report snapshots;
 // unavailable optional facts do not become invented conformance failures.
-const ProfileModelContext validation.ProfileID = "musicxml-4.0/model-context"
+const ProfileModelContext ModelProfile = "musicxml-4.0/model-context"
+
+const profileModelContext = validation.ProfileID(ProfileModelContext)
 
 // ProfileSourceContext selects the corresponding original-source context
 // assessment, preserving existing source syntax and unread external-DTD limits.
-const ProfileSourceContext validation.ProfileID = "musicxml-4.0/source-context"
+const ProfileSourceContext SourceProfile = "musicxml-4.0/source-context"
+
+const profileSourceContext = validation.ProfileID(ProfileSourceContext)
 
 var contextAssessmentEngine = sync.OnceValues(buildContextAssessmentEngine)
 
@@ -41,9 +45,9 @@ func buildContextAssessmentDefinitions() (*assessmentDefinitions, error) {
 	for i := range d.profiles {
 		p := &d.profiles[i]
 		if p.Target == validation.TargetModel {
-			p.ID = ProfileModelContext
+			p.ID = profileModelContext
 		} else {
-			p.ID = ProfileSourceContext
+			p.ID = profileSourceContext
 		}
 		p.Required = append([]validation.RuleKey(nil), p.Required...)
 		p.Support = append([]validation.RuleSupport(nil), p.Support...)

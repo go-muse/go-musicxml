@@ -21,7 +21,7 @@ func TestIndependentTimelinePracticalDirectionCandidates(t *testing.T) {
 	}
 	assertReadOnlyModelFixture(t, source, doc)
 	for _, liftedBuffer := range []bool{false, true} {
-		for _, p := range []validation.ProfileID{ProfileSourceLocal, ProfileSourceTimeline, ProfileModelLocal, ProfileModelTimeline} {
+		for _, p := range []validation.ProfileID{ProfileSourceLocal.ID(), ProfileSourceTimeline.ID(), ProfileModelLocal.ID(), ProfileModelTimeline.ID()} {
 			label := string(p)
 			budget := validation.Budgets{}
 			if liftedBuffer {
@@ -32,10 +32,10 @@ func TestIndependentTimelinePracticalDirectionCandidates(t *testing.T) {
 				t.Parallel()
 				var report validation.Report
 				var err error
-				if p == ProfileSourceLocal || p == ProfileSourceTimeline {
-					report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p, Budgets: budget})
+				if p == ProfileSourceLocal.ID() || p == ProfileSourceTimeline.ID() {
+					report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p), Budgets: budget})
 				} else {
-					report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: p, Budgets: budget})
+					report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(p), Budgets: budget})
 				}
 				t.Logf("1000 notes+1000 directions bytes=%d complete=%t satisfied=%t error=%v", len(source), report.AssessmentComplete, report.Satisfied(), err)
 				if err != nil || !report.Satisfied() {
@@ -61,7 +61,7 @@ func TestIndependentTimelinePracticalFiguredBassCandidates(t *testing.T) {
 	}
 	assertReadOnlyModelFixture(t, source, doc)
 	for _, liftedBuffer := range []bool{false, true} {
-		for _, p := range []validation.ProfileID{ProfileSourceLocal, ProfileSourceTimeline, ProfileModelLocal, ProfileModelTimeline} {
+		for _, p := range []validation.ProfileID{ProfileSourceLocal.ID(), ProfileSourceTimeline.ID(), ProfileModelLocal.ID(), ProfileModelTimeline.ID()} {
 			label := string(p)
 			budget := validation.Budgets{}
 			if liftedBuffer {
@@ -72,10 +72,10 @@ func TestIndependentTimelinePracticalFiguredBassCandidates(t *testing.T) {
 				t.Parallel()
 				var report validation.Report
 				var err error
-				if p == ProfileSourceLocal || p == ProfileSourceTimeline {
-					report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p, Budgets: budget})
+				if p == ProfileSourceLocal.ID() || p == ProfileSourceTimeline.ID() {
+					report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p), Budgets: budget})
 				} else {
-					report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: p, Budgets: budget})
+					report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(p), Budgets: budget})
 				}
 				t.Logf("1000 notes+1000 figured-bass records bytes=%d complete=%t satisfied=%t error=%v", len(source), report.AssessmentComplete, report.Satisfied(), err)
 				if err != nil || !report.Satisfied() {
@@ -116,7 +116,7 @@ func TestIndependentTimelinePracticalGraceCandidates(t *testing.T) {
 		}
 		assertReadOnlyModelFixture(t, source, doc)
 		for _, liftedBuffer := range []bool{false, true} {
-			for _, p := range []validation.ProfileID{ProfileSourceLocal, ProfileSourceTimeline, ProfileModelLocal, ProfileModelTimeline} {
+			for _, p := range []validation.ProfileID{ProfileSourceLocal.ID(), ProfileSourceTimeline.ID(), ProfileModelLocal.ID(), ProfileModelTimeline.ID()} {
 				label := name + "/" + string(p)
 				budget := validation.Budgets{}
 				if liftedBuffer {
@@ -127,10 +127,10 @@ func TestIndependentTimelinePracticalGraceCandidates(t *testing.T) {
 					t.Parallel()
 					var report validation.Report
 					var err error
-					if p == ProfileSourceLocal || p == ProfileSourceTimeline {
-						report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p, Budgets: budget})
+					if p == ProfileSourceLocal.ID() || p == ProfileSourceTimeline.ID() {
+						report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p), Budgets: budget})
 					} else {
-						report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: p, Budgets: budget})
+						report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(p), Budgets: budget})
 					}
 					t.Logf("grace trajectory bytes=%d complete=%t satisfied=%t error=%v", len(source), report.AssessmentComplete, report.Satisfied(), err)
 					if err != nil || !report.Satisfied() {

@@ -28,9 +28,9 @@ func TestContextProfilesTimeOnlyAcrossTargetsAndHierarchies(t *testing.T) {
 			for _, model := range []bool{false, true} {
 				var report validation.Report
 				if model {
-					report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+					report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 				} else {
-					report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+					report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatalf("timewise=%t model=%t value=%s: %v", timewise, model, tc.value, err)
@@ -65,14 +65,14 @@ func TestContextProfilesDoNotBroadenEarlierProfiles(t *testing.T) {
 	if err = Validate(doc); err != nil {
 		t.Fatalf("legacy changed:%v", err)
 	}
-	for _, id := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal, ProfileModelTimeline} {
-		report, e := AssessModel(context.Background(), doc, AssessmentOptions{Profile: id})
+	for _, id := range []validation.ProfileID{ProfileModelXSD.ID(), ProfileModelLocal.ID(), ProfileModelTimeline.ID()} {
+		report, e := AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(id)})
 		if e != nil || !report.Satisfied() {
 			t.Errorf("old profile%s:%v %s", id, e, localFindings(report))
 		}
 	}
-	for _, id := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceLocal, ProfileSourceTimeline} {
-		report, e := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: id})
+	for _, id := range []validation.ProfileID{ProfileSourceXSDPreview.ID(), ProfileSourceLocal.ID(), ProfileSourceTimeline.ID()} {
+		report, e := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(id)})
 		if e != nil || !report.Satisfied() {
 			t.Errorf("old profile%s:%v %s", id, e, localFindings(report))
 		}
@@ -98,9 +98,9 @@ func TestContextTimeOnlyInvalidPrerequisiteAndStrictDecode(t *testing.T) {
 			for _, model := range []bool{false, true} {
 				var r validation.Report
 				if model {
-					r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+					r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 				} else {
-					r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+					r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -125,7 +125,7 @@ func TestContextTimeOnlyInvalidPrerequisiteAndStrictDecode(t *testing.T) {
 	}
 
 	source := contextFixtureXML(`<note time-only="10,2"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`, false)
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}})
 	if err == nil || result.Document != nil {
 		t.Fatalf("strict context returned rejected model: %+v,%v", result, err)
 	}
@@ -164,7 +164,7 @@ func TestContextFigureNumberRetainsUnreviewedGrammarGate(t *testing.T) {
 func TestContextFigureNumberAbsentDoesNotCreateGrammarObligation(t *testing.T) {
 	for _, timewise := range []bool{false, true} {
 		xml := contextFixtureXML(`<figured-bass><figure><prefix>sharp</prefix></figure></figured-bass>`, timewise)
-		r, err := InspectXML(context.Background(), strings.NewReader(xml), AssessmentOptions{Profile: ProfileSourceContext})
+		r, err := InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Profile: ProfileSourceContext})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -181,7 +181,7 @@ func TestContextProfilesKeepApplicationChoicesExcluded(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, id := range []validation.ProfileID{ProfileSourceContext, ProfileModelContext} {
+	for _, id := range []validation.ProfileID{ProfileSourceContext.ID(), ProfileModelContext.ID()} {
 		profile := catalogProfile(t, engine, id)
 		for _, key := range profile.Required {
 			text := string(key.ID)

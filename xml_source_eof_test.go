@@ -94,8 +94,8 @@ func TestSourceTruncatedMarkupPublic(t *testing.T) {
 			profile validation.ProfileID
 		}{
 			{"decode", ""}, {"decode-assessed-default", ""},
-			{"inspect-preview", ProfileSourceXSDPreview}, {"decode-source-line", ProfileSourceLine}, {"inspect-semantics", ProfileSourceSemantics},
-			{"inspect-internal-dtd", ProfileSourceInternalDTD},
+			{"inspect-preview", ProfileSourceXSDPreview.ID()}, {"decode-source-line", ProfileSourceLine.ID()}, {"inspect-semantics", ProfileSourceSemantics.ID()},
+			{"inspect-internal-dtd", ProfileSourceInternalDTD.ID()},
 		} {
 			t.Run(api.name+"/"+source, func(t *testing.T) {
 				input := &onceEOFReader{input: source}
@@ -108,11 +108,11 @@ func TestSourceTruncatedMarkupPublic(t *testing.T) {
 						t.Error("truncated source exposed a document")
 					}
 				} else if strings.HasPrefix(api.name, "inspect") {
-					report, err = InspectXML(context.Background(), input, AssessmentOptions{Profile: api.profile})
+					report, err = InspectXML(context.Background(), input, SourceOptions{Profile: SourceProfile(api.profile)})
 				} else {
 					options := DecodeAssessmentOptions{}
 					if api.profile != "" {
-						options.Assessment = &AssessmentOptions{Profile: api.profile}
+						options.Assessment = &SourceOptions{Profile: SourceProfile(api.profile)}
 					}
 					result, decodeErr := DecodeAssessed(context.Background(), input, options)
 					report, err = result.SourceLine, decodeErr
@@ -150,9 +150,9 @@ func TestSourceTruncatedMarkupNonEOFCause(t *testing.T) {
 		{"joined-canceled", errors.Join(io.EOF, context.Canceled), validation.CategoryResource, "canceled"},
 		{"joined-resource", errors.Join(io.EOF, &validation.ResourceError{Kind: validation.BudgetInputBytes, Limit: 3, Used: 3, Requested: 1}), validation.CategoryResource, "resource-limit"},
 	} {
-		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceInternalDTD, ProfileSourceSemantics, ProfileSourceLine} {
+		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview.ID(), ProfileSourceInternalDTD.ID(), ProfileSourceSemantics.ID(), ProfileSourceLine.ID()} {
 			for _, decode := range []bool{false, true} {
-				if decode && profile != ProfileSourceLine {
+				if decode && profile != ProfileSourceLine.ID() {
 					continue // Narrow profiles remain inspection-only contracts.
 				}
 				name := tc.name + "/" + string(profile) + "/inspect"
@@ -161,7 +161,7 @@ func TestSourceTruncatedMarkupNonEOFCause(t *testing.T) {
 				}
 				t.Run(name, func(t *testing.T) {
 					input := &dtdAuditFinalReader{data: []byte(`<?A`), final: tc.terminal}
-					options := AssessmentOptions{Profile: profile}
+					options := SourceOptions{Profile: SourceProfile(profile)}
 					var report validation.Report
 					var err error
 					if decode {

@@ -75,7 +75,7 @@ func TestAssessmentRunSharedAggregateSourceBytes(t *testing.T) {
 		t.Run(fmt.Sprint(owner), func(t *testing.T) {
 			a := adapterAccount(t, validation.Budgets{MaxInputBytes: int64(len(input)), MaxExternalBytes: int64(len(input))})
 			for i := 0; i < 2; i++ {
-				c := adapterSourceConfig(t, a, fmt.Sprintf("package/child-%d", i), "scores/opus.xml", ProfileSourceXSDPreview, owner)
+				c := adapterSourceConfig(t, a, fmt.Sprintf("package/child-%d", i), "scores/opus.xml", ProfileSourceXSDPreview.ID(), owner)
 				report, err := adapterInspect(t, strings.NewReader(input), c)
 				if i == 0 && (err != nil || !report.Satisfied()) {
 					t.Fatalf("first child: %v %s", err, localFindings(report))
@@ -105,7 +105,7 @@ func TestAssessmentRunAccountedBytesStillChargeParsing(t *testing.T) {
 	if err := a.Charge(validation.BudgetExternalBytes, int64(len(input))); err != nil {
 		t.Fatal(err)
 	}
-	c := adapterSourceConfig(t, a, "archive/opus", "scores/opus.xml", ProfileSourceXSDPreview, sourceBytesAccounted)
+	c := adapterSourceConfig(t, a, "archive/opus", "scores/opus.xml", ProfileSourceXSDPreview.ID(), sourceBytesAccounted)
 	report, err := adapterInspect(t, strings.NewReader(input), c)
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("accounted bytes: %v %+v", err, report)
@@ -123,13 +123,13 @@ func TestAssessmentRunAccountedBytesStillChargeParsing(t *testing.T) {
 
 func TestAssessmentRunMixedChildrenShareNodesAndWork(t *testing.T) {
 	a := adapterAccount(t, validation.Budgets{MaxNodes: 2})
-	source := adapterSourceConfig(t, a, "root/source", "a.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+	source := adapterSourceConfig(t, a, "root/source", "a.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 	report, err := adapterInspect(t, strings.NewReader(`<opus/>`), source)
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("source: %v %+v", err, report)
 	}
 	events, steps := adapterUsage(t, a, validation.BudgetEvents), adapterUsage(t, a, validation.BudgetRuleSteps)
-	model := adapterModelConfig(t, a, "root/model", "b.xml", ProfileModelXSD)
+	model := adapterModelConfig(t, a, "root/model", "b.xml", ProfileModelXSD.ID())
 	report, _, err = assessModelWithConfig(context.Background(), NewOpusDocument(), model, modelWalkOptions{})
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("model: %v %+v", err, report)
@@ -217,9 +217,9 @@ func TestAssessmentRunQualifiedFindingsCausesRelatedAndContext(t *testing.T) {
 		id, entry, target := "root/child-source", "scores/source.xml", validation.TargetSource
 		if model {
 			id, entry, target = "root/child-model", "scores/current.xml", validation.TargetModel
-			report, _, err = assessModelWithConfig(context.Background(), document, adapterModelConfig(t, a, id, entry, ProfileModelContext), modelWalkOptions{})
+			report, _, err = assessModelWithConfig(context.Background(), document, adapterModelConfig(t, a, id, entry, ProfileModelContext.ID()), modelWalkOptions{})
 		} else {
-			report, err = adapterInspect(t, strings.NewReader(input), adapterSourceConfig(t, a, id, entry, ProfileSourceContext, sourceBytesExternal))
+			report, err = adapterInspect(t, strings.NewReader(input), adapterSourceConfig(t, a, id, entry, ProfileSourceContext.ID(), sourceBytesExternal))
 		}
 		if err != nil {
 			t.Fatal(err)
@@ -242,7 +242,7 @@ func TestAssessmentRunQualifiedFindingsCausesRelatedAndContext(t *testing.T) {
 			t.Fatalf("vacuous identity fixture: model=%v findings=%d causes=%d related=%d origins=%d", model, len(report.Findings), causes, related, origins)
 		}
 		// Starting/finalizing another child must not mutate the first child's IDs.
-		_, childErr := adapterInspect(t, strings.NewReader(`<opus/>`), adapterSourceConfig(t, a, id+"/later", "later.xml", ProfileSourceXSDPreview, sourceBytesExternal))
+		_, childErr := adapterInspect(t, strings.NewReader(`<opus/>`), adapterSourceConfig(t, a, id+"/later", "later.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal))
 		if childErr != nil {
 			t.Fatal(childErr)
 		}
@@ -255,7 +255,7 @@ func TestAssessmentRunOriginalSourcePositionsAndConversionIdentity(t *testing.T)
 	text := "<opus version=\"4.0\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\r\n<title>é</title><score xlink:href=\"x.xml\"/></opus>"
 	for _, input := range [][]byte{append([]byte{239, 187, 191}, []byte(text)...), encodeUTF16(text, binary.LittleEndian), encodeUTF16(text, binary.BigEndian)} {
 		a := adapterAccount(t, validation.Budgets{})
-		c := adapterSourceConfig(t, a, "package/resource-2", "opus/book.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+		c := adapterSourceConfig(t, a, "package/resource-2", "opus/book.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 		run, err := newSourceAssessmentRunWithConfig(context.Background(), bytes.NewReader(input), DecodeOptions{}, &c, false)
 		if err != nil {
 			t.Fatal(err)
@@ -334,14 +334,14 @@ func TestAssessmentRunConfigurationBeforeInput(t *testing.T) {
 		func(c *sourceAssessmentConfig) { c.Entry = "bad\x00entry" },
 		func(c *sourceAssessmentConfig) { c.Entry = string([]byte{255}) },
 		func(c *sourceAssessmentConfig) { c.Entry = strings.Repeat("a", 4097) },
-		func(c *sourceAssessmentConfig) { c.Profile = ProfileModelXSD },
+		func(c *sourceAssessmentConfig) { c.Profile = ProfileModelXSD.ID() },
 		func(c *sourceAssessmentConfig) { c.Profile = "unknown" },
 		func(c *sourceAssessmentConfig) { c.Engine = nil },
 		func(c *sourceAssessmentConfig) { c.Engine, _ = newModelAssessmentEngine() },
 		func(c *sourceAssessmentConfig) { c.ByteOwner = sourceByteOwner(255) },
 	} {
 		a := adapterAccount(t, validation.Budgets{})
-		c := adapterSourceConfig(t, a, "resource", "a.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+		c := adapterSourceConfig(t, a, "resource", "a.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 		mutate(&c)
 		reader := &adapterReadCloser{Reader: strings.NewReader(`<opus/>`)}
 		run, err := newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &c, false)
@@ -353,7 +353,7 @@ func TestAssessmentRunConfigurationBeforeInput(t *testing.T) {
 	a := adapterAccount(t, validation.Budgets{})
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	config := adapterSourceConfig(t, a, "resource", "a.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+	config := adapterSourceConfig(t, a, "resource", "a.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 	reader := &adapterReadCloser{Reader: strings.NewReader(`<opus/>`)}
 	if _, err := newSourceAssessmentRunWithConfig(ctx, reader, DecodeOptions{}, &config, false); !errors.Is(err, context.Canceled) || reader.reads != 0 {
 		t.Fatalf("canceled start: %v reads=%d", err, reader.reads)
@@ -367,7 +367,7 @@ func TestAssessmentRunStartupAndTerminalCleanup(t *testing.T) {
 		t.Fatal(err)
 	}
 	a := adapterAccount(t, validation.Budgets{})
-	session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: "resource", Profile: ProfileSourceXSDPreview, Account: a})
+	session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: "resource", Profile: ProfileSourceXSDPreview.ID(), Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -376,7 +376,7 @@ func TestAssessmentRunStartupAndTerminalCleanup(t *testing.T) {
 	// Session initialization succeeds, then cursor, parser and observer fail in turn.
 	for _, limit := range []int64{setup + sourceXMLCursorBytes + 511, setup + sourceXMLCursorBytes + 512 + sourceXMLReaderBytes - 1, setup + sourceXMLCursorBytes + 512 + sourceXMLReaderBytes + 255} {
 		a = adapterAccount(t, validation.Budgets{MaxBufferedBytes: limit})
-		c := adapterSourceConfig(t, a, "resource", "a.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+		c := adapterSourceConfig(t, a, "resource", "a.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 		reader := &adapterReadCloser{Reader: strings.NewReader(`<opus/>`)}
 		run, err := newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &c, false)
 		if !errors.Is(err, validation.ErrResourceLimit) || run == nil || !run.startupReport.Requested || !run.inputFinished || reader.reads != 0 {
@@ -392,7 +392,7 @@ func TestAssessmentRunStartupAndTerminalCleanup(t *testing.T) {
 	}
 	for _, input := range []string{`<opus/>`, `<opus>`, `<opus><bad/></opus>`} {
 		a = adapterAccount(t, validation.Budgets{})
-		c := adapterSourceConfig(t, a, "resource", "a.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+		c := adapterSourceConfig(t, a, "resource", "a.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 		reader := &adapterReadCloser{Reader: strings.NewReader(input)}
 		run, err := newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &c, false)
 		if err != nil {
@@ -417,7 +417,7 @@ func TestAssessmentRunStartupAndTerminalCleanup(t *testing.T) {
 
 func TestAssessmentRunModelPreflightLifecycleAndNoEncoding(t *testing.T) {
 	a := adapterAccount(t, validation.Budgets{MaxInputBytes: 1, MaxExternalBytes: 1})
-	c := adapterModelConfig(t, a, "package/model", "score.xml", ProfileModelXSD)
+	c := adapterModelConfig(t, a, "package/model", "score.xml", ProfileModelXSD.ID())
 	root := NewOpusDocument()
 	root.XMLName = xml.Name{Space: "\x00", Local: "\xff"} // ignored by the direct model contract
 	root.AddOpus(root)                                    // encoding this cycle cannot produce a finite document
@@ -452,7 +452,7 @@ func TestAssessmentRunModelPreflightLifecycleAndNoEncoding(t *testing.T) {
 		func(c *assessmentRunConfig) { c.Account = nil },
 		func(c *assessmentRunConfig) { c.DocumentID = "" },
 		func(c *assessmentRunConfig) { c.Entry = "\x00" },
-		func(c *assessmentRunConfig) { c.Profile = ProfileSourceLocal },
+		func(c *assessmentRunConfig) { c.Profile = ProfileSourceLocal.ID() },
 		func(c *assessmentRunConfig) { c.Engine = nil },
 	} {
 		config := c
@@ -482,7 +482,7 @@ func TestAssessmentRunInterruptionsAndFinalizationBudgets(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			a := adapterAccount(t, validation.Budgets{})
-			config := adapterSourceConfig(t, a, "resource", "source.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+			config := adapterSourceConfig(t, a, "resource", "source.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 			reader := &adapterReadCloser{Reader: tc.reader}
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -511,7 +511,7 @@ func TestAssessmentRunInterruptionsAndFinalizationBudgets(t *testing.T) {
 	}
 	// Derive the exact pre-finalization work from the real unchanged profile.
 	a := adapterAccount(t, validation.Budgets{})
-	config := adapterSourceConfig(t, a, "resource", "source.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+	config := adapterSourceConfig(t, a, "resource", "source.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 	run, err := newSourceAssessmentRunWithConfig(context.Background(), strings.NewReader(`<opus/>`), DecodeOptions{}, &config, false)
 	if err != nil {
 		t.Fatal(err)
@@ -527,7 +527,7 @@ func TestAssessmentRunInterruptionsAndFinalizationBudgets(t *testing.T) {
 		t.Fatal("fixture has no final evaluation")
 	}
 	a = adapterAccount(t, validation.Budgets{MaxRuleSteps: beforeFinish})
-	config = adapterSourceConfig(t, a, "resource", "source.xml", ProfileSourceXSDPreview, sourceBytesExternal)
+	config = adapterSourceConfig(t, a, "resource", "source.xml", ProfileSourceXSDPreview.ID(), sourceBytesExternal)
 	run, err = newSourceAssessmentRunWithConfig(context.Background(), strings.NewReader(`<opus/>`), DecodeOptions{}, &config, false)
 	if err != nil {
 		t.Fatal(err)
@@ -546,7 +546,7 @@ func TestAssessmentRunInterruptionsAndFinalizationBudgets(t *testing.T) {
 
 	for _, beforeWalk := range []bool{false, true} {
 		a = adapterAccount(t, validation.Budgets{})
-		config := adapterModelConfig(t, a, "model-resource", "current.xml", ProfileModelXSD)
+		config := adapterModelConfig(t, a, "model-resource", "current.xml", ProfileModelXSD.ID())
 		ctx, cancel := context.WithCancel(context.Background())
 		model, err := newModelAssessmentRun(ctx, NewOpusDocument(), config)
 		if err != nil {

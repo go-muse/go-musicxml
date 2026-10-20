@@ -7,15 +7,21 @@ import (
 
 // ProfileSourceDictionaries selects source XSD/local links plus exact pinned
 // dictionary consumers and narrow rendering advice. It performs no I/O itself.
-const ProfileSourceDictionaries validation.ProfileID = "musicxml-4.0/source-links-dictionaries"
+const ProfileSourceDictionaries SourceProfile = "musicxml-4.0/source-links-dictionaries"
+
+const profileSourceDictionaries = validation.ProfileID(ProfileSourceDictionaries)
 
 // ProfileModelDictionaries assesses current-model XSD/local links and exact
 // dictionary consumers, without reconstructing discarded source xsi:type.
-const ProfileModelDictionaries validation.ProfileID = "musicxml-4.0/model-links-dictionaries"
+const ProfileModelDictionaries ModelProfile = "musicxml-4.0/model-links-dictionaries"
+
+const profileModelDictionaries = validation.ProfileID(ProfileModelDictionaries)
 
 // ProfileSourceSoundsDictionaries adds non-normative standard-ID recognition
 // to source-only sounds XSD, mapping and discovery context. No model is added.
-const ProfileSourceSoundsDictionaries validation.ProfileID = "musicxml-4.0/source-sounds-dictionaries"
+const ProfileSourceSoundsDictionaries SourceProfile = "musicxml-4.0/source-sounds-dictionaries"
+
+const profileSourceSoundsDictionaries = validation.ProfileID(ProfileSourceSoundsDictionaries)
 
 var dictionaryAssessmentEngine = sync.OnceValues(buildDictionaryAssessmentEngine)
 
@@ -39,9 +45,9 @@ func buildDictionaryAssessmentDefinitions() (*assessmentDefinitions, error) {
 	for i := range d.profiles {
 		p := &d.profiles[i]
 		if p.Target == validation.TargetSource {
-			p.ID = ProfileSourceDictionaries
+			p.ID = profileSourceDictionaries
 		} else {
-			p.ID = ProfileModelDictionaries
+			p.ID = profileModelDictionaries
 		}
 		p.NormativeClosure = "Bounded MusicXML 4.0 source or current-model XSD/local links plus exact independently verified SMuFL 1.4 canonical-name membership. The six XSD name-family facets remain independent. Standard sounds are open-string recognition evidence; legacy IPA 2015/Unicode 13 positive tables remain partial. A separately selected representation manifest may establish an affirmative whole-input repertoire witness, without phonotactic, rendering or pronunciation claims. Missing selected capabilities remain unavailable per occurrence. Narrow mute/symbol/mordent defaults, active unmeasured-tremolo range facts and note-name/glyph/arrow advice do not assert general rendering intent. Local source/current-model/link limitations remain active. No fetching, implicit DTD composition, timeline, graph/package traversal or complete MusicXML conformance claim."
 	}
@@ -100,7 +106,7 @@ func appendDictionarySoundsDefinitions(d *assessmentDefinitions) error {
 	}
 	assembly := validation.AssemblySounds
 	d.schemas[assembly] = schema
-	p := validation.Profile{ID: ProfileSourceSoundsDictionaries, MusicXMLVersion: "4.0", Target: validation.TargetSource, RegistryCommit: "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c", SupportedRoots: []validation.QName{{Local: "sounds"}}, NormativeClosure: "Source-only pinned sounds XSD, exact directional mapping and nonfetching schema-hint discovery, with verified MusicXML 4.0 standard-ID recognition. Known nonstandard identifiers remain allowed open-string evidence. Missing dictionary evidence does not become a normative violation. Original source syntax and unread external-DTD limitations remain active. No SoundsDocument model, application mapping choice, package traversal or playback claim."}
+	p := validation.Profile{ID: profileSourceSoundsDictionaries, MusicXMLVersion: "4.0", Target: validation.TargetSource, RegistryCommit: "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c", SupportedRoots: []validation.QName{{Local: "sounds"}}, NormativeClosure: "Source-only pinned sounds XSD, exact directional mapping and nonfetching schema-hint discovery, with verified MusicXML 4.0 standard-ID recognition. Known nonstandard identifiers remain allowed open-string evidence. Missing dictionary evidence does not become a normative violation. Original source syntax and unread external-DTD limitations remain active. No SoundsDocument model, application mapping choice, package traversal or playback claim."}
 	for _, check := range []validation.XSDCheck{validation.XSDCheckBinding, validation.XSDCheckDeclaration, validation.XSDCheckAttributes, validation.XSDCheckScalar, validation.XSDCheckContent, validation.XSDCheckIdentity} {
 		plan, err := validation.NewXSDPlan(schema, check)
 		if err != nil {

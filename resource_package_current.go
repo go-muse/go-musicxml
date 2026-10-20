@@ -31,24 +31,25 @@ import (
 // reconstructed. Retained raw resources that are reached keep their source
 // assessment.
 func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
-	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLModelSemantics); ok {
-		options.Graph = graph
-		return assessMXLPackageWithDictionaries(ctx, value, mxlDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+	normalized := options.internal()
+	if graph, dictionaries, ok := normalized.Graph.scenario(profileMXLModelSemantics); ok {
+		normalized.Graph = graph
+		return assessMXLPackageWithDictionaries(ctx, value, mxlDictionaryAssessmentOptions{Resources: normalized, Dictionaries: dictionaries})
 	}
 	if value == nil {
 		return validation.AssessmentBundle{}, ErrNilMXLPackage
 	}
-	if _, err := options.MXL.limits(); err != nil {
+	if _, err := normalized.MXL.limits(); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
 	if _, err := validationSchemaForDocument(value.Document); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	g, err := startResourceGraph(ctx, options.linked(), ProfileMXLModel)
+	g, err := startResourceGraph(ctx, normalized.linked(), profileMXLModel)
 	if err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	g.mxlOptions = options.MXL
+	g.mxlOptions = normalized.MXL
 	return g.assessCurrentPackage(value)
 }
 

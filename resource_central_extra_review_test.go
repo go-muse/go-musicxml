@@ -15,7 +15,7 @@ import (
 // supplies no root metadata identity, so it retains no file metadata either.
 func TestMimetypeUnframedCentralExtraStopsChildEvidence(t *testing.T) {
 	for _, local := range []string{"", "\xfe\xca\x00\x00"} {
-		b, err := InspectMXL(context.Background(), bytes.NewReader(mimetypeHeaderScopeZIP(local, "\xfe", "")), MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource}})
+		b, err := InspectMXL(context.Background(), bytes.NewReader(mimetypeHeaderScopeZIP(local, "\xfe", "")), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}})
 		var capability *mxlAssessmentZIPCapabilityError
 		if !errors.As(err, &capability) || capability.feature != "unframed mimetype central extra field" {
 			t.Fatalf("expected exact central framing capability: %v", err)

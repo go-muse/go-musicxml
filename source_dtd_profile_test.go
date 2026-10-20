@@ -22,7 +22,7 @@ func TestSourceInternalDTDProfilePublicAcceptance(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &assessmentCountingReader{source: strings.NewReader(tc.input)}
-			report, err := InspectXML(context.Background(), r, AssessmentOptions{Profile: profile})
+			report, err := InspectXML(context.Background(), r, SourceOptions{Profile: SourceProfile(profile)})
 			if err != nil || !report.Satisfied() || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed {
 				t.Fatalf("selected internal-DTD profile: error=%v syntax=%s complete=%t satisfied=%t findings=%+v", err, report.Syntax, report.InputComplete, report.Satisfied(), report.Findings)
 			}
@@ -49,7 +49,7 @@ func TestSourceInternalDTDDefaultProvenanceAndExplicitSuppression(t *testing.T) 
 			input = strings.Replace(input, ` version="4.0"`, "", 1)
 		}
 		input = `<!DOCTYPE score-partwise [<!ATTLIST score-partwise version CDATA "4.0">]>` + input
-		report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
+		report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
 		if err != nil || !report.Satisfied() {
 			t.Fatalf("explicit=%t error=%v report=%+v", explicit, err, report)
 		}
@@ -79,7 +79,7 @@ func TestSourceInternalDTDDefaultProvenanceAndExplicitSuppression(t *testing.T) 
 
 func TestSourceInternalDTDDefaultExpandedNameCollision(t *testing.T) {
 	input := `<!DOCTYPE score-partwise [<!ATTLIST score-partwise q:x CDATA "default">]><score-partwise xmlns:p="urn:same" xmlns:q="urn:same" p:x="explicit"/>`
-	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
 	if err == nil || report.Syntax != validation.SyntaxMalformed || report.Satisfied() {
 		t.Fatalf("error=%v syntax=%s satisfied=%t", err, report.Syntax, report.Satisfied())
 	}
@@ -88,7 +88,7 @@ func TestSourceInternalDTDDefaultExpandedNameCollision(t *testing.T) {
 func TestSourceInternalDTDDecodeUsesSameEffectiveStream(t *testing.T) {
 	input := `<!DOCTYPE score-partwise [<!ENTITY title "Expanded title"><!ATTLIST score-partwise version CDATA "4.0">]>` + strings.Replace(strings.Replace(assessedScore("1", ""), ` version="4.0"`, "", 1), "<part-list>", "<movement-title>&title;</movement-title><part-list>", 1)
 	reader := &assessmentCountingReader{source: strings.NewReader(input)}
-	result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+	result, err := DecodeAssessed(context.Background(), reader, DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}})
 	if err != nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() || result.Conversion.State != validation.ConversionConverted {
 		t.Fatalf("error=%v syntax=%s conversion=%s", err, result.SourceLine.Syntax, result.Conversion.State)
 	}
@@ -103,12 +103,12 @@ func TestSourceInternalDTDDecodeUsesSameEffectiveStream(t *testing.T) {
 
 func TestSourceInternalDTDModePreflightAndLegacyIsolation(t *testing.T) {
 	input := `<!DOCTYPE score-partwise [<!ENTITY title "Expanded title">]>` + strings.Replace(assessedScore("1", ""), "<part-list>", "<movement-title>&title;</movement-title><part-list>", 1)
-	if _, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview}); !errors.Is(err, validation.ErrIncompleteAssessment) {
+	if _, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview}); !errors.Is(err, validation.ErrIncompleteAssessment) {
 		t.Fatalf("legacy entity expansion unexpectedly elected: %v", err)
 	}
-	if _, err := AssessModel(context.Background(), &ScorePartwise{}, AssessmentOptions{Profile: ProfileSourceInternalDTD}); !errors.Is(err, validation.ErrInvalidConfiguration) {
-		t.Fatalf("model accepted source profile: %v", err)
-	}
+	// A source profile no longer compiles as ModelOptions.Profile
+	// (TestProfileKindsAreDistinctTypes); a converted one is still rejected
+	// (TestAssessModelPreflight).
 	oldEngine, err := newSourceAssessmentEngine()
 	if err != nil {
 		t.Fatal(err)
@@ -118,7 +118,7 @@ func TestSourceInternalDTDModePreflightAndLegacyIsolation(t *testing.T) {
 		t.Fatal(err)
 	}
 	reader := &assessmentCountingReader{source: strings.NewReader(input)}
-	_, err = newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: "source", Profile: ProfileSourceInternalDTD, Engine: oldEngine}, ByteOwner: sourceBytesPrimary}, false)
+	_, err = newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: "source", Profile: ProfileSourceInternalDTD.ID(), Engine: oldEngine}, ByteOwner: sourceBytesPrimary}, false)
 	if !errors.Is(err, validation.ErrInvalidConfiguration) || reader.reads != 0 {
 		t.Fatalf("mismatched engine: error=%v reads=%d", err, reader.reads)
 	}
@@ -128,7 +128,7 @@ func TestSourceInternalDTDUnverifiedDeclarationClosureIsIncomplete(t *testing.T)
 	for _, subset := range []string{`<!ENTITY unused '&unused;'>`, `<!ENTITY amp 'wrong'>`} {
 		t.Run(subset, func(t *testing.T) {
 			input := `<!DOCTYPE score-partwise [` + subset + `]>` + assessedScore("1", "")
-			report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
+			report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
 			// InspectXML records ordinary unsupported assessment in the report;
 			// nil error is not acceptance and does not imply syntax closure.
 			if err != nil || report.Satisfied() || report.Syntax != validation.SyntaxIncomplete || !report.InputComplete {

@@ -19,11 +19,11 @@ func TestDictionaryGraphTypedNilBeforeProvider(t *testing.T) {
 	d := DictionaryOptions{Selections: dictionaryGraphSelection(), Source: source}
 	for _, run := range []func() error{
 		func() error {
-			_, e := inspectXMLWithResourcesAndDictionaries(context.Background(), reader, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
+			_, e := inspectXMLWithResourcesAndDictionaries(context.Background(), reader, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphDictionaries}}.internal(), Dictionaries: d})
 			return e
 		},
 		func() error {
-			_, e := inspectMXLWithDictionaries(context.Background(), reader, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}, Dictionaries: d})
+			_, e := inspectMXLWithDictionaries(context.Background(), reader, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSourceDictionaries}}.internal(), Dictionaries: d})
 			return e
 		},
 	} {
@@ -60,7 +60,7 @@ func TestDictionaryGraphCacheExactRetentionAdmission(t *testing.T) {
 			t.Fatal(err)
 		}
 		g := &resourceGraphRun{ctx: context.Background(), options: resourceRunOptions{account: a}, cache: map[graphResourceKey]*graphResource{}, pins: map[graphCanonicalKey]validation.ResourcePin{}, dictionaryFingerprint: [32]byte{1}}
-		r, err := g.cacheResource(pin, profile, "id", 1, true)
+		r, err := g.cacheResource(pin, profile.ID(), "id", 1, true)
 		if limit < need {
 			if r != nil || !errors.Is(err, validation.ErrResourceLimit) || len(g.cache) != 0 || len(g.pins) != 0 || g.retained != 0 {
 				t.Fatalf("partial cache on refusal: r=%v err=%v retained=%d", r, err, g.retained)
@@ -69,7 +69,7 @@ func TestDictionaryGraphCacheExactRetentionAdmission(t *testing.T) {
 			if err != nil || r == nil || g.retained != need {
 				t.Fatalf("exact admission: %v retained=%d", err, g.retained)
 			}
-			if again, e := g.cacheResource(pin, profile, "alias", 1, true); e != nil || again != r || g.retained != need {
+			if again, e := g.cacheResource(pin, profile.ID(), "alias", 1, true); e != nil || again != r || g.retained != need {
 				t.Fatalf("cache reuse recharged: %v", e)
 			}
 		}

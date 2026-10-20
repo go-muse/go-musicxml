@@ -12,15 +12,15 @@ import (
 )
 
 func TestResourceGraphPrimaryReports(t *testing.T) {
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 	if err != nil || !b.Satisfied() || b.ResourceCount() != 1 || b.AdoptionCount() != 1 || !b.EnumerationComplete() {
 		t.Fatalf("err=%v package=%+v resources=%d adoptions=%d", err, b.PackageReport(), b.ResourceCount(), b.AdoptionCount())
 	}
 	_, r, ok := b.ResourceReport(0)
-	if !ok || r.Target != validation.TargetSource || r.Profile.ID != ProfileSourceLinks {
+	if !ok || r.Target != validation.TargetSource || r.Profile.ID != ProfileSourceLinks.ID() {
 		t.Fatal(r)
 	}
-	b, err = InspectXMLWithResources(context.Background(), strings.NewReader(`<opus wrong="yes"/>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+	b, err = InspectXMLWithResources(context.Background(), strings.NewReader(`<opus wrong="yes"/>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 	if err != nil || b.Satisfied() {
 		t.Fatal(err, b.PackageReport())
 	}
@@ -32,21 +32,21 @@ func TestResourceGraphPrimaryReports(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+	b, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 	if err != nil || b.ResourceCount() != 1 {
 		t.Fatal(err, b.PackageReport())
 	}
 	_, r, _ = b.ResourceReport(0)
-	if r.Target != validation.TargetModel || r.Profile.ID != ProfileModelLinks {
+	if r.Target != validation.TargetModel || r.Profile.ID != ProfileModelLinks.ID() {
 		t.Fatal(r)
 	}
 }
 func TestResourceGraphConfigurationNoInput(t *testing.T) {
-	_, err := InspectXMLWithResources(context.Background(), nil, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+	_, err := InspectXMLWithResources(context.Background(), nil, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 	if !errors.Is(err, ErrNilReader) {
 		t.Fatal(err)
 	}
-	_, err = InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: "test/unknown-profile"}})
+	_, err = InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: "test/unknown-profile"}})
 	if !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestResourceGraphFiniteCyclesAndVerifiedParseReuse(t *testing.T) {
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="child.opus"/><opus-link xlink:href="child.opus"/></opus>`
 	child := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="root.opus"/></opus>`
 	resolver := &graphFixtureResolver{resources: map[string]string{"https://e.test/root.opus": root, "https://e.test/child.opus": child}, pins: map[string]string{"https://e.test/root.opus": "root", "https://e.test/child.opus": "child"}}
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if err != nil || !b.Satisfied() || b.ResourceCount() != 2 || b.AdoptionCount() != 4 || resolver.calls != 3 {
 		t.Fatalf("err %v resources %d adoptions %d calls %d report %+v", err, b.ResourceCount(), b.AdoptionCount(), resolver.calls, b.PackageReport())
 	}
@@ -106,7 +106,7 @@ func TestResourceGraphNoResolverForUnselectedOrInvalidHref(t *testing.T) {
 		{`<opus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://e.test/schema.xsd"/>`, true},
 	} {
 		resolver := &graphFixtureResolver{}
-		options := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}}
+		options := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}}
 		if tc.selected {
 			options.Dependencies = []ResourceDependency{ResourceDocuments}
 		}
@@ -125,7 +125,7 @@ func TestResourceGraphRejectsUnrequestedRevisionChurn(t *testing.T) {
 		body := `<opus/>`
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "same-resource", Revision: fmt.Sprint(calls), Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(body)))}, Body: &resourceTestBody{Reader: strings.NewReader(body)}, RetrievalURI: "https://e.test/child.opus"}, nil
 	})
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if !errors.Is(err, validation.ErrInvalidConfiguration) || b.Satisfied() {
 		t.Fatal(err, b.ResourceCount(), b.Satisfied())
 	}

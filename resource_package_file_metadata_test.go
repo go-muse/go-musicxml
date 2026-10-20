@@ -32,7 +32,7 @@ func TestPackageFileMetadataBeforeFailedParse(t *testing.T) {
 func TestPackageFileMetadataExternalAliasesAndEscapedName(t *testing.T) {
 	data := []byte(`<opus/>`)
 	source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/a%2Fb.musicxml"/><opus-link xlink:href="https://e.test/second.bad"/></opus>`
-	opts := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
+	opts := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
 		media := musicXMLMIMEType
 		if strings.Contains(q.Document.Href, "second") {
 			media = "application/pdf"

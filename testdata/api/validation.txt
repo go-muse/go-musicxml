@@ -510,7 +510,9 @@ type Assembly string
 type AssessmentBundle struct, comparable
 type AssessmentBundle, method (AssessmentBundle) Adoption(i int) (ResourceAssessmentID, string, bool)
 type AssessmentBundle, method (AssessmentBundle) AdoptionContext(i int) (ResourceAdoptionContext, bool)
+type AssessmentBundle, method (AssessmentBundle) AdoptionContexts() iter.Seq[ResourceAdoptionContext]
 type AssessmentBundle, method (AssessmentBundle) AdoptionCount() int
+type AssessmentBundle, method (AssessmentBundle) Adoptions() iter.Seq2[ResourceAssessmentID, string]
 type AssessmentBundle, method (AssessmentBundle) EnumerationComplete() bool
 type AssessmentBundle, method (AssessmentBundle) Failure() (ResourceFailureSummary, bool)
 type AssessmentBundle, method (AssessmentBundle) FailureReport() (Report, bool)
@@ -525,6 +527,7 @@ type AssessmentBundle, method (AssessmentBundle) OmittedPackageDiagnostics() (Pa
 type AssessmentBundle, method (AssessmentBundle) PackageReport() Report
 type AssessmentBundle, method (AssessmentBundle) ResourceCount() int
 type AssessmentBundle, method (AssessmentBundle) ResourceReport(i int) (ResourceAssessmentID, Report, bool)
+type AssessmentBundle, method (AssessmentBundle) Resources() iter.Seq2[ResourceAssessmentID, Report]
 type AssessmentBundle, method (AssessmentBundle) Satisfied() bool
 type AssociationKind string
 type AssociationRequest struct, comparable
@@ -1459,9 +1462,11 @@ type ResourceSnapshot struct, not comparable
 type ResourceSnapshot, method (*ResourceSnapshot) Close() error
 type ResourceSnapshot, method (*ResourceSnapshot) ContextAt(ctx context.Context, i int) (ContextResult, bool, error)
 type ResourceSnapshot, method (*ResourceSnapshot) ContextCount() int
+type ResourceSnapshot, method (*ResourceSnapshot) Contexts(ctx context.Context) iter.Seq2[ContextResult, error]
 type ResourceSnapshot, method (*ResourceSnapshot) Header() ResourceSnapshotHeader
 type ResourceSnapshot, method (*ResourceSnapshot) IDAt(ctx context.Context, i int) (ResourceIDFact, bool, error)
 type ResourceSnapshot, method (*ResourceSnapshot) IDCount() int
+type ResourceSnapshot, method (*ResourceSnapshot) IDs(ctx context.Context) iter.Seq2[ResourceIDFact, error]
 type ResourceSnapshot, method (*ResourceSnapshot) Report(ctx context.Context) (Report, error)
 type ResourceSnapshotHeader struct, comparable
 type ResourceSnapshotHeader struct, field Assembly Evidence[Assembly]

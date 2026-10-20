@@ -15,7 +15,7 @@ import (
 func TestValidateDependentRepresentationIncompleteness(t *testing.T) {
 	doc := modelMinimalScore()
 	doc.Part[0].Measure[0].Width = Ptr(Tenths(math.NaN()))
-	report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelXSD})
+	report, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelXSD})
 	if err != nil || !report.InputComplete || report.AssessmentComplete || report.Counts.Blocked == 0 || report.Terminal != nil {
 		t.Fatalf("representation report: complete=%t counts=%+v terminal=%+v err=%v", report.AssessmentComplete, report.Counts, report.Terminal, err)
 	}
@@ -42,7 +42,7 @@ func TestValidateDependentRepresentationIncompleteness(t *testing.T) {
 		t.Fatalf("joined representation/incompleteness contract: %v", err)
 	}
 	// Diagnostic omission does not turn unresolved schema work into complete work.
-	truncated, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxDiagnosticBytes: 1}})
+	truncated, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxDiagnosticBytes: 1}})
 	if err != nil || !truncated.DiagnosticsTruncated || len(truncated.Findings) != 0 || truncated.Counts != report.Counts || truncated.AssessmentComplete {
 		t.Fatalf("diagnostic-independent report contract: %+v err=%v", truncated, err)
 	}

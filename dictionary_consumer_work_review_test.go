@@ -18,7 +18,7 @@ func dictionaryReviewWork(t *testing.T, count int, accidental, dictionaries, ava
 	var cfg assessmentRunConfig
 	var err error
 	if dictionaries {
-		opts := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}}
+		opts := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}}
 		if available {
 			for _, manifest := range []validation.DictionaryManifestID{validation.DictionaryManifestSMuFL14Canonical, validation.DictionaryManifestSMuFL14Ranges, validation.DictionaryManifestStandardSounds40, validation.DictionaryManifestIPAPositive2015Unicode13} {
 				opts.Dictionaries.Selections = append(opts.Dictionaries.Selections, dictionaryImportSelection(manifest))
@@ -36,11 +36,11 @@ func dictionaryReviewWork(t *testing.T, count int, accidental, dictionaries, ava
 		if err != nil {
 			t.Fatal(err)
 		}
-		cfg.Engine, err = sourceAssessmentEngineForProfile(ProfileSourceLinks)
+		cfg.Engine, err = sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
 		if err != nil {
 			t.Fatal(err)
 		}
-		cfg.Profile, cfg.DocumentID = ProfileSourceLinks, sourceDocumentID
+		cfg.Profile, cfg.DocumentID = ProfileSourceLinks.ID(), sourceDocumentID
 	}
 	before, _ := cfg.Account.Usage(validation.BudgetRuleSteps)
 	body := `<note><rest/><duration>1</duration><type>quarter</type>`

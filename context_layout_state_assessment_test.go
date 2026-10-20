@@ -56,7 +56,7 @@ func buildLayoutStateTestEngine() (*validation.Engine, error) {
 		d.rules = append(d.rules, rule)
 		d.plans = append(d.plans, validation.PlanBinding{ID: rule.Predicate, Plan: v.plan})
 		for i := range d.profiles {
-			if d.profiles[i].ID == ProfileSourceLocal || d.profiles[i].ID == ProfileModelLocal {
+			if d.profiles[i].ID == ProfileSourceLocal.ID() || d.profiles[i].ID == ProfileModelLocal.ID() {
 				d.profiles[i].Required = append(d.profiles[i].Required, v.key)
 				d.profiles[i].Support = append(d.profiles[i].Support, validation.RuleSupport{Rule: v.key, State: validation.ImplementationAvailable})
 			}

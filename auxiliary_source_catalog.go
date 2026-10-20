@@ -10,13 +10,17 @@ import (
 // container XSD assembly and projects exact ordered rootfile metadata.
 // Package entries, root targets and ZIP rules are outside
 // this source-only profile. It does not add a Document model root.
-const ProfileSourceContainer validation.ProfileID = "musicxml-4.0/source-container"
+const ProfileSourceContainer SourceProfile = "musicxml-4.0/source-container"
+
+const profileSourceContainer = validation.ProfileID(ProfileSourceContainer)
 
 // ProfileSourceSounds assesses original sounds XML against the pinned sounds
 // XSD assembly and projects exact directional sound-mapping evidence. Dictionary
 // membership, application-library selection and playback are outside its scope.
 // It does not add a Document model root.
-const ProfileSourceSounds validation.ProfileID = "musicxml-4.0/source-sounds"
+const ProfileSourceSounds SourceProfile = "musicxml-4.0/source-sounds"
+
+const profileSourceSounds = validation.ProfileID(ProfileSourceSounds)
 
 var auxiliarySourceAssessmentEngine = sync.OnceValues(buildAuxiliarySourceAssessmentEngine)
 
@@ -48,8 +52,8 @@ func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error)
 		id       validation.ProfileID
 		root     string
 	}{
-		{validation.AssemblyContainer, containerValidationSchema, "container.xsd", ProfileSourceContainer, "container"},
-		{validation.AssemblySounds, soundsValidationSchema, "sounds.xsd", ProfileSourceSounds, "sounds"},
+		{validation.AssemblyContainer, containerValidationSchema, "container.xsd", profileSourceContainer, "container"},
+		{validation.AssemblySounds, soundsValidationSchema, "sounds.xsd", profileSourceSounds, "sounds"},
 	} {
 		profile := validation.Profile{ID: input.id, MusicXMLVersion: "4.0", Target: validation.TargetSource,
 			RegistryCommit:   "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",

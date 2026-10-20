@@ -16,7 +16,7 @@ func assessedScore(staves, extra string) string {
 	return `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Music</part-name></score-part></part-list><part id="P1"><measure number="1"><attributes><staves>` + staves + `</staves>` + extra + `</attributes></measure></part></score-partwise>`
 }
 func strictSourceOptions() DecodeAssessmentOptions {
-	return DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}}
+	return DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}}
 }
 
 type onceEOFReader struct {
@@ -55,7 +55,7 @@ func TestDecodeAssessedSourceAndConversionDomains(t *testing.T) {
 	} {
 		t.Run(tt.value, func(t *testing.T) {
 			input := assessedScore(tt.value, `<instruments>1</instruments>`)
-			inspection, inspectErr := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+			inspection, inspectErr := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview})
 			if inspectErr != nil || !inspection.InputComplete || !inspection.AssessmentComplete || inspection.Conformance != tt.source {
 				t.Fatalf("inspection=%+v err=%v", inspection, inspectErr)
 			}
@@ -124,7 +124,7 @@ func TestDecodeAssessedDrainsAfterOverflowAndPreservesTailCauses(t *testing.T) {
 func TestSourceAssessmentReaderOwnershipAndUnsupportedRoot(t *testing.T) {
 	for _, input := range []string{`<unknown/>`, `<score-partwise xmlns="urn:foreign"/>`, `<score-partwise/>`} {
 		reader := &assessmentCountingReader{source: strings.NewReader(input)}
-		report, err := InspectXML(context.Background(), reader, AssessmentOptions{Profile: ProfileSourceXSDPreview})
+		report, err := InspectXML(context.Background(), reader, SourceOptions{Profile: ProfileSourceXSDPreview})
 		if reader.closed {
 			t.Error("closed caller-owned reader")
 		}
@@ -166,14 +166,14 @@ func TestSourceAssessmentBudgets(t *testing.T) {
 		{"rule-steps", validation.Budgets{MaxRuleSteps: 1}, validation.BudgetRuleSteps},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: tt.budgets})
+			report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview, Budgets: tt.budgets})
 			var resource *validation.ResourceError
 			if !errors.As(err, &resource) || resource.Kind != tt.kind || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) || report.Satisfied() {
 				t.Fatalf("budget report=%+v error=%v kind=%+v", report, err, resource)
 			}
 		})
 	}
-	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxInputBytes: int64(len(input))}})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxInputBytes: int64(len(input))}})
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("exact byte limit should allow EOF: %+v %v", report, err)
 	}
@@ -254,7 +254,7 @@ func TestDecodeAssessedOriginalForeignRootName(t *testing.T) {
 
 func TestSourceAssessmentCumulativeBudgetBoundaries(t *testing.T) {
 	input := strings.Replace(assessedScore("1", `<instruments>1</instruments>`), `</part-list>`, `<score-part id="P2"><part-name>Other</part-name></score-part></part-list>`, 1)
-	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceXSDPreview}, false)
+	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &assessmentOptions{Profile: ProfileSourceXSDPreview.ID()}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,7 +283,7 @@ func TestSourceAssessmentCumulativeBudgetBoundaries(t *testing.T) {
 			for _, delta := range []int64{-1, 0, 1} {
 				budgets := validation.Budgets{}
 				tc.set(&budgets, used+delta)
-				got, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: budgets})
+				got, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview, Budgets: budgets})
 				if delta < 0 {
 					var limit *validation.ResourceError
 					if !errors.As(err, &limit) || limit.Kind != tc.kind || got.Satisfied() {
@@ -321,7 +321,7 @@ func TestSourceAssessmentDepthAndScalarBoundaries(t *testing.T) {
 				if tt.name == "scalar" {
 					input = strings.Replace(input, "Music", strings.Repeat("a", 50), 1)
 				}
-				report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: budgets})
+				report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview, Budgets: budgets})
 				if delta < 0 {
 					if !errors.Is(err, validation.ErrResourceLimit) || report.Satisfied() {
 						t.Errorf("below boundary: %+v %v", report, err)
@@ -336,7 +336,7 @@ func TestSourceAssessmentDepthAndScalarBoundaries(t *testing.T) {
 
 func TestSourceAssessmentEmptyDocumentSyntax(t *testing.T) {
 	for _, input := range []string{"", " \r\n\t", "<!-- no document element -->"} {
-		report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+		report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview})
 		if !errors.Is(err, ErrEmptyDocument) || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) || report.Syntax != validation.SyntaxMalformed || report.InputComplete || report.Terminal == nil || report.Terminal.Category != validation.CategorySyntax {
 			t.Errorf("empty source: %+v %v", report, err)
 		}
@@ -346,7 +346,7 @@ func TestSourceAssessmentEmptyDocumentSyntax(t *testing.T) {
 func TestSourceAssessmentBufferedBoundaryAndCleanup(t *testing.T) {
 	input := assessedScore("1", "")
 	inspect := func(limit int64) (validation.Report, error) {
-		return InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxBufferedBytes: limit}})
+		return InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxBufferedBytes: limit}})
 	}
 	low, high := int64(1), int64(2<<20)
 	if r, err := inspect(high); err != nil || !r.Satisfied() {
@@ -378,7 +378,7 @@ func TestSourceAssessmentBufferedBoundaryAndCleanup(t *testing.T) {
 	// Fail after Begin and at several points in the parser/observer/session tree.
 	// Every started run must release only its live buffers and depth on Finish.
 	for _, limit := range []int64{low / 2, low - 1, low} {
-		run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxBufferedBytes: limit}}, false)
+		run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &assessmentOptions{Profile: ProfileSourceXSDPreview.ID(), Budgets: validation.Budgets{MaxBufferedBytes: limit}}, false)
 		if run == nil {
 			continue
 		}
@@ -397,7 +397,7 @@ func TestSourceAssessmentBufferedBoundaryAndCleanup(t *testing.T) {
 
 func TestSourceAssessmentDiagnosticBoundaries(t *testing.T) {
 	input := `<score-partwise bad="x" also="y"/>`
-	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceXSDPreview}, false)
+	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &assessmentOptions{Profile: ProfileSourceXSDPreview.ID()}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -415,7 +415,7 @@ func TestSourceAssessmentDiagnosticBoundaries(t *testing.T) {
 			} else {
 				budgets.MaxDiagnosticBytes = used + delta
 			}
-			report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: budgets})
+			report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview, Budgets: budgets})
 			if err != nil || report.Counts != baseline.Counts || report.Conformance != validation.ConformanceViolated || !report.AssessmentComplete || report.DiagnosticsTruncated != (delta < 0) {
 				t.Errorf("%s limit%d: %+v %v", kind, used+delta, report, err)
 			}
@@ -424,7 +424,7 @@ func TestSourceAssessmentDiagnosticBoundaries(t *testing.T) {
 }
 
 func TestSourceAssessmentUnusedBudgetsDoNotInventWork(t *testing.T) {
-	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(assessedScore("1", "")), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxExternalBytes: 1, MaxContextFacts: 1, MaxLinkedDocuments: 1}}, false)
+	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(assessedScore("1", "")), DecodeOptions{}, &assessmentOptions{Profile: ProfileSourceXSDPreview.ID(), Budgets: validation.Budgets{MaxExternalBytes: 1, MaxContextFacts: 1, MaxLinkedDocuments: 1}}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -452,7 +452,7 @@ func TestDecodeAssessedUsesTighterDepthLimit(t *testing.T) {
 		{"decode-is-tighter", 2, 3, true}, {"assessment-is-tighter", 3, 2, false},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: tt.decode}, Assessment: &AssessmentOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxDepth: tt.assessment}}})
+			result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: tt.decode}, Assessment: &SourceOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxDepth: tt.assessment}}})
 			var resource *validation.ResourceError
 			if !errors.As(err, &resource) || resource.Kind != validation.BudgetDepth || resource.Limit != 2 || errors.Is(err, ErrXMLTooDeep) != tt.legacy || errors.Is(err, ErrInvalidDocument) || result.SourceLine.Terminal == nil || result.SourceLine.Terminal.Category != validation.CategoryResource || result.Document != nil {
 				t.Errorf("tighter depth result=%+v resource=%+v error=%v", result, resource, err)
@@ -484,7 +484,7 @@ func TestSourceAssessmentWorkIsRepeatable(t *testing.T) {
 	input := strings.Replace(assessedScore("1", `<instruments>1</instruments>`), `</part-list>`, `<score-part id="P2"><part-name>Other</part-name></score-part></part-list>`, 1)
 	var expected int64
 	for repeat := 0; repeat < 20; repeat++ {
-		run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceXSDPreview}, false)
+		run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &assessmentOptions{Profile: ProfileSourceXSDPreview.ID()}, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -516,7 +516,7 @@ func TestDecodeAssessedConversionLocationKeepsMappedOwner(t *testing.T) {
 }
 
 func TestAssessedModelRetentionSurvivesSourceFinalization(t *testing.T) {
-	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(assessedScore("1", "")), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceXSDPreview}, true)
+	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(assessedScore("1", "")), DecodeOptions{}, &assessmentOptions{Profile: ProfileSourceXSDPreview.ID()}, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -558,7 +558,7 @@ func TestAssessedModelRetentionSurvivesSourceFinalization(t *testing.T) {
 
 func TestSourceAssessmentKeepsClosedFailureWithUnclosedAncestors(t *testing.T) {
 	input := strings.TrimSuffix(assessedScore("bad", ""), "</attributes></measure></part></score-partwise>")
-	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+	report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview})
 	var syntax *xml.SyntaxError
 	if !errors.As(err, &syntax) || report.Conformance != validation.ConformanceViolated || report.AssessmentComplete || report.InputComplete {
 		t.Fatalf("closed scalar proof lost under unclosed ancestors: %+v / %v", report, err)

@@ -13,7 +13,9 @@ import (
 // official score samples; no infoset-neutral DTD assumption is made. It excludes
 // MusicXML prose, direct models, packages, linked documents and dictionaries;
 // it is not a production MusicXML conformance profile or an implicit default.
-const ProfileSourceXSDPreview validation.ProfileID = "musicxml-4.0/source-xsd-preview"
+const ProfileSourceXSDPreview SourceProfile = "musicxml-4.0/source-xsd-preview"
+
+const profileSourceXSDPreview = validation.ProfileID(ProfileSourceXSDPreview)
 
 var sourceAssessmentEngine = sync.OnceValues(buildSourceAssessmentEngine)
 
@@ -25,13 +27,13 @@ func buildSourceAssessmentEngine() (*validation.Engine, error) {
 
 func buildSourceXSDProfileEngine(internalDTD bool) (*validation.Engine, error) {
 	profile := validation.Profile{
-		ID: ProfileSourceXSDPreview, MusicXMLVersion: "4.0", Target: validation.TargetSource,
+		ID: profileSourceXSDPreview, MusicXMLVersion: "4.0", Target: validation.TargetSource,
 		RegistryCommit:   "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
 		SupportedRoots:   []validation.QName{{Local: "score-partwise"}, {Local: "score-timewise"}, {Local: "opus"}},
 		NormativeClosure: "Preview source-only execution of the pinned generated MusicXML 4.0 score and opus XSD assemblies. Counts are selected per-node composite XSD operation instances, not research-record coverage. Mandatory XML syntax is separate. Files with an unread external DOCTYPE subset cannot satisfy this preview, including the three committed official score samples. Reached unavailable metadata, opaque/open-content, DTD infoset and unsupported value/identity capabilities remain incomplete. MusicXML prose, current-model traversal, packages, links, external dictionaries and broad production conformance are excluded.",
 	}
 	if internalDTD {
-		profile.ID = ProfileSourceInternalDTD
+		profile.ID = profileSourceInternalDTD
 		profile.NormativeClosure = "Explicit source-only assessment of the pinned MusicXML 4.0 score and opus XSD assemblies after bounded processing of actually read internal DTD declarations, general entities, attribute normalization and defaults. A DOCTYPE external subset is read only from the bundled official MusicXML DTDs, selected by the official catalog's public identifiers or official system identifiers, or from a caller DTD source. Source-origin projections describe admitted element and attribute occurrences, not per-character scalar segmentation. Unrecognized external declarations, unelected parameter-entity forms and unresolved declaration well-formedness remain incomplete. No network retrieval, validating DTD processor, package adoption, model-history reconstruction, musical prose, dictionary or full XML conformance claim is made. Counts are selected operation instances, not original research-record coverage."
 	}
 	var rules []validation.RuleDefinition

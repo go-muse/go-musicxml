@@ -261,9 +261,9 @@ func TestTimelineSemanticQAHierarchyGapsPreserveAbsenceUncertainty(t *testing.T)
 	}
 	for _, form := range []string{"partwise", "timewise"} {
 		for _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {
-			profile := ProfileModelTimeline
+			profile := ProfileModelTimeline.ID()
 			if target == validation.TargetSource {
-				profile = ProfileSourceTimeline
+				profile = ProfileSourceTimeline.ID()
 			}
 			for _, gap := range []string{"score-" + form, "part", "measure"} {
 				t.Run(form+"/"+string(target)+"/"+gap, func(t *testing.T) {

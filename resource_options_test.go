@@ -14,13 +14,13 @@ func (*optionNilResolver) Resolve(context.Context, validation.ResourceRequest) (
 }
 func TestResourceOptionsRejectBeforeAnyIO(t *testing.T) {
 	profile := validation.ProfileID("test-resource")
-	for _, tc := range []LinkedAssessmentOptions{
-		{}, {Graph: AssessmentOptions{Profile: "wrong"}},
-		{Graph: AssessmentOptions{Profile: profile}, Dependencies: []ResourceDependency{"bogus"}},
-		{Graph: AssessmentOptions{Profile: profile}, Dependencies: []ResourceDependency{ResourceDocuments, ResourceDocuments}},
-		{Graph: AssessmentOptions{Profile: profile}, Identity: ResourceIdentity{RetrievalURI: "relative/base"}},
-		{Graph: AssessmentOptions{Profile: profile}, Identity: ResourceIdentity{CanonicalID: "a\x00b"}},
-		{Graph: AssessmentOptions{Profile: profile, Budgets: validation.Budgets{MaxRuleSteps: -1}}},
+	for _, tc := range []linkedAssessmentOptions{
+		{}, {Graph: assessmentOptions{Profile: "wrong"}},
+		{Graph: assessmentOptions{Profile: profile}, Dependencies: []ResourceDependency{"bogus"}},
+		{Graph: assessmentOptions{Profile: profile}, Dependencies: []ResourceDependency{ResourceDocuments, ResourceDocuments}},
+		{Graph: assessmentOptions{Profile: profile}, Identity: ResourceIdentity{RetrievalURI: "relative/base"}},
+		{Graph: assessmentOptions{Profile: profile}, Identity: ResourceIdentity{CanonicalID: "a\x00b"}},
+		{Graph: assessmentOptions{Profile: profile, Budgets: validation.Budgets{MaxRuleSteps: -1}}},
 	} {
 		if _, err := validateLinkedAssessmentOptions(context.Background(), tc, profile); !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Fatalf("%+v: %v", tc, err)
@@ -30,12 +30,12 @@ func TestResourceOptionsRejectBeforeAnyIO(t *testing.T) {
 func TestResourceOptionsEmptyAndTypedNilResolver(t *testing.T) {
 	profile := validation.ProfileID("test-resource")
 	for _, resolver := range []validation.ResourceResolver{nil, (*optionNilResolver)(nil)} {
-		cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{RetrievalURI: "urn:example:score"}}, profile)
+		cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{RetrievalURI: "urn:example:score"}}.internal(), profile)
 		if err != nil || cfg.resolver != nil || !cfg.selected[ResourceDocuments] {
 			t.Fatal(cfg, err)
 		}
 	}
-	cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: &optionNilResolver{}}, profile)
+	cfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}, Resolver: &optionNilResolver{}}.internal(), profile)
 	if err != nil || len(cfg.selected) != 0 {
 		t.Fatal(cfg, err)
 	}

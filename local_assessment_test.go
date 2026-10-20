@@ -41,9 +41,9 @@ func assessLocalFixture(t *testing.T, f localFixture, rule string, violated bool
 		t.Run(string(target), func(t *testing.T) {
 			var report validation.Report
 			if target == validation.TargetSource {
-				report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLocal})
+				report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLocal})
 			} else {
-				report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLocal})
+				report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLocal})
 			}
 			if err != nil {
 				t.Fatalf("operation: %v; %s", err, localFindings(report))
@@ -185,9 +185,9 @@ func TestAccordionInvalidPresentChildKeepsDistinctConsequence(t *testing.T) {
 	for _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {
 		var report validation.Report
 		if target == validation.TargetSource {
-			report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLocal})
+			report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLocal})
 		} else {
-			report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLocal})
+			report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLocal})
 		}
 		if err != nil || report.Conformance != validation.ConformanceViolated || !report.AssessmentComplete {
 			t.Fatalf("%s: %+v %v", target, report, err)

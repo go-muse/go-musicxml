@@ -40,7 +40,7 @@ func TestTimelineHierarchyGapCannotProveMissingKey(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: modelDocumentID, Profile: ProfileModelTimeline, Account: account})
+			session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: modelDocumentID, Profile: ProfileModelTimeline.ID(), Account: account})
 			if err != nil {
 				t.Fatal(err)
 			}

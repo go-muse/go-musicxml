@@ -33,22 +33,22 @@ func TestIndependentTimelineUniformExcursionPracticalDefaults(t *testing.T) {
 			for _, model := range []bool{false, true} {
 				for _, timeline := range []bool{false, true} {
 					t.Run(fmt.Sprintf("moves%d/repeated%t/model%t/timeline%t", count, repeated, model, timeline), func(t *testing.T) {
-						p := ProfileSourceLocal
+						p := ProfileSourceLocal.ID()
 						if model {
-							p = ProfileModelLocal
+							p = ProfileModelLocal.ID()
 						}
 						if timeline {
-							p = ProfileSourceTimeline
+							p = ProfileSourceTimeline.ID()
 							if model {
-								p = ProfileModelTimeline
+								p = ProfileModelTimeline.ID()
 							}
 						}
 						var r validation.Report
 						var err error
 						if model {
-							r, err = AssessModel(context.Background(), document, AssessmentOptions{Profile: p})
+							r, err = AssessModel(context.Background(), document, ModelOptions{Profile: ModelProfile(p)})
 						} else {
-							r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p})
+							r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p)})
 						}
 						t.Logf("complete%t satisfied%t: %v", r.AssessmentComplete, r.Satisfied(), err)
 						if err != nil || !r.Satisfied() {

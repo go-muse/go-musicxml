@@ -33,8 +33,8 @@ func TestBundledDictionaryLinkage(t *testing.T) {
 	calls := map[string]bool{
 		`musicxml.DecodeAssessed(ctx, r, musicxml.DecodeAssessmentOptions{})`:                                    true,
 		`musicxml.DecodeMXLAssessed(ctx, r, musicxml.DecodeMXLAssessmentOptions{})`:                              true,
-		`musicxml.InspectXML(ctx, r, musicxml.AssessmentOptions{})`:                                              true,
-		`musicxml.AssessModel(ctx, musicxml.NewOpusDocument(), musicxml.AssessmentOptions{})`:                    true,
+		`musicxml.InspectXML(ctx, r, musicxml.SourceOptions{})`:                                                  true,
+		`musicxml.AssessModel(ctx, musicxml.NewOpusDocument(), musicxml.ModelOptions{})`:                         true,
 		`musicxml.InspectXMLWithResources(ctx, r, musicxml.LinkedAssessmentOptions{})`:                           true,
 		`musicxml.AssessModelWithResources(ctx, musicxml.NewOpusDocument(), musicxml.LinkedAssessmentOptions{})`: true,
 		`musicxml.InspectMXL(ctx, r, musicxml.MXLAssessmentOptions{})`:                                           true,

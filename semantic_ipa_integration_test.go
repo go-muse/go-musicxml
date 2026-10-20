@@ -17,7 +17,7 @@ func TestSemanticIPARepresentationPublicSourceModelAndAssessedReader(t *testing.
 				ctx := context.Background()
 				text := contextFixtureXML(`<note><rest/><duration>1</duration><play><ipa>`+value+`</ipa></play></note>`, false)
 				calls := 0
-				options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
+				options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceSemantics.ID()}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
 				var report validation.Report
 				var err error
 				switch mode {
@@ -28,10 +28,10 @@ func TestSemanticIPARepresentationPublicSourceModelAndAssessedReader(t *testing.
 					if e != nil {
 						t.Fatal(e)
 					}
-					options.Assessment.Profile = ProfileModelSemantics
+					options.Assessment.Profile = ProfileModelSemantics.ID()
 					report, err = assessModelWithDictionaries(ctx, doc, options)
 				case "assessed-reader":
-					options.Assessment.Profile = ProfileSourceLine
+					options.Assessment.Profile = ProfileSourceLine.ID()
 					options.Dictionaries = assessedRepresentationDictionaries(t, &calls)
 					result, e := decodeAssessedWithDictionaries(ctx, strings.NewReader(text), decodeDictionaryTestOptions{Assessment: &options})
 					// Dictionaries are line-3 evidence.
@@ -74,18 +74,18 @@ func TestSemanticIPARepresentationGraphAliasesAndMXLUseSameWitness(t *testing.T)
 			case "graph-aliases":
 				root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="a.musicxml"/><score xlink:href="b.musicxml"/></opus>`
 				fixture := &graphFixtureResolver{resources: map[string]string{"https://ipa.test/a.musicxml": text, "https://ipa.test/b.musicxml": text}, pins: map[string]string{"https://ipa.test/a.musicxml": "same", "https://ipa.test/b.musicxml": "same"}}
-				bundle, err = inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphSemantics}, Identity: ResourceIdentity{RetrievalURI: "https://ipa.test/root.opus"}, Resolver: fixture, Dependencies: []ResourceDependency{ResourceDocuments}}, Dictionaries: dictionaries})
+				bundle, err = inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraphSemantics}, Identity: ResourceIdentity{RetrievalURI: "https://ipa.test/root.opus"}, Resolver: fixture, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), Dictionaries: dictionaries})
 				if fixture.calls != 2 || bundle.ResourceCount() != 2 || bundle.AdoptionCount() != 3 {
 					t.Fatalf("graph counts %d %d %d", fixture.calls, bundle.ResourceCount(), bundle.AdoptionCount())
 				}
 			case "raw-mxl":
-				bundle, err = inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(text, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceSemantics}}, Dictionaries: dictionaries})
+				bundle, err = inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(text, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSourceSemantics}}.internal(), Dictionaries: dictionaries})
 			case "model-mxl":
 				doc, e := Decode(strings.NewReader(text))
 				if e != nil {
 					t.Fatal(e)
 				}
-				bundle, err = assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelSemantics}}, Dictionaries: dictionaries})
+				bundle, err = assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModelSemantics}}.internal(), Dictionaries: dictionaries})
 			}
 			if err != nil {
 				t.Fatal(err)

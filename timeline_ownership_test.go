@@ -520,7 +520,7 @@ func TestTimelineOwnershipReconciledExecutableEvidence(t *testing.T) {
 	}
 	profiles := map[string]validation.Profile{}
 	required := map[validation.RuleKey]bool{}
-	for _, id := range []validation.ProfileID{ProfileModelTimeline, ProfileSourceTimeline} {
+	for _, id := range []validation.ProfileID{ProfileModelTimeline.ID(), ProfileSourceTimeline.ID()} {
 		p := catalogProfile(t, engine, id)
 		profiles[string(id)] = p
 		for _, k := range p.Required {

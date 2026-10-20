@@ -10,12 +10,12 @@ import (
 // startDictionaryResourceGraph validates every option before caller I/O, then
 // creates the sole root account and imports its immutable capability set once.
 // A nonnil graph owns all cleanup even when startup returns an operation error.
-func startDictionaryResourceGraph(ctx context.Context, resources LinkedAssessmentOptions, dictionaries DictionaryOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
+func startDictionaryResourceGraph(ctx context.Context, resources linkedAssessmentOptions, dictionaries DictionaryOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
 	return startDictionaryResourceGraphAccount(ctx, resources, dictionaries, profile, nil)
 }
 
 // startDictionaryResourceGraphAccount uses account when it is non-nil.
-func startDictionaryResourceGraphAccount(ctx context.Context, resources LinkedAssessmentOptions, dictionaries DictionaryOptions, profile validation.ProfileID, account *validation.Account) (*resourceGraphRun, error) {
+func startDictionaryResourceGraphAccount(ctx context.Context, resources linkedAssessmentOptions, dictionaries DictionaryOptions, profile validation.ProfileID, account *validation.Account) (*resourceGraphRun, error) {
 	selected, composed, err := selectDictionaryPackageProfile(resources.Graph.Profile, profile)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func inspectXMLWithResourcesAndDictionaries(ctx context.Context, reader io.Reade
 	if nilValue(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
-	g, err := startDictionaryResourceGraph(ctx, options.Resources, options.Dictionaries, ProfileResourceGraphDictionaries)
+	g, err := startDictionaryResourceGraph(ctx, options.Resources, options.Dictionaries, profileResourceGraphDictionaries)
 	if g == nil {
 		return validation.AssessmentBundle{}, err
 	}
@@ -94,7 +94,7 @@ func assessModelWithResourcesAndDictionaries(ctx context.Context, document Docum
 	if _, err := validationSchemaForDocument(document); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	g, err := startDictionaryResourceGraph(ctx, options.Resources, options.Dictionaries, ProfileResourceGraphDictionaries)
+	g, err := startDictionaryResourceGraph(ctx, options.Resources, options.Dictionaries, profileResourceGraphDictionaries)
 	if g == nil {
 		return validation.AssessmentBundle{}, err
 	}
@@ -114,7 +114,7 @@ func inspectMXLWithDictionaries(ctx context.Context, reader io.Reader, options m
 	if _, err := options.Resources.MXL.limits(); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	g, err := startDictionaryResourceGraph(ctx, options.Resources.linked(), options.Dictionaries, ProfileMXLSourceDictionaries)
+	g, err := startDictionaryResourceGraph(ctx, options.Resources.linked(), options.Dictionaries, profileMXLSourceDictionaries)
 	if g == nil {
 		return validation.AssessmentBundle{}, err
 	}
@@ -138,7 +138,7 @@ func assessMXLPackageWithDictionaries(ctx context.Context, value *MXLPackage, op
 	if _, err := validationSchemaForDocument(value.Document); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	g, err := startDictionaryResourceGraph(ctx, options.Resources.linked(), options.Dictionaries, ProfileMXLModelDictionaries)
+	g, err := startDictionaryResourceGraph(ctx, options.Resources.linked(), options.Dictionaries, profileMXLModelDictionaries)
 	if g == nil {
 		return validation.AssessmentBundle{}, err
 	}

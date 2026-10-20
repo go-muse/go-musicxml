@@ -25,10 +25,10 @@ func dictionaryAssessmentConfigAccount(ctx context.Context, options dictionaryAs
 	var engine *validation.Engine
 	var err error
 	switch {
-	case target == validation.TargetSource && (options.Assessment.Profile == ProfileSourceDictionaries || options.Assessment.Profile == ProfileSourceSoundsDictionaries || options.Assessment.Profile == ProfileSourceInternalDTDDictionaries || options.Assessment.Profile == ProfileSourceInternalDTDSoundsDictionaries || options.Assessment.Profile == ProfileSourceSemantics):
+	case target == validation.TargetSource && (options.Assessment.Profile == profileSourceDictionaries || options.Assessment.Profile == profileSourceSoundsDictionaries || options.Assessment.Profile == profileSourceInternalDTDDictionaries || options.Assessment.Profile == profileSourceInternalDTDSoundsDictionaries || options.Assessment.Profile == profileSourceSemantics):
 		engine, err = sourceAssessmentEngineForProfile(options.Assessment.Profile)
 		cfg.DocumentID = sourceDocumentID
-	case target == validation.TargetModel && (options.Assessment.Profile == ProfileModelDictionaries || options.Assessment.Profile == ProfileModelSemantics):
+	case target == validation.TargetModel && (options.Assessment.Profile == profileModelDictionaries || options.Assessment.Profile == profileModelSemantics):
 		engine, err = modelAssessmentEngineForProfile(options.Assessment.Profile)
 		cfg.DocumentID = modelDocumentID
 	default:

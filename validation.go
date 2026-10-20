@@ -64,7 +64,7 @@ func (e *ValidationError) Unwrap() error {
 // and configurable finite budgets.
 func Validate(document Document) error {
 	report, status, err := assessModel(context.Background(), document,
-		AssessmentOptions{Profile: ProfileModelXSD, Budgets: legacyValidationBudgets()},
+		assessmentOptions{Profile: profileModelXSD, Budgets: legacyValidationBudgets()},
 		modelWalkOptions{LegacyPaths: true})
 	if !report.Requested {
 		return err

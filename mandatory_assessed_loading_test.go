@@ -26,7 +26,7 @@ func TestMandatoryAssessedLoadingRejectsInvalidSourceWithDefaults(t *testing.T) 
 				if result.Document != nil || !errors.Is(err, ErrInvalidDocument) {
 					t.Fatalf("invalid source accepted: document=%T error=%v", result.Document, err)
 				}
-				if !result.SourceLine.Requested || result.SourceLine.Profile.ID != ProfileSourceLine || result.SourceLine.Conformance != validation.ConformanceViolated {
+				if !result.SourceLine.Requested || result.SourceLine.Profile.ID != ProfileSourceLine.ID() || result.SourceLine.Conformance != validation.ConformanceViolated {
 					t.Fatalf("mandatory source assessment missing: requested=%v profile=%s conformance=%s", result.SourceLine.Requested, result.SourceLine.Profile.ID, result.SourceLine.Conformance)
 				}
 				if mandatoryModelReport(t, result).Requested {
@@ -50,8 +50,8 @@ func TestMandatoryAssessedLoadingReturnsBothSatisfiedReports(t *testing.T) {
 				if reader.closed || reader.bytes != len(source) {
 					t.Fatalf("reader ownership changed: closed=%v bytes=%d want=%d", reader.closed, reader.bytes, len(source))
 				}
-				mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine, validation.TargetSource)
-				mandatorySatisfiedReport(t, mandatoryModelReport(t, result), ProfileModelSemantics, validation.TargetModel)
+				mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine.ID(), validation.TargetSource)
+				mandatorySatisfiedReport(t, mandatoryModelReport(t, result), ProfileModelSemantics.ID(), validation.TargetModel)
 			})
 		}
 	}
@@ -60,15 +60,15 @@ func TestMandatoryAssessedLoadingReturnsBothSatisfiedReports(t *testing.T) {
 func TestMandatoryAssessedLoadingRejectsNarrowProfilesBeforeRead(t *testing.T) {
 	for _, explicit := range []bool{false, true} {
 		for _, profile := range []validation.ProfileID{
-			ProfileSourceXSDPreview, ProfileSourceLocal, ProfileSourceContext,
-			ProfileSourceDictionaries, ProfileSourceInternalDTDDictionaries,
-			ProfileModelSemantics, ProfileMXLSourceSemantics, ProfileMXLSourceLine, "unknown-profile",
+			ProfileSourceXSDPreview.ID(), ProfileSourceLocal.ID(), ProfileSourceContext.ID(),
+			ProfileSourceDictionaries.ID(), ProfileSourceInternalDTDDictionaries.ID(),
+			ProfileModelSemantics.ID(), ProfileMXLSourceSemantics.ID(), ProfileMXLSourceLine.ID(), "unknown-profile",
 			// The full source semantics is a diagnostic profile, not line 2.
-			ProfileSourceSemantics,
+			ProfileSourceSemantics.ID(),
 		} {
 			t.Run(mandatoryLoaderName(explicit)+"/"+string(profile), func(t *testing.T) {
 				reader := &assessmentCountingReader{source: strings.NewReader(`<opus/>`)}
-				result, err := mandatoryDecode(explicit, context.Background(), reader, &AssessmentOptions{Profile: profile})
+				result, err := mandatoryDecode(explicit, context.Background(), reader, &SourceOptions{Profile: SourceProfile(profile)})
 				if !errors.Is(err, validation.ErrInvalidConfiguration) || result.Document != nil || reader.reads != 0 || reader.closed {
 					t.Fatalf("profile preflight: profile=%s document=%T reads=%d closed=%v error=%v", profile, result.Document, reader.reads, reader.closed, err)
 				}
@@ -95,7 +95,7 @@ func TestMandatoryAssessedLoadingCannotReturnDocumentAfterIncompleteSource(t *te
 			{name: "normative-unknown", ctx: context.Background(), source: mandatoryScore("1", `<note time-only="1,1"><rest/><duration>1</duration></note>`), want: ErrIncompleteAssessment},
 		} {
 			t.Run(mandatoryLoaderName(explicit)+"/"+tc.name, func(t *testing.T) {
-				result, err := mandatoryDecode(explicit, tc.ctx, strings.NewReader(tc.source), &AssessmentOptions{Budgets: tc.budgets})
+				result, err := mandatoryDecode(explicit, tc.ctx, strings.NewReader(tc.source), &SourceOptions{Budgets: tc.budgets})
 				if err == nil || result.Document != nil || (tc.want != nil && !errors.Is(err, tc.want)) {
 					t.Fatalf("incomplete source accepted: document=%T error=%v want=%v", result.Document, err, tc.want)
 				}
@@ -128,7 +128,7 @@ func TestMandatoryAssessedLoadingRejectsDecimalUnderflowInTheSourceLine(t *testi
 	// unrepresentable; the source stays conformant.
 	tiny := "0." + strings.Repeat("0", 399) + "1"
 	source := mandatoryScore(tiny, `<note><rest/><duration>`+tiny+`</duration></note>`)
-	sourceReport, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLine})
+	sourceReport, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLine})
 	if err != nil || sourceReport.Satisfied() || sourceReport.Conformance != validation.ConformanceConformant || !hasRepresentabilityFailure(sourceReport) {
 		t.Fatalf("source line must reject the unrepresentable values: conformance=%s error=%v findings=%s", sourceReport.Conformance, err, localFindings(sourceReport))
 	}
@@ -137,7 +137,7 @@ func TestMandatoryAssessedLoadingRejectsDecimalUnderflowInTheSourceLine(t *testi
 	if err != nil || document == nil {
 		t.Fatalf("fixture must convert successfully: document=%T error=%v", document, err)
 	}
-	modelReport, err := AssessModel(context.Background(), document, AssessmentOptions{Profile: ProfileModelSemantics})
+	modelReport, err := AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics})
 	if err != nil || modelReport.Conformance != validation.ConformanceViolated {
 		t.Fatalf("fixture model must violate semantics: conformance=%s error=%v findings=%s", modelReport.Conformance, err, localFindings(modelReport))
 	}
@@ -164,8 +164,8 @@ func TestMandatoryAssessedLoadingKeepsSourceReportLeaseDuringModel(t *testing.T)
 	if err != nil || result.Document == nil {
 		t.Fatalf("pipeline control failed: document=%T error=%v", result.Document, err)
 	}
-	mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine, validation.TargetSource)
-	mandatorySatisfiedReport(t, result.ModelLine, ProfileModelSemantics, validation.TargetModel)
+	mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine.ID(), validation.TargetSource)
+	mandatorySatisfiedReport(t, result.ModelLine, ProfileModelSemantics.ID(), validation.TargetModel)
 	if !observed.modelSeen || observed.modelBuffered != expected.modelBuffered {
 		t.Fatalf("source report lease was not retained through model assessment: checkpoint=%d want=%d, independently measured lease=%d", observed.modelBuffered, expected.modelBuffered, expected.leaseBytes)
 	}
@@ -188,7 +188,7 @@ func TestMandatoryAssessedLoadingModelStartupCancellationLeavesUnrequestedReport
 	if !errors.As(err, &incomplete) || incomplete.Reason != "canceled-before-begin" || !errors.Is(incomplete.Cause, context.Canceled) {
 		t.Fatalf("cancellation did not occur at model-session Begin: %v", err)
 	}
-	mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine, validation.TargetSource)
+	mandatorySatisfiedReport(t, result.SourceLine, ProfileSourceLine.ID(), validation.TargetSource)
 	if result.ModelLine.Requested || result.ModelLine.Profile.ID != "" || observed.modelSeen {
 		t.Fatalf("startup cancellation invented a started model report: requested=%v profile=%s node-observed=%v", result.ModelLine.Requested, result.ModelLine.Profile.ID, observed.modelSeen)
 	}
@@ -250,7 +250,7 @@ func mandatoryIndependentLeaseCheckpoint(t *testing.T, source string, sourceNode
 
 func mandatoryLeaseFixture(t *testing.T, observed *mandatoryLeaseCheckpointContext, source string) (*sourceAssessmentRun, assessmentRunConfig) {
 	t.Helper()
-	options := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileModelSemantics}, Dictionaries: DictionaryOptions{
+	options := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileModelSemantics.ID()}, Dictionaries: DictionaryOptions{
 		Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
 	}}
 	config, modelConfig, err := assessedLoadingLines(observed, options)
@@ -342,9 +342,9 @@ func (c *mandatoryLeaseCheckpointContext) Err() error {
 // mandatoryDecode runs DecodeAssessed with the default dictionaries or, when
 // explicit is set, with the bundled required dictionaries given explicitly in
 // Assessment.Dictionaries; both must behave alike.
-func mandatoryDecode(explicit bool, ctx context.Context, reader io.Reader, options *AssessmentOptions) (DecodeResult, error) {
+func mandatoryDecode(explicit bool, ctx context.Context, reader io.Reader, options *SourceOptions) (DecodeResult, error) {
 	if explicit {
-		var copied AssessmentOptions
+		var copied SourceOptions
 		if options != nil {
 			copied = *options
 		}
@@ -357,15 +357,15 @@ func mandatoryDecode(explicit bool, ctx context.Context, reader io.Reader, optio
 
 func mandatoryAssessmentOptions() []struct {
 	name  string
-	value *AssessmentOptions
+	value *SourceOptions
 } {
 	return []struct {
 		name  string
-		value *AssessmentOptions
+		value *SourceOptions
 	}{
 		{name: "nil-assessment"},
-		{name: "empty-assessment", value: &AssessmentOptions{}},
-		{name: "explicit-source-line", value: &AssessmentOptions{Profile: ProfileSourceLine}},
+		{name: "empty-assessment", value: &SourceOptions{}},
+		{name: "explicit-source-line", value: &SourceOptions{Profile: ProfileSourceLine}},
 	}
 }
 

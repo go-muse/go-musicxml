@@ -14,7 +14,7 @@ func TestResourceIntrinsicSameAccountSnapshot(t *testing.T) {
 	ctx := context.Background()
 	a := adapterAccount(t, validation.Budgets{})
 	input := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="part.musicxml"/></opus>`
-	cfg := adapterSourceConfig(t, a, "child-source", "sets/catalog.opus", ProfileSourceLinks, sourceBytesAccounted)
+	cfg := adapterSourceConfig(t, a, "child-source", "sets/catalog.opus", ProfileSourceLinks.ID(), sourceBytesAccounted)
 	got := assessResourceSource(ctx, strings.NewReader(input), cfg)
 	if got.Err != nil || !got.Report.Satisfied() || got.Snapshot == nil || !got.DigestComplete || got.Digest != sha256.Sum256([]byte(input)) {
 		t.Fatalf("%+v", got)
@@ -37,7 +37,7 @@ func TestResourceIntrinsicSameAccountSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	model := assessResourceModel(ctx, doc, adapterModelConfig(t, a, "child-model", "current.opus", ProfileModelLinks))
+	model := assessResourceModel(ctx, doc, adapterModelConfig(t, a, "child-model", "current.opus", ProfileModelLinks.ID()))
 	if model.Err != nil || !model.Report.Satisfied() || model.Snapshot == nil || model.DigestComplete || model.Digest != ([32]byte{}) {
 		t.Fatalf("%+v", model)
 	}
@@ -49,7 +49,7 @@ func TestResourceIntrinsicSameAccountSnapshot(t *testing.T) {
 }
 func TestResourceIntrinsicPreservesKnownFailure(t *testing.T) {
 	a := adapterAccount(t, validation.Budgets{})
-	got := assessResourceSource(context.Background(), strings.NewReader(`<opus invalid="yes"/>`), adapterSourceConfig(t, a, "invalid-source", "", ProfileSourceLinks, sourceBytesPrimary))
+	got := assessResourceSource(context.Background(), strings.NewReader(`<opus invalid="yes"/>`), adapterSourceConfig(t, a, "invalid-source", "", ProfileSourceLinks.ID(), sourceBytesPrimary))
 	if got.Report.Conformance != validation.ConformanceViolated || got.Snapshot == nil {
 		t.Fatalf("%+v", got)
 	}
@@ -62,8 +62,8 @@ func TestResourceIntrinsicPreservesKnownFailure(t *testing.T) {
 
 func TestResourcePrerequisitePublicInspectPreservesJoinedEOF(t *testing.T) {
 	boom := errors.New("joined EOF transport")
-	for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceLocal, ProfileSourceTimeline, ProfileSourceContext, ProfileSourceLinks} {
-		report, err := InspectXML(context.Background(), &resourceReadError{[]byte(`<opus/>`), errors.Join(io.EOF, boom)}, AssessmentOptions{Profile: profile})
+	for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview.ID(), ProfileSourceLocal.ID(), ProfileSourceTimeline.ID(), ProfileSourceContext.ID(), ProfileSourceLinks.ID()} {
+		report, err := InspectXML(context.Background(), &resourceReadError{[]byte(`<opus/>`), errors.Join(io.EOF, boom)}, SourceOptions{Profile: SourceProfile(profile)})
 		if !errors.Is(err, boom) || report.AssessmentComplete || report.Satisfied() {
 			t.Fatalf("%s: %v %+v", profile, err, report)
 		}

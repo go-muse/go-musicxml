@@ -7,8 +7,25 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Breaking changes
+
+- **Typed profiles.** The profile constants have one type per kind of entry
+  point: `SourceProfile` (`ProfileSource*`), `ModelProfile` (`ProfileModel*`),
+  `GraphProfile` (`ProfileResourceGraph*`) and `MXLProfile` (`ProfileMXL*`),
+  each with `ID() validation.ProfileID`. `AssessmentOptions` is replaced by
+  `SourceOptions` (`InspectXML`, `DecodeAssessmentOptions.Assessment`),
+  `ModelOptions` (`AssessModel`, without the unused `DTD`), and, as the `Graph`
+  field of `LinkedAssessmentOptions` and `MXLAssessmentOptions`,
+  `GraphOptions` and `MXLGraphOptions` (without `OmitContext`). Passing a
+  profile of another kind, such as `SourceOptions{Profile: ProfileModelXSD}`,
+  no longer compiles. Migration: replace `AssessmentOptions` by the options
+  type of the entry point, and compare reports with `ProfileX.ID()`, such as
+  `report.Profile.ID == ProfileSourceLine.ID()`.
+
 ### Changed
 
+- `ConversionError`, `SessionError` and `ConfigurationError` messages include
+  the cause and omit empty parts instead of printing `: :`.
 - Strict loading runs two validation lines that no longer overlap. Line 2,
   the new `ProfileSourceLine` (`ProfileMXLSourceLine` for MXL), runs while
   `DecodeAssessed` and `DecodeMXLAssessed` read the input and checks only what
@@ -77,7 +94,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- `AssessmentOptions.OmitContext` and `validation.RunOptions.OmitContext`
+- `AssessmentBundle.Resources`, `Adoptions` and `AdoptionContexts` and
+  `ResourceSnapshot.Contexts` and `IDs` return `iter.Seq`/`iter.Seq2`
+  sequences over what the indexed accessors return.
+- `SourceOptions.OmitContext`, `ModelOptions.OmitContext` and `validation.RunOptions.OmitContext`
   leave `Report.Context` empty with every decision, count and finding
   unchanged, which roughly halves the buffer strict loading needs. A session
   that omits the projection refuses `FinishWithResourceSnapshot`.

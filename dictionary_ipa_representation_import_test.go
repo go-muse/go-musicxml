@@ -495,7 +495,7 @@ func TestDictionaryIPARepresentationCloseCancellationStopsDocumentReads(t *testi
 						}
 						return DictionaryComponentResult{Request: request, State: validation.EvidenceKnown, Body: body}, nil
 					})
-					report, err := inspectXMLWithDictionaries(ctx, &dictionaryUnexpectedRead{t}, dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}, Dictionaries: DictionaryOptions{Selections: selections, Source: source}})
+					report, err := inspectXMLWithDictionaries(ctx, &dictionaryUnexpectedRead{t}, dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: ProfileSourceDictionaries.ID()}, Dictionaries: DictionaryOptions{Selections: selections, Source: source}})
 					wantCalls := 1
 					if earlierGap {
 						wantCalls++

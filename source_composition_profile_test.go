@@ -23,9 +23,9 @@ func TestSourceDeclarationCompositionProfiles(t *testing.T) {
 			var report validation.Report
 			var err error
 			if strings.HasSuffix(string(profile), "-dictionaries") {
-				report, err = inspectXMLWithDictionaries(context.Background(), r, dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}})
+				report, err = inspectXMLWithDictionaries(context.Background(), r, dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: profile}})
 			} else {
-				report, err = InspectXML(context.Background(), r, AssessmentOptions{Profile: profile})
+				report, err = InspectXML(context.Background(), r, SourceOptions{Profile: SourceProfile(profile)})
 			}
 			if err != nil || !report.Satisfied() || report.Profile.ID != profile || report.Syntax != validation.SyntaxWellFormed || !report.InputComplete {
 				t.Fatalf("profile=%s error=%v satisfied=%t syntax=%s findings=%+v", profile, err, report.Satisfied(), report.Syntax, report.Findings)
@@ -64,7 +64,7 @@ func TestSourceDeclarationCompositionReachedEntity(t *testing.T) {
 			if tc.declaration != "" {
 				input = "<!DOCTYPE score-partwise [" + tc.declaration + "]>" + input
 			}
-			report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: profile})
+			report, err := InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: SourceProfile(profile)})
 			if err != nil || report.Conformance != tc.conformance || report.Syntax != validation.SyntaxWellFormed || !report.InputComplete {
 				t.Fatalf("error=%v conformance=%s want=%s syntax=%s findings=%+v", err, report.Conformance, tc.conformance, report.Syntax, report.Findings)
 			}

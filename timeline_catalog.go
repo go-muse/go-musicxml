@@ -11,11 +11,15 @@ import (
 // ProfileModelTimeline selects direct current-model XSD/local assessment and
 // the explicitly bounded exact timeline/effective-state clauses. It is not an
 // implicit default or a claim of complete MusicXML conformance.
-const ProfileModelTimeline validation.ProfileID = "musicxml-4.0/model-timeline"
+const ProfileModelTimeline ModelProfile = "musicxml-4.0/model-timeline"
+
+const profileModelTimeline = validation.ProfileID(ProfileModelTimeline)
 
 // ProfileSourceTimeline selects the corresponding original-source timeline
 // assessment. Existing source/XSD and unread external-DTD limits still apply.
-const ProfileSourceTimeline validation.ProfileID = "musicxml-4.0/source-timeline"
+const ProfileSourceTimeline SourceProfile = "musicxml-4.0/source-timeline"
+
+const profileSourceTimeline = validation.ProfileID(ProfileSourceTimeline)
 
 var timelineAssessmentEngine = sync.OnceValues(buildTimelineAssessmentEngine)
 
@@ -42,16 +46,16 @@ func buildTimelineAssessmentDefinitions() (*assessmentDefinitions, error) {
 	}
 	var profiles []validation.Profile
 	for _, previous := range d.profiles {
-		if previous.ID != ProfileModelLocal && previous.ID != ProfileSourceLocal {
+		if previous.ID != profileModelLocal && previous.ID != profileSourceLocal {
 			continue
 		}
 		p := previous
 		p.Required = append([]validation.RuleKey(nil), previous.Required...)
 		p.Support = append([]validation.RuleSupport(nil), previous.Support...)
 		if p.Target == validation.TargetModel {
-			p.ID = ProfileModelTimeline
+			p.ID = profileModelTimeline
 		} else {
-			p.ID = ProfileSourceTimeline
+			p.ID = profileSourceTimeline
 		}
 		p.NormativeClosure = "Explicit bounded MusicXML 4.0 source or current-model XSD, local clauses and shared exact musical timeline/effective-state assessment. The timeline provider finalizes typed part/measure/event and state evidence; its pass does not assert that every optional or ambiguous musical fact is known. The selected mandatory consumers are principal-note chord duration bounds and explicit numeral-key or applicable encoded effective-key presence at the harmony's unshifted score origin. Ordinary exact rational positions are not rounded. Ambiguous, missing, invalid or unsupported dependent evidence remains incomplete. Existing target-specific XSD, current-model representation, source syntax and unread external-DTD limits remain active. Broader repeat/span/intent/layout/playback consumers, packages, linked scores, external dictionaries and remaining normative closure are excluded. Opus selection assesses only that document, never linked scores. Counts are selected predicate instances, not complete MusicXML coverage."
 		profiles = append(profiles, p)

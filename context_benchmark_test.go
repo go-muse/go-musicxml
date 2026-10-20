@@ -22,24 +22,24 @@ func BenchmarkContextProfiles(b *testing.B) {
 		for _, model := range []bool{false, true} {
 			for _, extended := range []bool{false, true} {
 				b.Run(fmt.Sprintf("notes%d/model%t/context%t", count, model, extended), func(b *testing.B) {
-					profile := ProfileSourceTimeline
+					profile := ProfileSourceTimeline.ID()
 					if model {
-						profile = ProfileModelTimeline
+						profile = ProfileModelTimeline.ID()
 					}
 					if extended {
-						profile = ProfileSourceContext
+						profile = ProfileSourceContext.ID()
 						if model {
-							profile = ProfileModelContext
+							profile = ProfileModelContext.ID()
 						}
 					}
-					opts := AssessmentOptions{Profile: profile, Budgets: validation.Budgets{MaxBufferedBytes: 512 << 20, MaxRuleSteps: 1 << 34}}
+					budgets := validation.Budgets{MaxBufferedBytes: 512 << 20, MaxRuleSteps: 1 << 34}
 					run := func() {
 						var r validation.Report
 						var err error
 						if model {
-							r, err = AssessModel(context.Background(), doc, opts)
+							r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(profile), Budgets: budgets})
 						} else {
-							r, err = InspectXML(context.Background(), strings.NewReader(source), opts)
+							r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(profile), Budgets: budgets})
 						}
 						if err != nil || !r.Satisfied() {
 							b.Fatalf("%v; %s", err, localFindings(r))

@@ -23,7 +23,7 @@ func requiredDictionaryOptions() DictionaryOptions {
 // Dictionaries or a value with a nil Source and no selections selects the
 // bundled required data, as DecodeAssessed does. The returned options have no
 // Dictionaries.
-func (o AssessmentOptions) scenario(semantic validation.ProfileID) (AssessmentOptions, DictionaryOptions, bool) {
+func (o assessmentOptions) scenario(semantic validation.ProfileID) (assessmentOptions, DictionaryOptions, bool) {
 	dictionaries := o.Dictionaries
 	o.Dictionaries = nil
 	if o.Profile == "" {

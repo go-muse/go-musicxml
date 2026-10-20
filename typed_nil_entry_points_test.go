@@ -37,20 +37,20 @@ func TestEntryPointsRejectTypedNilStreams(t *testing.T) {
 		"DecodeAssessed":          func(r io.Reader) error { _, e := DecodeAssessed(ctx, r, DecodeAssessmentOptions{}); return e },
 		"DecodeMXLAssessed":       func(r io.Reader) error { _, e := DecodeMXLAssessed(ctx, r, DecodeMXLAssessmentOptions{}); return e },
 		"InspectXML": func(r io.Reader) error {
-			_, e := InspectXML(ctx, r, AssessmentOptions{Profile: ProfileSourceXSDPreview})
+			_, e := InspectXML(ctx, r, SourceOptions{Profile: ProfileSourceXSDPreview})
 			return e
 		},
 		"InspectXMLWithResources": func(r io.Reader) error {
-			_, e := InspectXMLWithResources(ctx, r, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+			_, e := InspectXMLWithResources(ctx, r, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})
 			return e
 		},
 		"InspectMXL": func(r io.Reader) error { _, e := InspectMXL(ctx, r, packageGraphOptions()); return e },
 		"InspectXML dictionaries": func(r io.Reader) error {
-			_, e := InspectXML(ctx, r, AssessmentOptions{Profile: ProfileSourceSemantics, Dictionaries: &DictionaryOptions{Source: BundledDictionarySource(), Selections: mandatoryDictionarySelections()}})
+			_, e := InspectXML(ctx, r, SourceOptions{Profile: ProfileSourceSemantics, Dictionaries: &DictionaryOptions{Source: BundledDictionarySource(), Selections: mandatoryDictionarySelections()}})
 			return e
 		},
 		"InspectMXL dictionaries": func(r io.Reader) error {
-			_, e := InspectMXL(ctx, r, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries, Dictionaries: &DictionaryOptions{Source: BundledDictionarySource(), Selections: mandatoryDictionarySelections()}}})
+			_, e := InspectMXL(ctx, r, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSourceDictionaries, Dictionaries: &DictionaryOptions{Source: BundledDictionarySource(), Selections: mandatoryDictionarySelections()}}})
 			return e
 		},
 	}
@@ -89,7 +89,7 @@ func TestResourceResolverTypedNilBodyIsAbsent(t *testing.T) {
 		resolver := graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
 			return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "child", Representation: validation.ResourceSourceXML, Digest: strings.Repeat("a", 64)}, RetrievalURI: "https://e.test/child.opus", Body: body}, nil
 		})
-		_, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+		_, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 		if !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Errorf("%s: %v", name, err)
 		}

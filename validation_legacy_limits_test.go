@@ -58,12 +58,12 @@ func TestValidateLegacyLargeScore(t *testing.T) {
 	// The new assessment API remains explicitly bounded. Raising its exact
 	// relevant ceilings admits the same model; a caller's small quota still wins.
 	limits := validation.Budgets{MaxBufferedBytes: math.MaxInt64, MaxRuleSteps: math.MaxInt64}
-	report, err := AssessModel(context.Background(), score, AssessmentOptions{Profile: ProfileModelXSD, Budgets: limits})
+	report, err := AssessModel(context.Background(), score, ModelOptions{Profile: ProfileModelXSD, Budgets: limits})
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("explicit large assessment budgets: satisfied=%t counts=%+v err=%v", report.Satisfied(), report.Counts, err)
 	}
 	limits.MaxNodes = 100
-	report, err = AssessModel(context.Background(), score, AssessmentOptions{Profile: ProfileModelXSD, Budgets: limits})
+	report, err = AssessModel(context.Background(), score, ModelOptions{Profile: ProfileModelXSD, Budgets: limits})
 	if !errors.Is(err, validation.ErrResourceLimit) || report.Satisfied() || !errors.Is(err, validation.ErrIncompleteAssessment) {
 		t.Fatalf("explicit small assessment budget ignored: satisfied=%t err=%v", report.Satisfied(), err)
 	}
@@ -77,7 +77,7 @@ func TestValidateLegacyLargeCurrentText(t *testing.T) {
 	if err := Validate(score); err != nil {
 		t.Fatalf("legacy validation added a scalar ceiling: %v", err)
 	}
-	report, err := AssessModel(context.Background(), score, AssessmentOptions{Profile: ProfileModelXSD})
+	report, err := AssessModel(context.Background(), score, ModelOptions{Profile: ProfileModelXSD})
 	if !errors.Is(err, validation.ErrResourceLimit) || report.Satisfied() {
 		t.Fatalf("default bounded assessment lost its scalar ceiling: satisfied=%t err=%v", report.Satisfied(), err)
 	}

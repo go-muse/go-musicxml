@@ -30,8 +30,8 @@ later migration.
 
 **Later removal:** the `...WithDictionaries` and `...WithResourcesAndDictionaries`
 entry points and their option types named in the matrix were removed. Their
-dictionaries are now `AssessmentOptions.Dictionaries`, used by `InspectXML`,
-`AssessModel` and `DecodeAssessed`, or `Graph.Dictionaries` of
+dictionaries are now the `Dictionaries` field of `SourceOptions` (`InspectXML`,
+`DecodeAssessed`) and `ModelOptions` (`AssessModel`), or `Graph.Dictionaries` of
 `LinkedAssessmentOptions` and `MXLAssessmentOptions`; an empty profile now
 selects the semantic profile. See [Scenarios](../../API.md#scenarios). The
 matrix keeps the recorded revision's names.

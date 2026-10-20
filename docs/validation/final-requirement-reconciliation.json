@@ -17501,7 +17501,7 @@
       "anchors": [
         {
           "file": "xml_source_eof_test.go",
-          "text": "\tfor _, source := range []string{\n\t\t`<?A`, `<?A `, `<?xml `, `<?xml version=\"1.0\"`,\n\t\t`<?xml version=\"1.0\" `, assessedScore(\"1\", \"\") + `<?A`,\n\t} {\n\t\tfor _, api := range []struct {\n\t\t\tname    string\n\t\t\tprofile validation.ProfileID\n\t\t}{\n\t\t\t{\"decode\", \"\"}, {\"decode-assessed-default\", \"\"},\n\t\t\t{\"inspect-preview\", ProfileSourceXSDPreview}, {\"decode-source-line\", ProfileSourceLine}, {\"inspect-semantics\", ProfileSourceSemantics},\n\t\t\t{\"inspect-internal-dtd\", ProfileSourceInternalDTD},"
+          "text": "for _, source := range []string{\n\t\t`<?A`, `<?A `, `<?xml `, `<?xml version=\"1.0\"`,\n\t\t`<?xml version=\"1.0\" `, assessedScore(\"1\", \"\") + `<?A`,\n\t} {\n\t\tfor _, api := range []struct {\n\t\t\tname    string\n\t\t\tprofile validation.ProfileID\n\t\t}{\n\t\t\t{\"decode\", \"\"}, {\"decode-assessed-default\", \"\"},\n\t\t\t{\"inspect-preview\", ProfileSourceXSDPreview.ID()}, {\"decode-source-line\", ProfileSourceLine.ID()}, {\"inspect-semantics\", ProfileSourceSemantics.ID()},\n\t\t\t{\"inspect-internal-dtd\", ProfileSourceInternalDTD.ID()},"
         },
         {
           "file": "xml_source_eof_test.go",
@@ -18170,7 +18170,7 @@
       "anchors": [
         {
           "file": "model_assessment_contract_test.go",
-          "text": "\tfor _, date := range []string{\"2024-02-29\", \"2026-02-30\", \"0000-01-01\", \"2024-01-01Z\"} {\n\t\tsource := (localFixture{header: `<identification><encoding><encoding-date>` + date + `</encoding-date></encoding></identification>`}).xml()\n\t\tdoc, err := Decode(strings.NewReader(source))\n\t\tif err != nil {\n\t\t\tt.Fatal(err)\n\t\t}\n\t\tfor _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {\n\t\t\tvar report validation.Report\n\t\t\tif target == validation.TargetSource {\n\t\t\t\treport, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLocal})\n\t\t\t} else {"
+          "text": "for _, date := range []string{\"2024-02-29\", \"2026-02-30\", \"0000-01-01\", \"2024-01-01Z\"} {\n\t\tsource := (localFixture{header: `<identification><encoding><encoding-date>` + date + `</encoding-date></encoding></identification>`}).xml()\n\t\tdoc, err := Decode(strings.NewReader(source))\n\t\tif err != nil {\n\t\t\tt.Fatal(err)\n\t\t}\n\t\tfor _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {\n\t\t\tvar report validation.Report\n\t\t\tif target == validation.TargetSource {\n\t\t\t\treport, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceLocal})\n\t\t\t} else {"
         },
         {
           "file": "model_assessment_contract_test.go",
@@ -18189,7 +18189,7 @@
       "anchors": [
         {
           "file": "model_catalog_test.go",
-          "text": "\tengine, err := buildModelAssessmentEngine()\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tmodel := catalogProfile(t, engine, ProfileModelLocal)\n\tsource := catalogProfile(t, engine, ProfileSourceLocal)\n\txsd := catalogProfile(t, engine, ProfileModelXSD)\n\tif len(xsd.Required) != 14 || len(model.Required) != 36 || len(source.Required) != 34 {\n\t\tt.Fatalf(\"unexpected frozen obligation list: xsd%d model%d source%d\", len(xsd.Required), len(model.Required), len(source.Required))\n\t}\n\tkeys := func(p validation.Profile) []validation.RuleKey {"
+          "text": "engine, err := buildModelAssessmentEngine()\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tmodel := catalogProfile(t, engine, ProfileModelLocal.ID())\n\tsource := catalogProfile(t, engine, ProfileSourceLocal.ID())\n\txsd := catalogProfile(t, engine, ProfileModelXSD.ID())\n\tif len(xsd.Required) != 14 || len(model.Required) != 36 || len(source.Required) != 34 {\n\t\tt.Fatalf(\"unexpected frozen obligation list: xsd%d model%d source%d\", len(xsd.Required), len(model.Required), len(source.Required))\n\t}\n\tkeys := func(p validation.Profile) []validation.RuleKey {"
         },
         {
           "file": "model_catalog_test.go",
@@ -18360,7 +18360,7 @@
       "anchors": [
         {
           "file": "assessment_test.go",
-          "text": "\t\t{\"narrow-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}}, validation.ErrInvalidConfiguration},\n\t\t{\"unknown-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: \"unknown\"}}, validation.ErrInvalidConfiguration},\n\t\t{\"model-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: \"musicxml-4.0/model\"}}, validation.ErrInvalidConfiguration},"
+          "text": "{\"narrow-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceXSDPreview}}, validation.ErrInvalidConfiguration},\n\t\t{\"unknown-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: \"unknown\"}}, validation.ErrInvalidConfiguration},\n\t\t{\"model-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: \"musicxml-4.0/model\"}}, validation.ErrInvalidConfiguration},"
         },
         {
           "file": "assessment_test.go",
@@ -18384,7 +18384,7 @@
         },
         {
           "file": "assessment_test.go",
-          "text": "\tfor _, options := range []DecodeAssessmentOptions{{}, {Assessment: &AssessmentOptions{}}, strictSourceOptions()} {\n\t\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(input), options)\n\t\tif !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.Requested || result.SourceLine.Profile.ID != ProfileSourceLine || result.SourceLine.Conformance != validation.ConformanceViolated || result.ModelLine.Requested {\n\t\t\tt.Fatalf(\"mandatory result=%+v error=%v\", result, err)\n\t\t}\n\t}"
+          "text": "for _, options := range []DecodeAssessmentOptions{{}, {Assessment: &SourceOptions{}}, strictSourceOptions()} {\n\t\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(input), options)\n\t\tif !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.Requested || result.SourceLine.Profile.ID != ProfileSourceLine.ID() || result.SourceLine.Conformance != validation.ConformanceViolated || result.ModelLine.Requested {\n\t\t\tt.Fatalf(\"mandatory result=%+v error=%v\", result, err)\n\t\t}\n\t}"
         }
       ],
       "evidence_layer": "pr46-assessed-loading",
@@ -18400,11 +18400,11 @@
       "anchors": [
         {
           "file": "model_assessment_contract_test.go",
-          "text": "\tsource := (localFixture{body: localDirection(`<accordion-registration/>`)}).xml()\n\tdoc, err := Decode(strings.NewReader(source))\n\tif err != nil || doc == nil {\n\t\tt.Fatalf(\"permissive transport: %v\", err)\n\t}\n\tif err = Validate(doc); err != nil {\n\t\tt.Fatalf(\"XSD-only facade unexpectedly selected local prose: %v\", err)\n\t}\n\tpreview, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceXSDPreview})\n\tif err != nil || !preview.Satisfied() {\n\t\tt.Fatalf(\"XSD preview: %+v %v\", preview, err)"
+          "text": "source := (localFixture{body: localDirection(`<accordion-registration/>`)}).xml()\n\tdoc, err := Decode(strings.NewReader(source))\n\tif err != nil || doc == nil {\n\t\tt.Fatalf(\"permissive transport: %v\", err)\n\t}\n\tif err = Validate(doc); err != nil {\n\t\tt.Fatalf(\"XSD-only facade unexpectedly selected local prose: %v\", err)\n\t}\n\tpreview, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceXSDPreview})\n\tif err != nil || !preview.Satisfied() {\n\t\tt.Fatalf(\"XSD preview: %+v %v\", preview, err)"
         },
         {
           "file": "model_assessment_contract_test.go",
-          "text": "\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})\n\tif !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.InputComplete || !result.SourceLine.AssessmentComplete {\n\t\tt.Fatalf(\"strict local outcome: %+v %v\", result, err)\n\t}"
+          "text": "result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}})\n\tif !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.SourceLine.InputComplete || !result.SourceLine.AssessmentComplete {\n\t\tt.Fatalf(\"strict local outcome: %+v %v\", result, err)\n\t}"
         }
       ],
       "evidence_layer": "pr46-assessed-loading",
@@ -18497,7 +18497,7 @@
       "anchors": [
         {
           "file": "model_assessment_test.go",
-          "text": "\tdoc := modelMinimalScore()\n\tnote := doc.Part[0].Measure[0].Content[0].Note\n\tnote.Rest = nil\n\tnote.Pitch = &Pitch{Step: Step(\"H\"), Octave: 4}\n\tbefore := *note.Pitch\n\treport, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelXSD})\n\tif err != nil || report.Satisfied() || report.Conformance != validation.ConformanceViolated || !report.InputComplete {\n\t\tt.Fatalf(\"current invalid edit was not assessed: %+v %v\", report, err)\n\t}\n\tif !reflect.DeepEqual(before, *note.Pitch) {\n\t\tt.Fatal(\"assessment changed the caller's model\")"
+          "text": "doc := modelMinimalScore()\n\tnote := doc.Part[0].Measure[0].Content[0].Note\n\tnote.Rest = nil\n\tnote.Pitch = &Pitch{Step: Step(\"H\"), Octave: 4}\n\tbefore := *note.Pitch\n\treport, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelXSD})\n\tif err != nil || report.Satisfied() || report.Conformance != validation.ConformanceViolated || !report.InputComplete {\n\t\tt.Fatalf(\"current invalid edit was not assessed: %+v %v\", report, err)\n\t}\n\tif !reflect.DeepEqual(before, *note.Pitch) {\n\t\tt.Fatal(\"assessment changed the caller's model\")"
         },
         {
           "file": "model_assessment_test.go",
@@ -18630,7 +18630,7 @@
       "anchors": [
         {
           "file": "resource_graph_review_contract_test.go",
-          "text": "\tsource := `<opus xmlns:xlink=\"http://www.w3.org/1999/xlink\"><opus-link xlink:href=\"child.opus\"/></opus>`\n\tb, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: \"https://e.test/root.opus\"}, Dependencies: []ResourceDependency{ResourceDocuments}})\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tfound := false\n\tfor _, d := range b.PackageReport().Findings {\n\t\tif d.Reason == \"resolver-unavailable\" {\n\t\t\tfound = true\n\t\t}\n\t}"
+          "text": "source := `<opus xmlns:xlink=\"http://www.w3.org/1999/xlink\"><opus-link xlink:href=\"child.opus\"/></opus>`\n\tb, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: \"https://e.test/root.opus\"}, Dependencies: []ResourceDependency{ResourceDocuments}})\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tfound := false\n\tfor _, d := range b.PackageReport().Findings {\n\t\tif d.Reason == \"resolver-unavailable\" {\n\t\t\tfound = true\n\t\t}\n\t}"
         },
         {
           "file": "resource_graph_review_contract_test.go",
@@ -18801,7 +18801,7 @@
       "anchors": [
         {
           "file": "semantic_composition_profiles_test.go",
-          "text": "\tfor _, timewise := range []bool{false, true} {\n\t\tinput := barlineLocationScore(timewise, barlineDivisions+barlineNote(\"1\")+`<barline/>`, \"\")\n\t\tfor _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {\n\t\t\tname := string(target) + map[bool]string{false: \"/partwise\", true: \"/timewise\"}[timewise]\n\t\t\tt.Run(name, func(t *testing.T) {\n\t\t\t\tprofile := validation.ProfileID(\"musicxml-4.0/\" + string(target) + \"-semantics\")\n\t\t\t\toptions := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}}\n\t\t\t\tvar report validation.Report\n\t\t\t\tvar err error\n\t\t\t\tif target == validation.TargetSource {\n\t\t\t\t\treport, err = inspectXMLWithDictionaries(context.Background(), strings.NewReader(input), options)"
+          "text": "for _, timewise := range []bool{false, true} {\n\t\tinput := barlineLocationScore(timewise, barlineDivisions+barlineNote(\"1\")+`<barline/>`, \"\")\n\t\tfor _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {\n\t\t\tname := string(target) + map[bool]string{false: \"/partwise\", true: \"/timewise\"}[timewise]\n\t\t\tt.Run(name, func(t *testing.T) {\n\t\t\t\tprofile := validation.ProfileID(\"musicxml-4.0/\" + string(target) + \"-semantics\")\n\t\t\t\toptions := dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: profile}}\n\t\t\t\tvar report validation.Report\n\t\t\t\tvar err error\n\t\t\t\tif target == validation.TargetSource {\n\t\t\t\t\treport, err = inspectXMLWithDictionaries(context.Background(), strings.NewReader(input), options)"
         },
         {
           "file": "semantic_composition_profiles_test.go",
@@ -18820,7 +18820,7 @@
       "anchors": [
         {
           "file": "package_catalog_test.go",
-          "text": "\tc, err := newPackageAssessmentCatalog()\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tfor _, id := range []validation.ProfileID{\"\", \"unknown\", ProfileSourceLinks, ProfileModelLinks, ProfileSourceContainer, ProfileSourceSounds, ProfileSourceContext, ProfileModelContext} {\n\t\tif _, ok := c.Profile(id); ok {\n\t\t\tt.Errorf(\"nonpackage profile accepted: %s\", id)\n\t\t}\n\t}\n\tfor _, id := range []validation.ProfileID{ProfileResourceGraph, ProfileMXLSource, ProfileMXLModel} {\n\t\tif _, err := sourceAssessmentEngineForProfile(id); !errors.Is(err, validation.ErrInvalidConfiguration) {"
+          "text": "c, err := newPackageAssessmentCatalog()\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tfor _, id := range []validation.ProfileID{\"\", \"unknown\", ProfileSourceLinks.ID(), ProfileModelLinks.ID(), ProfileSourceContainer.ID(), ProfileSourceSounds.ID(), ProfileSourceContext.ID(), ProfileModelContext.ID()} {\n\t\tif _, ok := c.Profile(id); ok {\n\t\t\tt.Errorf(\"nonpackage profile accepted: %s\", id)\n\t\t}\n\t}\n\tfor _, id := range []validation.ProfileID{ProfileResourceGraph.ID(), ProfileMXLSource.ID(), ProfileMXLModel.ID()} {\n\t\tif _, err := sourceAssessmentEngineForProfile(id); !errors.Is(err, validation.ErrInvalidConfiguration) {"
         },
         {
           "file": "package_catalog_test.go",
@@ -18858,7 +18858,7 @@
       "anchors": [
         {
           "file": "resource_graph_test.go",
-          "text": "\tb, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})\n\tif err != nil || !b.Satisfied() || b.ResourceCount() != 1 || b.AdoptionCount() != 1 || !b.EnumerationComplete() {\n\t\tt.Fatalf(\"err=%v package=%+v resources=%d adoptions=%d\", err, b.PackageReport(), b.ResourceCount(), b.AdoptionCount())\n\t}\n\t_, r, ok := b.ResourceReport(0)\n\tif !ok || r.Target != validation.TargetSource || r.Profile.ID != ProfileSourceLinks {\n\t\tt.Fatal(r)\n\t}\n\tb, err = InspectXMLWithResources(context.Background(), strings.NewReader(`<opus wrong=\"yes\"/>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})\n\tif err != nil || b.Satisfied() {\n\t\tt.Fatal(err, b.PackageReport())"
+          "text": "b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})\n\tif err != nil || !b.Satisfied() || b.ResourceCount() != 1 || b.AdoptionCount() != 1 || !b.EnumerationComplete() {\n\t\tt.Fatalf(\"err=%v package=%+v resources=%d adoptions=%d\", err, b.PackageReport(), b.ResourceCount(), b.AdoptionCount())\n\t}\n\t_, r, ok := b.ResourceReport(0)\n\tif !ok || r.Target != validation.TargetSource || r.Profile.ID != ProfileSourceLinks.ID() {\n\t\tt.Fatal(r)\n\t}\n\tb, err = InspectXMLWithResources(context.Background(), strings.NewReader(`<opus wrong=\"yes\"/>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}})\n\tif err != nil || b.Satisfied() {\n\t\tt.Fatal(err, b.PackageReport())"
         },
         {
           "file": "resource_graph_test.go",
@@ -18877,7 +18877,7 @@
       "anchors": [
         {
           "file": "resource_graph_boundary_inventory_test.go",
-          "text": "\tfor _, current := range []bool{false, true} {\n\t\tfor _, mode := range []string{\"absent\", \"existing\", \"cycle\"} {\n\t\t\tt.Run(fmt.Sprintf(\"current=%t/%s\", current, mode), func(t *testing.T) {\n\t\t\t\tlast := \"missing.opus\"\n\t\t\t\tif mode == \"cycle\" {\n\t\t\t\t\tlast = \"one.opus\"\n\t\t\t\t}\n\t\t\t\tdata, value := reviewBoundaryFixture(t, last, mode == \"existing\")\n\t\t\t\tcalls := 0\n\t\t\t\toptions := MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {\n\t\t\t\t\tcalls++"
+          "text": "for _, current := range []bool{false, true} {\n\t\tfor _, mode := range []string{\"absent\", \"existing\", \"cycle\"} {\n\t\t\tt.Run(fmt.Sprintf(\"current=%t/%s\", current, mode), func(t *testing.T) {\n\t\t\t\tlast := \"missing.opus\"\n\t\t\t\tif mode == \"cycle\" {\n\t\t\t\t\tlast = \"one.opus\"\n\t\t\t\t}\n\t\t\t\tdata, value := reviewBoundaryFixture(t, last, mode == \"existing\")\n\t\t\t\tcalls := 0\n\t\t\t\toptions := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource, Budgets: validation.Budgets{MaxDepth: 3}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: graphResolverFunc(func(context.Context, validation.ResourceRequest) (validation.ResourceResult, error) {\n\t\t\t\t\tcalls++"
         },
         {
           "file": "resource_graph_boundary_inventory_test.go",
@@ -18934,7 +18934,7 @@
       "anchors": [
         {
           "file": "resource_graph_review_contract_test.go",
-          "text": "\tfor _, uri := range []string{\"relative/child.opus\", \"https://e.test/%zz\"} {\n\t\tt.Run(uri, func(t *testing.T) {\n\t\t\tsource := `<opus xmlns:xlink=\"http://www.w3.org/1999/xlink\"><opus-link xlink:href=\"child.opus\"/></opus>`\n\t\t\tdata := `<opus/>`\n\t\t\treader := &resourceReviewCountingReader{Reader: strings.NewReader(data)}\n\t\t\tbody := &resourceTestBody{Reader: reader}\n\t\t\tresolver := graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {\n\t\t\t\treturn validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: \"child\", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf(\"%x\", sha256.Sum256([]byte(data)))}, RetrievalURI: uri, Body: body}, nil\n\t\t\t})\n\t\t\t_, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: \"https://e.test/root.opus\"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver})\n\t\t\tif !errors.Is(err, validation.ErrInvalidConfiguration) || reader.reads != 0 || body.closed != 1 {"
+          "text": "for _, uri := range []string{\"relative/child.opus\", \"https://e.test/%zz\"} {\n\t\tt.Run(uri, func(t *testing.T) {\n\t\t\tsource := `<opus xmlns:xlink=\"http://www.w3.org/1999/xlink\"><opus-link xlink:href=\"child.opus\"/></opus>`\n\t\t\tdata := `<opus/>`\n\t\t\treader := &resourceReviewCountingReader{Reader: strings.NewReader(data)}\n\t\t\tbody := &resourceTestBody{Reader: reader}\n\t\t\tresolver := graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {\n\t\t\t\treturn validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: \"child\", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf(\"%x\", sha256.Sum256([]byte(data)))}, RetrievalURI: uri, Body: body}, nil\n\t\t\t})\n\t\t\t_, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: \"https://e.test/root.opus\"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver})\n\t\t\tif !errors.Is(err, validation.ErrInvalidConfiguration) || reader.reads != 0 || body.closed != 1 {"
         },
         {
           "file": "resource_graph_review_contract_test.go",
@@ -18953,7 +18953,7 @@
       "anchors": [
         {
           "file": "resource_options_test.go",
-          "text": "\tprofile := validation.ProfileID(\"test-resource\")\n\tfor _, resolver := range []validation.ResourceResolver{nil, (*optionNilResolver)(nil)} {\n\t\tcfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{RetrievalURI: \"urn:example:score\"}}, profile)\n\t\tif err != nil || cfg.resolver != nil || !cfg.selected[ResourceDocuments] {\n\t\t\tt.Fatal(cfg, err)\n\t\t}\n\t}\n\tcfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: &optionNilResolver{}}, profile)\n\tif err != nil || len(cfg.selected) != 0 {\n\t\tt.Fatal(cfg, err)\n\t}"
+          "text": "profile := validation.ProfileID(\"test-resource\")\n\tfor _, resolver := range []validation.ResourceResolver{nil, (*optionNilResolver)(nil)} {\n\t\tcfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{RetrievalURI: \"urn:example:score\"}}.internal(), profile)\n\t\tif err != nil || cfg.resolver != nil || !cfg.selected[ResourceDocuments] {\n\t\t\tt.Fatal(cfg, err)\n\t\t}\n\t}\n\tcfg, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(profile)}, Resolver: &optionNilResolver{}}.internal(), profile)\n\tif err != nil || len(cfg.selected) != 0 {\n\t\tt.Fatal(cfg, err)\n\t}"
         },
         {
           "file": "resource_options_test.go",
@@ -19239,7 +19239,7 @@
       "anchors": [
         {
           "file": "assessed_decode_test.go",
-          "text": "\tinput := strings.Replace(assessedScore(\"1\", `<instruments>1</instruments>`), `</part-list>`, `<score-part id=\"P2\"><part-name>Other</part-name></score-part></part-list>`, 1)\n\trun, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceXSDPreview}, false)\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tsourceErr := run.drain()\n\treport, err := run.finish(sourceErr)\n\tif err != nil || !report.Satisfied() {\n\t\tt.Fatalf(\"baseline %+v %v\", report, err)\n\t}\n\tcases := []struct {"
+          "text": "input := strings.Replace(assessedScore(\"1\", `<instruments>1</instruments>`), `</part-list>`, `<score-part id=\"P2\"><part-name>Other</part-name></score-part></part-list>`, 1)\n\trun, err := newSourceAssessmentRun(context.Background(), strings.NewReader(input), DecodeOptions{}, &assessmentOptions{Profile: ProfileSourceXSDPreview.ID()}, false)\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tsourceErr := run.drain()\n\treport, err := run.finish(sourceErr)\n\tif err != nil || !report.Satisfied() {\n\t\tt.Fatalf(\"baseline %+v %v\", report, err)\n\t}\n\tcases := []struct {"
         },
         {
           "file": "assessed_decode_test.go",
@@ -19258,7 +19258,7 @@
       "anchors": [
         {
           "file": "assessed_decode_test.go",
-          "text": "\tinput := assessedScore(\"1\", \"\")\n\tinspect := func(limit int64) (validation.Report, error) {\n\t\treturn InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxBufferedBytes: limit}})\n\t}\n\tlow, high := int64(1), int64(2<<20)\n\tif r, err := inspect(high); err != nil || !r.Satisfied() {\n\t\tt.Fatalf(\"upper bound not sufficient: %+v %v\", r, err)\n\t}\n\tfor low < high {\n\t\tmiddle := low + (high-low)/2\n\t\tr, err := inspect(middle)"
+          "text": "input := assessedScore(\"1\", \"\")\n\tinspect := func(limit int64) (validation.Report, error) {\n\t\treturn InspectXML(context.Background(), strings.NewReader(input), SourceOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxBufferedBytes: limit}})\n\t}\n\tlow, high := int64(1), int64(2<<20)\n\tif r, err := inspect(high); err != nil || !r.Satisfied() {\n\t\tt.Fatalf(\"upper bound not sufficient: %+v %v\", r, err)\n\t}\n\tfor low < high {\n\t\tmiddle := low + (high-low)/2\n\t\tr, err := inspect(middle)"
         },
         {
           "file": "assessed_decode_test.go",
@@ -19581,7 +19581,7 @@
       "anchors": [
         {
           "file": "auxiliary_source_assessment_test.go",
-          "text": "\tfor _, tc := range auxiliarySourceCases() {\n\t\tt.Run(tc.name, func(t *testing.T) {\n\t\t\treport, err := InspectXML(context.Background(), strings.NewReader(tc.source), AssessmentOptions{Profile: validation.ProfileID(\"musicxml-4.0/source-\" + tc.assembly)})\n\t\t\tif strings.HasSuffix(tc.name, \"wrong root\") || strings.HasSuffix(tc.name, \"foreign root\") {\n\t\t\t\tif !errors.Is(err, ErrUnsupportedRoot) || report.Satisfied() {\n\t\t\t\t\tt.Fatalf(\"root profile admission: %v %+v\", err, report)\n\t\t\t\t}\n\t\t\t\treturn\n\t\t\t}\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"profile unavailable or operation failed: %v\", err)"
+          "text": "for _, tc := range auxiliarySourceCases() {\n\t\tt.Run(tc.name, func(t *testing.T) {\n\t\t\treport, err := InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Profile: SourceProfile(validation.ProfileID(\"musicxml-4.0/source-\" + tc.assembly))})\n\t\t\tif strings.HasSuffix(tc.name, \"wrong root\") || strings.HasSuffix(tc.name, \"foreign root\") {\n\t\t\t\tif !errors.Is(err, ErrUnsupportedRoot) || report.Satisfied() {\n\t\t\t\t\tt.Fatalf(\"root profile admission: %v %+v\", err, report)\n\t\t\t\t}\n\t\t\t\treturn\n\t\t\t}\n\t\t\tif err != nil {\n\t\t\t\tt.Fatalf(\"profile unavailable or operation failed: %v\", err)"
         },
         {
           "file": "auxiliary_source_assessment_test.go",
@@ -19619,7 +19619,7 @@
       "anchors": [
         {
           "file": "source_dtd_audit_integration_test.go",
-          "text": "\tctx := context.Background()\n\ta := adapterAccount(t, validation.Budgets{})\n\tc := adapterSourceConfig(t, a, \"audit\", \"\", ProfileSourceInternalDTD, sourceBytesPrimary)\n\trun, err := newSourceAssessmentRunWithConfig(ctx, strings.NewReader(dtdAuditPublicRepeated), DecodeOptions{}, &c, false)\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tcause := run.drain()\n\tcompletion, err := run.finishInput(cause)\n\tif err != nil || cause != nil {\n\t\tt.Fatalf(\"input=%v %v\", cause, err)"
+          "text": "ctx := context.Background()\n\ta := adapterAccount(t, validation.Budgets{})\n\tc := adapterSourceConfig(t, a, \"audit\", \"\", ProfileSourceInternalDTD.ID(), sourceBytesPrimary)\n\trun, err := newSourceAssessmentRunWithConfig(ctx, strings.NewReader(dtdAuditPublicRepeated), DecodeOptions{}, &c, false)\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tcause := run.drain()\n\tcompletion, err := run.finishInput(cause)\n\tif err != nil || cause != nil {\n\t\tt.Fatalf(\"input=%v %v\", cause, err)"
         },
         {
           "file": "source_dtd_audit_integration_test.go",

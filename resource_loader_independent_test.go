@@ -276,7 +276,7 @@ func TestIndependentResourceIntrinsicActualDigestAndErrors(t *testing.T) {
 	for _, data := range inputs {
 		a := adapterAccount(t, validation.Budgets{})
 		r := &adapterReadCloser{Reader: bytes.NewReader(data)}
-		got := assessResourceSource(context.Background(), r, adapterSourceConfig(t, a, "digest-original", "src/opus.xml", ProfileSourceLinks, sourceBytesPrimary))
+		got := assessResourceSource(context.Background(), r, adapterSourceConfig(t, a, "digest-original", "src/opus.xml", ProfileSourceLinks.ID(), sourceBytesPrimary))
 		if got.Err != nil || got.Snapshot == nil || !got.DigestComplete || got.Digest != sha256.Sum256(data) {
 			t.Fatalf("digest got %+v", got)
 		}
@@ -300,8 +300,8 @@ func TestIndependentResourceIntrinsicActualDigestAndErrors(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			a := adapterAccount(t, validation.Budgets{})
 			r := &adapterReadCloser{Reader: tc.r}
-			got := assessResourceSource(context.Background(), r, adapterSourceConfig(t, a, "source-errors", "src/opus.xml", ProfileSourceLinks, sourceBytesPrimary))
-			if !got.Report.Requested || got.Report.Profile.ID != ProfileSourceLinks || got.Report.Target != validation.TargetSource || got.Report.Profile.CatalogDigest == "" || got.Report.Satisfied() || got.DigestComplete || r.closes != 0 {
+			got := assessResourceSource(context.Background(), r, adapterSourceConfig(t, a, "source-errors", "src/opus.xml", ProfileSourceLinks.ID(), sourceBytesPrimary))
+			if !got.Report.Requested || got.Report.Profile.ID != ProfileSourceLinks.ID() || got.Report.Target != validation.TargetSource || got.Report.Profile.CatalogDigest == "" || got.Report.Satisfied() || got.DigestComplete || r.closes != 0 {
 				t.Fatalf("partial report %+v closes %d", got, r.closes)
 			}
 			if tc.want != nil && !errors.Is(got.Err, tc.want) {
@@ -321,7 +321,7 @@ func TestIndependentResourceIntrinsicSharedLimitsAndNoEncoding(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	source := assessResourceSource(context.Background(), bytes.NewReader(body.bytes), adapterSourceConfig(t, a, "first-source", "", ProfileSourceLinks, sourceBytesAccounted))
+	source := assessResourceSource(context.Background(), bytes.NewReader(body.bytes), adapterSourceConfig(t, a, "first-source", "", ProfileSourceLinks.ID(), sourceBytesAccounted))
 	if source.Err != nil || source.Snapshot == nil {
 		t.Fatalf("source %+v", source)
 	}
@@ -330,12 +330,12 @@ func TestIndependentResourceIntrinsicSharedLimitsAndNoEncoding(t *testing.T) {
 	}
 	source.Snapshot.Close()
 	body.close()
-	model := assessResourceModel(context.Background(), NewOpusDocument(), adapterModelConfig(t, a, "second-model", "", ProfileModelLinks))
+	model := assessResourceModel(context.Background(), NewOpusDocument(), adapterModelConfig(t, a, "second-model", "", ProfileModelLinks.ID()))
 	if model.Err != nil || model.Snapshot == nil || !model.Report.Satisfied() {
 		t.Fatalf("model %+v", model)
 	}
 	model.Snapshot.Close()
-	third := assessResourceSource(context.Background(), strings.NewReader(`<opus/>`), adapterSourceConfig(t, a, "third-source", "", ProfileSourceLinks, sourceBytesAccounted))
+	third := assessResourceSource(context.Background(), strings.NewReader(`<opus/>`), adapterSourceConfig(t, a, "third-source", "", ProfileSourceLinks.ID(), sourceBytesAccounted))
 	if !errors.Is(third.Err, validation.ErrResourceLimit) || third.Report.Satisfied() {
 		t.Fatalf("shared limit bypass %+v", third)
 	}
@@ -346,7 +346,7 @@ func TestIndependentResourceIntrinsicSharedLimitsAndNoEncoding(t *testing.T) {
 	a = adapterAccount(t, validation.Budgets{MaxInputBytes: 1, MaxExternalBytes: 1})
 	cyclic := NewOpusDocument()
 	cyclic.AddOpus(cyclic)
-	got := assessResourceModel(context.Background(), cyclic, adapterModelConfig(t, a, "direct-model", "model.xml", ProfileModelLinks))
+	got := assessResourceModel(context.Background(), cyclic, adapterModelConfig(t, a, "direct-model", "model.xml", ProfileModelLinks.ID()))
 	if got.Err != nil || got.Report.Satisfied() || got.Snapshot == nil || got.DigestComplete || got.Digest != ([32]byte{}) || got.Report.Syntax != validation.SyntaxNotAssessed {
 		t.Fatalf("cyclic direct model %+v", got)
 	}
@@ -367,18 +367,18 @@ func TestIndependentResourceIntrinsicSnapshotAdmissionKeepsBestReport(t *testing
 			doc := NewOpusDocument()
 			badType := "extended"
 			doc.AddScore(&OpusScore{Type: &badType})
-			_, _, _ = assessModelWithConfig(context.Background(), doc, adapterModelConfig(t, a, "best-model", "", ProfileModelLinks), modelWalkOptions{})
+			_, _, _ = assessModelWithConfig(context.Background(), doc, adapterModelConfig(t, a, "best-model", "", ProfileModelLinks.ID()), modelWalkOptions{})
 			steps = adapterUsage(t, a, validation.BudgetRuleSteps)
 			a = adapterAccount(t, validation.Budgets{MaxRuleSteps: steps})
-			got := assessResourceModel(context.Background(), doc, adapterModelConfig(t, a, "best-model", "", ProfileModelLinks))
+			got := assessResourceModel(context.Background(), doc, adapterModelConfig(t, a, "best-model", "", ProfileModelLinks.ID()))
 			if !errors.Is(got.Err, validation.ErrResourceLimit) || got.Snapshot != nil || !got.Report.Requested || got.Report.Conformance != validation.ConformanceViolated {
 				t.Fatalf("model best %+v budget %d", got, steps)
 			}
 		} else {
-			_, _ = adapterInspect(t, strings.NewReader(input), adapterSourceConfig(t, a, "best-source", "", ProfileSourceLinks, sourceBytesPrimary))
+			_, _ = adapterInspect(t, strings.NewReader(input), adapterSourceConfig(t, a, "best-source", "", ProfileSourceLinks.ID(), sourceBytesPrimary))
 			steps = adapterUsage(t, a, validation.BudgetRuleSteps)
 			a = adapterAccount(t, validation.Budgets{MaxRuleSteps: steps})
-			got := assessResourceSource(context.Background(), strings.NewReader(input), adapterSourceConfig(t, a, "best-source", "", ProfileSourceLinks, sourceBytesPrimary))
+			got := assessResourceSource(context.Background(), strings.NewReader(input), adapterSourceConfig(t, a, "best-source", "", ProfileSourceLinks.ID(), sourceBytesPrimary))
 			if !errors.Is(got.Err, validation.ErrResourceLimit) || got.Snapshot != nil || !got.Report.Requested || got.Report.Conformance != validation.ConformanceViolated || !got.DigestComplete || got.Digest != sha256.Sum256([]byte(input)) {
 				t.Fatalf("source best %+v budget %d", got, steps)
 			}
@@ -430,7 +430,7 @@ func TestIndependentResourceIntrinsicPrefixDigestAndStartup(t *testing.T) {
 	for _, owner := range []sourceByteOwner{sourceBytesPrimary, sourceBytesExternal} {
 		a := adapterAccount(t, validation.Budgets{MaxInputBytes: 5, MaxExternalBytes: 5})
 		r := &independentRecordingReader{Reader: strings.NewReader(input)}
-		got := assessResourceSource(context.Background(), r, adapterSourceConfig(t, a, "prefix", "", ProfileSourceLinks, owner))
+		got := assessResourceSource(context.Background(), r, adapterSourceConfig(t, a, "prefix", "", ProfileSourceLinks.ID(), owner))
 		if !errors.Is(got.Err, validation.ErrResourceLimit) || !got.Report.Requested || got.DigestComplete || got.Digest != sha256.Sum256(r.data) {
 			t.Fatalf("prefix digest %+v read %x", got, r.data)
 		}
@@ -443,8 +443,8 @@ func TestIndependentResourceIntrinsicPrefixDigestAndStartup(t *testing.T) {
 		adapterClean(t, a)
 	}
 	a := adapterAccount(t, validation.Budgets{})
-	engine, _ := sourceAssessmentEngineForProfile(ProfileSourceLinks)
-	session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: "startup", Profile: ProfileSourceLinks, Account: a})
+	engine, _ := sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
+	session, err := engine.Begin(context.Background(), validation.RunOptions{DocumentID: "startup", Profile: ProfileSourceLinks.ID(), Account: a})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -453,8 +453,8 @@ func TestIndependentResourceIntrinsicPrefixDigestAndStartup(t *testing.T) {
 	for _, limit := range []int64{setup + sourceXMLCursorBytes + 511, setup + sourceXMLCursorBytes + 512 + sourceXMLReaderBytes - 1, setup + sourceXMLCursorBytes + 512 + sourceXMLReaderBytes + 255} {
 		a = adapterAccount(t, validation.Budgets{MaxBufferedBytes: limit})
 		r := &adapterReadCloser{Reader: strings.NewReader(`<opus/>`)}
-		got := assessResourceSource(context.Background(), r, adapterSourceConfig(t, a, "startup", "", ProfileSourceLinks, sourceBytesPrimary))
-		if !errors.Is(got.Err, validation.ErrResourceLimit) || !got.Report.Requested || got.Report.Profile.ID != ProfileSourceLinks || got.Snapshot != nil || r.reads != 0 || r.closes != 0 {
+		got := assessResourceSource(context.Background(), r, adapterSourceConfig(t, a, "startup", "", ProfileSourceLinks.ID(), sourceBytesPrimary))
+		if !errors.Is(got.Err, validation.ErrResourceLimit) || !got.Report.Requested || got.Report.Profile.ID != ProfileSourceLinks.ID() || got.Snapshot != nil || r.reads != 0 || r.closes != 0 {
 			t.Fatalf("startup %+v reads %d closes %d", got, r.reads, r.closes)
 		}
 		adapterClean(t, a)
@@ -480,7 +480,7 @@ func TestIndependentResourceCancellationBoundaries(t *testing.T) {
 					t.Fatal("body close count")
 				}
 			case "source":
-				got := assessResourceSource(ctx, strings.NewReader(`<opus/>`), adapterSourceConfig(t, a, "canceled-source", "", ProfileSourceLinks, sourceBytesPrimary))
+				got := assessResourceSource(ctx, strings.NewReader(`<opus/>`), adapterSourceConfig(t, a, "canceled-source", "", ProfileSourceLinks.ID(), sourceBytesPrimary))
 				err = got.Err
 				if got.Snapshot != nil {
 					got.Snapshot.Close()
@@ -489,7 +489,7 @@ func TestIndependentResourceCancellationBoundaries(t *testing.T) {
 					t.Fatal("source lost best report")
 				}
 			case "model":
-				got := assessResourceModel(ctx, NewOpusDocument(), adapterModelConfig(t, a, "canceled-model", "", ProfileModelLinks))
+				got := assessResourceModel(ctx, NewOpusDocument(), adapterModelConfig(t, a, "canceled-model", "", ProfileModelLinks.ID()))
 				err = got.Err
 				if got.Snapshot != nil {
 					got.Snapshot.Close()
@@ -545,7 +545,7 @@ func TestIndependentResourceOptionsRejectUnusablePinBeforeIO(t *testing.T) {
 	for _, identity := range []ResourceIdentity{
 		{CanonicalID: "line\nbreak"}, {CanonicalID: "line\rbreak"}, {CanonicalID: "tab\tname"}, {Revision: strings.Repeat("r", 1025)},
 	} {
-		_, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: "test-resource"}, Identity: identity}, "test-resource")
+		_, err := validateLinkedAssessmentOptions(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: "test-resource"}, Identity: identity}.internal(), "test-resource")
 		if !errors.Is(err, validation.ErrInvalidConfiguration) {
 			t.Errorf("accepted primary identity incompatible with core ResourcePin: canonical %q revision length %d error %v", identity.CanonicalID, len(identity.Revision), err)
 		}
@@ -563,9 +563,9 @@ func TestIndependentResourceIntrinsicBufferAdmissionKeepsKnownFailure(t *testing
 			var report validation.Report
 			var err error
 			if model {
-				report, _, err = assessModelWithConfig(context.Background(), doc, adapterModelConfig(t, a, "buffer-admission", "", ProfileModelLinks), modelWalkOptions{})
+				report, _, err = assessModelWithConfig(context.Background(), doc, adapterModelConfig(t, a, "buffer-admission", "", ProfileModelLinks.ID()), modelWalkOptions{})
 			} else {
-				report, err = adapterInspect(t, strings.NewReader(input), adapterSourceConfig(t, a, "buffer-admission", "", ProfileSourceLinks, sourceBytesPrimary))
+				report, err = adapterInspect(t, strings.NewReader(input), adapterSourceConfig(t, a, "buffer-admission", "", ProfileSourceLinks.ID(), sourceBytesPrimary))
 			}
 			adapterClean(t, a)
 			return report, err
@@ -587,9 +587,9 @@ func TestIndependentResourceIntrinsicBufferAdmissionKeepsKnownFailure(t *testing
 		a := adapterAccount(t, validation.Budgets{MaxBufferedBytes: high})
 		var got resourceIntrinsicResult
 		if model {
-			got = assessResourceModel(context.Background(), doc, adapterModelConfig(t, a, "buffer-admission", "", ProfileModelLinks))
+			got = assessResourceModel(context.Background(), doc, adapterModelConfig(t, a, "buffer-admission", "", ProfileModelLinks.ID()))
 		} else {
-			got = assessResourceSource(context.Background(), strings.NewReader(input), adapterSourceConfig(t, a, "buffer-admission", "", ProfileSourceLinks, sourceBytesPrimary))
+			got = assessResourceSource(context.Background(), strings.NewReader(input), adapterSourceConfig(t, a, "buffer-admission", "", ProfileSourceLinks.ID(), sourceBytesPrimary))
 		}
 		if got.Snapshot != nil {
 			got.Snapshot.Close()

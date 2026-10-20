@@ -10,19 +10,25 @@ import (
 // ProfileResourceGraphDictionaries selects the bounded resource graph with
 // dictionary-enabled source/current-model intrinsic profiles. It grants no
 // transport authority and does not enable internal-DTD or full IPA assessment.
-const ProfileResourceGraphDictionaries validation.ProfileID = "musicxml-4.0/resource-graph-dictionaries"
+const ProfileResourceGraphDictionaries GraphProfile = "musicxml-4.0/resource-graph-dictionaries"
+
+const profileResourceGraphDictionaries = validation.ProfileID(ProfileResourceGraphDictionaries)
 
 // ProfileMXLSourceDictionaries selects original-MXL package checks and exact
 // source dictionary interpretations. Original container assessment is unchanged.
-const ProfileMXLSourceDictionaries validation.ProfileID = "musicxml-4.0/mxl-source-dictionaries"
+const ProfileMXLSourceDictionaries MXLProfile = "musicxml-4.0/mxl-source-dictionaries"
+
+const profileMXLSourceDictionaries = validation.ProfileID(ProfileMXLSourceDictionaries)
 
 // ProfileMXLModelDictionaries selects current-MXL package checks with a directly
 // assessed current primary model and dictionary-enabled retained source children.
 // It never reconstructs discarded source or original ZIP evidence.
-const ProfileMXLModelDictionaries validation.ProfileID = "musicxml-4.0/mxl-model-dictionaries"
+const ProfileMXLModelDictionaries MXLProfile = "musicxml-4.0/mxl-model-dictionaries"
+
+const profileMXLModelDictionaries = validation.ProfileID(ProfileMXLModelDictionaries)
 
 func dictionaryResourceIntrinsicProfiles() resourceIntrinsicProfiles {
-	return resourceIntrinsicProfiles{source: ProfileSourceDictionaries, model: ProfileModelDictionaries, container: ProfileSourceContainer, sounds: ProfileSourceSoundsDictionaries}
+	return resourceIntrinsicProfiles{source: profileSourceDictionaries, model: profileModelDictionaries, container: profileSourceContainer, sounds: profileSourceSoundsDictionaries}
 }
 
 var dictionaryPackageAssessmentCatalog = sync.OnceValues(buildDictionaryPackageAssessmentCatalog)
@@ -50,12 +56,12 @@ func buildDictionaryPackageAssessmentDefinitions() ([]validation.PackageRuleBind
 	for i := range profiles {
 		p := &profiles[i]
 		switch p.Profile.ID {
-		case ProfileResourceGraph:
-			p.Profile.ID = ProfileResourceGraphDictionaries
-		case ProfileMXLSource:
-			p.Profile.ID = ProfileMXLSourceDictionaries
-		case ProfileMXLModel:
-			p.Profile.ID = ProfileMXLModelDictionaries
+		case profileResourceGraph:
+			p.Profile.ID = profileResourceGraphDictionaries
+		case profileMXLSource:
+			p.Profile.ID = profileMXLSourceDictionaries
+		case profileMXLModel:
+			p.Profile.ID = profileMXLModelDictionaries
 		}
 		p.Profile.NormativeClosure = strings.Replace(p.Profile.NormativeClosure, "renderer, dictionary, automatic", "renderer, automatic", 1) + " Selected dictionary intrinsic profiles add exact pinned SMuFL membership, independently retained MusicXML family constraints, local defaults and bounded range advice, open-string standard-sound recognition, unchanged partial IPA positive facts and an explicitly selected bounded whole-input IPA representation witness. Missing capabilities remain unavailable without suppressing independent failures. IPA phonotactics, pronunciation intent, universal representation conformance, font rendering, internal-DTD and source-origin composition are outside this closure. A root imports only explicitly selected components once, sharing the verified set and finite account with every intrinsic child."
 		for j := range p.Intrinsic {

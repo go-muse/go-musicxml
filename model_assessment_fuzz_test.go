@@ -55,7 +55,7 @@ func FuzzAssessCurrentModel(f *testing.F) {
 			note.Rest = nil
 			note.Pitch = &Pitch{Step: Step(text), Octave: Octave(shape)}
 		}
-		options := AssessmentOptions{Profile: ProfileModelLocal, Budgets: validation.Budgets{MaxBufferedBytes: 2 << 20, MaxDepth: 32, MaxNodes: 256, MaxAttributes: 512, MaxEvents: 4096, MaxRuleSteps: 50000, MaxScalarBytes: 2048, MaxDiagnostics: 16, MaxDiagnosticBytes: 8192}}
+		options := ModelOptions{Profile: ProfileModelLocal, Budgets: validation.Budgets{MaxBufferedBytes: 2 << 20, MaxDepth: 32, MaxNodes: 256, MaxAttributes: 512, MaxEvents: 4096, MaxRuleSteps: 50000, MaxScalarBytes: 2048, MaxDiagnostics: 16, MaxDiagnosticBytes: 8192}}
 		a, errA := AssessModel(context.Background(), input, options)
 		b, errB := AssessModel(context.Background(), input, options)
 		if !reflect.DeepEqual(a, b) || ((errA == nil) != (errB == nil)) {

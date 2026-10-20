@@ -114,7 +114,7 @@ func buildSpanTestEngine(withTimeline bool) (spanEngineFixture, error) {
 	add(validation.RuleKey{ID: "span-test.spans", Revision: 1}, p, deps)
 	var profiles []validation.Profile
 	for _, base := range d.profiles {
-		if base.ID != ProfileSourceLocal && base.ID != ProfileModelLocal {
+		if base.ID != ProfileSourceLocal.ID() && base.ID != ProfileModelLocal.ID() {
 			continue
 		}
 		base.ID = validation.ProfileID("span-test/" + string(base.Target))

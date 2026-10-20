@@ -10,11 +10,15 @@ import (
 // ProfileSourceSemantics composes encoded MusicXML checks with the bounded
 // internal-DTD source infoset and explicitly supplied normative dictionaries.
 // It is an opt-in interpretation, not a universal conformance certificate.
-const ProfileSourceSemantics validation.ProfileID = "musicxml-4.0/source-semantics"
+const ProfileSourceSemantics SourceProfile = "musicxml-4.0/source-semantics"
+
+const profileSourceSemantics = validation.ProfileID(ProfileSourceSemantics)
 
 // ProfileModelSemantics assesses current encoded model facts without recreating
 // discarded XML, DTD, namespace, lexical or original package history.
-const ProfileModelSemantics validation.ProfileID = "musicxml-4.0/model-semantics"
+const ProfileModelSemantics ModelProfile = "musicxml-4.0/model-semantics"
+
+const profileModelSemantics = validation.ProfileID(ProfileModelSemantics)
 
 var sourceSemanticEngine = sync.OnceValues(func() (*validation.Engine, error) { return buildSemanticAssessmentEngine(validation.TargetSource) })
 var modelSemanticEngine = sync.OnceValues(func() (*validation.Engine, error) { return buildSemanticAssessmentEngine(validation.TargetModel) })
@@ -39,9 +43,9 @@ func buildSemanticAssessmentDefinitions(target validation.Target) (*assessmentDe
 	if err != nil {
 		return nil, err
 	}
-	wantBase := ProfileModelContext
+	wantBase := profileModelContext
 	if target == validation.TargetSource {
-		wantBase = ProfileSourceContext
+		wantBase = profileSourceContext
 	}
 	var selected validation.Profile
 	for _, p := range d.profiles {
@@ -55,9 +59,9 @@ func buildSemanticAssessmentDefinitions(target validation.Target) (*assessmentDe
 	if selected.ID == "" {
 		return nil, fmt.Errorf("musicxml: semantic target profile missing")
 	}
-	selected.ID = ProfileModelSemantics
+	selected.ID = profileModelSemantics
 	if target == validation.TargetSource {
-		selected.ID = ProfileSourceSemantics
+		selected.ID = profileSourceSemantics
 	}
 	selected.NormativeClosure = "Explicit bounded assessment of encoded MusicXML 4.0 XSD, local, exact timeline, contextual and nonfetching resource facts. Selected normative consumers include independently proved barline location and graphical-repeat content. Unavailable timing, unresolved source clauses and unsupported representation capabilities remain explicit; no renderer, external desired-score comparison, inferred exporter intention or universal conformance claim. Canonical SMuFL membership and the actual supported IPA evidence require only caller-selected data at relevant occurrences; no dictionary is loaded automatically. Optional standard-sound recognition and dictionary-backed rendering advice are not added by this composition."
 	if target == validation.TargetSource {

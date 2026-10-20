@@ -12,7 +12,7 @@ func ExampleAssessModel() {
 	measure := musicxml.NewScorePartwiseMeasure("1")
 	measure.AddNote(musicxml.NewRestNote(1))
 	document.Part[0].AddMeasure(measure)
-	report, err := musicxml.AssessModel(context.Background(), document, musicxml.AssessmentOptions{Profile: musicxml.ProfileModelLocal})
+	report, err := musicxml.AssessModel(context.Background(), document, musicxml.ModelOptions{Profile: musicxml.ProfileModelLocal})
 	if err != nil {
 		panic(err)
 	}

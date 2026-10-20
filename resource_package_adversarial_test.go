@@ -40,7 +40,7 @@ func TestPackageGraphContainerGatesAndLiteralPaths(t *testing.T) {
 				t.Fatalf("err=%v resources=%d enum=%v findings=%v", err, b.ResourceCount(), b.EnumerationComplete(), b.PackageReport().Findings)
 			}
 			if tc.name == "wrong container root" {
-				original, originalErr := InspectXML(context.Background(), strings.NewReader(tc.container), AssessmentOptions{Profile: ProfileSourceContainer})
+				original, originalErr := InspectXML(context.Background(), strings.NewReader(tc.container), SourceOptions{Profile: ProfileSourceContainer})
 				failure, ok := b.Failure()
 				if !errors.Is(err, ErrUnsupportedRoot) || originalErr == nil || original.Terminal == nil || !ok || failure.Target != original.Target || failure.Profile != original.Profile.ID || failure.CatalogDigest != original.Profile.CatalogDigest || failure.Counts != original.Counts || failure.Conformance != original.Conformance || failure.Terminal != *original.Terminal {
 					t.Fatalf("unadmitted original container failure lost: %+v error=%v", failure, err)
@@ -63,7 +63,7 @@ func TestPackageGraphLaterAlternateAndCurrentPrimaryBackreference(t *testing.T) 
 		t.Fatal(err)
 	}
 	value := &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}}, Resources: []MXLResource{{Path: "child.opus", Data: []byte(child)}}}
-	b, err = AssessMXLPackage(context.Background(), value, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+	b, err = AssessMXLPackage(context.Background(), value, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 	if err != nil || b.ResourceCount() != 2 || b.AdoptionCount() != 3 {
 		t.Fatalf("current backreference reparsed primary: %v %d %d %v", err, b.ResourceCount(), b.AdoptionCount(), b.PackageReport().Findings)
 	}
@@ -168,7 +168,7 @@ func TestPackageSharedExpandedReaderBoundsReadBeforeIO(t *testing.T) {
 
 func packageGraphMeasuredRun(t *testing.T, ctx context.Context, data []byte) (*resourceGraphRun, error) {
 	t.Helper()
-	g, err := startResourceGraph(ctx, packageGraphOptions().linked(), ProfileMXLSource)
+	g, err := startResourceGraph(ctx, packageGraphOptions().internal().linked(), ProfileMXLSource.ID())
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func TestPackageGraphCleanupAtCancellationBoundaries(t *testing.T) {
 	}
 }
 func TestPackageGraphCurrentResourceCopyIsIndependent(t *testing.T) {
-	g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}}, ProfileMXLModel)
+	g, err := startResourceGraph(context.Background(), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}}.internal().linked(), ProfileMXLModel.ID())
 	if err != nil {
 		t.Fatal(err)
 	}

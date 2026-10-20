@@ -42,9 +42,9 @@ func TestIndependentContextDefaultResourceMatrix(t *testing.T) {
 				begin := time.Now()
 				var report validation.Report
 				if model {
-					report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+					report, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 				} else {
-					report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+					report, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 				}
 				t.Logf("model=%t input_bytes=%d elapsed=%s complete=%t satisfied=%t conformance=%s records=%d findings=%d error=%v", model, len(source), time.Since(begin), report.AssessmentComplete, report.Satisfied(), report.Conformance, len(report.Context), len(report.Findings), err)
 				if errors.Is(err, validation.ErrResourceLimit) {
@@ -99,20 +99,20 @@ func TestIndependentContextConcurrentReportsAndProfiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	run := func(model, extended bool) (validation.Report, error) {
-		p := ProfileSourceTimeline
+		p := ProfileSourceTimeline.ID()
 		if model {
-			p = ProfileModelTimeline
+			p = ProfileModelTimeline.ID()
 		}
 		if extended {
-			p = ProfileSourceContext
+			p = ProfileSourceContext.ID()
 			if model {
-				p = ProfileModelContext
+				p = ProfileModelContext.ID()
 			}
 		}
 		if model {
-			return AssessModel(context.Background(), doc, AssessmentOptions{Profile: p})
+			return AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(p)})
 		}
-		return InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: p})
+		return InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: SourceProfile(p)})
 	}
 	baselines := map[[2]bool][]byte{}
 	for _, model := range []bool{false, true} {
@@ -178,9 +178,9 @@ func TestIndependentContextOpusDoesNotFetch(t *testing.T) {
 	for _, model := range []bool{false, true} {
 		var r validation.Report
 		if model {
-			r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+			r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
 		} else {
-			r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+			r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
 		}
 		if err != nil || !r.Satisfied() {
 			t.Fatalf("model=%t err=%v", model, err)
@@ -210,7 +210,7 @@ func TestIndependentContextOpusDoesNotFetch(t *testing.T) {
 func TestIndependentContextHugeSparseSourceValues(t *testing.T) {
 	const huge = "18446744073709551616"
 	source := contextFixtureXML(`<attributes><divisions>10</divisions><staves>`+huge+`</staves></attributes><barline location="left"><repeat direction="forward" times="`+huge+`"/></barline><note time-only="18446744073709551616,18446744073709551617" dynamics="125"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><staff>`+huge+`</staff></note>`, false)
-	r, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext, Budgets: validation.Budgets{MaxContextFacts: 1000}})
+	r, err := InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext, Budgets: validation.Budgets{MaxContextFacts: 1000}})
 	if err != nil || !r.Satisfied() {
 		t.Fatalf("symbolic huge values required expansion or host int: %v %s", err, localFindings(r))
 	}

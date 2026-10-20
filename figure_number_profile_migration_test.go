@@ -28,7 +28,7 @@ func TestFigureNumberHistoricalProfileSnapshotPreserved(t *testing.T) {
 // every other report field and each earlier profile still compare unchanged.
 func migrateFrozenFigureNumberReport(t *testing.T, id validation.ProfileID, value any) {
 	t.Helper()
-	if id != ProfileSourceContext && id != ProfileModelContext {
+	if id != ProfileSourceContext.ID() && id != ProfileModelContext.ID() {
 		return
 	}
 	report := value.(map[string]any)
@@ -85,10 +85,10 @@ func migrateFigureNumberProfileHash(t *testing.T, id validation.ProfileID, histo
 	t.Helper()
 	var before, after string
 	switch id {
-	case ProfileSourceContext:
+	case ProfileSourceContext.ID():
 		before = "f2547f7b087b4551e47f1a4d1f1b8799cf955ec3f2cb2f56da96257dae6e41fc"
 		after = "43a78f538defd0fbbc4e5331eecf41688204f12742a5900e49672128cd320155"
-	case ProfileModelContext:
+	case ProfileModelContext.ID():
 		before = "37a63c9325973e67ae03328df45be262101fd83b216562641770e7ddf6ca93bb"
 		after = "ea6744501e0555255420471e8b8d5a0e4fb9371d915332777bfffdac77fd2511"
 	default:

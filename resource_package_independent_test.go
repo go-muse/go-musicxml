@@ -35,7 +35,7 @@ func TestIndependentMXLCanonicalPinConsistency(t *testing.T) {
 				bodies = append(bodies, body)
 				return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "same-package", Revision: revision, Representation: validation.ResourceRawMXL, Digest: fmt.Sprintf("%x", sha256.Sum256(data))}, RetrievalURI: q.Document.Href, Body: body}, nil
 			})
-			b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+			b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 			for i, body := range bodies {
 				if body.closed != 1 {
 					t.Errorf("body %d close count %d", i, body.closed)
@@ -80,7 +80,7 @@ func TestIndependentMXLLinkDepthIsNotResetByPackage(t *testing.T) {
 		bodies = append(bodies, body)
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: q.Document.Href, Representation: representation, Digest: fmt.Sprintf("%x", sha256.Sum256(data))}, RetrievalURI: q.Document.Href, Body: body}, nil
 	})
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 4}}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 4}}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
 	for _, body := range bodies {
 		if body.closed != 1 {
 			t.Error("close", body.closed)

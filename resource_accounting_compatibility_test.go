@@ -33,10 +33,10 @@ func TestReviewRetainedGrowthTunedBudgetCompatibility(t *testing.T) {
 		assess func(validation.Budgets) (validation.Report, error)
 	}{
 		{"model", 953719, func(b validation.Budgets) (validation.Report, error) {
-			return AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelXSD, Budgets: b})
+			return AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelXSD, Budgets: b})
 		}},
 		{"source", 556569, func(b validation.Budgets) (validation.Report, error) {
-			return InspectXML(context.Background(), strings.NewReader(reviewBudgetScore(100)), AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: b})
+			return InspectXML(context.Background(), strings.NewReader(reviewBudgetScore(100)), SourceOptions{Profile: ProfileSourceXSDPreview, Budgets: b})
 		}},
 	}
 	for _, tc := range cases {

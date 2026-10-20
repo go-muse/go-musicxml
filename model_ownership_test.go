@@ -234,7 +234,7 @@ func TestModelAssessmentOwnershipExecutableEvidence(t *testing.T) {
 	}
 	required := map[validation.RuleKey]bool{}
 	localRequired := map[validation.RuleKey]bool{}
-	for _, id := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal, ProfileSourceLocal} {
+	for _, id := range []validation.ProfileID{ProfileModelXSD.ID(), ProfileModelLocal.ID(), ProfileSourceLocal.ID()} {
 		for _, key := range catalogProfile(t, engine, id).Required {
 			required[key] = true
 			if strings.HasPrefix(string(key.ID), "MX40-LOCAL-") {

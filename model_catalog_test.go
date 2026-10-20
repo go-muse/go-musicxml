@@ -23,9 +23,9 @@ func TestBoundedCatalogExactProfilesAndSharedRules(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	model := catalogProfile(t, engine, ProfileModelLocal)
-	source := catalogProfile(t, engine, ProfileSourceLocal)
-	xsd := catalogProfile(t, engine, ProfileModelXSD)
+	model := catalogProfile(t, engine, ProfileModelLocal.ID())
+	source := catalogProfile(t, engine, ProfileSourceLocal.ID())
+	xsd := catalogProfile(t, engine, ProfileModelXSD.ID())
 	if len(xsd.Required) != 14 || len(model.Required) != 36 || len(source.Required) != 34 {
 		t.Fatalf("unexpected frozen obligation list: xsd%d model%d source%d", len(xsd.Required), len(model.Required), len(source.Required))
 	}
@@ -64,7 +64,7 @@ func TestBoundedCatalogExactProfilesAndSharedRules(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	old := catalogProfile(t, preview, ProfileSourceXSDPreview)
+	old := catalogProfile(t, preview, ProfileSourceXSDPreview.ID())
 	if len(old.Required) != 12 || old.CatalogDigest == model.CatalogDigest {
 		t.Fatal("preview catalog scope or isolation changed")
 	}

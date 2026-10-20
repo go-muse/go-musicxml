@@ -10,7 +10,7 @@ import (
 )
 
 func TestAssessedModelAcceptancePreservesIndependentRepresentationFailure(t *testing.T) {
-	report := validation.Report{Requested: true, Profile: validation.Profile{ID: ProfileModelSemantics, Target: validation.TargetModel}, Target: validation.TargetModel, InputComplete: true, Syntax: validation.SyntaxNotAssessed, Conformance: validation.ConformanceConformant, AssessmentComplete: true}
+	report := validation.Report{Requested: true, Profile: validation.Profile{ID: ProfileModelSemantics.ID(), Target: validation.TargetModel}, Target: validation.TargetModel, InputComplete: true, Syntax: validation.SyntaxNotAssessed, Conformance: validation.ConformanceConformant, AssessmentComplete: true}
 	if !report.Satisfied() {
 		t.Fatal("invalid successful-report control")
 	}

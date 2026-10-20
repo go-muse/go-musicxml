@@ -43,10 +43,10 @@ func TestSourceInternalDTDPublicExternalIdentifiersStayUnread(t *testing.T) {
 				var err error
 				if decode {
 					var result DecodeResult
-					result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceLine}})
+					result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), DecodeAssessmentOptions{Assessment: &SourceOptions{Profile: ProfileSourceLine}})
 					report = result.SourceLine
 				} else {
-					report, err = InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
+					report, err = InspectXML(context.Background(), bytes.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD})
 				}
 				if (!decode && err != nil) || (decode && !errors.Is(err, validation.ErrIncompleteAssessment)) || report.Syntax == validation.SyntaxMalformed || !report.InputComplete || report.Satisfied() {
 					t.Fatalf("decode=%t err=%v syntax=%s complete=%t satisfied=%t", decode, err, report.Syntax, report.InputComplete, report.Satisfied())
@@ -79,7 +79,7 @@ func TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD(t *testing.T) {
 			if name == "Chant.musicxml" {
 				budgets = validation.Budgets{}
 			}
-			report, err := InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD, Budgets: budgets})
+			report, err := InspectXML(context.Background(), bytes.NewReader(input), SourceOptions{Profile: ProfileSourceInternalDTD, Budgets: budgets})
 			if err != nil || !report.InputComplete || !report.AssessmentComplete || !report.Satisfied() {
 				t.Fatalf("bundled external DTD inspection: err=%v syntax=%s complete=%t satisfied=%t counts=%+v", err, report.Syntax, report.AssessmentComplete, report.Satisfied(), report.Counts)
 			}

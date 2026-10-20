@@ -32,7 +32,7 @@ func assertDictionaryLocalSourceModel(t *testing.T, text string, canonicalCount 
 		name    string
 		model   bool
 		profile validation.ProfileID
-	}{{"source", false, ProfileSourceDictionaries}, {"model", true, ProfileModelDictionaries}} {
+	}{{"source", false, ProfileSourceDictionaries.ID()}, {"model", true, ProfileModelDictionaries.ID()}} {
 		for _, data := range []struct {
 			name      string
 			available bool

@@ -30,7 +30,7 @@ func TestResourceGraphReturnedURIAdmissionBeforeRead(t *testing.T) {
 			resolver := graphResolverFunc(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
 				return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "child", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(data)))}, RetrievalURI: uri, Body: body}, nil
 			})
-			_, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver})
+			_, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver})
 			if !errors.Is(err, validation.ErrInvalidConfiguration) || reader.reads != 0 || body.closed != 1 {
 				t.Fatalf("err=%v reads=%d closed=%d", err, reader.reads, body.closed)
 			}
@@ -45,14 +45,14 @@ func TestResourceGraphImageCallbackCannotMutateRequest(t *testing.T) {
 		q.Image.Href = "forged.dat"
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceUnknown, Reason: "metadata-unavailable"}, nil
 	})
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Dependencies: []ResourceDependency{ResourceImages}, Resolver: resolver})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Dependencies: []ResourceDependency{ResourceImages}, Resolver: resolver})
 	if err != nil || calls != 1 || b.ImageAdviceCount() != 1 {
 		t.Fatalf("err=%v calls=%d advice=%d", err, calls, b.ImageAdviceCount())
 	}
 }
 func TestResourceGraphSelectedMissingResolverReason(t *testing.T) {
 	source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="child.opus"/></opus>`
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -31,7 +31,7 @@ func BenchmarkContextReaderReview(b *testing.B) {
 				if e != nil {
 					b.Fatal(e)
 				}
-				session, e := engine.Begin(context.Background(), validation.RunOptions{Profile: ProfileModelContext, DocumentID: modelDocumentID, Account: account})
+				session, e := engine.Begin(context.Background(), validation.RunOptions{Profile: ProfileModelContext.ID(), DocumentID: modelDocumentID, Account: account})
 				if e != nil {
 					b.Fatal(e)
 				}

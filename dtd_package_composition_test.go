@@ -30,9 +30,9 @@ func TestDTDPackageCompositionAuxiliaryProfiles(t *testing.T) {
 			var r validation.Report
 			var err error
 			if tc.id == dtdSoundsProfile {
-				r, err = inspectXMLWithDictionaries(context.Background(), strings.NewReader(tc.source), dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: tc.id}})
+				r, err = inspectXMLWithDictionaries(context.Background(), strings.NewReader(tc.source), dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: tc.id}})
 			} else {
-				r, err = InspectXML(context.Background(), strings.NewReader(tc.source), AssessmentOptions{Profile: tc.id})
+				r, err = InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Profile: SourceProfile(tc.id)})
 			}
 			if err != nil || r.Conformance == validation.ConformanceViolated || !r.InputComplete {
 				t.Fatalf("err=%v report=%+v", err, r)
@@ -63,16 +63,16 @@ func TestDTDPackageCompositionEntryPoints(t *testing.T) {
 		model   bool
 	}{
 		{"source", dtdGraphProfile, func() (validation.AssessmentBundle, error) {
-			return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(`<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: dtdGraphProfile}}})
+			return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(`<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal()})
 		}, false},
 		{"model", dtdGraphProfile, func() (validation.AssessmentBundle, error) {
-			return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: dtdGraphProfile}}})
+			return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(dtdGraphProfile)}}.internal()})
 		}, true},
 		{"raw MXL", dtdMXLSourceProfile, func() (validation.AssessmentBundle, error) {
-			return inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: dtdMXLSourceProfile}}})
+			return inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(dtdMXLSourceProfile)}}.internal()})
 		}, false},
 		{"current MXL", dtdMXLModelProfile, func() (validation.AssessmentBundle, error) {
-			return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: dtdMXLModelProfile}}})
+			return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(dtdMXLModelProfile)}}.internal()})
 		}, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -90,9 +90,9 @@ func TestDTDPackageCompositionEntryPoints(t *testing.T) {
 					continue
 				}
 				found = true
-				want := ProfileSourceInternalDTDDictionaries
+				want := ProfileSourceInternalDTDDictionaries.ID()
 				if tc.model {
-					want = ProfileModelDictionaries
+					want = ProfileModelDictionaries.ID()
 				}
 				if r.Profile.ID != want {
 					t.Errorf("intrinsic=%s want=%s", r.Profile.ID, want)

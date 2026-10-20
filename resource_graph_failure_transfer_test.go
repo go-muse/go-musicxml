@@ -14,16 +14,16 @@ import (
 
 func qaInvalidIntrinsicGraph(t *testing.T, ctx context.Context) (*resourceGraphRun, resourceIntrinsicResult, validation.ResourcePin, string) {
 	t.Helper()
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}}, ProfileResourceGraph)
+	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
 	id := g.next("source")
-	result := assessResourceSource(ctx, strings.NewReader(`<opus wrong="yes"/>`), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesPrimary})
+	result := assessResourceSource(ctx, strings.NewReader(`<opus wrong="yes"/>`), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 	if result.Err != nil || result.Snapshot == nil || result.Report.Counts.Fail == 0 || result.Report.Conformance != validation.ConformanceViolated {
 		t.Fatalf("invalid primary did not export real best report: %v %+v", result.Err, result.Report)
 	}
@@ -48,7 +48,7 @@ func TestQAPrimaryPostExportStepRefusalPreservesKnownChildReport(t *testing.T) {
 	if err != nil || !qaBundleHasKnownChildFailure(baseline) {
 		t.Fatal("baseline", err)
 	}
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus wrong="yes"/>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxRuleSteps: steps}}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<opus wrong="yes"/>`), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxRuleSteps: steps}}})
 	if !errors.Is(err, validation.ErrResourceLimit) {
 		t.Fatalf("expected post-export step refusal at %d: %v", steps, err)
 	}
@@ -126,7 +126,7 @@ func TestQAPrimaryPostExportBufferRefusalPreservesKnownChildReport(t *testing.T)
 }
 func TestQANestedSourcePostExportAdmissionPreservesKnownChildReport(t *testing.T) {
 	ctx := &qaPostExportBufferContext{Context: context.Background(), stage: "AddResource"}
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}}, ProfileResourceGraph)
+	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +139,7 @@ func TestQANestedSourcePostExportAdmissionPreservesKnownChildReport(t *testing.T
 	if err = g.options.account.Charge(validation.BudgetExternalBytes, int64(len(data))); err != nil {
 		t.Fatal(err)
 	}
-	resource, _, err := g.assessPackageSource(p, "bad.opus", bytes.Clone(data), ProfileSourceLinks)
+	resource, _, err := g.assessPackageSource(p, "bad.opus", bytes.Clone(data), ProfileSourceLinks.ID())
 	if resource != nil || !ctx.fired || !errors.Is(err, validation.ErrResourceLimit) {
 		t.Fatalf("expected actual nested transfer failure: %v %t %v", resource, ctx.fired, err)
 	}
@@ -155,7 +155,7 @@ func TestQANestedSourcePostExportAdmissionPreservesKnownChildReport(t *testing.T
 
 func TestQACurrentPackagePostExportAdmissionPreservesKnownChildReport(t *testing.T) {
 	ctx := &qaPostExportBufferContext{Context: context.Background(), stage: "AddResource"}
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}}, ProfileMXLModel)
+	g, err := startResourceGraph(ctx, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}}.internal().linked(), ProfileMXLModel.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +167,7 @@ func TestQACurrentPackagePostExportAdmissionPreservesKnownChildReport(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	control, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLinks})
+	control, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelLinks})
 	if err != nil || control.Counts.Fail == 0 {
 		t.Fatalf("model fixture not independently invalid: %v %+v", err, control.Counts)
 	}
@@ -203,17 +203,17 @@ func TestQAExternalChildPostExportAdmissionPreservesKnownChildReport(t *testing.
 	ctx := &qaPostExportBufferContext{Context: context.Background(), stage: "AddResource", ancestor: ".(*resourceGraphRun).loadExternalDocument"}
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="target.opus"/></opus>`
 	resolver := &graphFixtureResolver{resources: map[string]string{"https://e.test/target.opus": `<opus wrong="yes"/>`}, pins: map[string]string{"https://e.test/target.opus": "target"}}
-	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}, ProfileResourceGraph)
+	g, err := startResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "root", RetrievalURI: "https://e.test/root.opus"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), ProfileResourceGraph.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
 	ctx.account = g.options.account
-	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
 	id := g.next("source")
-	result := assessResourceSource(ctx, strings.NewReader(root), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesPrimary})
+	result := assessResourceSource(ctx, strings.NewReader(root), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks.ID(), Engine: engine}, ByteOwner: sourceBytesPrimary})
 	if result.Err != nil || result.Snapshot == nil {
 		t.Fatalf("source root: %v", result.Err)
 	}

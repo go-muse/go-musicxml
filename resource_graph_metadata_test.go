@@ -30,7 +30,7 @@ func TestResourceGraphImageMetadataIsExplicitOwnedAdvice(t *testing.T) {
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Image: &metadata}, nil
 	})
 	for _, selected := range []bool{false, true} {
-		opts := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver}
+		opts := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver}
 		if selected {
 			opts.Dependencies = []ResourceDependency{ResourceImages}
 		}
@@ -71,7 +71,7 @@ func TestResourceGraphInstrumentAssociationRequiresExactProvider(t *testing.T) {
 			a := validation.AssociationResult{Request: *q.Association, Membership: validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}, Authority: validation.EvidenceAuthority{ID: "fixture-authority", ExactRelationComplete: true, Provenance: []validation.SourceRef{{IDs: []string{"membership"}, URL: "https://example.test/association", Locator: "test exact membership"}}}, TargetPartID: validation.Evidence[string]{State: validation.EvidenceAbsent}, TargetInstrumentID: validation.Evidence[string]{State: validation.EvidenceAbsent}}
 			return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Association: &a}, nil
 		})
-		opts := LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/score.musicxml"}}
+		opts := LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}, Identity: ResourceIdentity{RetrievalURI: "https://e.test/score.musicxml"}}
 		if selected {
 			opts.Dependencies = append(opts.Dependencies, ResourceAssociations)
 		}

@@ -220,7 +220,7 @@ func TestResourceGraphIndirectionContextAssociationIsolation(t *testing.T) {
 			return validation.ResourceResult{}, nil
 		}
 	})
-	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(outer), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "outer", RetrievalURI: "https://e.test/outer.xml"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments, ResourceImages, ResourceAssociations}})
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(outer), LinkedAssessmentOptions{Graph: GraphOptions{Profile: ProfileResourceGraph}, Identity: ResourceIdentity{CanonicalID: "outer", RetrievalURI: "https://e.test/outer.xml"}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments, ResourceImages, ResourceAssociations}})
 	if err != nil {
 		t.Fatal(err)
 	}

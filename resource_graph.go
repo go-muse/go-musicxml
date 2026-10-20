@@ -19,7 +19,7 @@ type resourceIntrinsicProfiles struct {
 }
 
 func ordinaryResourceIntrinsicProfiles() resourceIntrinsicProfiles {
-	return resourceIntrinsicProfiles{source: ProfileSourceLinks, model: ProfileModelLinks, container: ProfileSourceContainer, sounds: ProfileSourceSounds}
+	return resourceIntrinsicProfiles{source: profileSourceLinks, model: profileModelLinks, container: profileSourceContainer, sounds: profileSourceSounds}
 }
 
 type resourceGraphRun struct {
@@ -54,7 +54,7 @@ type resourceGraphRun struct {
 	linked                map[graphLinkKey]graphLinkedTarget
 }
 
-func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
+func startResourceGraph(ctx context.Context, options linkedAssessmentOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
 	cfg, err := validateLinkedAssessmentOptions(ctx, options, profile)
 	if err != nil {
 		return nil, err
@@ -171,14 +171,15 @@ func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error
 // it must be ProfileResourceGraph, or a dictionary graph profile when
 // options.Graph.Dictionaries is set.
 func InspectXMLWithResources(ctx context.Context, reader io.Reader, options LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
-	if graph, dictionaries, ok := options.Graph.scenario(ProfileResourceGraphSemantics); ok {
-		options.Graph = graph
-		return inspectXMLWithResourcesAndDictionaries(ctx, reader, linkedDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+	normalized := options.internal()
+	if graph, dictionaries, ok := normalized.Graph.scenario(profileResourceGraphSemantics); ok {
+		normalized.Graph = graph
+		return inspectXMLWithResourcesAndDictionaries(ctx, reader, linkedDictionaryAssessmentOptions{Resources: normalized, Dictionaries: dictionaries})
 	}
 	if nilValue(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
-	g, err := startResourceGraph(ctx, options, ProfileResourceGraph)
+	g, err := startResourceGraph(ctx, normalized, profileResourceGraph)
 	if err != nil {
 		return validation.AssessmentBundle{}, err
 	}
@@ -210,14 +211,15 @@ func (g *resourceGraphRun) inspectPrimarySource(reader io.Reader) (validation.As
 // it must be ProfileResourceGraph, or a dictionary graph profile when
 // options.Graph.Dictionaries is set.
 func AssessModelWithResources(ctx context.Context, document Document, options LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
-	if graph, dictionaries, ok := options.Graph.scenario(ProfileResourceGraphSemantics); ok {
-		options.Graph = graph
-		return assessModelWithResourcesAndDictionaries(ctx, document, linkedDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+	normalized := options.internal()
+	if graph, dictionaries, ok := normalized.Graph.scenario(profileResourceGraphSemantics); ok {
+		normalized.Graph = graph
+		return assessModelWithResourcesAndDictionaries(ctx, document, linkedDictionaryAssessmentOptions{Resources: normalized, Dictionaries: dictionaries})
 	}
 	if _, err := validationSchemaForDocument(document); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	g, err := startResourceGraph(ctx, options, ProfileResourceGraph)
+	g, err := startResourceGraph(ctx, normalized, profileResourceGraph)
 	if err != nil {
 		return validation.AssessmentBundle{}, err
 	}

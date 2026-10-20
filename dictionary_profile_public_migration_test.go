@@ -38,10 +38,10 @@ func TestDictionaryProfilesPublishedBaselineMigration(t *testing.T) {
 		}
 		baseline[p.ID] = p
 	}
-	for _, id := range []validation.ProfileID{ProfileSourceDictionaries, ProfileModelDictionaries, ProfileSourceSoundsDictionaries} {
+	for _, id := range []validation.ProfileID{ProfileSourceDictionaries.ID(), ProfileModelDictionaries.ID(), ProfileSourceSoundsDictionaries.ID()} {
 		target := validation.TargetSource
 		var engine *validation.Engine
-		if id == ProfileModelDictionaries {
+		if id == ProfileModelDictionaries.ID() {
 			target = validation.TargetModel
 			engine, err = modelAssessmentEngineForProfile(id)
 		} else {

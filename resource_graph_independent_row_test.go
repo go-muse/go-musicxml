@@ -140,7 +140,7 @@ func TestFinalQACompressedLinkFamilyBases(t *testing.T) {
 						t.Fatal(x)
 					}
 					p := &MXLPackage{Document: d, RootFiles: []MXLRootFile{{FullPath: tc.path}}, Resources: []MXLResource{{Path: tc.correct, Data: []byte(score)}, {Path: tc.decoy, Data: []byte(`<unexpected/>`)}}}
-					b, e = AssessMXLPackage(context.Background(), p, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
+					b, e = AssessMXLPackage(context.Background(), p, MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLModel}})
 				}
 				want := 2
 				if mode == "raw-mxl" {
@@ -396,9 +396,9 @@ func TestFinalQALocalAttachmentSourceModelAxes(t *testing.T) {
 					if x != nil {
 						t.Fatal(x)
 					}
-					r, e = AssessModel(context.Background(), d, AssessmentOptions{Profile: ProfileModelLinks})
+					r, e = AssessModel(context.Background(), d, ModelOptions{Profile: ProfileModelLinks})
 				} else {
-					r, e = InspectXML(context.Background(), strings.NewReader(s), AssessmentOptions{Profile: ProfileSourceLinks})
+					r, e = InspectXML(context.Background(), strings.NewReader(s), SourceOptions{Profile: ProfileSourceLinks})
 				}
 				if e != nil || r.Satisfied() == tc.invalid {
 					t.Fatalf("local result %v %+v", e, r)

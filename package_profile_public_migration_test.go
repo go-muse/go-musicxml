@@ -45,8 +45,8 @@ func TestPackageProfilesPublishedBaselineMigration(t *testing.T) {
 		ids           []validation.ProfileID
 		before, after string
 	}{
-		{newPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraph, ProfileMXLSource, ProfileMXLModel}, "083b1b94f8b581825b23b81e3c7e39c238741f04f897ba71f7aa9354ea789d97", "554a97e25d6494c2e0550519fd4f6d2a439ca2f31e01a82baa7e28a00ddd2088"},
-		{newDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphDictionaries, ProfileMXLSourceDictionaries, ProfileMXLModelDictionaries}, "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333", "f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44"},
+		{newPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraph.ID(), ProfileMXLSource.ID(), ProfileMXLModel.ID()}, "083b1b94f8b581825b23b81e3c7e39c238741f04f897ba71f7aa9354ea789d97", "554a97e25d6494c2e0550519fd4f6d2a439ca2f31e01a82baa7e28a00ddd2088"},
+		{newDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphDictionaries.ID(), ProfileMXLSourceDictionaries.ID(), ProfileMXLModelDictionaries.ID()}, "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333", "f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44"},
 	} {
 		c, err := tc.factory()
 		if err != nil {

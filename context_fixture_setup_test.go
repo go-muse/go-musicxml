@@ -20,16 +20,16 @@ func TestContextFixtureSharedModelConcurrentReadOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, profile := range []validation.ProfileID{ProfileModelLocal, ProfileModelTimeline} {
+	for _, profile := range []validation.ProfileID{ProfileModelLocal.ID(), ProfileModelTimeline.ID()} {
 		t.Run(string(profile), func(t *testing.T) {
-			baseline, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: profile})
+			baseline, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(profile)})
 			if err != nil || !baseline.Satisfied() {
 				t.Fatalf("baseline: %v; %s", err, localFindings(baseline))
 			}
 			for worker := 0; worker < 4; worker++ {
 				t.Run(fmt.Sprintf("worker%d", worker), func(t *testing.T) {
 					t.Parallel()
-					report, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: profile})
+					report, err := AssessModel(context.Background(), doc, ModelOptions{Profile: ModelProfile(profile)})
 					if err != nil || !reflect.DeepEqual(report, baseline) {
 						t.Fatalf("shared-model assessment changed: %v", err)
 					}

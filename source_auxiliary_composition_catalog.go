@@ -10,12 +10,16 @@ import (
 // ProfileSourceInternalDTDContainer explicitly assesses original container XML
 // after bounded internal-DTD processing. Effective path and media type values
 // are separate from retained physical Raw values and source-origin evidence.
-const ProfileSourceInternalDTDContainer validation.ProfileID = "musicxml-4.0/source-internal-dtd-container"
+const ProfileSourceInternalDTDContainer SourceProfile = "musicxml-4.0/source-internal-dtd-container"
+
+const profileSourceInternalDTDContainer = validation.ProfileID(ProfileSourceInternalDTDContainer)
 
 // ProfileSourceInternalDTDSoundsDictionaries explicitly composes bounded
 // internal-DTD processing with effective sounds mappings and supplied standard
 // sound dictionaries. It does not discover auxiliary files or select mappings.
-const ProfileSourceInternalDTDSoundsDictionaries validation.ProfileID = "musicxml-4.0/source-internal-dtd-sounds-dictionaries"
+const ProfileSourceInternalDTDSoundsDictionaries SourceProfile = "musicxml-4.0/source-internal-dtd-sounds-dictionaries"
+
+const profileSourceInternalDTDSoundsDictionaries = validation.ProfileID(ProfileSourceInternalDTDSoundsDictionaries)
 
 var sourceAuxiliaryCompositionEngine = sync.OnceValues(buildSourceAuxiliaryCompositionEngine)
 
@@ -73,10 +77,10 @@ func buildSourceAuxiliaryCompositionDefinitions() (*assessmentDefinitions, error
 	for i := range d.profiles {
 		p := &d.profiles[i]
 		assembly := validation.AssemblyContainer
-		p.ID = ProfileSourceInternalDTDContainer
+		p.ID = profileSourceInternalDTDContainer
 		if p.SupportedRoots[0].Local == "sounds" {
 			assembly = validation.AssemblySounds
-			p.ID = ProfileSourceInternalDTDSoundsDictionaries
+			p.ID = profileSourceInternalDTDSoundsDictionaries
 		}
 		for j, key := range p.Required {
 			if replacement, ok := replacements[key]; ok {

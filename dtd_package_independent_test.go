@@ -75,7 +75,7 @@ func TestDTDPkgIndependentContainerPhysicalEffectiveMatrix(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			xml := "<!DOCTYPE container [" + tc.declarations + "]><container><rootfiles>" + tc.element + "</rootfiles></container>"
-			r, err := InspectXML(context.Background(), strings.NewReader(xml), AssessmentOptions{Profile: independentDTDContainerProfile})
+			r, err := InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Profile: SourceProfile(independentDTDContainerProfile)})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -123,7 +123,7 @@ func TestDTDPkgIndependentAuxiliaryHintsKeepOddEffectiveTail(t *testing.T) {
 					profile = independentDTDContainerProfile
 				}
 				xml := "<!DOCTYPE " + name + " [" + decl + "]><" + name + attrs + ">" + body + "</" + name + ">"
-				r, err := InspectXML(context.Background(), strings.NewReader(xml), AssessmentOptions{Profile: profile})
+				r, err := InspectXML(context.Background(), strings.NewReader(xml), SourceOptions{Profile: SourceProfile(profile)})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -164,7 +164,7 @@ func TestDTDPkgIndependentAuxiliaryHintsKeepOddEffectiveTail(t *testing.T) {
 
 func TestDTDPkgIndependentSoundsDefaultsDoNotEraseStringSpaceOrIdentityFailure(t *testing.T) {
 	xml := `<!DOCTYPE sounds [<!ATTLIST sound id ID "repeated" primary (yes|no) "yes"><!ATTLIST ensemble primary (yes|no) "no" number NMTOKEN " two "><!ENTITY row '<ensemble> A&#x9; B </ensemble>'>]><sounds><sound>&row;</sound><sound><solo> C  D </solo></sound></sounds>`
-	r, err := inspectXMLWithDictionaries(context.Background(), strings.NewReader(xml), dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: independentDTDSoundsProfile}})
+	r, err := inspectXMLWithDictionaries(context.Background(), strings.NewReader(xml), dictionaryAssessmentOptions{Assessment: assessmentOptions{Profile: independentDTDSoundsProfile}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,7 +237,7 @@ func TestDTDPkgIndependentAllEntryPointsRejectBeforeIO(t *testing.T) {
 				if entry == "current-mxl" {
 					profile = independentDTDCurrentMXLProfile
 				}
-				o := mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{{Manifest: validation.DictionaryManifestStandardSounds40, Relations: []validation.DictionaryRelation{validation.DictionaryRelationStandardSound}}}, Source: independentDTDPanicDictionary{}}}
+				o := mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(profile)}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}.internal(), Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{{Manifest: validation.DictionaryManifestStandardSounds40, Relations: []validation.DictionaryRelation{validation.DictionaryRelationStandardSound}}}, Source: independentDTDPanicDictionary{}}}
 				switch invalid {
 				case "empty":
 					o.Resources.Graph.Profile = ""
@@ -296,11 +296,11 @@ func TestDTDPkgIndependentDefaultedLinksSurviveOriginIndexShift(t *testing.T) {
 	root := `<!DOCTYPE opus [<!ATTLIST opus-link xlink:href CDATA "child.opus">]><opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link/><opus-link/></opus>`
 	child := `<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`
 	var bodies []*independentDTDBody
-	engine, err := sourceAssessmentEngineForProfile(ProfileSourceInternalDTDDictionaries)
+	engine, err := sourceAssessmentEngineForProfile(ProfileSourceInternalDTDDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, _ := engine.Profile(ProfileSourceInternalDTDDictionaries)
+	p, _ := engine.Profile(ProfileSourceInternalDTDDictionaries.ID())
 	resolver := independentDTDResolver(func(_ context.Context, q validation.ResourceRequest) (validation.ResourceResult, error) {
 		if q.Document == nil || q.Document.RequiredProfile != p.ID || q.Document.CatalogDigest != p.CatalogDigest || q.Document.Href != "child.opus" {
 			t.Fatalf("wrong exact request: %+v", q.Document)
@@ -310,7 +310,7 @@ func TestDTDPkgIndependentDefaultedLinksSurviveOriginIndexShift(t *testing.T) {
 		return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceKnown, Pin: validation.ResourcePin{CanonicalID: "child", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(child)))}, RetrievalURI: "https://example.test/child.opus", Body: b}, nil
 	})
 	// Use the real starter while preserving visibility of the root account.
-	g, err := startDictionaryResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDGraphProfile}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}, DictionaryOptions{}, ProfileResourceGraphDictionaries)
+	g, err := startDictionaryResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(independentDTDGraphProfile)}, Identity: ResourceIdentity{RetrievalURI: "https://example.test/root.opus"}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: resolver}.internal(), DictionaryOptions{}, ProfileResourceGraphDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -344,7 +344,7 @@ func TestDTDPkgIndependentDefaultedLinksSurviveOriginIndexShift(t *testing.T) {
 func TestDTDPkgIndependentRejectedTransfersKeepSnapshotOwned(t *testing.T) {
 	for _, mode := range []string{"legacy-profile", "foreign-account", "wrong-representation", "publication-budget", "cancelled"} {
 		t.Run(mode, func(t *testing.T) {
-			g, err := startDictionaryResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDRawMXLProfile}}, DictionaryOptions{}, ProfileMXLSourceDictionaries)
+			g, err := startDictionaryResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(independentDTDRawMXLProfile)}}.internal(), DictionaryOptions{}, ProfileMXLSourceDictionaries.ID())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -352,7 +352,7 @@ func TestDTDPkgIndependentRejectedTransfersKeepSnapshotOwned(t *testing.T) {
 			a := pa
 			profile := independentDTDContainerProfile
 			if mode == "legacy-profile" {
-				profile = ProfileSourceContainer
+				profile = ProfileSourceContainer.ID()
 			}
 			if mode == "foreign-account" {
 				a = independentDTDAccount(t, validation.Budgets{})
@@ -460,13 +460,13 @@ func TestDTDPkgIndependentOrdinaryWrappersDoNotGrantDTD(t *testing.T) {
 			if entry == "current-mxl" {
 				profile = independentDTDCurrentMXLProfile
 			}
-			o := MXLAssessmentOptions{Graph: AssessmentOptions{Profile: profile}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}
+			o := MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(profile)}, Resolver: independentDTDPanicResolver{}, Dependencies: []ResourceDependency{ResourceDocuments}}
 			var err error
 			switch entry {
 			case "source":
-				_, err = InspectXMLWithResources(context.Background(), independentDTDPanicReader{}, o.linked())
+				_, err = InspectXMLWithResources(context.Background(), independentDTDPanicReader{}, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(o.Graph.Profile), Budgets: o.Graph.Budgets, DTD: o.Graph.DTD, Dictionaries: o.Graph.Dictionaries}, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies})
 			case "model":
-				_, err = AssessModelWithResources(context.Background(), doc, o.linked())
+				_, err = AssessModelWithResources(context.Background(), doc, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(o.Graph.Profile), Budgets: o.Graph.Budgets, DTD: o.Graph.DTD, Dictionaries: o.Graph.Dictionaries}, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies})
 			case "raw-mxl":
 				_, err = InspectMXL(context.Background(), independentDTDPanicReader{}, o)
 			case "current-mxl":
@@ -484,11 +484,11 @@ func TestDTDPkgIndependentCurrentModelRemainsSourceHonest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	engine, err := modelAssessmentEngineForProfile(ProfileModelDictionaries)
+	engine, err := modelAssessmentEngineForProfile(ProfileModelDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
-	exact, _ := engine.Profile(ProfileModelDictionaries)
+	exact, _ := engine.Profile(ProfileModelDictionaries.ID())
 	for _, mxl := range []bool{false, true} {
 		t.Run(fmt.Sprint(mxl), func(t *testing.T) {
 			previous := ""
@@ -496,9 +496,9 @@ func TestDTDPkgIndependentCurrentModelRemainsSourceHonest(t *testing.T) {
 				var b validation.AssessmentBundle
 				var err error
 				if mxl {
-					b, err = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus", MediaType: Ptr("application/vnd.recordare.musicxml+xml")}}}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDCurrentMXLProfile}}})
+					b, err = assessMXLPackageWithDictionaries(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus", MediaType: Ptr("application/vnd.recordare.musicxml+xml")}}}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: MXLProfile(independentDTDCurrentMXLProfile)}}.internal()})
 				} else {
-					b, err = assessModelWithResourcesAndDictionaries(context.Background(), doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDGraphProfile}}})
+					b, err = assessModelWithResourcesAndDictionaries(context.Background(), doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(independentDTDGraphProfile)}}.internal()})
 				}
 				if err != nil {
 					t.Fatal(err)
@@ -543,7 +543,7 @@ func TestDTDPkgIndependentCurrentModelRemainsSourceHonest(t *testing.T) {
 
 func TestDTDPkgIndependentCapabilitiesPartitionExactSnapshotIdentity(t *testing.T) {
 	ctx := context.Background()
-	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: independentDTDGraphProfile}}, DictionaryOptions{}, ProfileResourceGraphDictionaries)
+	g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(independentDTDGraphProfile)}}.internal(), DictionaryOptions{}, ProfileResourceGraphDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -552,20 +552,20 @@ func TestDTDPkgIndependentCapabilitiesPartitionExactSnapshotIdentity(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	engine, err := sourceAssessmentEngineForProfile(ProfileSourceInternalDTDDictionaries)
+	engine, err := sourceAssessmentEngineForProfile(ProfileSourceInternalDTDDictionaries.ID())
 	if err != nil {
 		t.Fatal(err)
 	}
 	var ids []validation.ResourceAssessmentID
 	pin := validation.ResourcePin{CanonicalID: "same-source", Representation: validation.ResourceSourceXML, Digest: fmt.Sprintf("%x", sha256.Sum256([]byte(`<opus/>`)))}
 	for i, dictionary := range []*validation.DictionarySet{g.dictionaries, set} {
-		out := assessResourceSource(ctx, strings.NewReader(`<opus/>`), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: a, DocumentID: fmt.Sprintf("capability-%d", i), Profile: ProfileSourceInternalDTDDictionaries, Engine: engine, Dictionaries: dictionary}, ByteOwner: sourceBytesPrimary})
+		out := assessResourceSource(ctx, strings.NewReader(`<opus/>`), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: a, DocumentID: fmt.Sprintf("capability-%d", i), Profile: ProfileSourceInternalDTDDictionaries.ID(), Engine: engine, Dictionaries: dictionary}, ByteOwner: sourceBytesPrimary})
 		if out.Err != nil || out.Snapshot == nil {
 			t.Fatal(out.Err)
 		}
 		// An editable returned report cannot replace the core snapshot identity.
 		out.Report.Profile.CatalogDigest = "forged"
-		out.Report.Profile.ID = ProfileSourceDictionaries
+		out.Report.Profile.ID = ProfileSourceDictionaries.ID()
 		id, err := validationPackageSessionAddResource(g.session, ctx, pin, out.Snapshot, true)
 		if err != nil {
 			t.Fatal(err)
@@ -593,22 +593,22 @@ func TestDTDPkgIndependentExactIntrinsicRowsAcceptOnlyTheirTargets(t *testing.T)
 	for _, pkg := range []struct {
 		id, entry validation.ProfileID
 		models    bool
-	}{{independentDTDGraphProfile, ProfileResourceGraphDictionaries, true}, {independentDTDRawMXLProfile, ProfileMXLSourceDictionaries, false}, {independentDTDCurrentMXLProfile, ProfileMXLModelDictionaries, true}} {
+	}{{independentDTDGraphProfile, ProfileResourceGraphDictionaries.ID(), true}, {independentDTDRawMXLProfile, ProfileMXLSourceDictionaries.ID(), false}, {independentDTDCurrentMXLProfile, ProfileMXLModelDictionaries.ID(), true}} {
 		for _, row := range []struct {
 			assembly validation.Assembly
 			profile  validation.ProfileID
 			xml      string
 			model    bool
 		}{
-			{validation.AssemblyMusicXML, ProfileSourceInternalDTDDictionaries, `<score-partwise version="4.0"><part-list/></score-partwise>`, false},
-			{validation.AssemblyOpus, ProfileSourceInternalDTDDictionaries, `<opus/>`, false},
+			{validation.AssemblyMusicXML, ProfileSourceInternalDTDDictionaries.ID(), `<score-partwise version="4.0"><part-list/></score-partwise>`, false},
+			{validation.AssemblyOpus, ProfileSourceInternalDTDDictionaries.ID(), `<opus/>`, false},
 			{validation.AssemblyContainer, independentDTDContainerProfile, `<container><rootfiles><rootfile full-path="main.xml"/></rootfiles></container>`, false},
 			{validation.AssemblySounds, independentDTDSoundsProfile, `<sounds><sound id="custom"/></sounds>`, false},
-			{validation.AssemblyMusicXML, ProfileModelDictionaries, `<score-partwise version="4.0"><part-list/></score-partwise>`, true},
-			{validation.AssemblyOpus, ProfileModelDictionaries, `<opus/>`, true},
+			{validation.AssemblyMusicXML, ProfileModelDictionaries.ID(), `<score-partwise version="4.0"><part-list/></score-partwise>`, true},
+			{validation.AssemblyOpus, ProfileModelDictionaries.ID(), `<opus/>`, true},
 		} {
 			t.Run(fmt.Sprintf("%s/%s/model=%v", pkg.id, row.assembly, row.model), func(t *testing.T) {
-				g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: pkg.id}}, DictionaryOptions{}, pkg.entry)
+				g, err := startDictionaryResourceGraph(ctx, LinkedAssessmentOptions{Graph: GraphOptions{Profile: GraphProfile(pkg.id)}}.internal(), DictionaryOptions{}, pkg.entry)
 				if err != nil {
 					t.Fatal(err)
 				}

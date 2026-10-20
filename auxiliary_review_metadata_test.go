@@ -42,16 +42,16 @@ func TestReviewCatalogSourceLocators(t *testing.T) {
 		profile validation.ProfileID
 		source  string
 	}{
-		{ProfileSourceContainer, `<container><rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`},
-		{ProfileSourceSounds, `<sounds><sound id="piano"/></sounds>`},
-		{ProfileSourceLinks, `<opus version="4.0"/>`},
+		{ProfileSourceContainer.ID(), `<container><rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`},
+		{ProfileSourceSounds.ID(), `<sounds><sound id="piano"/></sounds>`},
+		{ProfileSourceLinks.ID(), `<opus version="4.0"/>`},
 	} {
 		t.Run(string(tc.profile), func(t *testing.T) {
-			report, err := InspectXML(context.Background(), strings.NewReader(tc.source), AssessmentOptions{Profile: tc.profile})
+			report, err := InspectXML(context.Background(), strings.NewReader(tc.source), SourceOptions{Profile: SourceProfile(tc.profile)})
 			if err != nil {
 				t.Fatal(err)
 			}
-			if tc.profile == ProfileSourceLinks {
+			if tc.profile == ProfileSourceLinks.ID() {
 				definitions, err := buildLinkAssessmentDefinitions()
 				if err != nil {
 					t.Fatal(err)
@@ -86,7 +86,7 @@ func TestReviewCatalogSourceLocators(t *testing.T) {
 			// These identities include the corrected locator strings. Earlier released
 			// profiles are separately checked by the eight-profile frozen controls.
 			want := "85518be7283021faf6b5080788c5efa0eebee1429d310f94d82fbdc5cbb232b2"
-			if tc.profile == ProfileSourceLinks {
+			if tc.profile == ProfileSourceLinks.ID() {
 				want = migrateStructuralRolesCatalog(migrateValidationLinesCatalog(migrateDecimalContractCatalog("5fb200a688a054add8a551d288486d2724ff7d1530b42a3e0fbed40f3df46cb3")))
 			}
 			if report.Profile.CatalogDigest != want {

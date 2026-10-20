@@ -70,7 +70,7 @@ func TestPR35TimelineBudgetEvidence(t *testing.T) {
 	for _, profile := range []validation.ProfileID{ProfileModelLocal, ProfileModelTimeline} {
 		t.Run(string(profile), func(t *testing.T) {
 			run := func(limits validation.Budgets) (validation.Report, error) {
-				return AssessModel(context.Background(), document, AssessmentOptions{Profile: profile, Budgets: limits})
+				return AssessModel(context.Background(), document, ModelOptions{Profile: profile, Budgets: limits})
 			}
 			r, err := run(validation.Budgets{})
 			if err != nil || !r.Satisfied() {

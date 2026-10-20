@@ -37,7 +37,7 @@ func TestSourceRepresentabilityRule(t *testing.T) {
 		{"integer beyond uint64", representabilityScore("<staves>18446744073709551616</staves>", representabilityNote("1", "")), []string{"/score-partwise/part/measure/attributes/staves"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			report, err := InspectXML(context.Background(), strings.NewReader(tc.score), AssessmentOptions{Profile: ProfileSourceLine})
+			report, err := InspectXML(context.Background(), strings.NewReader(tc.score), SourceOptions{Profile: ProfileSourceLine})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -88,7 +88,7 @@ func TestModelDecimalsAgreeWithTheSource(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			score := mandatoryScore("1", tc.notes)
-			source, err := InspectXML(context.Background(), strings.NewReader(score), AssessmentOptions{Profile: ProfileSourceSemantics})
+			source, err := InspectXML(context.Background(), strings.NewReader(score), SourceOptions{Profile: ProfileSourceSemantics})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -96,7 +96,7 @@ func TestModelDecimalsAgreeWithTheSource(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			model, err := AssessModel(context.Background(), document, AssessmentOptions{})
+			model, err := AssessModel(context.Background(), document, ModelOptions{})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -128,11 +128,11 @@ func TestRepresentabilityRejectionSurvivesDiagnosticTruncation(t *testing.T) {
 		"no diagnostic bytes":   {MaxDiagnosticBytes: 1},
 	} {
 		t.Run(name, func(t *testing.T) {
-			result, err := DecodeAssessed(context.Background(), strings.NewReader(two), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Budgets: budgets}})
+			result, err := DecodeAssessed(context.Background(), strings.NewReader(two), DecodeAssessmentOptions{Assessment: &SourceOptions{Budgets: budgets}})
 			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || result.SourceLine.ModelFailures != 2 || result.Document != nil {
 				t.Fatalf("truncated rejection: model failures=%d error=%v", result.SourceLine.ModelFailures, err)
 			}
-			mxl, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(rawMXL(t, two)), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: budgets}}})
+			mxl, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(rawMXL(t, two)), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: MXLGraphOptions{Budgets: budgets}}})
 			if !errors.Is(err, ErrInvalidDocument) || errors.Is(err, ErrIncompleteAssessment) || !mxl.SourceLine.Failures().Violated || mxl.SourceLine.Failures().Failed != 2 {
 				t.Fatalf("truncated MXL rejection: failures=%+v error=%v", mxl.SourceLine.Failures(), err)
 			}
@@ -154,7 +154,7 @@ func TestEncodedModelValuesAreRepresentable(t *testing.T) {
 		if err := Encode(&encoded, document); err != nil {
 			t.Fatal(err)
 		}
-		report, err := InspectXML(context.Background(), bytes.NewReader(encoded.Bytes()), AssessmentOptions{Profile: ProfileSourceLine})
+		report, err := InspectXML(context.Background(), bytes.NewReader(encoded.Bytes()), SourceOptions{Profile: ProfileSourceLine})
 		if err != nil || hasRepresentabilityFailure(report) {
 			t.Errorf("%g: encoded model value rejected as unrepresentable: %v", value, err)
 		}
@@ -164,7 +164,7 @@ func TestEncodedModelValuesAreRepresentable(t *testing.T) {
 // The model stage classifies a failed model-category decision as the source
 // stage does: a violation, not an incomplete assessment.
 func TestModelAcceptanceTreatsModelFailuresAsViolations(t *testing.T) {
-	report := validation.Report{Requested: true, Profile: validation.Profile{ID: ProfileModelSemantics, Target: validation.TargetModel}, Target: validation.TargetModel,
+	report := validation.Report{Requested: true, Profile: validation.Profile{ID: ProfileModelSemantics.ID(), Target: validation.TargetModel}, Target: validation.TargetModel,
 		Syntax: validation.SyntaxNotAssessed, Conformance: validation.ConformanceConformant, AssessmentComplete: true, InputComplete: true,
 		BlockingProblems: 1, ModelFailures: 1,
 		Findings: []validation.Finding{{Decision: validation.Decision{Rule: validation.RuleKey{ID: "MX40-MODEL-REPRESENTATION-musicxml", Revision: 1}, Outcome: validation.OutcomeFail, Reason: "model-nonfinite"}, Category: validation.CategoryModel}}}

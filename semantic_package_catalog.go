@@ -10,15 +10,21 @@ import (
 
 // ProfileResourceGraphSemantics composes bounded encoded semantic assessments
 // for source and current-model resources, retaining their distinct authorities.
-const ProfileResourceGraphSemantics validation.ProfileID = "musicxml-4.0/resource-graph-semantics"
+const ProfileResourceGraphSemantics GraphProfile = "musicxml-4.0/resource-graph-semantics"
+
+const profileResourceGraphSemantics = validation.ProfileID(ProfileResourceGraphSemantics)
 
 // ProfileMXLSourceSemantics adds the encoded semantic interpretation to original
 // MXL assessment without granting transport or external-declaration authority.
-const ProfileMXLSourceSemantics validation.ProfileID = "musicxml-4.0/mxl-source-semantics"
+const ProfileMXLSourceSemantics MXLProfile = "musicxml-4.0/mxl-source-semantics"
+
+const profileMXLSourceSemantics = validation.ProfileID(ProfileMXLSourceSemantics)
 
 // ProfileMXLModelSemantics assesses a current package and retained source children
 // without reconstructing original ZIP, container or discarded source history.
-const ProfileMXLModelSemantics validation.ProfileID = "musicxml-4.0/mxl-model-semantics"
+const ProfileMXLModelSemantics MXLProfile = "musicxml-4.0/mxl-model-semantics"
+
+const profileMXLModelSemantics = validation.ProfileID(ProfileMXLModelSemantics)
 
 // ProfileMXLSourceLine is validation line 2 of strict MXL loading: the
 // original archive bytes that the converted MXLPackage does not keep (the
@@ -29,17 +35,19 @@ const ProfileMXLModelSemantics validation.ProfileID = "musicxml-4.0/mxl-model-se
 // archive it reads; line 3, ProfileMXLModelSemantics, checks the converted
 // package, including the files it retains as bytes. Line 2 asks the caller's
 // resolver for nothing.
-const ProfileMXLSourceLine validation.ProfileID = "musicxml-4.0/mxl-source-line"
+const ProfileMXLSourceLine MXLProfile = "musicxml-4.0/mxl-source-line"
+
+const profileMXLSourceLine = validation.ProfileID(ProfileMXLSourceLine)
 
 func isSemanticPackageProfile(id validation.ProfileID) bool {
 	switch id {
-	case ProfileResourceGraphSemantics, ProfileMXLSourceSemantics, ProfileMXLModelSemantics:
+	case profileResourceGraphSemantics, profileMXLSourceSemantics, profileMXLModelSemantics:
 		return true
 	}
 	return false
 }
 func semanticResourceIntrinsicProfiles() resourceIntrinsicProfiles {
-	return resourceIntrinsicProfiles{source: ProfileSourceSemantics, model: ProfileModelSemantics, container: ProfileSourceInternalDTDContainer, sounds: ProfileSourceInternalDTDSoundsDictionaries}
+	return resourceIntrinsicProfiles{source: profileSourceSemantics, model: profileModelSemantics, container: profileSourceInternalDTDContainer, sounds: profileSourceInternalDTDSoundsDictionaries}
 }
 
 // semanticPackageIntrinsicProfiles returns the intrinsic profiles of a
@@ -47,8 +55,8 @@ func semanticResourceIntrinsicProfiles() resourceIntrinsicProfiles {
 // ProfileSourceLine.
 func semanticPackageIntrinsicProfiles(id validation.ProfileID) resourceIntrinsicProfiles {
 	bundle := semanticResourceIntrinsicProfiles()
-	if id == ProfileMXLSourceLine {
-		bundle.source = ProfileSourceLine
+	if id == profileMXLSourceLine {
+		bundle.source = profileSourceLine
 	}
 	return bundle
 }
@@ -56,8 +64,8 @@ func semanticPackageIntrinsicProfiles(id validation.ProfileID) resourceIntrinsic
 // startSourceLineResourceGraph starts validation line 2 of strict MXL
 // loading. ProfileMXLSourceLine reads no dictionaries, so the graph imports
 // none; account may be nil.
-func startSourceLineResourceGraph(ctx context.Context, resources LinkedAssessmentOptions, account *validation.Account) (*resourceGraphRun, error) {
-	cfg, err := validateLinkedAssessmentOptionsAccount(ctx, resources, ProfileMXLSourceLine, account)
+func startSourceLineResourceGraph(ctx context.Context, resources linkedAssessmentOptions, account *validation.Account) (*resourceGraphRun, error) {
+	cfg, err := validateLinkedAssessmentOptionsAccount(ctx, resources, profileMXLSourceLine, account)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +77,7 @@ func startSourceLineResourceGraph(ctx context.Context, resources LinkedAssessmen
 	if err != nil {
 		return nil, err
 	}
-	return startConfiguredResourceGraph(ctx, cfg, ProfileMXLSourceLine, catalog, semanticPackageIntrinsicProfiles(ProfileMXLSourceLine))
+	return startConfiguredResourceGraph(ctx, cfg, profileMXLSourceLine, catalog, semanticPackageIntrinsicProfiles(profileMXLSourceLine))
 }
 
 // sourceLinePackageCheck reports whether a package check reads original
@@ -115,10 +123,10 @@ func semanticPackageAssessmentDefinitions() ([]validation.PackageRuleBinding, []
 		r.Sources = append(r.Sources, validation.SourceRef{IDs: []string{"XPointer-element"}, URL: "https://www.w3.org/TR/2003/REC-xptr-element-20030325/", Locator: "Section 3: selected element-child addressing from exact intrinsic snapshot capability"})
 	}
 	for i := range profiles {
-		if profiles[i].Profile.ID == ProfileMXLSource {
+		if profiles[i].Profile.ID == profileMXLSource {
 			line := profiles[i]
 			line.Profile = compositionProfileCopy(line.Profile)
-			line.Profile.ID = ProfileMXLSourceLine
+			line.Profile.ID = profileMXLSourceLine
 			// Line 2 follows no resource links, so it reaches no Sounds
 			// document; the Sounds row would bind a dictionary profile.
 			line.Intrinsic = nil
@@ -135,19 +143,19 @@ func semanticPackageAssessmentDefinitions() ([]validation.PackageRuleBinding, []
 		p := &profiles[i]
 		bundle := semanticPackageIntrinsicProfiles(p.Profile.ID)
 		switch p.Profile.ID {
-		case ProfileResourceGraph:
-			p.Profile.ID = ProfileResourceGraphSemantics
-		case ProfileMXLSourceLine:
-		case ProfileMXLSource:
-			p.Profile.ID = ProfileMXLSourceSemantics
-		case ProfileMXLModel:
-			p.Profile.ID = ProfileMXLModelSemantics
+		case profileResourceGraph:
+			p.Profile.ID = profileResourceGraphSemantics
+		case profileMXLSourceLine:
+		case profileMXLSource:
+			p.Profile.ID = profileMXLSourceSemantics
+		case profileMXLModel:
+			p.Profile.ID = profileMXLModelSemantics
 		default:
 			return nil, nil, &validation.ConfigurationError{Field: "semantic package profile", Reason: "unexpected base profile"}
 		}
 		p.Profile.NormativeClosure = strings.Replace(p.Profile.NormativeClosure, "renderer, dictionary, automatic", "renderer, automatic", 1)
 		p.Profile.NormativeClosure += " Exact intrinsic composition selects bounded encoded MusicXML semantics, local and timeline checks, barline and graphical-repeat proofs, caller-supplied canonical and IPA evidence, and the registered XML Framework/shorthand/element fragment interpretation. Source children use actually read internal declarations, a DOCTYPE external subset read from the bundled official MusicXML DTDs or a caller DTD source and owned source origins; current models retain only current-state authority. Source Container metadata distinguishes physical and effective values. No auxiliary discovery, dictionary auto-loading, external declaration fetch, renderer or desired-score authority is introduced. Missing capabilities, incomplete identity domains, compressed-target indirection and other original package limits remain explicit. No universal conformance claim is made."
-		if p.Profile.ID == ProfileMXLSourceLine {
+		if p.Profile.ID == profileMXLSourceLine {
 			p.Profile.NormativeClosure = "Validation line 2 of strict MXL loading: the bounded original raw-MXL archive facts that a converted MXLPackage does not keep. Original local/central headers, mimetype storage, extra fields, leading bytes and content advice, UTF-8 entry names, the container path and observed compression remain source evidence, the first rootfile's media type is decided as the original container wrote it, including absent, empty and DTD-defaulted values, and original schema hints are paired. The first rootfile document, which conversion decodes, is assessed with the source line, and the original container with its bounded DTD/effective metadata. Later rootfiles and resource links are not followed and no dictionary is read: line 3 assesses the converted package, including the files it keeps as bytes. Complete ZIP/JAR/DEFLATE normative closure and other original package limits remain unresolved when reached. No universal conformance claim is made."
 			required := p.Profile.Required[:0]
 			for _, key := range p.Profile.Required {

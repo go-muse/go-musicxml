@@ -99,7 +99,7 @@ func TestZIPReviewPolicyTerminalPrecedence(t *testing.T) {
 		{"resource-and-cancellation", errors.Join(context.Canceled, resource), "resource-limit"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			g, err := startResourceGraph(context.Background(), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource}}, ProfileMXLSource)
+			g, err := startResourceGraph(context.Background(), MXLAssessmentOptions{Graph: MXLGraphOptions{Profile: ProfileMXLSource}}.internal().linked(), ProfileMXLSource.ID())
 			if err != nil {
 				t.Fatal(err)
 			}

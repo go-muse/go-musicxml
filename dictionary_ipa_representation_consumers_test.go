@@ -61,9 +61,9 @@ func dictionaryRepresentationDirect(t *testing.T, text string, model, legacy, se
 		t.Fatal(err)
 	}
 	defer func() { set.Close(); dictionaryImportNoLive(t, a) }()
-	profile := ProfileSourceDictionaries
+	profile := ProfileSourceDictionaries.ID()
 	if model {
-		profile = ProfileModelDictionaries
+		profile = ProfileModelDictionaries.ID()
 	}
 	s, err := engine.BeginWithDictionaries(ctx, validation.RunOptions{DocumentID: "representation", Profile: profile, Account: a}, set)
 	if err != nil {
