@@ -156,9 +156,10 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 // The official scores load with the default budgets: the default empty
 // context selection and the released XSD work charges bring MozartTrio and
 // MozaChloSample, which needed about 76 and 84 MiB when the complete
-// projection was the default, under 64 MiB, and the rule-step default, which
-// grows with the document, covers their 24 and 29 million steps, also when they
-// are packed as MXL.
+// projection was the default, under 64 MiB; evaluation scratch charged only
+// while its evaluation runs keeps MozartTrio under it also with the complete
+// projection; and the rule-step default, which grows with the document, covers
+// their 24 and 29 million steps, also when they are packed as MXL.
 func TestStrictLoadingOfficialScoresFitTheDefaultBudgets(t *testing.T) {
 	if raceEnabled {
 		t.Skip("slow under the race detector")
@@ -168,9 +169,15 @@ func TestStrictLoadingOfficialScoresFitTheDefaultBudgets(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{})
-		if err != nil || !result.Accepted {
-			t.Errorf("%s: accepted=%v error=%v", name, result.Accepted, err)
+		selections := []validation.ContextFamilies{0}
+		if name == "MozartTrio.musicxml" {
+			selections = append(selections, validation.ContextFamilyAll)
+		}
+		for _, families := range selections {
+			result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &SourceOptions{Context: families}})
+			if err != nil || !result.Accepted {
+				t.Errorf("%s context=%b: accepted=%v error=%v", name, families, result.Accepted, err)
+			}
 		}
 		packed, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(ruleStepMXL(t, data)), DecodeMXLAssessmentOptions{})
 		if err != nil || !packed.Accepted {

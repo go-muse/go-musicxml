@@ -143,6 +143,7 @@ type Session struct {
 	// contextSharedTableBytes sums the charges of the shared attribute tables.
 	contextSharedTableBytes int64
 	contextResults          []ContextResult
+	transient               int64
 	internRetained          int64
 	contextFamilies         ContextFamilies
 	resourceSnapshot        bool
@@ -330,6 +331,48 @@ func (s *Session) retain(amount int64) error {
 	}
 	s.retained += amount
 	return nil
+}
+
+// retainTransient admits storage that lives only while the current rule
+// evaluation runs: a provider's scratch that no fact, service or projection
+// keeps. evaluate releases it when it returns;
+// a charge outside any evaluation stays until cleanup.
+func (s *Session) retainTransient(amount int64) error {
+	if err := s.account.Charge(BudgetBufferedBytes, amount); err != nil {
+		return err
+	}
+	s.transient += amount
+	return nil
+}
+
+// transientScope runs one evaluation and releases the transient storage it
+// admitted, leaving what an enclosing evaluation admitted before it.
+func (s *Session) transientScope(run func() error) error {
+	mark := s.transient
+	err := run()
+	s.releaseTransient(mark)
+	return err
+}
+
+// releaseTransient releases what was admitted by retainTransient since mark.
+func (s *Session) releaseTransient(mark int64) {
+	if delta := s.transient - mark; delta > 0 {
+		_ = s.account.Release(BudgetBufferedBytes, delta)
+		s.transient = mark
+	}
+}
+
+// finishObserver, when set by a test through the hook
+// "Session.SetFinishObserver", sees the account before Finish evaluates its
+// phases ("evaluating"), when a final evaluation returns ("evaluated", after
+// its transient storage is released) and after every phase ("finished").
+// It is an unsynchronized package variable: only serial tests set it.
+var finishObserver func(stage string, account *Account)
+
+func setFinishObserver(observer func(stage string, account *Account)) func(string, *Account) {
+	previous := finishObserver
+	finishObserver = observer
+	return previous
 }
 
 // OpenNode starts one balanced occurrence and copies retained headers and
@@ -642,6 +685,9 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	if s.terminalCause == nil && s.schema != nil && s.schema.bound {
 		addCause(s.finalizeSourceSchema(ctx))
 	}
+	if finishObserver != nil {
+		finishObserver("evaluating", s.account)
+	}
 	if s.terminalCause == nil {
 		for _, phase := range s.catalog.phases[s.profile.ID] {
 			s.collectingIdentity = phase.registration
@@ -664,6 +710,9 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 				}
 			}
 		}
+	}
+	if finishObserver != nil {
+		finishObserver("finished", s.account)
 	}
 	addCause(s.flushSourceDTDSummaries())
 	if !s.inputComplete || !reportSyntaxComplete(s.profile.Target, end.Syntax) || s.terminalCause != nil || s.enumerationIncomplete {
@@ -784,6 +833,7 @@ func (s *Session) cleanup() {
 		_ = s.account.Release(BudgetBufferedBytes, s.retained)
 		s.retained = 0
 	}
+	s.releaseTransient(0)
 	s.internRetained = 0 // released with s.retained above
 	s.strings = nil
 	s.nodes = nil

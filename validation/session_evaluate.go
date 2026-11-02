@@ -5,7 +5,17 @@ import (
 	"strconv"
 )
 
+// evaluate runs one rule on one node. Storage the evaluation admitted with
+// retainTransient is released when it returns.
 func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final bool) error {
+	err := s.transientScope(func() error { return s.evaluateRule(ctx, n, key, final) })
+	if finishObserver != nil && final {
+		finishObserver("evaluated", s.account)
+	}
+	return err
+}
+
+func (s *Session) evaluateRule(ctx context.Context, n *factNode, key RuleKey, final bool) error {
 	id := decisionID{rule: key, node: n.header.ID}
 	if _, done := s.lookupDecision(id); done {
 		return nil

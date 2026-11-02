@@ -166,7 +166,7 @@ func navigationInteger(ctx context.Context, s *Session, n uint64) (Integer, erro
 	if err := s.step(ctx, 1); err != nil {
 		return Integer{}, err
 	}
-	if err := s.retain(128); err != nil {
+	if err := s.retainTransient(128); err != nil {
 		return Integer{}, err
 	}
 	if err := s.account.Charge(BudgetBufferedBytes, 128); err != nil {
@@ -288,7 +288,7 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 		if e != nil {
 			return out, e
 		}
-		if e = s.retain(1024 + frameBytes); e != nil {
+		if e = s.retainTransient(1024 + frameBytes); e != nil {
 			return out, e
 		}
 		if e = s.account.Charge(BudgetContextFacts, 1); e != nil {
@@ -330,10 +330,10 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 		if err != nil {
 			return out, err
 		}
-		if _, err = stateReserve(ctx, s, play); err != nil {
+		if _, err = stateReserveTransient(ctx, s, play); err != nil {
 			return out, err
 		}
-		if _, err = stateReserve(ctx, s, localPlay); err != nil {
+		if _, err = stateReserveTransient(ctx, s, localPlay); err != nil {
 			return out, err
 		}
 		occurrence.Play = make([]NavigationPlayInstruction, 0, len(play)+len(localPlay))
@@ -343,7 +343,7 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 		if err != nil {
 			return out, err
 		}
-		if _, err = stateReserve(ctx, s, instruments); err != nil {
+		if _, err = stateReserveTransient(ctx, s, instruments); err != nil {
 			return out, err
 		}
 		occurrence.Instruments = stateClone(instruments)
@@ -351,7 +351,7 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 		if err != nil {
 			return out, err
 		}
-		if _, err = stateReserve(ctx, s, listening); err != nil {
+		if _, err = stateReserveTransient(ctx, s, listening); err != nil {
 			return out, err
 		}
 		occurrence.Listening = stateClone(listening)
@@ -467,6 +467,7 @@ func cloneNavigationContext(ctx context.Context, s *Session, in *NavigationConte
 	}
 	value := *in
 	navigationNormalizeEvidence(&value)
+	// The projection keeps this copy, so it stays charged.
 	if _, err := stateReserve(ctx, s, value); err != nil {
 		return nil, err
 	}
