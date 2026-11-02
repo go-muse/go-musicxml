@@ -62,9 +62,10 @@ func TestReviewDefaultBudgetOfficialSourceComposition(t *testing.T) {
 			if profile == ProfileSourceSemantics.ID() && err != nil {
 				// Historically this input reached the fixed 20M work limit; the
 				// default rule-step limit now grows with the document, so with the
-				// complete projection only the default buffer refuses, at the end
-				// of the complete input. The refusal is not a completed or
-				// satisfied assessment.
+				// complete projection only the default buffer can refuse, at the
+				// end of the complete input; at its edge, whether it does depends
+				// on the platform. The refusal is not a completed or satisfied
+				// assessment.
 				var limit *validation.ResourceError
 				if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
 					t.Fatalf("unexpected default-budget failure: %v", err)
@@ -89,8 +90,8 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 	}
 	_, err = InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceSemantics})
 	if err != nil {
-		// With the complete projection the default buffer refuses; the default
-		// rule-step limit grows with the document.
+		// With the complete projection only the default buffer can refuse; the
+		// default rule-step limit grows with the document.
 		var limit *validation.ResourceError
 		if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes {
 			t.Fatalf("unexpected original-byte limit: %v", err)

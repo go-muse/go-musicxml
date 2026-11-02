@@ -194,8 +194,9 @@ its deliberately open string domain without an additional numeric grammar gate. 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
 and `MozaChloSample.musicxml` (278 notes) complete both context profiles under
 the default budgets when no context family is selected (the default); with
-`validation.ContextFamilyAll` the MozaChlo source exceeds the default 64 MiB
-buffer, and `MaxBufferedBytes: 512 << 20` completes every case
+`validation.ContextFamilyAll` the MozaChlo source is at the edge of the default
+64 MiB buffer and, depending on the platform, may exceed it, and
+`MaxBufferedBytes: 512 << 20` completes every case
 (`TestContextProfilesOfficialSamplesFitTheDefaultBudgets`). Before the default
 rule-step limit grew with the document, both stopped at the fixed 20,000,000
 steps. Source measurements remove

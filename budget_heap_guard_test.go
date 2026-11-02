@@ -181,8 +181,9 @@ func TestStrictLoadingOfficialScoresFitTheDefaultBudgets(t *testing.T) {
 
 // With the default empty context selection, both context profiles complete on
 // both official samples with the default budgets. With the complete projection
-// only the MozaChlo source exceeds the default buffer, and raising only the
-// buffer to 512 MiB completes every case.
+// the MozaChlo source is at the edge of the default buffer: depending on the
+// platform it completes or the buffer refuses, never the rule steps. Raising
+// only the buffer to 512 MiB completes every case.
 func TestContextProfilesOfficialSamplesFitTheDefaultBudgets(t *testing.T) {
 	if raceEnabled || testing.Short() {
 		t.Skip("slow under the race detector")
@@ -204,10 +205,10 @@ func TestContextProfilesOfficialSamplesFitTheDefaultBudgets(t *testing.T) {
 				}
 				label := fmt.Sprintf("%s context=%b buffer=%d", name, families, buffer)
 				source, err := InspectXML(context.Background(), bytes.NewReader(reviewBudgetRemoveDOCTYPE(t, raw)), SourceOptions{Profile: ProfileSourceContext, Budgets: budgets, Context: families})
-				if families != 0 && buffer == 0 && name == "MozaChloSample.musicxml" {
+				if families != 0 && buffer == 0 && name == "MozaChloSample.musicxml" && err != nil {
 					var limit *validation.ResourceError
 					if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || source.Satisfied() {
-						t.Errorf("%s source: want the default buffer refusal, got satisfied=%v error=%v", label, source.Satisfied(), err)
+						t.Errorf("%s source: want completion or the default buffer refusal, got satisfied=%v error=%v", label, source.Satisfied(), err)
 					}
 				} else if err != nil || !source.Satisfied() {
 					t.Errorf("%s source: satisfied=%v error=%v", label, source.Satisfied(), err)

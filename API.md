@@ -1204,8 +1204,9 @@ and context profiles with documented larger finite budgets; it does not close
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
 and `MozaChloSample.musicxml` (278 notes) complete both context profiles under
 the default budgets when no context family is selected (the default); with
-`validation.ContextFamilyAll` the MozaChlo source exceeds the default 64 MiB
-buffer, and `MaxBufferedBytes: 512 << 20` completes every case
+`validation.ContextFamilyAll` the MozaChlo source is at the edge of the default
+64 MiB buffer and, depending on the platform, may exceed it, and
+`MaxBufferedBytes: 512 << 20` completes every case
 (`TestContextProfilesOfficialSamplesFitTheDefaultBudgets`). Before the default
 rule-step limit grew with the document, both stopped at the fixed 20,000,000
 steps. Source measurements remove
@@ -1576,7 +1577,8 @@ Composition costs differ from that XSD-only table. In the historical
 linux/amd64 receipt below, the original 223,068-byte UTF-16BE
 `MozaChloSample.musicxml` with `ProfileSourceSemantics` exhausts the default
 64 MiB buffer; with real-layout projection accounting and the default rule-step
-limit that grows with the document, the default buffer refuses. Its external subset is now read from the bundled official DTD, so
+limit that grows with the document, it is at the edge of the default buffer,
+which may refuse depending on the platform. Its external subset is now read from the bundled official DTD, so
 the assessment does its full work: with `MaxBufferedBytes: 256 << 20` and
 `MaxRuleSteps: 100_000_000` this particular fixture completes and is satisfied.
 This is a measured finite allowance for that exact input and profile, not a new
@@ -1584,7 +1586,7 @@ default or a minimum/general capacity guarantee.
 Removing the encoded DOCTYPE produces a different 222,824-byte control.
 `ProfileSourceInternalDTDDictionaries` assesses that control within defaults
 (observed live-account peak 44,036,266 bytes). `ProfileSourceSemantics` with the complete
-projection instead exceeds the default buffer; under the earlier fixed
+projection is instead at the edge of the default buffer; under the earlier fixed
 20,000,000-step default it reached that limit first, with an observed buffer
 peak of 67,011,966 bytes. These peaks are sampled logical account
 usage, not exact minimum budgets or heap measurements. The
