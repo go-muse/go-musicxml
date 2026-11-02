@@ -11,8 +11,7 @@ import (
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
-// Compile-time guards also validate cross-compiled targets that this host
-// cannot execute. A slot-envelope regression is a compilation failure.
+// Compile-time guards: a slot-envelope regression is a compilation failure.
 const _ = uint64(schemaBindFrameBytes) - uint64(unsafe.Sizeof(schemaBindFrame{}))
 const _ = uint64(schemaBindCompletionBytes) - uint64(unsafe.Sizeof(xsd.Completion{}))
 
@@ -127,7 +126,7 @@ func TestSchemaBindingScratchRejectsOversizeBeforeAllocation(t *testing.T) {
 	a, _ := NewBudgetAccount(Budgets{MaxBufferedBytes: math.MaxInt64})
 	w := schemaBindScratch{account: a}
 	defer w.release()
-	for _, pair := range [][2]int64{{math.MaxInt64, 2}, {int64(^uint(0)>>1)/schemaBindFrameBytes + 1, schemaBindFrameBytes}} {
+	for _, pair := range [][2]int64{{math.MaxInt64, 2}, {int64(math.MaxInt)/schemaBindFrameBytes + 1, schemaBindFrameBytes}} {
 		if err := w.reserve(pair[0], pair[1]); !errors.Is(err, ErrResourceLimit) {
 			t.Fatalf("unsafe allocation admitted: %v", err)
 		}

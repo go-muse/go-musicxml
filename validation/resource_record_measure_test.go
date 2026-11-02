@@ -8,9 +8,8 @@ import (
 	"unsafe"
 )
 
-// Compile-time envelopes are checked even by cross-architecture compile-only
-// tests. The new sizing path uses the actual layout, while these assertions
-// also keep the existing closed payload reserves honest on native and 386.
+// Compile-time envelopes: the new sizing path uses the actual layout, while
+// these assertions keep the existing closed payload reserves honest.
 var (
 	_ [sourceOriginRecordBytes - int64(unsafe.Sizeof(SourceOriginContextResult{}))]struct{}
 	_ [sourceOriginStepBytes - int64(unsafe.Sizeof(SourceOriginStep{}))]struct{}

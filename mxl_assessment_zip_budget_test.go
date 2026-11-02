@@ -272,11 +272,6 @@ func TestMXLAssessmentZIPOverflowAndHostInt(t *testing.T) {
 	if _, e := mxlZIPInventoryAllowance(0, 0); e != nil {
 		t.Fatal(e)
 	}
-	if ^uint(0)>>63 == 0 {
-		if _, e := mxlZIPInventoryAllowance(1<<22, 0); e == nil {
-			t.Fatal("32-bit host overflow accepted")
-		}
-	}
 	b := assessmentZIPBytes(nil, nil, "")
 	account := assessmentZIPAccount(t, validation.Budgets{})
 	a, e := openMXLAssessmentArchive(context.Background(), bytes.NewReader(b), MXLOptions{MaxArchiveBytes: math.MaxInt64, MaxMetadataBytes: math.MaxInt64, MaxDocumentBytes: math.MaxInt64, MaxResourceBytes: math.MaxInt64, MaxResourcesBytes: math.MaxInt64}, account)

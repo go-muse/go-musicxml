@@ -215,10 +215,8 @@ Permanent regression coverage includes:
 
 The workflow requires the raw-source oracle root
 `TestSourceAssessmentAgainstSchema` alongside the existing 26 external roots,
-with `MUSICXML_REQUIRE_XMLLINT=1`. The Linux test job executes `go test -count=1
-./...` under `GOARCH=386`; cross-compilation alone is not runtime evidence.
-`check-all` runs module, generation, formatting, tests, vet, race and counted fuzz
-stages. Execution evidence and exact CI head are recorded in the PR, not implied
+with `MUSICXML_REQUIRE_XMLLINT=1`. `check-all` runs module, generation,
+formatting, tests, vet, race and counted fuzz stages. Execution evidence and exact CI head are recorded in the PR, not implied
 by this test inventory.
 
 ## Complete remaining ownership

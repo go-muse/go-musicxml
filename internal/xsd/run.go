@@ -826,7 +826,7 @@ func (c *Context) size(count, width int64) int64 {
 		panic(runAbort{errors.New("xsd: allocation size overflow")})
 	}
 	n := count * width
-	if uint64(n) > uint64(^uint(0)>>1) {
+	if uint64(n) > uint64(math.MaxInt) {
 		panic(runAbort{errors.New("xsd: allocation exceeds host size")})
 	}
 	return n

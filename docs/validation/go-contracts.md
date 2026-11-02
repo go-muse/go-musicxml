@@ -901,7 +901,7 @@ only when correctly mapped through transcoding; otherwise omit or label the
 coordinate space. Trim/escape untrusted values and cap both count and byte size.
 
 All budget limits and charge quantities are int64, including byte and count limits;
-host-size conversion is checked and cannot weaken limits on 32-bit targets.
+conversion to `int` is checked and cannot weaken limits.
 Budget zero fields select documented finite defaults; negative or impossible
 values fail before reading. Existing XML depth defaults/maxima and five separate
 MXL byte limits remain intact. Strict decode enforces both Decode.MaxXMLDepth

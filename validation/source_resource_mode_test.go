@@ -351,7 +351,7 @@ func TestSourceLexicalModeIsSelectedAndSessionLocal(t *testing.T) {
 func TestSourceOriginIndexAccountingEnvelopeAndOwnedPointers(t *testing.T) {
 	// Reserve two map-entry generations, with a full control word per slot,
 	// including the indexed pointer. The initial 512-byte charge covers map and
-	// table headers. This bound is host-layout based and is also run on GOARCH=386.
+	// table headers. This bound is host-layout based.
 	indexed := unsafe.Sizeof(sourceOriginSubject{}) + unsafe.Sizeof((*SourceOriginContextResult)(nil)) + unsafe.Sizeof(uint64(0))
 	if int64(2*indexed) > sourceOriginIndexEntryBytes {
 		t.Fatalf("source-origin index envelope %d exceeds 128-byte charge", 2*indexed)

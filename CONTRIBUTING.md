@@ -119,8 +119,7 @@ source-reader, internal-DTD frame reader, direct-model, bounded context-profile,
 auxiliary-source and two validation-core fuzz targets each run 10,000 counted
 executions by default (`VALIDATION_FUZZ_TIME` overrides this count). The MXL
 round-trip and raw ZIP assessment-observer targets each run 10,000 executions
-(`MXL_FUZZ_TIME`). The Linux test job also executes
-`GOARCH=386 go test -count=1 ./...` to exercise host-width contracts.
+(`MXL_FUZZ_TIME`).
 The full race stage uses an explicit finite 15-minute per-package timeout.
 Local and release checks retain `go test -race -count=1 -timeout=15m ./...`.
 CI runs two exhaustive, disjoint race shards on standard Linux runners: the

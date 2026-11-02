@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"testing"
 )
@@ -144,7 +145,7 @@ func layoutRound5IndependentPublishConflict(l *layoutScopes, n *factNode) error 
 
 func TestLayoutRound5IndependentExplicitAdmissionAndCancellation(t *testing.T) {
 	baseline, node := layoutRound5IndependentPublisher(t, Budgets{})
-	counter := &rationalCancelContext{Context: context.Background(), at: int(^uint(0) >> 1)}
+	counter := &rationalCancelContext{Context: context.Background(), at: math.MaxInt}
 	baseline.r.ctx = counter
 	if err := layoutRound5IndependentPublishConflict(baseline, node); err != nil {
 		t.Fatal(err)

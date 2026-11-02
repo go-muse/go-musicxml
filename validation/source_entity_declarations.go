@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"math"
 	"strings"
 	"unicode/utf8"
 
@@ -137,7 +138,7 @@ func (s *Session) sourceEntityDeclarations(ctx context.Context, facts SourceEnti
 			}
 		}
 		nameBytes := int64(len(row.Name))
-		hostMax := int64(^uint(0) >> 1)
+		hostMax := int64(math.MaxInt)
 		if nameBytes > hostMax-originBytes {
 			return contract("source entity declarations", "snapshot entry exceeds host allocation size")
 		}
@@ -165,7 +166,7 @@ func (s *Session) sourceEntityDeclarations(ctx context.Context, facts SourceEnti
 // sourceEntityMapBytes proves both conservative map allowance arithmetic and
 // host allocation width before make, even when callers raise default budgets.
 func sourceEntityMapBytes(count int, extra int64) (int64, error) {
-	hostMax := int64(^uint(0) >> 1)
+	hostMax := int64(math.MaxInt)
 	if count < 0 || extra < 0 || extra > hostMax-512 || int64(count) > (hostMax-512-extra)/512 {
 		return 0, contract("source entity declarations", "snapshot size exceeds host allocation size")
 	}

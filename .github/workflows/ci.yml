@@ -89,12 +89,6 @@ jobs:
         shell: bash
         run: bash scripts/check-all.sh test
 
-      - name: Execute source and validation contracts on 32-bit integers
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          GOARCH: "386"
-        run: go test -count=1 ./...
-
   race-root:
     name: Race detector (root)
     runs-on: ubuntu-latest

@@ -3,6 +3,7 @@ package validation
 import (
 	"errors"
 	"fmt"
+	"math"
 	"runtime"
 	"testing"
 	"unsafe"
@@ -67,7 +68,7 @@ func TestSchemaAttributeScratchEnvelopeCoversMeanMeasuredMapAllocation(t *testin
 }
 
 func TestSchemaAttributeScratchSizingRejectsOverflow(t *testing.T) {
-	for _, count := range []int64{1<<63 - 1, int64(^uint(0)>>1)/schemaAttributeIndexSlotBytes + 1} {
+	for _, count := range []int64{1<<63 - 1, int64(math.MaxInt)/schemaAttributeIndexSlotBytes + 1} {
 		if _, err := schemaAttributeIndexBytes(count); !errors.Is(err, ErrResourceLimit) {
 			t.Fatalf("unallocatable attribute index of %d entries: %v", count, err)
 		}
