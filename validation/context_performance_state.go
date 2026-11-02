@@ -27,7 +27,7 @@ type TimingSpatial struct {
 type TimingMeterPair struct{ Beats, BeatType Evidence[string] }
 
 func performanceStateSources(ctx context.Context, s *Session, raw []stateProvenance) ([]TimingStateSource, error) {
-	if err := stateRetainCount(s, len(raw), 256); err != nil {
+	if err := stateRetainTransientCount(s, len(raw), 256); err != nil {
 		return nil, err
 	}
 	out := make([]TimingStateSource, len(raw))
@@ -50,7 +50,7 @@ func performanceStateOrigin[T any](ctx context.Context, s *Session, out *TimingC
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
-	if err := s.retain(512); err != nil {
+	if err := s.retainTransient(512); err != nil {
 		return err
 	}
 	sources, err := performanceStateSources(ctx, s, v.Provenance)
@@ -82,7 +82,7 @@ func performanceSoundSpatial(ctx context.Context, s *Session, service *timelineS
 		if err != nil {
 			return err
 		}
-		if err = s.retain(1536); err != nil {
+		if err = s.retainTransient(1536); err != nil {
 			return err
 		}
 		out.Spatial = append(out.Spatial, TimingSpatial{Instrument: m.Instrument, Pan: result.Pan.Value, Elevation: result.Elevation.Value, PanSource: pan, ElevationSource: elevation})

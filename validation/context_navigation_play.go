@@ -22,7 +22,7 @@ func navigationApplyPlay(ctx context.Context, s *Session, current []NavigationPl
 		}
 		item := NavigationPlayInstruction{Instruction: p, Active: active}
 		item.Instruction.Value = navigationConditionalValue(item.Instruction.Value, active)
-		if _, err := stateReserve(ctx, s, item); err != nil {
+		if _, err := stateReserveTransient(ctx, s, item); err != nil {
 			return nil, nil, err
 		}
 		if p.Scope == TimingPlayCurrentNote {

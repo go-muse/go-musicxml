@@ -33,7 +33,7 @@ func newLayoutFormatting(r *contextReader, key RuleKey) (*layoutFormatting, erro
 	if !r.step(1) {
 		return nil, r.err
 	}
-	if err := r.s.retain(2048); err != nil {
+	if err := r.s.retainTransient(2048); err != nil {
 		return nil, err
 	}
 	f := &layoutFormatting{r: r, key: key, formats: make(map[NodeID]*layoutFormat), previous: make(map[NodeID]*factNode), publishers: make(map[layoutPublisherKey][]layoutPublisher), closed: Evidence[bool]{State: EvidenceKnown, Value: true}}
@@ -83,7 +83,7 @@ func newLayoutFormatting(r *contextReader, key RuleKey) (*layoutFormatting, erro
 		if r.err != nil {
 			return nil, r.err
 		}
-		if err := r.s.retain(3072 + int64(len(p.Name.Value.Text)+len(p.Number.Value.Text))); err != nil {
+		if err := r.s.retainTransient(3072 + int64(len(p.Name.Value.Text)+len(p.Number.Value.Text))); err != nil {
 			return nil, err
 		}
 		k, known := layoutPublisherKeyFor(p.Name, p.Number)
@@ -142,7 +142,7 @@ func (f *layoutFormatting) lyricValue(lyric *factNode, component int) layoutForm
 		if !r.step(1 + atomicLogicalBytes(result.Value.Value) + atomicLogicalBytes(value.Value)) {
 			return
 		}
-		if err := r.s.retain(768 + locationLogicalBytes(p.Node.header.Location)); err != nil {
+		if err := r.s.retainTransient(768 + locationLogicalBytes(p.Node.header.Location)); err != nil {
 			r.err = err
 			return
 		}
@@ -191,7 +191,7 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 	if !hasStyle {
 		return r.err
 	}
-	if err := r.s.retain(8192); err != nil {
+	if err := r.s.retainTransient(8192); err != nil {
 		return err
 	}
 	style := new(layoutFormat)

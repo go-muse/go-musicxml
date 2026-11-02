@@ -120,7 +120,7 @@ func navigationReadNoteListening(r *contextReader, n *factNode, part Evidence[No
 			v.OtherType = stateText(r.attribute(ch, contextNavOtherListenType))
 			v.Value = stateText(r.scalar(ch))
 		}
-		if _, err := stateReserve(r.ctx, r.s, v); err != nil {
+		if _, err := stateReserveTransient(r.ctx, r.s, v); err != nil {
 			return nil, recommended, distinct, err
 		}
 		out = append(out, stateClone(v))
@@ -161,7 +161,7 @@ func navigationSameTarget(ctx context.Context, s *Session, ap, at, bp, bt Eviden
 	return result, nil
 }
 func navigationNoteListeningAt(ctx context.Context, s *Session, raw []NavigationNoteListening, pass uint64, parent Evidence[bool]) ([]NavigationNoteListening, error) {
-	if _, err := stateReserve(ctx, s, raw); err != nil {
+	if _, err := stateReserveTransient(ctx, s, raw); err != nil {
 		return nil, err
 	}
 	out := stateClone(raw)

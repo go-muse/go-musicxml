@@ -69,7 +69,7 @@ func navigationRawDirectives(r *contextReader, raw navigationContext) ([]Navigat
 			v.Enabled = Evidence[bool]{State: EvidenceAbsent}
 		}
 		v.TimeOnly, v.Defaulted = navigationDefaultGuard(v.Kind, raw.TimeOnly)
-		if _, err := stateReserve(r.ctx, r.s, v); err != nil {
+		if _, err := stateReserveTransient(r.ctx, r.s, v); err != nil {
 			return nil, err
 		}
 		out = append(out, stateClone(v))

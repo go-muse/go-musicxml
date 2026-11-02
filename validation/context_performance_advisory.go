@@ -13,7 +13,7 @@ func performanceAdvice(ctx context.Context, s *Session, out *TimingContextResult
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
-	if err := s.retain(512 + evidenceLogicalBytes(value)); err != nil {
+	if err := s.retainTransient(512 + evidenceLogicalBytes(value)); err != nil {
 		return err
 	}
 	out.Advisories = append(out.Advisories, TimingAdvisory{clause, value})
@@ -401,7 +401,7 @@ func performanceInstrumentGrouping(r *stateReader, n *factNode, part Evidence[No
 				return Evidence[bool]{State: EvidenceKnown, Value: false}
 			}
 		}
-		if e := r.s.retain(128); e != nil {
+		if e := r.s.retainTransient(128); e != nil {
 			r.err = e
 			return stateUnknown[bool]("context-interrupted")
 		}

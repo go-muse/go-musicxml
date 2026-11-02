@@ -35,6 +35,13 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- While `Finish` evaluates the document families, evaluation scratch (layout
+  formatting, navigation runs, performance records) is charged to
+  `MaxBufferedBytes` only while its rule evaluation runs, not until the
+  session ends. Within the same budget, verdicts and reports are unchanged;
+  documents near the old buffer limit may now complete. Strict loading of
+  MozartTrio needs a 20.0 MiB buffer instead of 25.4 MiB, and it now loads
+  within the default buffer also with the complete projection.
 - CI no longer runs the test suite with `GOARCH=386`, and no code, test or
   current document is specific to 32-bit platforms. Bounds on conversions to
   `int` are written with `math.MaxInt`.
