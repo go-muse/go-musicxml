@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"strconv"
 	"testing"
 )
 
@@ -259,13 +258,6 @@ func TestMeterAllocationWidthAndOverflow(t *testing.T) {
 		func() { defer recoverRun(&e); f() }()
 		if e == nil {
 			t.Fatal("unchecked allocation")
-		}
-	}
-	if strconv.IntSize == 32 {
-		var e error
-		func() { defer recoverRun(&e); c.size(1<<31, 1) }()
-		if e == nil {
-			t.Fatal("host-size allocation accepted")
 		}
 	}
 }

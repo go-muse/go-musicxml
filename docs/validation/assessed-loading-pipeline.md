@@ -362,8 +362,8 @@ both resource-limit and incomplete-assessment recognition. This is a capacity
 change from the earlier narrower source-only loading contract, not a MusicXML
 violation or a malformed-input claim. This exact refusal was asserted only on
 amd64; the [reviewer also reproduced it on darwin/arm64 and
-darwin/amd64][review-architecture]. The 386 CI run did not assert this
-boundary, and size-based accounting makes it architecture-dependent.
+darwin/amd64][review-architecture]. Size-based accounting makes it
+architecture-dependent.
 
 The smaller original `testdata/official/MozartTrio.musicxml` is 94,916 bytes.
 The [PR 46 reviewer][review-mozart] also observed a default 64 MiB refusal for
@@ -380,8 +380,7 @@ regression
 [TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD][official-capacity-test]
 keeps these amd64 default refusals, which return no document, and then accepts
 both with `MaxBufferedBytes: 256 << 20` and `MaxRuleSteps: 100_000_000`. `Chant.musicxml` is accepted with default budgets.
-`TestSourceAssessmentAgainstSchema` exercises the same controls. The 386 run
-checks the configured acceptance, not the default frontiers.
+`TestSourceAssessmentAgainstSchema` exercises the same controls.
 
 The configured allowance is fixture-specific, not a new default, a measured
 minimum or a production recommendation. Earlier standalone source-semantics

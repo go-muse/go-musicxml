@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 	"unsafe"
 )
@@ -227,7 +228,7 @@ func TestGraceNeighborsLongGroupDefaultBudgetsAndAtomicFailure(t *testing.T) {
 	// Derive the interruption grid from this implementation's successful path.
 	// Fixed poll counts silently stop testing cancellation when work is reduced.
 	baselineSession, baseline, bindings, domain := graceNeighborFixture(t, OrderSource, stateKnown("a"))
-	measured := &rationalCancelContext{Context: context.Background(), at: int(^uint(0) >> 1)}
+	measured := &rationalCancelContext{Context: context.Background(), at: math.MaxInt}
 	if err := baseline.resolveGraceNeighbors(measured, baselineSession, bindings, domain); err != nil {
 		t.Fatal(err)
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"math"
 	"unicode/utf16"
 	"unicode/utf8"
 
@@ -29,7 +30,7 @@ func (p *sourceXMLPosition) advanceCoordinates(r rune) {
 	if p.Line == 0 {
 		return
 	}
-	const maximum = int(^uint(0) >> 1)
+	const maximum = math.MaxInt
 	if r == '\n' {
 		if p.Line < maximum {
 			p.Line++

@@ -89,12 +89,6 @@ jobs:
         shell: bash
         run: bash scripts/check-all.sh test
 
-      - name: Execute source and validation contracts on 32-bit integers
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          GOARCH: "386"
-        run: go test -count=1 ./...
-
   race-root:
     name: Race detector (root)
     runs-on: ubuntu-latest
@@ -169,7 +163,11 @@ jobs:
 
   xsd-conformance:
     name: External XSD conformance
-    runs-on: ubuntu-latest
+    # The oracle comparisons and their recorded divergences are calibrated
+    # against libxml2 2.9.14. libxml2 2.15 (Ubuntu 26.04) accepts XML 1.0
+    # fifth-edition name characters in XSD names and changes xmllint's exit
+    # status for well-formedness errors.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:

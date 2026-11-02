@@ -1,6 +1,9 @@
 package validation
 
-import "sync"
+import (
+	"math"
+	"sync"
+)
 
 // Budgets limits assessment resources. All fields are int64; zero selects the
 // documented finite default, and negative values are invalid. Byte limits count
@@ -142,8 +145,8 @@ type Account struct {
 }
 
 // NewBudgetAccount validates limits and substitutes finite defaults for zeros.
-// Large cumulative limits remain int64 even on 32-bit hosts; each concrete
-// allocation is validated separately before host-int conversion.
+// Large cumulative limits remain int64; each concrete allocation is validated
+// separately before int conversion.
 func NewBudgetAccount(limits Budgets) (*Account, error) {
 	defaults := DefaultBudgets()
 	fields, fallback := budgetValues(&limits), budgetValues(&defaults)
@@ -257,7 +260,7 @@ func allocationSize(bytes int64) (int, error) {
 	if bytes < 0 {
 		return 0, &ConfigurationError{Field: "allocation", Reason: "must not be negative"}
 	}
-	max := int64(^uint(0) >> 1)
+	max := int64(math.MaxInt)
 	if bytes > max {
 		return 0, &ResourceError{Kind: BudgetBufferedBytes, Limit: max, Requested: bytes}
 	}

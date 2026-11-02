@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"math"
 	"slices"
 	"strings"
 	"unsafe"
@@ -776,7 +777,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 			}
 			if len(values) == cap(values) {
 				capacity := cap(values) + min(cap(values), len(n.children)-cap(values))
-				maxBytes := int64(^uint(0) >> 1)
+				maxBytes := int64(math.MaxInt)
 				if int64(capacity) > maxBytes/entryBytes {
 					return d, false, &ResourceError{Kind: BudgetBufferedBytes, Limit: maxBytes, Requested: maxBytes}
 				}

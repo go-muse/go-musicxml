@@ -500,7 +500,7 @@ func (s *Session) retainSchemaAtomic(v Evidence[Atomic]) (*Evidence[Atomic], err
 }
 
 // Sizes are checked after converting each individual length to the account's
-// int64 domain, including on 32-bit hosts. No native-int aggregate is formed.
+// int64 domain. No native-int aggregate is formed.
 func retainedFactSize(parts ...int64) (int64, error) {
 	var n int64
 	for _, part := range parts {
