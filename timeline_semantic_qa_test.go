@@ -417,7 +417,7 @@ func TestTimelineSemanticQALocalKeyProofSurvivesFinalizationResourceStop(t *test
 					if err != nil {
 						t.Fatal(err)
 					}
-					if err = account.Charge(validation.BudgetRuleSteps, account.Limits().MaxRuleSteps-used); err != nil {
+					if err = account.Charge(validation.BudgetRuleSteps, ruleStepLimit(t, account)-used); err != nil {
 						t.Fatal(err)
 					}
 					reports[variant], err = session.Finish(context.Background(), validation.Completion{InputComplete: true, Syntax: syntax})

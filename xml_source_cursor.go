@@ -212,6 +212,13 @@ func (c *sourceXMLCursor) byte() (byte, error) {
 		if n > 0 {
 			c.reads += int64(n)
 			_, _ = c.digest.Write(c.data[:n])
+			if c.account != nil {
+				// Document text funds the default rule-step allowance whatever
+				// owner charged its bytes.
+				if chargeErr := validationAccountChargeDocumentBytes(c.account, int64(n)); chargeErr != nil {
+					return 0, chargeErr
+				}
+			}
 			if chargedInput {
 				charged := min(int64(n), remaining)
 				if chargeErr := c.account.Charge(kind, charged); chargeErr != nil {

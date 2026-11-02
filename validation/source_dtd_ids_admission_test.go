@@ -24,7 +24,7 @@ func TestSourceDTDIDValueAdmissionBeforeComparison(t *testing.T) {
 		defer s.cleanup()
 		f := dtdIDAdmittedAttribute(t, s, key, "a", "value")
 		used, _ := s.account.Usage(BudgetRuleSteps)
-		hold := s.account.Limits().MaxRuleSteps - used - int64(len(f.Value))
+		hold := ruleStepLimit(t, s.account) - used - int64(len(f.Value))
 		if e := s.account.Charge(BudgetRuleSteps, hold); e != nil {
 			t.Fatal(e)
 		}

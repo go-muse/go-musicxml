@@ -192,12 +192,14 @@ repeat-content and gesture requirements explicitly. Figure-number text retains
 its deliberately open string domain without an additional numeric grammar gate. See the [context scope](docs/validation/context-assessment-scope.md).
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
-and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
-profile under the default budgets. Both stop at the 20,000,000-step limit.
-Raising only the work, to `MaxRuleSteps: 1 << 34`, completes both profiles on
-both samples within the default 64 MiB buffer when no context family is
-selected (the default); with `validation.ContextFamilyAll` the MozaChlo source
-still exceeds it, and `MaxBufferedBytes: 512 << 20` completes every case. Source measurements remove
+and `MozaChloSample.musicxml` (278 notes) complete both context profiles under
+the default budgets when no context family is selected (the default); with
+`validation.ContextFamilyAll` the MozaChlo source is at the edge of the default
+64 MiB buffer and, depending on the platform, may exceed it, and
+`MaxBufferedBytes: 512 << 20` completes every case
+(`TestContextProfilesOfficialSamplesFitTheDefaultBudgets`). Before the default
+rule-step limit grew with the document, both stopped at the fixed 20,000,000
+steps. Source measurements remove
 only the DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration are
 preserved. The unmodified DOCTYPE-bearing originals are now assessed with their
 bundled external DTD; see [External DTD subsets](API.md#external-dtd-subsets).
@@ -305,11 +307,11 @@ unchanged. See the [representation policy and migration](docs/validation/ipa-rep
 Internal-DTD composition requires its separate profile; general glyph/rendering
 semantics remain outside this scope.
 
-Default budgets can still stop modest inputs. In a specific repeated-note fixture
-with all four dictionary components imported, standalone source/model assessment
-completes at 368 notes and exhausts the unchanged 20,000,000-step limit at 369;
-graph and raw/current MXL complete operational enumeration at 363 and refuse
-364. When this was measured, current-model bundles also kept a schema-hint
+Under the earlier fixed 20,000,000-step default, a specific repeated-note
+fixture with all four dictionary components imported completed standalone
+source/model assessment at 368 notes and exhausted the limit at 369; graph and
+raw/current MXL completed operational enumeration at 363 and refused 364. The
+default rule-step limit now grows with the document. When this was measured, current-model bundles also kept a schema-hint
 unknown, which revision 2 of the pairing rule removed. These are fixture-specific observations, not general capacities or
 B5-PERF-01 closure. See the [measured conditions][dictionary-budget-evidence].
 
@@ -356,7 +358,9 @@ without becoming safe member paths. Primary retrieval-name advice uses a supplie
 URI rather than the canonical cache identity or reconstructed model history.
 
 Default budgets are finite. Shared input, external bytes and working storage each
-default to 64 MiB, with 20,000,000 rule steps and depth 1024; the separate MXL byte
+default to 64 MiB, with depth 1024 and a rule-step limit that grows with the
+document: 20,000,000 steps plus 10,000 per node, at most 1,000 per document byte
+(see [API.md](API.md)); the separate MXL byte
 caps do not raise them. A satisfied bundle covers its named bounded profile,
 not full ZIP/JAR/DEFLATE, media-type or compressed-rootfile interpretation closure.
 

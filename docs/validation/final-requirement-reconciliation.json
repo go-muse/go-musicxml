@@ -19177,12 +19177,12 @@
       "file": "validation/budgets_test.go",
       "function": "TestBudgetDefaultsFiniteCopiedAndEachFieldNegativeRejected",
       "input": "Every budget field normalized from zero and independently set to -1 or custom 7",
-      "expected": "Finite copied defaults, rejection of each negative field and preservation of custom limit 7.",
+      "expected": "Finite copied defaults with a zero MaxRuleSteps selecting the rule-step limit that grows with charged nodes, rejection of each negative field and preservation of custom limit 7.",
       "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
       "anchors": [
         {
           "file": "validation/budgets_test.go",
-          "text": "\taccount, err := NewBudgetAccount(Budgets{})\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tdefaults := DefaultBudgets()\n\tif got := account.Limits(); got != defaults {\n\t\tt.Fatalf(\"normalized limits = %+v want %+v\", got, defaults)\n\t}\n\twant := Budgets{MaxInputBytes: 64 << 20, MaxExternalBytes: 64 << 20, MaxBufferedBytes: 64 << 20, MaxDepth: 1024, MaxNodes: 1000000, MaxAttributes: 4000000, MaxEvents: 8000000, MaxScalarBytes: 1 << 20, MaxIDs: 1000000, MaxRuleSteps: 20000000, MaxContextFacts: 1000000, MaxLinkedDocuments: 128, MaxDiagnostics: 1000, MaxDiagnosticBytes: 1 << 20}\n\tif defaults != want {\n\t\tt.Errorf(\"default contract = %+v want %+v\", defaults, want)"
+          "text": "\taccount, err := NewBudgetAccount(Budgets{})\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tdefaults := DefaultBudgets()\n\tif got := account.Limits(); got != defaults {\n\t\tt.Fatalf(\"normalized limits = %+v want %+v\", got, defaults)\n\t}\n\twant := Budgets{MaxInputBytes: 64 << 20, MaxExternalBytes: 64 << 20, MaxBufferedBytes: 64 << 20, MaxDepth: 1024, MaxNodes: 1000000, MaxAttributes: 4000000, MaxEvents: 8000000, MaxScalarBytes: 1 << 20, MaxIDs: 1000000, MaxContextFacts: 1000000, MaxLinkedDocuments: 128, MaxDiagnostics: 1000, MaxDiagnosticBytes: 1 << 20}\n\tif defaults != want {\n\t\tt.Errorf(\"default contract = %+v want %+v\", defaults, want)"
         },
         {
           "file": "validation/budgets_test.go",

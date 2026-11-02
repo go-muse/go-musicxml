@@ -309,6 +309,11 @@ func TestStrictLoadingFitsDefaultBudgets(t *testing.T) {
 		if err != nil || !result.Accepted || result.SourceLine.Profile.ID != ProfileSourceLine.ID() || result.ModelLine.Profile.ID != ProfileModelSemantics.ID() {
 			t.Errorf("%s: accepted=%v error=%v", name, result.Accepted, err)
 		}
+		// They also fit the fixed base of the default rule-step limit.
+		result, err = DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &SourceOptions{Budgets: validation.Budgets{MaxRuleSteps: validation.DefaultRuleStepBase}}})
+		if err != nil || !result.Accepted {
+			t.Errorf("%s within the base: accepted=%v error=%v", name, result.Accepted, err)
+		}
 	}
 }
 

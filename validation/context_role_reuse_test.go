@@ -179,7 +179,7 @@ func TestContextRoleReuseExactWorkAndCancellation(t *testing.T) {
 			if warm && !r.matches(n, "item-role") {
 				t.Fatal(r.err)
 			}
-			remaining := s.account.Limits().MaxRuleSteps - rationalUsage(t, s, BudgetRuleSteps)
+			remaining := ruleStepLimit(t, s.account) - rationalUsage(t, s, BudgetRuleSteps)
 			if err := s.account.Charge(BudgetRuleSteps, remaining-limit); err != nil {
 				t.Fatal(err)
 			}

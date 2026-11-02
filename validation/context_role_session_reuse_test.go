@@ -124,7 +124,7 @@ func TestContextRoleSessionReuseExactWorkAndCancellation(t *testing.T) {
 			t.Fatal(first.err)
 		}
 		retained := s.retained
-		padding := s.account.Limits().MaxRuleSteps - rationalUsage(t, s, BudgetRuleSteps) - limit
+		padding := ruleStepLimit(t, s.account) - rationalUsage(t, s, BudgetRuleSteps) - limit
 		if err := s.account.Charge(BudgetRuleSteps, padding); err != nil {
 			t.Fatal(err)
 		}

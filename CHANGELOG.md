@@ -9,6 +9,21 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Breaking changes
 
+- **The default rule-step limit grows with the document.** A zero
+  `MaxRuleSteps` now allows `validation.DefaultRuleStepBase` (20,000,000)
+  steps plus `validation.DefaultRuleStepsPerNode` (10,000) for every node
+  charged to the account, at most `validation.DefaultRuleStepsPerDocumentByte`
+  (1,000) for every byte of XML document text read (the primary input, linked
+  documents and MXL members after decompression, not external DTDs), instead of
+  a fixed 20,000,000. Nodes are counted once per assessment line, and internal
+  entity expansions add at most the work of the document bytes. An explicit
+  `MaxRuleSteps` stays a fixed cap. `DefaultBudgets()` now returns
+  `MaxRuleSteps: 0` and `Account.Limits()` keeps the zero, so a copy of the
+  defaults keeps the growing limit; code that read `DefaultBudgets().MaxRuleSteps`
+  as the limit should use `validation.DefaultRuleStepBase` or `Account.Limit`.
+  The official `MozartTrio.musicxml` and `MozaChloSample.musicxml` now load with
+  the default budgets, also as MXL, and default assessed loading accepts 146
+  instead of 140 of the 154 official and test-suite files.
 - **Typed profiles.** The profile constants have one type per kind of entry
   point: `SourceProfile` (`ProfileSource*`), `ModelProfile` (`ProfileModel*`),
   `GraphProfile` (`ProfileResourceGraph*`) and `MXLProfile` (`ProfileMXL*`),
@@ -115,6 +130,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `Account.Limit` reports a resource's current maximum, including the
+  allowance of the default rule-step limit.
 - `AssessmentBundle.Resources`, `Adoptions` and `AdoptionContexts` and
   `ResourceSnapshot.Contexts` and `IDs` return `iter.Seq`/`iter.Seq2`
   sequences over what the indexed accessors return.

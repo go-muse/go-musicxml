@@ -35,7 +35,7 @@ func TestBudgetDefaultsFiniteCopiedAndEachFieldNegativeRejected(t *testing.T) {
 	if got := account.Limits(); got != defaults {
 		t.Fatalf("normalized limits = %+v want %+v", got, defaults)
 	}
-	want := Budgets{MaxInputBytes: 64 << 20, MaxExternalBytes: 64 << 20, MaxBufferedBytes: 64 << 20, MaxDepth: 1024, MaxNodes: 1000000, MaxAttributes: 4000000, MaxEvents: 8000000, MaxScalarBytes: 1 << 20, MaxIDs: 1000000, MaxRuleSteps: 20000000, MaxContextFacts: 1000000, MaxLinkedDocuments: 128, MaxDiagnostics: 1000, MaxDiagnosticBytes: 1 << 20}
+	want := Budgets{MaxInputBytes: 64 << 20, MaxExternalBytes: 64 << 20, MaxBufferedBytes: 64 << 20, MaxDepth: 1024, MaxNodes: 1000000, MaxAttributes: 4000000, MaxEvents: 8000000, MaxScalarBytes: 1 << 20, MaxIDs: 1000000, MaxContextFacts: 1000000, MaxLinkedDocuments: 128, MaxDiagnostics: 1000, MaxDiagnosticBytes: 1 << 20}
 	if defaults != want {
 		t.Errorf("default contract = %+v want %+v", defaults, want)
 	}
@@ -64,6 +64,163 @@ func TestBudgetDefaultsFiniteCopiedAndEachFieldNegativeRejected(t *testing.T) {
 				t.Fatalf("custom %s = %d", tc.field, got)
 			}
 		})
+	}
+}
+
+// The default rule-step limit is the base plus a fixed allowance per charged
+// node; an explicit MaxRuleSteps stays a fixed cap.
+func TestDefaultRuleStepLimitGrowsWithChargedNodes(t *testing.T) {
+	account, err := NewBudgetAccount(Budgets{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if account.Limits().MaxRuleSteps != 0 {
+		t.Fatalf("normalized MaxRuleSteps = %d, want zero for the growing default", account.Limits().MaxRuleSteps)
+	}
+	if got := ruleStepLimit(t, account); got != DefaultRuleStepBase {
+		t.Fatalf("limit without nodes = %d", got)
+	}
+	if err := account.Charge(BudgetRuleSteps, DefaultRuleStepBase); err != nil {
+		t.Fatalf("exact base: %v", err)
+	}
+	var resource *ResourceError
+	if err := account.Charge(BudgetRuleSteps, 1); !errors.As(err, &resource) || resource.Limit != DefaultRuleStepBase || resource.Used != DefaultRuleStepBase {
+		t.Fatalf("one past base = %v", err)
+	}
+	if err := account.Charge(BudgetNodes, 3); err != nil {
+		t.Fatal(err)
+	}
+	want := int64(DefaultRuleStepBase + 3*DefaultRuleStepsPerNode)
+	if got := ruleStepLimit(t, account); got != want {
+		t.Fatalf("limit after 3 nodes = %d want %d", got, want)
+	}
+	if err := account.Charge(BudgetRuleSteps, 3*DefaultRuleStepsPerNode); err != nil {
+		t.Fatalf("exact grown limit: %v", err)
+	}
+	if err := account.Charge(BudgetRuleSteps, 1); !errors.As(err, &resource) || resource.Limit != want {
+		t.Fatalf("one past grown limit = %v", err)
+	}
+	if used, _ := account.Usage(BudgetRuleSteps); used != want {
+		t.Fatalf("failed charge changed usage to %d", used)
+	}
+
+	fixed, err := NewBudgetAccount(Budgets{MaxRuleSteps: 5})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := fixed.Charge(BudgetNodes, 100); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, fixed); got != 5 {
+		t.Fatalf("explicit cap grew to %d", got)
+	}
+	if err := fixed.Charge(BudgetRuleSteps, 6); !errors.Is(err, ErrResourceLimit) {
+		t.Fatalf("explicit cap exceeded: %v", err)
+	}
+
+	huge, err := NewBudgetAccount(Budgets{MaxNodes: math.MaxInt64})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := huge.Charge(BudgetNodes, math.MaxInt64/DefaultRuleStepsPerNode); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, huge); got != math.MaxInt64 {
+		t.Fatalf("saturated limit = %d", got)
+	}
+	if err := huge.Charge(BudgetRuleSteps, math.MaxInt64); err != nil {
+		t.Fatalf("saturated charge: %v", err)
+	}
+
+	// Document bytes cap the node allowance: nodes without document text
+	// behind them, such as entity expansions, buy no more than the bytes that
+	// produced them. Charged input and external bytes do not count by
+	// themselves.
+	capped, err := NewBudgetAccount(Budgets{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := capped.chargeDocumentBytes(2); err != nil {
+		t.Fatal(err)
+	}
+	if err := capped.Charge(BudgetInputBytes, 1000); err != nil {
+		t.Fatal(err)
+	}
+	if err := capped.Charge(BudgetExternalBytes, 1000); err != nil {
+		t.Fatal(err)
+	}
+	if err := capped.Charge(BudgetNodes, 50); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, capped); got != DefaultRuleStepBase+2*DefaultRuleStepsPerDocumentByte {
+		t.Fatalf("document-byte-capped limit = %d", got)
+	}
+	if err := capped.chargeDocumentBytes(1000); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, capped); got != DefaultRuleStepBase+50*DefaultRuleStepsPerNode {
+		t.Fatalf("node allowance below the byte cap = %d", got)
+	}
+	if err := capped.chargeDocumentBytes(-1); !errors.Is(err, ErrInvalidConfiguration) {
+		t.Fatalf("negative document bytes = %v", err)
+	}
+	if err := capped.chargeDocumentBytes(math.MaxInt64); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, capped); got != DefaultRuleStepBase+50*DefaultRuleStepsPerNode {
+		t.Fatalf("saturated document bytes = %d", got)
+	}
+
+	// The limit never shrinks: nodes charged before the first document byte,
+	// such as those of an in-memory model, keep the allowance they bought,
+	// even when no step was charged in between.
+	model, err := NewBudgetAccount(Budgets{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := model.Charge(BudgetNodes, 50); err != nil {
+		t.Fatal(err)
+	}
+	if err := model.chargeDocumentBytes(7); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, model); got != DefaultRuleStepBase+50*DefaultRuleStepsPerNode {
+		t.Fatalf("limit shrank to %d after the first document byte", got)
+	}
+	if err := model.Charge(BudgetNodes, 50); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, model); got != DefaultRuleStepBase+50*DefaultRuleStepsPerNode {
+		t.Fatalf("later nodes not capped by document bytes: %d", got)
+	}
+
+	// The largest node count that does not saturate.
+	edge, err := NewBudgetAccount(Budgets{MaxNodes: math.MaxInt64})
+	if err != nil {
+		t.Fatal(err)
+	}
+	nodes := int64((math.MaxInt64 - DefaultRuleStepBase) / DefaultRuleStepsPerNode)
+	if err := edge.Charge(BudgetNodes, nodes); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, edge); got != DefaultRuleStepBase+nodes*DefaultRuleStepsPerNode {
+		t.Fatalf("limit at the saturation edge = %d", got)
+	}
+	if err := edge.Charge(BudgetNodes, 1); err != nil {
+		t.Fatal(err)
+	}
+	if got := ruleStepLimit(t, edge); got != math.MaxInt64 {
+		t.Fatalf("limit past the saturation edge = %d", got)
+	}
+
+	if got, err := account.Limit(BudgetDepth); err != nil || got != DefaultBudgets().MaxDepth {
+		t.Fatalf("depth limit = %d, %v", got, err)
+	}
+	if _, err := account.Limit("unknown"); !errors.Is(err, ErrInvalidConfiguration) {
+		t.Fatalf("unknown kind = %v", err)
+	}
+	if _, err := (&Account{}).Limit(BudgetRuleSteps); !errors.Is(err, ErrInvalidConfiguration) {
+		t.Fatalf("invalid account = %v", err)
 	}
 }
 

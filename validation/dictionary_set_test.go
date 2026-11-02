@@ -303,7 +303,7 @@ func TestDictionaryFailedSessionInitializationAndCancellationReleaseBorrow(t *te
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := a.Charge(BudgetRuleSteps, a.Limits().MaxRuleSteps-used); err != nil {
+	if err := a.Charge(BudgetRuleSteps, ruleStepLimit(t, a)-used); err != nil {
 		t.Fatal(err)
 	}
 	if s, err := e.BeginWithDictionaries(ctx, RunOptions{DocumentID: "exhausted", Profile: "test.source", Account: a}, set); s != nil || !errors.Is(err, ErrResourceLimit) {
@@ -318,7 +318,7 @@ func TestDictionaryFailedSessionInitializationAndCancellationReleaseBorrow(t *te
 	if got := dictionaryCoreUsage(t, a); got != 17 {
 		t.Fatalf("failed session borrowed forever: %d", got)
 	}
-	if got, _ := a.Usage(BudgetRuleSteps); got != a.Limits().MaxRuleSteps {
+	if got, _ := a.Usage(BudgetRuleSteps); got != ruleStepLimit(t, a) {
 		t.Fatalf("cleanup refunded work: %d", got)
 	}
 }

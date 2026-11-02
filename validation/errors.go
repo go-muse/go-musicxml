@@ -103,7 +103,9 @@ func (e *ConfigurationError) Unwrap() error {
 }
 
 // ResourceError records a refused resource operation. Used excludes Requested;
-// a refused operation never increases the account's usage.
+// a refused operation never increases the account's usage. Limit is the
+// maximum in effect at the refusal, which for the default rule-step limit
+// includes the allowance for the nodes and document bytes charged so far.
 type ResourceError struct {
 	Kind      BudgetKind
 	Limit     int64

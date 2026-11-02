@@ -460,7 +460,7 @@ func TestModelRepresentationBufferAndWorkBudgets(t *testing.T) {
 			used, _ := s.account.Usage(kind)
 			limit := s.account.Limits().MaxBufferedBytes
 			if kind == BudgetRuleSteps {
-				limit = s.account.Limits().MaxRuleSteps
+				limit = ruleStepLimit(t, s.account)
 			}
 			external := limit - used
 			if err := s.account.Charge(kind, external); err != nil {

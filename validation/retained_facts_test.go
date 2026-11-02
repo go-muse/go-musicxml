@@ -492,7 +492,7 @@ func TestRetainedFactSchemaCacheKeyWorkAndGrowth(t *testing.T) {
 					want += 1 + int64(count)*keyWork
 				}
 				used, _ := s.account.Usage(BudgetRuleSteps)
-				limit := s.account.Limits().MaxRuleSteps
+				limit := ruleStepLimit(t, s.account)
 				hold := limit - used - want + short
 				if err := s.account.Charge(BudgetRuleSteps, hold); err != nil {
 					t.Fatal(err)

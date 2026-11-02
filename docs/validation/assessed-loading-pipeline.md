@@ -281,10 +281,12 @@ complete projection" sets `SourceOptions.Context` to
 | `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 75.6 MiB | 23.92 million, 20.0 MiB | 26.74 million, 61.2 MiB |
 | `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.23 million, 21.8 MiB | 32.24 million, 66.2 MiB |
 
-The first two load within the default budgets (20 million rule steps, 64 MiB);
-`TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores now
-fit the default buffer (MozartTrio also with the complete projection) but
-still need more rule steps than the default. These
+The first two load within the default budgets;
+`TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores also
+load with the default budgets, also packed as MXL and MozartTrio also with the
+complete projection, since the default rule-step limit grows with the document:
+20 million steps plus 10,000 per node, at most 1,000 per document byte
+(`TestStrictLoadingOfficialScoresFitTheDefaultBudgets`). These
 are logical account figures for these files, not heap measurements or general
 capacity; at the end of input the charge covers the live heap
 (`TestBufferedChargeCoversTheHeapAtEndOfInput`). While `Finish` evaluates
@@ -382,12 +384,12 @@ document. It is not a portable boundary. Input byte size alone cannot place the
 capacity threshold above 200 KB.
 
 With the bundled external DTD, both larger originals do their full source and
-model work. Since the lines were split, line 2 accepts both within the default
-budgets and line 3 reaches the default 20 million rule-step limit. The focused
-regression
+model work. Both lines accept them within the default budgets; before the
+default rule-step limit grew with the document, line 3 reached its fixed 20
+million steps. The focused regression
 [TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD][official-capacity-test]
-keeps these amd64 default refusals, which return no document, and then accepts
-both with `MaxBufferedBytes: 256 << 20` and `MaxRuleSteps: 100_000_000`. `Chant.musicxml` is accepted with default budgets.
+accepts both with the default budgets and with `MaxBufferedBytes: 256 << 20` and
+`MaxRuleSteps: 100_000_000`. `Chant.musicxml` is accepted with default budgets.
 `TestSourceAssessmentAgainstSchema` exercises the same controls.
 
 The configured allowance is fixture-specific, not a new default, a measured

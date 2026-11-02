@@ -54,7 +54,7 @@ func TestReviewRetainedGrowthTunedBudgetCompatibility(t *testing.T) {
 				t.Fatal("assessment refusal mutated the caller model")
 			}
 			t.Logf("historical limit refusal: %v", limit)
-			r, err = tc.assess(validation.Budgets{MaxBufferedBytes: 1 << 30})
+			r, err = tc.assess(validation.Budgets{MaxBufferedBytes: 1 << 30, MaxRuleSteps: validation.DefaultRuleStepBase})
 			if err != nil || !r.InputComplete || !r.AssessmentComplete || !r.Satisfied() {
 				t.Fatalf("default work control: complete=%v input=%v satisfied=%v err=%v", r.AssessmentComplete, r.InputComplete, r.Satisfied(), err)
 			}

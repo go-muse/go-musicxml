@@ -258,7 +258,7 @@ func TestReviewGraphArchiveInventoryPrerequisiteLookup(t *testing.T) {
 				}
 			case "work-refused":
 				used, _ := g.options.account.Usage(validation.BudgetRuleSteps)
-				if err = g.options.account.Charge(validation.BudgetRuleSteps, g.options.account.Limits().MaxRuleSteps-used); err != nil {
+				if err = g.options.account.Charge(validation.BudgetRuleSteps, ruleStepLimit(t, g.options.account)-used); err != nil {
 					t.Fatal(err)
 				}
 				wantErr = validation.ErrResourceLimit

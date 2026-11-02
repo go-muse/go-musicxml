@@ -60,21 +60,17 @@ func TestReviewDefaultBudgetOfficialSourceComposition(t *testing.T) {
 		t.Run(string(profile), func(t *testing.T) {
 			r, err := InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Context: validation.ContextFamilyAll, Profile: SourceProfile(profile)})
 			if profile == ProfileSourceSemantics.ID() && err != nil {
-				// Historically this input reached the 20M work limit before layout
-				// publication; reduced repeated work then moved the refusal to the
-				// buffer. With real-layout projection accounting the buffer and the
-				// work limit are both close to exhaustion at the end of the same
-				// complete input, so either may refuse first. Neither
-				// default-budget refusal is a completed or satisfied assessment.
+				// Historically this input reached the fixed 20M work limit; the
+				// default rule-step limit now grows with the document, so with the
+				// complete projection only the default buffer can refuse, at the
+				// end of the complete input; at its edge, whether it does depends
+				// on the platform. The refusal is not a completed or satisfied
+				// assessment.
 				var limit *validation.ResourceError
-				if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes && limit.Kind != validation.BudgetRuleSteps || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
+				if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
 					t.Fatalf("unexpected default-budget failure: %v", err)
 				}
-				wantLimit := validation.DefaultBudgets().MaxBufferedBytes
-				if limit.Kind == validation.BudgetRuleSteps {
-					wantLimit = validation.DefaultBudgets().MaxRuleSteps
-				}
-				if limit.Limit != wantLimit {
+				if limit.Limit != validation.DefaultBudgets().MaxBufferedBytes {
 					t.Fatalf("resource refusal did not use the default limit: %v", err)
 				}
 				t.Logf("stripped UTF-16 sample preserves complete-input/incomplete-assessment resource refusal: %v", err)
@@ -94,9 +90,10 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 	}
 	_, err = InspectXML(context.Background(), bytes.NewReader(raw), SourceOptions{Context: validation.ContextFamilyAll, Profile: ProfileSourceSemantics})
 	if err != nil {
-		// The default buffer or work limit refuses, whichever comes first.
+		// With the complete projection only the default buffer can refuse; the
+		// default rule-step limit grows with the document.
 		var limit *validation.ResourceError
-		if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes && limit.Kind != validation.BudgetRuleSteps {
+		if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes {
 			t.Fatalf("unexpected original-byte limit: %v", err)
 		}
 		t.Logf("original UTF-16 sample default limit: %v", err)
@@ -130,9 +127,9 @@ func reviewBudgetFragmentScore() string {
 	return source.String()
 }
 
-func reviewBudgetFragmentOptions(buffer int64) linkedDictionaryAssessmentOptions {
+func reviewBudgetFragmentOptions(buffer, steps int64) linkedDictionaryAssessmentOptions {
 	return linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{
-		Graph:        GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: buffer}},
+		Graph:        GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: buffer, MaxRuleSteps: steps}},
 		Identity:     ResourceIdentity{RetrievalURI: "https://budget.test/score.musicxml"},
 		Dependencies: []ResourceDependency{ResourceDocuments},
 	}.internal()}
@@ -140,8 +137,10 @@ func reviewBudgetFragmentOptions(buffer int64) linkedDictionaryAssessmentOptions
 
 func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
 	source := reviewBudgetFragmentScore()
-	// This deliberately isolates work; it is not an all-default capacity claim.
-	options := reviewBudgetFragmentOptions(512 << 20)
+	// This deliberately isolates work against the base of the default rule-step
+	// limit, without the allowance the 2,000 measures would add; it is not an
+	// all-default capacity claim.
+	options := reviewBudgetFragmentOptions(512<<20, validation.DefaultRuleStepBase)
 	bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
 	if err != nil || !bundle.EnumerationComplete() || !bundle.Satisfied() {
 		t.Fatalf("three shorthand links failed at default work budget: %v %+v", err, bundle.PackageReport())
@@ -228,7 +227,7 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	if len(source) != 86052 {
 		t.Fatalf("fixture bytes=%d, want 86052", len(source))
 	}
-	bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0))
+	bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0, 0))
 	// Historical live-byte witnesses were 57,607,574 and then 54,998,870;
 	// declaration-canonical role reuse lowers only the live side again.
 	// The external-DTD closure wording adds 202 live and 104 requested bytes:
