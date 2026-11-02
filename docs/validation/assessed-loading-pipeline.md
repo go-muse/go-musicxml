@@ -268,24 +268,32 @@ lines; "lines" is `59d4536`; "batch 2" adds the verified-set cache, the
 deferred import, real-layout projection accounting and shared attribute
 tables, with the complete projection that was then the default; "now" adds
 the default empty context selection, compact XSD state, outcome bits,
-interned engine strings and the release of XSD work charges when a subject
-completes; "now, complete projection" sets `SourceOptions.Context` to
+interned engine strings, the release of XSD work charges when a subject
+completes, and evaluation scratch (layout formatting, navigation runs,
+performance records) charged only while its rule evaluation runs; "now,
+complete projection" sets `SourceOptions.Context` to
 `validation.ContextFamilyAll`:
 
 | File | Before the split | Lines | Batch 2 | Now | Now, complete projection |
 | --- | --- | --- | --- | --- | --- |
-| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 27.1 MiB | 8.68 million, 8.8 MiB | 9.73 million, 23.8 MiB |
-| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 34.7 MiB | 10.13 million, 11.2 MiB | 11.40 million, 30.6 MiB |
-| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 75.6 MiB | 23.92 million, 25.4 MiB | 26.74 million, 66.8 MiB |
-| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.23 million, 27.5 MiB | 32.24 million, 73.0 MiB |
+| `01a-Pitches-Pitches.xml`, 31 KB | 21.69 million rule steps, 53.2 MiB buffer | 13.68 million, 34.2 MiB | 9.69 million, 27.1 MiB | 8.68 million, 6.3 MiB | 9.73 million, 21.2 MiB |
+| `41c-StaffGroups.xml`, 42 KB | 24.90 million, 72.4 MiB | 15.59 million, 46.5 MiB | 11.38 million, 34.7 MiB | 10.13 million, 8.3 MiB | 11.40 million, 27.5 MiB |
+| `MozartTrio.musicxml`, 95 KB | — | 31.88 million, 98.9 MiB | 26.66 million, 75.6 MiB | 23.92 million, 20.0 MiB | 26.74 million, 61.2 MiB |
+| `MozaChloSample.musicxml`, 223 KB | — | 37.57 million, 109.8 MiB | 32.18 million, 84.4 MiB | 29.23 million, 21.8 MiB | 32.24 million, 66.2 MiB |
 
 The first two load within the default budgets (20 million rule steps, 64 MiB);
 `TestStrictLoadingFitsDefaultBudgets` keeps that. The two official scores now
-fit the default buffer but still need more rule steps than the default. These
+fit the default buffer (MozartTrio also with the complete projection) but
+still need more rule steps than the default. These
 are logical account figures for these files, not heap measurements or general
 capacity; at the end of input the charge covers the live heap
-(`TestBufferedChargeCoversTheHeapAtEndOfInput`), and while `Finish` evaluates
-the document families it still exceeds it several times over. A one-off
+(`TestBufferedChargeCoversTheHeapAtEndOfInput`). While `Finish` evaluates
+the document families, the charge it adds covers the heap it adds
+(`TestFinishChargeCoversTheHeapItAdds`, on corpus, official and hostile
+documents, except a document with tens of thousands of failed decisions, whose
+map grows during `Finish`; its whole run is still checked) and, on 64-bit
+platforms, stays within five and a half times it
+(`TestFinishChargeStaysNearTheHeapItAdds`; about 4.9 times on MozartTrio). A one-off
 comparison when these changes were made, not a test, found the reports
 unchanged: on every corpus and official file, the reports of `DecodeAssessed`,
 `DecodeMXLAssessed`, `InspectXML`, `InspectMXL`, `AssessModel`,

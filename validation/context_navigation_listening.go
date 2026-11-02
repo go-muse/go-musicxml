@@ -85,7 +85,7 @@ func navigationReadListening(r *contextReader, n *factNode, part Evidence[NodeRe
 		} else {
 			v.Value = stateText(r.scalar(ch))
 		}
-		if _, err := stateReserve(r.ctx, r.s, v); err != nil {
+		if _, err := stateReserveTransient(r.ctx, r.s, v); err != nil {
 			return nil, err
 		}
 		out = append(out, stateClone(v))
@@ -164,7 +164,7 @@ func navigationApplyListening(ctx context.Context, s *Session, current []Navigat
 			}
 		}
 		current = current[:write]
-		if _, err = stateReserve(ctx, s, next); err != nil {
+		if _, err = stateReserveTransient(ctx, s, next); err != nil {
 			return nil, err
 		}
 		current = append(current, stateClone(next))

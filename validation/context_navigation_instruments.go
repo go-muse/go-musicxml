@@ -116,7 +116,7 @@ func navigationApplyInstruments(ctx context.Context, s *Session, current []Navig
 			navigationAbsentIfUnset(&value.Pan.Value)
 			navigationAbsentIfUnset(&value.Elevation.Value)
 			navigationApplyInstrumentFields(&value, u, guard)
-			if _, err := stateReserve(ctx, s, value); err != nil {
+			if _, err := stateReserveTransient(ctx, s, value); err != nil {
 				return nil, err
 			}
 			current = append(current, stateClone(value))

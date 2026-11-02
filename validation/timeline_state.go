@@ -367,6 +367,19 @@ func stateRetainCopy(ctx context.Context, s *Session, v any) error {
 	}
 	return s.retain(n)
 }
+
+// stateRetainTransientCount admits count records of width bytes for as long
+// as the evaluation that builds them runs.
+func stateRetainTransientCount(s *Session, count int, width int64) error {
+	n, e := rationalCheckedMul(BudgetBufferedBytes, int64(count), width)
+	if e != nil {
+		return e
+	}
+	if _, e = allocationSize(n); e != nil {
+		return e
+	}
+	return s.retainTransient(n)
+}
 func stateRetainCount(s *Session, count int, width int64) error {
 	n, e := rationalCheckedMul(BudgetBufferedBytes, int64(count), width)
 	if e != nil {
@@ -395,6 +408,29 @@ func stateReserve(ctx context.Context, s *Session, value any) (int64, error) {
 		return 0, e
 	}
 	if e = s.retain(n); e != nil {
+		return 0, e
+	}
+	return n, nil
+}
+
+// stateReserveTransient admits a record like stateReserve for as long as the
+// evaluation that builds it runs.
+func stateReserveTransient(ctx context.Context, s *Session, value any) (int64, error) {
+	n, e := retainedLayoutBytes(ctx, s, reflect.ValueOf(value))
+	if e != nil {
+		return 0, e
+	}
+	if _, e = allocationSize(n); e != nil {
+		return 0, e
+	}
+	n, e = rationalCheckedMul(BudgetBufferedBytes, n, 2)
+	if e != nil {
+		return 0, e
+	}
+	if e = s.account.Charge(BudgetContextFacts, 1); e != nil {
+		return 0, e
+	}
+	if e = s.retainTransient(n); e != nil {
 		return 0, e
 	}
 	return n, nil
@@ -855,7 +891,7 @@ var timelineOne = Integer{value: big.NewInt(1), text: "1", bytes: 2}
 func stateOne() Integer { return timelineOne }
 func (h *timelineState) effectiveCount(ctx context.Context, s *Session, hist *stateHistory[Integer], pos musicalPosition) (stateResult[Integer], error) {
 	initial := func() (stateResult[Integer], error) {
-		if err := s.retain(256); err != nil {
+		if err := s.retainTransient(256); err != nil {
 			return stateResult[Integer]{}, err
 		}
 		return stateResult[Integer]{Value: Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, Provenance: []stateProvenance{{Node: pos.Part, Kind: stateInitialDefault}}, Inherited: true}, nil
