@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
+	"unsafe"
 )
 
 const (
@@ -326,7 +328,45 @@ type reportAccumulator struct {
 	// is charged to the diagnostic byte quota for more than its key.
 	at   findingKey
 	keys []findingKey
+	// deferred keeps findings by key and stores them in Finish (see
+	// deferDiagnostic). pending holds the candidates in key order, charged to
+	// the buffer for pendingBytes while they wait; cutoff is the first key the
+	// buffered accumulator would not store, once one is known.
+	deferred     bool
+	pending      []pendingFinding
+	pendingBytes int64
+	cutoff       *findingKey
+	// lastArrival is the key of the latest finding, which numbers findings at
+	// one position in the order they arrive.
+	lastArrival findingKey
+	arrived     bool
+	// simulated counts the leading candidates whose buffered storage simSize,
+	// simCount and simRules already account for. stale means a candidate
+	// arrived before that prefix: the cutoff is then only an upper bound until
+	// the next full simulation.
+	simulated int
+	simSize   int64
+	simCount  int64
+	simRules  map[RuleKey]bool
+	stale     bool
+	// capacityBytes is the charge for the pending array's capacity.
+	capacityBytes int64
 }
+
+// pendingFinding is a finding that the deferred accumulator will store if no
+// finding before it in key order truncates the report.
+type pendingFinding struct {
+	key     findingKey
+	finding Finding
+	rule    *RuleDefinition
+	charged int64
+}
+
+// pendingFindingSlotBytes is one slot of the pending array; a candidate's rule
+// copy is charged at pendingRuleBytes, the allocator class holding it.
+var pendingFindingSlotBytes = int64(unsafe.Sizeof(pendingFinding{}))
+
+const pendingRuleBytes = 256
 
 func newReportAccumulator(profile Profile, account *Account) *reportAccumulator {
 	return &reportAccumulator{report: Report{Requested: true, Profile: cloneProfile(profile), Target: profile.Target, AssessmentComplete: true}, account: account, rules: make(map[RuleKey]bool)}
@@ -404,11 +444,53 @@ func (a *reportAccumulator) recordOutcome(rule RuleDefinition, decision Decision
 	return nil
 }
 
+// nextKey is the key of the next finding at the current position: findings
+// at one position keep the order they arrive in.
+func (a *reportAccumulator) nextKey() findingKey {
+	key := a.at
+	var last *findingKey
+	switch {
+	case a.deferred && a.arrived:
+		last = &a.lastArrival
+	case !a.deferred && len(a.keys) > 0:
+		last = &a.keys[len(a.keys)-1]
+	}
+	if last != nil && last.stage == key.stage && last.phase == key.phase && last.trigger == key.trigger {
+		key.order = last.order + 1
+	}
+	return key
+}
+
+// diagnosticsTruncated reports whether a finding produced now would be
+// dropped: work that only adds diagnostic detail may stop once it is.
+func (a *reportAccumulator) diagnosticsTruncated() bool {
+	if !a.deferred {
+		return a.report.DiagnosticsTruncated
+	}
+	return a.cutoff != nil && !a.nextKey().less(*a.cutoff)
+}
+
+// truncateDiagnostics truncates diagnostic storage at the current position:
+// findings stored before it are kept, later ones are dropped.
+func (a *reportAccumulator) truncateDiagnostics() {
+	if !a.deferred {
+		a.report.DiagnosticsTruncated = true
+		return
+	}
+	a.setCutoff(a.nextKey())
+}
+
 func (a *reportAccumulator) storeDiagnostic(rule RuleDefinition, decision Decision, location Location) error {
 	// Pass and proven exclusion are assessment results, not diagnostics. Keep
 	// their authoritative counts above, without measuring or storing payloads,
 	// consuming diagnostic quotas, or marking diagnostic storage truncated.
-	if decision.Outcome == OutcomePass || decision.Outcome == OutcomeNotApplicable || a.report.DiagnosticsTruncated {
+	if decision.Outcome == OutcomePass || decision.Outcome == OutcomeNotApplicable {
+		return nil
+	}
+	if a.deferred {
+		return a.deferDiagnostic(rule, decision, location)
+	}
+	if a.report.DiagnosticsTruncated {
 		return nil
 	}
 	// The expected/actual preview is bounded before measuring or cloning. Other
@@ -434,12 +516,191 @@ func (a *reportAccumulator) storeDiagnostic(rule RuleDefinition, decision Decisi
 		return err
 	}
 	a.report.Findings = append(a.report.Findings, Finding{Decision: cloneDecision(decision), Category: rule.Category, Location: cloneLocation(location)})
-	key := a.at
-	if n := len(a.keys); n > 0 {
-		if last := a.keys[n-1]; last.stage == key.stage && last.phase == key.phase && last.trigger == key.trigger {
-			key.order = last.order + 1
+	a.keys = append(a.keys, a.nextKey())
+	if includeRule {
+		a.report.Rules = append(a.report.Rules, cloneRule(rule))
+		a.rules[rule.Key] = true
+	}
+	return nil
+}
+
+// deferDiagnostic keeps a finding by its key instead of storing it now, so an
+// engine that evaluates out of document order still reports exactly what the
+// buffered engine stores. The candidates stay sorted, and the buffered
+// storage of their key-order prefix is simulated against the quotas left on
+// the account, which no other session charges while this one is open: the
+// first candidate that would not be stored sets the cutoff, and every finding
+// at or after it is dropped without being copied or charged. With findings
+// arriving in key order the cutoff is exact as soon as truncation happens; an
+// earlier finding arriving later can only move it earlier.
+func (a *reportAccumulator) deferDiagnostic(rule RuleDefinition, decision Decision, location Location) error {
+	key := a.nextKey()
+	a.lastArrival, a.arrived = key, true
+	if a.cutoff != nil && !key.less(*a.cutoff) {
+		return nil
+	}
+	decision.Expected = reportBoundedValue(decision.Expected, reportValueBytes)
+	decision.Actual = reportBoundedValue(decision.Actual, reportValueBytes)
+	size := reportStorageSize{limit: a.account.Limits().MaxDiagnosticBytes}
+	size.decision(decision)
+	size.location(location)
+	if size.exceeded {
+		a.setCutoff(key)
+		return nil
+	}
+	if err := a.reservePendingSlot(); err != nil {
+		return err
+	}
+	charge := size.total + pendingRuleBytes
+	if err := a.account.Charge(BudgetBufferedBytes, charge); err != nil {
+		return err
+	}
+	a.pendingBytes += charge
+	owned := rule
+	candidate := pendingFinding{key: key, rule: &owned, charged: charge, finding: Finding{Decision: cloneDecision(decision), Category: rule.Category, Location: cloneLocation(location)}}
+	// After equal keys, so equal keys keep their arrival order.
+	at, _ := slices.BinarySearchFunc(a.pending, key, func(p pendingFinding, k findingKey) int {
+		if k.less(p.key) {
+			return 1
+		}
+		return -1
+	})
+	a.pending = slices.Insert(a.pending, at, candidate)
+	if at < a.simulated {
+		a.stale = true
+	}
+	limits := a.account.Limits()
+	switch {
+	case !a.stale:
+		a.simulate()
+	case int64(len(a.pending)) > 2*limits.MaxDiagnostics || a.pendingBytes > 2*limits.MaxDiagnosticBytes:
+		// Out-of-order arrivals are simulated in batches: until then the
+		// cutoff is a valid upper bound and only keeps more candidates.
+		a.simulated, a.simSize, a.simCount, a.simRules, a.stale = 0, 0, 0, nil, false
+		a.simulate()
+	}
+	return nil
+}
+
+// reservePendingSlot grows the pending array before an insert that needs it,
+// charging the new array before it is allocated and releasing the old one
+// after the copy.
+func (a *reportAccumulator) reservePendingSlot() error {
+	if len(a.pending) < cap(a.pending) {
+		return nil
+	}
+	grown := max(8, 2*cap(a.pending))
+	charge := int64(grown) * pendingFindingSlotBytes
+	if err := a.account.Charge(BudgetBufferedBytes, charge); err != nil {
+		return err
+	}
+	next := make([]pendingFinding, len(a.pending), grown)
+	copy(next, a.pending)
+	a.pending = next
+	_ = a.account.Release(BudgetBufferedBytes, a.capacityBytes)
+	a.capacityBytes = charge
+	return nil
+}
+
+// simulate extends the simulated prefix over the pending candidates with the
+// buffered accumulator's sizes and quota checks, and sets the cutoff at the
+// first candidate it would not store.
+func (a *reportAccumulator) simulate() {
+	limits := a.account.Limits()
+	usedCount, _ := a.account.Usage(BudgetDiagnostics)
+	usedBytes, _ := a.account.Usage(BudgetDiagnosticBytes)
+	for a.simulated < len(a.pending) {
+		p := &a.pending[a.simulated]
+		includeRule := !a.rules[p.rule.Key] && !a.simRules[p.rule.Key]
+		size := reportStorageSize{limit: limits.MaxDiagnosticBytes}
+		size.decision(p.finding.Decision)
+		size.location(p.finding.Location)
+		if includeRule {
+			size.rule(*p.rule)
+		}
+		if size.exceeded || 1 > limits.MaxDiagnostics-usedCount-a.simCount || size.total > limits.MaxDiagnosticBytes-usedBytes-a.simSize {
+			a.setCutoff(p.key)
+			return
+		}
+		a.simSize += size.total
+		a.simCount++
+		if includeRule {
+			if a.simRules == nil {
+				a.simRules = make(map[RuleKey]bool)
+			}
+			a.simRules[p.rule.Key] = true
+		}
+		a.simulated++
+	}
+}
+
+// setCutoff truncates at key, dropping and releasing the candidates at or
+// after it.
+func (a *reportAccumulator) setCutoff(key findingKey) {
+	if a.cutoff != nil && !key.less(*a.cutoff) {
+		return
+	}
+	a.cutoff = &key
+	keep := len(a.pending)
+	for keep > 0 && !a.pending[keep-1].key.less(key) {
+		keep--
+	}
+	for _, p := range a.pending[keep:] {
+		_ = a.account.Release(BudgetBufferedBytes, p.charged)
+		a.pendingBytes -= p.charged
+	}
+	clear(a.pending[keep:])
+	a.pending = a.pending[:keep]
+	if keep < a.simulated {
+		// Dropped candidates were part of the simulated prefix: simulate the
+		// remaining ones again, which cannot drop more than the new cutoff.
+		a.simulated, a.simSize, a.simCount, a.simRules, a.stale = 0, 0, 0, nil, false
+		a.simulate()
+	}
+}
+
+// storePending stores the deferred candidates in key order with the buffered
+// accumulator's sizes, quotas and truncation, and releases their buffer charge.
+func (a *reportAccumulator) storePending() error {
+	pending := a.pending
+	a.pending, a.deferred = nil, false
+	_ = a.account.Release(BudgetBufferedBytes, a.pendingBytes+a.capacityBytes)
+	a.pendingBytes, a.capacityBytes = 0, 0
+	for _, p := range pending {
+		if a.report.DiagnosticsTruncated {
+			break
+		}
+		if err := a.storeDiagnosticAt(*p.rule, p.finding, p.key); err != nil {
+			return err
 		}
 	}
+	if a.cutoff != nil {
+		a.report.DiagnosticsTruncated = true
+	}
+	return nil
+}
+
+// storeDiagnosticAt stores one already bounded and owned finding under its key.
+func (a *reportAccumulator) storeDiagnosticAt(rule RuleDefinition, finding Finding, key findingKey) error {
+	includeRule := !a.rules[rule.Key]
+	size := reportStorageSize{limit: a.account.Limits().MaxDiagnosticBytes}
+	size.decision(finding.Decision)
+	size.location(finding.Location)
+	if includeRule {
+		size.rule(rule)
+	}
+	if size.exceeded {
+		a.report.DiagnosticsTruncated = true
+		return nil
+	}
+	if err := a.account.chargeDiagnostic(size.total); err != nil {
+		if errors.Is(err, ErrResourceLimit) {
+			a.report.DiagnosticsTruncated = true
+			return nil
+		}
+		return err
+	}
+	a.report.Findings = append(a.report.Findings, finding)
 	a.keys = append(a.keys, key)
 	if includeRule {
 		a.report.Rules = append(a.report.Rules, cloneRule(rule))
@@ -460,6 +721,11 @@ func (a *reportAccumulator) terminal(_ error, category DiagnosticCategory, reaso
 }
 
 func (a *reportAccumulator) finish(inputComplete bool, syntax SyntaxState) Report {
+	if a.deferred {
+		// Only an invalid account fails a diagnostic charge other than by its
+		// quota, and recordOutcome already rejected one.
+		_ = a.storePending()
+	}
 	if findingKeyObserver != nil {
 		findingKeyObserver(a.keys)
 	}

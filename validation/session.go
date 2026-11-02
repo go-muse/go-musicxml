@@ -228,6 +228,7 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 		return nil, err
 	}
 	s.accumulator = newReportAccumulator(profile, account)
+	s.accumulator.deferred = s.strategy == strategyWindowed
 	if len(e.catalog.schemas[profile.ID]) != 0 {
 		if err := s.retain(512); err != nil {
 			s.cleanup()

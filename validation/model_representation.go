@@ -243,7 +243,7 @@ func (s *Session) evaluateModelRepresentation(ctx context.Context, n *factNode, 
 			return err
 		}
 		for _, problem := range fact.Problems {
-			if s.accumulator.report.DiagnosticsTruncated {
+			if s.accumulator.diagnosticsTruncated() {
 				break
 			}
 			if err := s.step(ctx, 1); err != nil {
