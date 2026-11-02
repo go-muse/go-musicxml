@@ -10,9 +10,9 @@ import (
 // Deliberate policy changes require a reviewed ledger edit and corresponding
 // pin update. These hashes freeze evidence classifications and residual text;
 // they do not establish runtime conformance or interpret arbitrary prose.
-const reviewedRequirementPolicySHA256 = "d90dc8cab1ce1ff7c46eae6d481e9cfb723b9a855065176997ca470363ed67ce"
-const reviewedCasePolicySHA256 = "4804c6a20c40ad9fd817c6da64e7c00819edf78b0e4f397fcda7c920f556bf8e"
-const reviewedAxisPolicySHA256 = "790639672f0e3f9d3bdf3aa925c4de35ade4d826ed76a640fc740c217cb5272e"
+const reviewedRequirementPolicySHA256 = "cfd8b58b8306915ef7315d894bf52c3a4ec1aa4e9392c7ad64f5b44221f92961"
+const reviewedCasePolicySHA256 = "8b71a4499cc1cc4e2989ac9c69929920cc75c050992c50070c9e722f153bd4b2"
+const reviewedAxisPolicySHA256 = "25242b6fea553e8cac5e788215c9e109b6571a7cccd24c3ac5789ce8666b8835"
 
 var preservedSourcePins = map[string]string{
 	"docs/validation/plan/implementation-plan.json":               "d8dc0030f58f8f84647d099ef441adab436af5167ebaa5bf86fab4fb959ba044",

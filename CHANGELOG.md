@@ -50,6 +50,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- CI no longer runs the test suite with `GOARCH=386`, and no code, test or
+  current document is specific to 32-bit platforms. Bounds on conversions to
+  `int` are written with `math.MaxInt`.
 - `ConversionError`, `SessionError` and `ConfigurationError` messages include
   the cause and omit empty parts instead of printing `: :`.
 - Strict loading runs two validation lines that no longer overlap. Line 2,

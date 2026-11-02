@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math"
 	"reflect"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -391,7 +390,7 @@ func TestSharedBudgetAccountConcurrentAggregateQuota(t *testing.T) {
 }
 
 func TestAllocationSizeChecksHostIntWithoutNarrowingLimits(t *testing.T) {
-	max := int64(^uint(0) >> 1)
+	max := int64(math.MaxInt)
 	for _, n := range []int64{0, 1, max} {
 		got, err := allocationSize(n)
 		if err != nil || int64(got) != n {
@@ -400,11 +399,6 @@ func TestAllocationSizeChecksHostIntWithoutNarrowingLimits(t *testing.T) {
 	}
 	if _, err := allocationSize(-1); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Errorf("negative allocation = %v", err)
-	}
-	if strconv.IntSize == 32 {
-		if _, err := allocationSize(max + 1); !errors.Is(err, ErrResourceLimit) {
-			t.Errorf("host overflow = %v", err)
-		}
 	}
 	account, err := NewBudgetAccount(Budgets{MaxInputBytes: math.MaxInt64})
 	if err != nil || account.Limits().MaxInputBytes != math.MaxInt64 {

@@ -5,9 +5,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-muse/go-musicxml/validation"
 	"io"
+	"math"
 	"testing"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 func TestResourceBodyReviewedChunkWork(t *testing.T) {
@@ -85,7 +87,7 @@ func TestResourceBodyReviewedCancellationDuringRelocation(t *testing.T) {
 }
 
 func TestResourceBodyChunkEndNativeBoundary(t *testing.T) {
-	max := int(^uint(0) >> 1)
+	max := math.MaxInt
 	for _, at := range []int{max - 8192, max - 4096, max - 4095, max - 1, max} {
 		end := resourceBodyChunkEnd(at, max)
 		if end < at || end > max || end-at > 4096 || end != at+min(4096, max-at) {

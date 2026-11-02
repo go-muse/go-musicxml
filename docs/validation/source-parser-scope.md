@@ -187,4 +187,4 @@ reader versus the final guarded reader measured 7.439 / 7.598 ms for UTF-8
 (+2.13%) and 11.077 / 11.569 ms for UTF-16 (+4.44%). Median allocation counts
 were unchanged (40,181 / 50,073). These separate timing windows must not be
 combined into a new claimed baseline percentage. The final guard preserves
-exact-or-omitted source coordinates on both 32-bit and 64-bit hosts.
+exact-or-omitted source coordinates.

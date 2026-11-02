@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"math"
 	"strings"
 	"testing"
 )
@@ -65,7 +66,7 @@ func TestSourceEntityDeclarationMalformedMetadataIsRejected(t *testing.T) {
 }
 
 func TestSourceEntityDeclarationMapSizeArithmetic(t *testing.T) {
-	hostMax := int64(^uint(0) >> 1)
+	hostMax := int64(math.MaxInt)
 	for _, extra := range []int64{0, 1024} {
 		count := (hostMax - 512 - extra) / 512
 		if _, err := sourceEntityMapBytes(int(count), extra); err != nil {

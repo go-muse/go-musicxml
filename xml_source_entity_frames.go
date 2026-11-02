@@ -3,6 +3,7 @@ package musicxml
 import (
 	"errors"
 	"fmt"
+	"math"
 	"unicode/utf8"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -77,7 +78,7 @@ func (r *sourceXMLTokenReader) pushEntity(input sourceXMLEntityInput, context so
 	}
 	replacementBytes := int64(len(input.Replacement))
 	if input.Padded {
-		if len(input.Replacement) > int(^uint(0)>>1)-2 {
+		if len(input.Replacement) > math.MaxInt-2 {
 			return &validation.ResourceError{Kind: validation.BudgetEvents, Requested: replacementBytes}
 		}
 		replacementBytes += 2

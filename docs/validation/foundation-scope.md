@@ -381,9 +381,7 @@ Package-assessment entry points remain absent until their adapters satisfy their
 contracts.
 
 Required verification remains `make check-all`, the existing required Linux
-external-XSD roots and planning/generation reproducibility. The Linux CI test job
-executes `GOARCH=386 go test -count=1 ./...` for actual host-width coverage;
-a cross-build alone does not establish 32-bit runtime coverage. `check-all` runs
+external-XSD roots and planning/generation reproducibility. `check-all` runs
 `FuzzReportFieldIsBoundedEscapedUTF8` and `FuzzSessionLifecycle` for 10,000 counted
 executions each by default, configurable with `VALIDATION_FUZZ_TIME`, as documented
 in [local checks](../../CONTRIBUTING.md#local-checks). Test links describe checked

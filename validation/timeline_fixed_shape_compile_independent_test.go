@@ -3,8 +3,7 @@ package validation
 import "unsafe"
 
 // These constant-size arrays make the independent closed-shape margins part of
-// 386 cross-compilation too. Compilation does not establish runtime behavior;
-// execution and cancellation on that architecture remain separate CI gates.
+// compilation. Compilation does not establish runtime behavior.
 var (
 	_ [timelineFactReserveBytes - int64(unsafe.Sizeof(timelineEventFact{})) - 512]struct{}
 	_ [timelineNoteReserveBytes - int64(unsafe.Sizeof(noteTimingOrigin{})) - 512]struct{}
@@ -19,7 +18,7 @@ var (
 
 // Grace's admitted variable scratch owns streams, lookup maps, sequence IDs,
 // two note-local gaps, and up to three additional structural gaps per block.
-// Keep these constraints active even when a target architecture is compile-only.
+// The constraints are checked at compile time.
 const (
 	independentGraceNoteShape = 4*unsafe.Sizeof(graceStream{}) +
 		4*(unsafe.Sizeof(graceStreamKey{})+unsafe.Sizeof(int(0))) +

@@ -139,8 +139,8 @@ type schemaBindFrame struct {
 	entered   bool
 }
 
-// Fixed conservative slot envelopes cover both amd64 and 386 (size-guarded in
-// tests). Charge allocated capacity, not the number of all document nodes.
+// Fixed conservative slot envelopes (size-guarded in tests). Charge allocated
+// capacity, not the number of all document nodes.
 const schemaBindFrameBytes int64 = 256
 const schemaBindCompletionBytes int64 = 64
 

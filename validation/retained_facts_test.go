@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strings"
 	"testing"
@@ -50,7 +51,7 @@ func TestRetainedFactOpenClosureStaysZero(t *testing.T) {
 	}
 }
 
-// Compile-time envelope guards run on every supported host, including 386.
+// Compile-time envelope guards.
 const _ = uint64(retainedFactNodeBytes) - uint64(unsafe.Sizeof(factNode{}))
 const _ = uint64(retainedFactPoolBytes) - uint64(unsafe.Sizeof(retainedFactPool{}))
 const _ = uint64(retainedComponentBytes) - uint64(unsafe.Sizeof(Evidence[ComponentID]{}))
@@ -757,7 +758,7 @@ func TestRetainedFactSchemaCacheRejectsForeignAndZeroIdentity(t *testing.T) {
 }
 
 func TestRetainedFactSchemaCacheGrowthRefusesOverflow(t *testing.T) {
-	maxInt := int64(^uint(0) >> 1)
+	maxInt := int64(math.MaxInt)
 	for _, tc := range []struct {
 		name                string
 		capacity, slotBytes int64

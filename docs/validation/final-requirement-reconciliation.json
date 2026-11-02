@@ -4357,7 +4357,7 @@
         "model",
         "package"
       ],
-      "implementation": "Required scripts preserve mod/generate/format/test/vet/race/fuzz plus three OS tests, real XSD oracle and actual 386 execution.",
+      "implementation": "Required scripts preserve mod/generate/format/test/vet/race/fuzz plus three OS tests and the real XSD oracle.",
       "implementation_refs": [
         "scripts/check-all.sh",
         ".github/workflows/ci.yml"
@@ -4384,7 +4384,7 @@
         "scope": "Historical implementation/acceptance observations only. The final integrated tree requires its own named commands, toolchain, platform, exit status and actual receipts."
       },
       "residual_scope": "This ledger is not an execution receipt for an integrated tree. Historical PR 41 receipts do not certify PR 42 additions. Exact-tree local/hosted acceptance evidence is recorded separately in the PR description.",
-      "closure_criterion": "An exact integrated-tree receipt records unchanged seven local stages, required inventories/oracles, actual 386 and hosted three-OS/quality checks with commands, versions, exits and receipts. Unavailable checks remain visible."
+      "closure_criterion": "An exact integrated-tree receipt records unchanged seven local stages, required inventories/oracles and hosted three-OS/quality checks with commands, versions, exits and receipts. Unavailable checks remain visible."
     },
     {
       "id": "REQ-DEF-VERIFY-DIFFERENTIAL",
@@ -11841,7 +11841,7 @@
             "TestResourceGraphAggregateSourceIDBoundary",
             "TestResourceGraphAggregateModelAttributeBoundary"
           ],
-          "assessment_basis": "Host-int conversion (including its explicit 32-bit branch) is separated from int64 quota; linked exact/one-under cases preserve prior counters and enforce the original shared cap. This mapping does not certify a 386 execution.",
+          "assessment_basis": "Int conversion is separated from int64 quota and bounded by math.MaxInt; the plan's 32-bit bounds clause is retired by the owner's 2026-11-02 decision to keep no platform-specific code or CI. Linked exact/one-under cases preserve prior counters and enforce the original shared cap.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -13469,7 +13469,7 @@
           ],
           "assessment": "missing-evidence",
           "case_ids": [],
-          "assessment_basis": "Required scripts preserve mod/generate/format/test/vet/race/fuzz plus three OS tests, real XSD oracle and actual 386 execution.",
+          "assessment_basis": "Required scripts preserve mod/generate/format/test/vet/race/fuzz plus three OS tests and the real XSD oracle.",
           "gap": "No exact executable case or portable evidence was established in this reconciliation for: A regression first reproduces the selected defect and passes after the scoped correction.",
           "gap_kind": "decision-or-execution-receipt-required"
         },
@@ -13491,7 +13491,7 @@
           ],
           "assessment": "missing-evidence",
           "case_ids": [],
-          "assessment_basis": "Required scripts preserve mod/generate/format/test/vet/race/fuzz plus three OS tests, real XSD oracle and actual 386 execution.",
+          "assessment_basis": "Required scripts preserve mod/generate/format/test/vet/race/fuzz plus three OS tests and the real XSD oracle.",
           "gap": "No exact executable case or portable evidence was established in this reconciliation for: Resource boundaries and cancellation enter fuzz seeds alongside valid source/model seeds.",
           "gap_kind": "decision-or-execution-receipt-required"
         },
@@ -19690,13 +19690,13 @@
       "file": "validation/budgets_test.go",
       "function": "TestAllocationSizeChecksHostIntWithoutNarrowingLimits",
       "evidence_layer": "baseline",
-      "input": "Allocation sizes 0, 1, host-int max and negative; 32-bit-only max+1 branch; int64 account limit.",
-      "expected": "Host conversion overflow rejects without narrowing cumulative int64 limits; the 32-bit branch is a route, not proof of a 386 execution.",
+      "input": "Allocation sizes 0, 1, int max and negative; int64 account limit.",
+      "expected": "Int conversion rejects negative sizes without narrowing cumulative int64 limits.",
       "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
       "anchors": [
         {
           "file": "validation/budgets_test.go",
-          "text": "if strconv.IntSize == 32 {"
+          "text": "if _, err := allocationSize(-1); !errors.Is(err, ErrInvalidConfiguration) {"
         },
         {
           "file": "validation/budgets_test.go",

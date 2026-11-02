@@ -188,7 +188,6 @@ go test -count=1 ./internal/finalreconciliation
 ```
 
 Execution receipts require an identified commit or tree, command, toolchain,
-platform and result. This document makes no standalone pass claim. The
-allocation test's 32-bit branch is a mapped assertion, not a 386 execution
-receipt. Full-suite, seven-stage local acceptance, external oracle, race, fuzz,
-hosted CI and 386 results must be read from their exact-tree receipts.
+platform and result. This document makes no standalone pass claim.
+Full-suite, seven-stage local acceptance, external oracle, race, fuzz and
+hosted CI results must be read from their exact-tree receipts.
