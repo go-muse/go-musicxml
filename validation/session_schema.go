@@ -723,7 +723,7 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 	// The verdict above precedes any diagnostic work, allocation, cancellation or
 	// cache retention. Display quotas cannot erase a proved normative violation.
 	for i := previous.details; i < len(result.Issues); i++ {
-		if s.accumulator.report.DiagnosticsTruncated {
+		if s.accumulator.diagnosticsTruncated() {
 			break
 		}
 		if err := s.step(ctx, 1); err != nil {
@@ -842,7 +842,7 @@ func (s *Session) flushSourceDTDSummaries() error {
 	// Flush after ordinary findings, even on an interrupted Finish. No healthy
 	// context is needed for this already bounded diagnostic-only operation.
 	for _, key := range state.dtdOrder {
-		if s.accumulator.report.DiagnosticsTruncated {
+		if s.accumulator.diagnosticsTruncated() {
 			break
 		}
 		summary := state.dtdSummaries[key]
@@ -859,7 +859,7 @@ func (s *Session) flushSourceDTDSummaries() error {
 	}
 	// Setting this earlier would suppress later ordinary failure storage.
 	if state.dtdOmitted {
-		s.accumulator.report.DiagnosticsTruncated = true
+		s.accumulator.truncateDiagnostics()
 	}
 	return nil
 }
