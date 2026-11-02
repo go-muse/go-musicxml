@@ -38,6 +38,8 @@ func init() {
 	validationlink.Register("CompiledSchema.Share", (*CompiledSchema).share)
 	validationlink.Register("RunOptions.ResourceSnapshot", resourceSnapshotRun)
 	validationlink.Register("Session.SetFinishObserver", setFinishObserver)
+	validationlink.Register("Session.SetWindowedStrategy", setWindowedStrategy)
+	validationlink.Register("Report.SetFindingKeyObserver", setFindingKeyObserverOrdered)
 	validationlink.Register("Engine.SourceAttributeLexicalProvider", (*Engine).sourceAttributeLexicalProvider)
 	validationlink.Register("Engine.SourceDTDIDsSelected", (*Engine).sourceDTDIDsSelected)
 	validationlink.Register("Engine.SourceOriginProvider", (*Engine).sourceOriginProvider)

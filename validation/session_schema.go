@@ -217,6 +217,7 @@ func (w *schemaBindScratch) release() {
 // bindSourceSchema owns the pending source-fact transition. Exact child uses
 // come only from the shared grammar witness; a path or QName never guesses one.
 func (s *Session) bindSourceSchema(ctx context.Context) error {
+	s.accumulator.at = findingKey{stage: stageSchema}
 	state := s.schema
 	if state == nil || state.bound || s.root == nil {
 		return nil
@@ -628,6 +629,7 @@ func (s *Session) schemaResult(n *factNode, check XSDCheck) xsd.Result {
 	return xsd.Result{}
 }
 func (s *Session) recordXSDProvedFailures(ctx context.Context, n *factNode) error {
+	s.accumulator.at = findingKey{stage: stageSchema, trigger: int64(n.header.ID)}
 	// These bounded, dependency-free rule lists were admitted and charged at
 	// Begin. Looking up an already proved result must precede a new cancellation
 	// or exhausted-work check; diagnostic/cache work remains checked afterwards.
@@ -877,6 +879,7 @@ func (s *Session) recordXSDIdentityFailure(ctx context.Context) error {
 }
 
 func (s *Session) finalizeSourceSchema(ctx context.Context) error {
+	s.accumulator.at = findingKey{stage: stageSchemaFinal}
 	state := s.schema
 	if state.run == nil {
 		return nil
