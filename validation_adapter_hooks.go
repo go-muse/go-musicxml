@@ -42,7 +42,11 @@ var (
 	validationCompiledSchemaShare                   = validationlink.Hook[func(*validation.CompiledSchema) *validation.CompiledSchema]("CompiledSchema.Share")
 	validationResourceSnapshotRun                   = validationlink.Hook[func(validation.RunOptions) validation.RunOptions]("RunOptions.ResourceSnapshot")
 	// validationSetFinishObserver is a test observation point only.
-	validationSetFinishObserver                      = validationlink.Hook[func(func(string, *validation.Account)) func(string, *validation.Account)]("Session.SetFinishObserver")
+	validationSetFinishObserver = validationlink.Hook[func(func(string, *validation.Account)) func(string, *validation.Account)]("Session.SetFinishObserver")
+	// validationSetWindowedStrategy is a test switch only.
+	validationSetWindowedStrategy = validationlink.Hook[func(bool) bool]("Session.SetWindowedStrategy")
+	// validationObserveFindingKeyOrder is a test observation point only.
+	validationObserveFindingKeyOrder                 = validationlink.Hook[func(func(bool, int))]("Report.SetFindingKeyObserver")
 	validationShareDictionarySet                     = validationlink.Hook[func(context.Context, *validation.DictionarySet, *validation.Account) (*validation.DictionarySet, error)]("ShareDictionarySet")
 	validationEngineSourceAttributeLexicalProvider   = validationlink.Hook[func(*validation.Engine, validation.ProfileID, validation.Assembly) (validation.RuleKey, bool)]("Engine.SourceAttributeLexicalProvider")
 	validationEngineSourceDTDIDsSelected             = validationlink.Hook[func(*validation.Engine, validation.ProfileID) bool]("Engine.SourceDTDIDsSelected")

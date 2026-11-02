@@ -253,6 +253,66 @@ func reportBoundedValue(value string, limit int) string {
 	return reportUTF8Prefix(value, limit-len(marker)) + marker
 }
 
+// findingStage names the part of a session that produced a finding, in the
+// order the buffered engine runs them.
+type findingStage uint8
+
+const (
+	stageInput findingStage = iota
+	stageSchema
+	stageSchemaFinal
+	stagePhases
+	stageSummaries
+)
+
+// findingKey orders a stored finding by where the buffered engine produces
+// it, independently of when an engine evaluates it: the stage, the evaluation
+// phase, the trigger (the input event, or the node in document order) and the
+// order within that trigger. The windowed engine sorts by it to reproduce the
+// buffered report.
+type findingKey struct {
+	stage   findingStage
+	phase   int
+	trigger int64
+	order   int
+}
+
+func (k findingKey) less(other findingKey) bool {
+	if k.stage != other.stage {
+		return k.stage < other.stage
+	}
+	if k.phase != other.phase {
+		return k.phase < other.phase
+	}
+	if k.trigger != other.trigger {
+		return k.trigger < other.trigger
+	}
+	return k.order < other.order
+}
+
+// findingKeyObserver receives every finished report's finding keys. It is an
+// unsynchronized package variable: only serial tests set it.
+var findingKeyObserver func(keys []findingKey)
+
+// setFindingKeyObserverOrdered observes, for every finished report, whether its
+// findings were stored in strictly increasing key order and how many there
+// were; nil stops observing.
+func setFindingKeyObserverOrdered(observer func(ordered bool, findings int)) {
+	if observer == nil {
+		findingKeyObserver = nil
+		return
+	}
+	findingKeyObserver = func(keys []findingKey) {
+		ordered := true
+		for i := 1; i < len(keys); i++ {
+			if !keys[i-1].less(keys[i]) {
+				ordered = false
+			}
+		}
+		observer(ordered, len(keys))
+	}
+}
+
 // reportAccumulator keeps authoritative assessment axes independently of the
 // diagnostic storage budget. It belongs to one single-goroutine session.
 type reportAccumulator struct {
@@ -261,6 +321,11 @@ type reportAccumulator struct {
 	rules            map[RuleKey]bool
 	normativeUnknown bool
 	unfinished       bool
+	// at is the position the session is evaluating; keys holds one key per
+	// stored finding. The keys are not charged separately: each stored finding
+	// is charged to the diagnostic byte quota for more than its key.
+	at   findingKey
+	keys []findingKey
 }
 
 func newReportAccumulator(profile Profile, account *Account) *reportAccumulator {
@@ -369,6 +434,13 @@ func (a *reportAccumulator) storeDiagnostic(rule RuleDefinition, decision Decisi
 		return err
 	}
 	a.report.Findings = append(a.report.Findings, Finding{Decision: cloneDecision(decision), Category: rule.Category, Location: cloneLocation(location)})
+	key := a.at
+	if n := len(a.keys); n > 0 {
+		if last := a.keys[n-1]; last.stage == key.stage && last.phase == key.phase && last.trigger == key.trigger {
+			key.order = last.order + 1
+		}
+	}
+	a.keys = append(a.keys, key)
 	if includeRule {
 		a.report.Rules = append(a.report.Rules, cloneRule(rule))
 		a.rules[rule.Key] = true
@@ -388,6 +460,9 @@ func (a *reportAccumulator) terminal(_ error, category DiagnosticCategory, reaso
 }
 
 func (a *reportAccumulator) finish(inputComplete bool, syntax SyntaxState) Report {
+	if findingKeyObserver != nil {
+		findingKeyObserver(a.keys)
+	}
 	r := a.report
 	r.InputComplete, r.Syntax = inputComplete, syntax
 	unresolvedInput := !inputComplete || !reportSyntaxComplete(r.Target, syntax)

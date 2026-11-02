@@ -146,6 +146,8 @@ type Session struct {
 	transient               int64
 	internRetained          int64
 	contextFamilies         ContextFamilies
+	strategy                evaluationStrategy
+	inputEvents             int64
 	resourceSnapshot        bool
 	hiddenContexts          []hiddenContext
 	// contextBackingHold keeps replaced Report.Context arrays charged while
@@ -219,7 +221,7 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 			return nil, err
 		}
 	}
-	s := &Session{catalog: e.catalog, documentID: strings.Clone(opts.DocumentID), profile: profile, account: account, nodes: make(map[NodeID]*factNode), decisions: make(map[decisionID]Decision), contexts: make(map[ContextKey]ContextFact), identities: make(map[string]*identityIndex), registered: make(map[decisionID]bool), contextFamilies: opts.Context, resourceSnapshot: opts.resourceSnapshot}
+	s := &Session{catalog: e.catalog, documentID: strings.Clone(opts.DocumentID), profile: profile, account: account, nodes: make(map[NodeID]*factNode), decisions: make(map[decisionID]Decision), contexts: make(map[ContextKey]ContextFact), identities: make(map[string]*identityIndex), registered: make(map[decisionID]bool), contextFamilies: opts.Context, resourceSnapshot: opts.resourceSnapshot, strategy: defaultStrategy}
 	// Profile/report fixed metadata is finite at compile time and its per-run
 	// copied payload is also reserved before the report snapshot is allocated.
 	if err := s.retain(int64(1024+len(opts.DocumentID)) + profileLogicalBytes(profile)); err != nil {
@@ -305,6 +307,8 @@ func (s *Session) event(ctx context.Context, op string) error {
 	if err := s.account.Charge(BudgetEvents, 1); err != nil {
 		return s.fail(err)
 	}
+	s.inputEvents++
+	s.accumulator.at = findingKey{stage: stageInput, trigger: s.inputEvents}
 	return nil
 }
 func (s *Session) fail(err error) error {
@@ -368,6 +372,31 @@ func (s *Session) releaseTransient(mark int64) {
 // its transient storage is released) and after every phase ("finished").
 // It is an unsynchronized package variable: only serial tests set it.
 var finishObserver func(stage string, account *Account)
+
+// evaluationStrategy selects how a session schedules evaluation. The windowed
+// strategy is the per-measure engine under construction; until it lands it
+// evaluates exactly as buffered, and differential tests compare the two.
+type evaluationStrategy uint8
+
+const (
+	strategyBuffered evaluationStrategy = iota
+	strategyWindowed
+)
+
+// defaultStrategy is the strategy of new sessions. It is an unsynchronized
+// package variable: only serial tests set it.
+var defaultStrategy = strategyBuffered
+
+// setWindowedStrategy selects the strategy of new sessions and returns whether
+// the windowed one was selected before.
+func setWindowedStrategy(windowed bool) bool {
+	previous := defaultStrategy == strategyWindowed
+	defaultStrategy = strategyBuffered
+	if windowed {
+		defaultStrategy = strategyWindowed
+	}
+	return previous
+}
 
 func setFinishObserver(observer func(stage string, account *Account)) func(string, *Account) {
 	previous := finishObserver
@@ -689,9 +718,10 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 		finishObserver("evaluating", s.account)
 	}
 	if s.terminalCause == nil {
-		for _, phase := range s.catalog.phases[s.profile.ID] {
+		for phaseIndex, phase := range s.catalog.phases[s.profile.ID] {
 			s.collectingIdentity = phase.registration
-			for _, id := range s.sequence {
+			for trigger, id := range s.sequence {
+				s.accumulator.at = findingKey{stage: stagePhases, phase: phaseIndex, trigger: int64(trigger)}
 				n := s.nodes[id]
 				if !n.closed {
 					continue
@@ -714,6 +744,7 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	if finishObserver != nil {
 		finishObserver("finished", s.account)
 	}
+	s.accumulator.at = findingKey{stage: stageSummaries}
 	addCause(s.flushSourceDTDSummaries())
 	if !s.inputComplete || !reportSyntaxComplete(s.profile.Target, end.Syntax) || s.terminalCause != nil || s.enumerationIncomplete {
 		s.accumulator.incomplete()
