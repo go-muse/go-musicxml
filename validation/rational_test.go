@@ -5,7 +5,6 @@ import (
 	"errors"
 	"math"
 	"math/big"
-	"strconv"
 	"sync"
 	"testing"
 )
@@ -224,12 +223,8 @@ func TestRationalCostChecksOverflowAndHostWidth(t *testing.T) {
 	if _, err := rationalCheckedAdd(BudgetBufferedBytes, math.MaxInt64, 1); !errors.Is(err, ErrResourceLimit) {
 		t.Fatalf("allocation add overflow=%v", err)
 	}
-	if strconv.IntSize == 32 {
-		if _, err := rationalAllocation(int64(math.MaxInt32) + 1); !errors.Is(err, ErrResourceLimit) {
-			t.Fatalf("host overflow=%v", err)
-		}
-	} else if _, err := rationalAllocation(int64(math.MaxInt32) + 1); err != nil {
-		t.Fatalf("64-bit allocation guard=%v", err)
+	if _, err := rationalAllocation(int64(math.MaxInt32) + 1); err != nil {
+		t.Fatalf("rationalAllocation(MaxInt32+1)=%v, want accepted", err)
 	}
 }
 func TestRationalMeterBoundariesAndCleanup(t *testing.T) {

@@ -1444,12 +1444,11 @@ still prevents source acceptance, including in the mandatory assessed-loading
 pipeline. With the bundled DTDs, `DecodeAssessed` accepts the committed official
 `Chant.musicxml` with default budgets. The larger `MozartTrio.musicxml` and
 UTF-16 `MozaChloSample.musicxml` now complete their full source and model
-assessment and need more than the default 64 MiB buffer and 20,000,000 rule
-steps; with 256 MiB and 100,000,000 steps both are accepted. Their default
-buffer refusals are architecture-dependent receipts, not portable input-size
-limits; 386 does not assert them. See the [capacity controls][loading-capacity]
-for provenance. Of the 154 score and opus files in `testdata/official` and the
-MusicXML test suite, default assessed loading accepted 140 when measured for
+assessment within the default 64 MiB buffer but need more than the default
+20,000,000 rule steps; with 40,000,000 steps both are accepted
+(`TestStrictLoadingOfficialScoresFitTheDefaultBuffer`). See the
+[capacity controls][loading-capacity] for provenance. Of the 154 score and
+opus files in `testdata/official` and the MusicXML test suite, default assessed loading accepted 140 when measured for
 this change, and `TestAssessedLoadingCorpusMeasurement` keeps that floor; the
 rest report genuine violations, unestablished semantic context or resource
 limits, none of them unread-DTD evidence. The source-XSD preview remains developmental and

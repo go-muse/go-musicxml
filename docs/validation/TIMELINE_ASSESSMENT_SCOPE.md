@@ -222,8 +222,8 @@ runtime binding/revision and implementation commit, independent hand-computed
 source/current-model expectations, all applicable positive/negative/boundary/
 missing-fact/interaction axes, causal interruption behavior and remaining owners.
 The integrity tests in `timeline_ownership_test.go` check traceability only.
-All final repository stages, exact-head CI, actual 386 execution and required
-real xmllint checks remain separate acceptance evidence; XSD oracle success
+All final repository stages, exact-head CI and required real xmllint checks
+remain separate acceptance evidence; XSD oracle success
 cannot prove musical semantics.
 
 ## Remaining performance obligation
@@ -262,8 +262,8 @@ snapshots; a named test reference is not itself an execution pass. The ledger di
 source/current-model entry points from synthetic shared-fact unit fixtures.
 A unit test that reads typed time or staff fields does not prove every production
 adapter occurrence. Independent semantic and resource acceptance are pinned to production `22ae68a`.
-Final integrated repository stages and exact-head CI, including actual 386
-execution and required real xmllint, remain separate acceptance gates.
+Final integrated repository stages and exact-head CI, including required real
+xmllint, remain separate acceptance gates.
 
 The [independent resource checkpoint](evidence/timeline-resource-independent-checkpoint.md)
 records accepted `22ae68a` default-budget, certificate/normalization lifecycle

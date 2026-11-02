@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"testing"
 )
 
@@ -31,7 +32,7 @@ func layoutRound3CancellationFixture(t *testing.T, duplicate bool, limit int64) 
 func TestLayoutRound3StaffSelectionCancellationPrecedesAllocation(t *testing.T) {
 	for _, duplicate := range []bool{false, true} {
 		baseline, b := layoutRound3CancellationFixture(t, duplicate, 64<<20)
-		counter := &rationalCancelContext{Context: context.Background(), at: int(^uint(0) >> 1)}
+		counter := &rationalCancelContext{Context: context.Background(), at: math.MaxInt}
 		baseline.r.ctx = counter
 		if err := baseline.publishStaffLayouts(b, Evidence[layoutStaffRef]{State: EvidenceAbsent}, layoutFrame{}); err != nil {
 			t.Fatal(err)

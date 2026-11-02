@@ -7,13 +7,14 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"math"
 	"strings"
 	"testing"
 	"testing/iotest"
 )
 
 func TestSourceCursorCoordinateWidth(t *testing.T) {
-	maximum := int(^uint(0) >> 1)
+	maximum := math.MaxInt
 	for _, tc := range []struct {
 		name, text   string
 		line, column int
@@ -87,7 +88,7 @@ func TestSourceCursorCoordinateWidth(t *testing.T) {
 }
 
 func TestSourceASCIISpanCoordinateWidth(t *testing.T) {
-	maximum := int(^uint(0) >> 1)
+	maximum := math.MaxInt
 	for _, tc := range []struct {
 		name, text   string
 		line, column int
@@ -136,7 +137,7 @@ func TestSourceTokenCoordinateWidthPreservesXML(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer r.Close()
-	r.cursor.position.Column = int(^uint(0)>>1) - 5
+	r.cursor.position.Column = math.MaxInt - 5
 	starts := 0
 	for {
 		token, err := r.Token()

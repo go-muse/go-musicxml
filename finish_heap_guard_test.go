@@ -5,7 +5,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -153,18 +152,13 @@ func TestFinishChargeCoversTheHeapItAdds(t *testing.T) {
 // measurements of the live heap.
 const finishHeapNoise = 64 << 10
 
-// Evaluation scratch is charged only while its evaluation runs, so on a
-// 64-bit platform what model semantics' Finish charges on MozartTrio stays
-// within five and a half times the heap it adds (it was more than eight times
-// when layout formatting, navigation runs and performance records stayed
-// charged until cleanup). Most charges are fixed logical amounts, so the
-// ratio is larger where words and the heap are half as large.
+// Evaluation scratch is charged only while its evaluation runs, so what model
+// semantics' Finish charges on MozartTrio stays within five and a half times
+// the heap it adds (it was more than eight times when layout formatting,
+// navigation runs and performance records stayed charged until cleanup).
 func TestFinishChargeStaysNearTheHeapItAdds(t *testing.T) {
 	if raceEnabled || testing.Short() {
 		t.Skip("measures the heap")
-	}
-	if strconv.IntSize == 32 {
-		t.Skip("the bound is for 64-bit heaps")
 	}
 	data, err := os.ReadFile(filepath.Join("testdata", "official", "MozartTrio.musicxml"))
 	if err != nil {

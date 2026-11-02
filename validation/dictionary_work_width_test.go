@@ -12,7 +12,7 @@ func TestDictionaryComparisonWorkWidths(t *testing.T) {
 		name              string
 		left, right, want int64
 	}{
-		{"near386", 2147483630, 44, 2147483675},
+		{"beyond-int32", 2147483630, 44, 2147483675},
 		{"small", 7, 11, 19},
 		{"empty", 0, 0, 1},
 	} {

@@ -35,12 +35,6 @@ func TestLegacyValidationBudgetPolicy(t *testing.T) {
 	if err := account.Charge(validation.BudgetRuleSteps, 1); !errors.Is(err, validation.ErrResourceLimit) {
 		t.Fatalf("legacy accounting overflow was not rejected: %v", err)
 	}
-	if strconv.IntSize == 32 {
-		hostMax := int64(^uint(0) >> 1)
-		if _, err := validationAllocationSize(hostMax + 1); !errors.Is(err, validation.ErrResourceLimit) {
-			t.Fatalf("host allocation overflow was not rejected: %v", err)
-		}
-	}
 }
 
 func TestValidateLegacyLargeScore(t *testing.T) {

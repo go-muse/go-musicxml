@@ -544,8 +544,8 @@ func dictionarySort[T any](ctx context.Context, a *Account, rows []T, key func(T
 	return first
 }
 
-// Keep lengths wide before adding: scalar limits may exceed the host int range
-// on another supported architecture. The trailing unit admits the comparison.
+// Keep lengths wide before adding: scalar limits are int64 and may exceed the
+// int range. The trailing unit admits the comparison.
 func dictionaryComparisonWork(left, right int64) (int64, error) {
 	return rationalSum(BudgetRuleSteps, left, right, 1)
 }
