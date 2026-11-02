@@ -18,7 +18,7 @@ func attributeWildcardOracleGate(workflow string) error {
 		return fmt.Errorf("missing external oracle job")
 	}
 	job, _, ok = strings.Cut(job, "\n  fuzz:\n")
-	if !ok || !strings.Contains(job, `MUSICXML_REQUIRE_XMLLINT: "1"`) || !strings.Contains(job, "libxml2-utils") {
+	if !ok || !strings.Contains(job, `MUSICXML_REQUIRE_XMLLINT: "1"`) || !strings.Contains(job, "libxml2-utils") || !strings.Contains(job, "\n    runs-on: ubuntu-24.04\n") {
 		return fmt.Errorf("missing required real xmllint setup")
 	}
 	command := regexp.MustCompile(`(?m)^\s*run: go test .* -run='([^']+)' \.$`).FindStringSubmatch(job)
@@ -59,6 +59,7 @@ func TestAttributeWildcardCIGateDetectsOmission(t *testing.T) {
 		strings.Replace(lf, attributeWildcardOracleTests[1], "TestDifferentOracle", 1),
 		strings.Replace(lf, `MUSICXML_REQUIRE_XMLLINT: "1"`, `MUSICXML_REQUIRE_XMLLINT: "0"`, 1),
 		strings.Replace(lf, "libxml2-utils", "different-package", 1),
+		strings.Replace(lf, "runs-on: ubuntu-24.04", "runs-on: ubuntu-latest", 1),
 	} {
 		for _, newline := range []string{"\n", "\r\n"} {
 			if err := attributeWildcardOracleGate(strings.ReplaceAll(changed, "\n", newline)); err == nil {
