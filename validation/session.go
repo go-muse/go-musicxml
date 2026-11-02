@@ -147,9 +147,11 @@ type Session struct {
 	internRetained          int64
 	contextFamilies         ContextFamilies
 	strategy                evaluationStrategy
-	inputEvents             int64
-	resourceSnapshot        bool
-	hiddenContexts          []hiddenContext
+	// window is the open evaluation window under the windowed strategy.
+	window           *evaluationWindow
+	inputEvents      int64
+	resourceSnapshot bool
+	hiddenContexts   []hiddenContext
 	// contextBackingHold keeps replaced Report.Context arrays charged while
 	// a rollback snapshot may restore one; contextBackingHeld sums them.
 	contextBackingHold      bool
@@ -497,9 +499,13 @@ func (s *Session) OpenNode(ctx context.Context, node NodeHeader) error {
 		parent := s.stack[len(s.stack)-1]
 		parent.children = append(parent.children, retained)
 	}
+	opensWindow := s.opensWindow(header.Name)
 	s.nodes[node.ID] = retained
 	s.sequence = append(s.sequence, node.ID)
 	s.stack = append(s.stack, retained)
+	if opensWindow {
+		s.window = &evaluationWindow{root: node.ID, first: len(s.sequence) - 1}
+	}
 	if s.sourceOriginKey() != (RuleKey{}) {
 		s.sourceOriginExpected++
 	}
@@ -623,6 +629,11 @@ func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
 	n.end = ownedEnd
 	n.closed = true
 	s.stack = s.stack[:len(s.stack)-1]
+	if s.window != nil && s.window.root == n.header.ID {
+		s.window.end = len(s.sequence)
+		s.closeWindow(*s.window)
+		s.window = nil
+	}
 	if err := s.account.Release(BudgetDepth, 1); err != nil {
 		return s.fail(err)
 	}
@@ -717,6 +728,9 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	}
 	if finishObserver != nil {
 		finishObserver("evaluating", s.account)
+	}
+	if windowObserver != nil && s.strategy == strategyWindowed {
+		windowObserver(0, len(s.sequence), len(s.sequence))
 	}
 	if s.terminalCause == nil {
 		for phaseIndex, phase := range s.catalog.phases[s.profile.ID] {

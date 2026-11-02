@@ -164,3 +164,91 @@ func TestFindingKeysFollowInsertionOrder(t *testing.T) {
 	}
 	t.Logf("%d reports, %d findings, %d out of order", reports, findings, unordered)
 }
+
+// Under the windowed strategy every measure is one evaluation window: through
+// both validation lines, on the official and test-suite files, the windows
+// close in document order without overlapping, there is one per measure of a
+// partwise score, and the nodes outside them, the skeleton that stays until
+// Finish, are the header and the parts. The buffered strategy opens none.
+func TestWindowsCoverMeasures(t *testing.T) {
+	if raceEnabled {
+		t.Skip("slow under the race detector")
+	}
+	var files []string
+	for _, dir := range []string{"testdata/official", "testdata/corpus"} {
+		if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err == nil && !info.IsDir() && (strings.HasSuffix(path, ".xml") || strings.HasSuffix(path, ".musicxml")) {
+				files = append(files, path)
+			}
+			return err
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	measure := regexp.MustCompile(`<measure[\s>/]`)
+	partwise := regexp.MustCompile(`<score-partwise[\s>]`)
+	type window struct{ first, end int }
+	var windows []window
+	total := -1
+	t.Cleanup(func() { validationSetWindowObserver(nil) })
+	observe := func(root validation.NodeID, first, end int) {
+		if root == 0 {
+			total = end
+			return
+		}
+		windows = append(windows, window{first, end})
+	}
+	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 34}
+	checked, nodes, skeleton := 0, 0, 0
+	for i := 0; i < len(files); i += windowedStride() {
+		data, err := os.ReadFile(files[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+		document, err := Decode(bytes.NewReader(data))
+		if err != nil {
+			continue
+		}
+		measures := len(measure.FindAll(data, -1))
+		for _, line := range []string{"source", "model"} {
+			for _, windowed := range []bool{false, true} {
+				windows, total = nil, -1
+				previousStrategy := validationSetWindowedStrategy(windowed)
+				validationSetWindowObserver(observe)
+				if line == "source" {
+					_, err = InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceLine, Budgets: big})
+				} else {
+					_, err = AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics, Budgets: big})
+				}
+				validationSetWindowObserver(nil)
+				validationSetWindowedStrategy(previousStrategy)
+				if err != nil {
+					t.Fatalf("%s %s: %v", files[i], line, err)
+				}
+				if !windowed {
+					if len(windows) != 0 || total != -1 {
+						t.Fatalf("%s %s: buffered strategy observed %d windows", files[i], line, len(windows))
+					}
+					continue
+				}
+				if partwise.Match(data) && len(windows) != measures {
+					t.Errorf("%s %s: %d windows for %d measures", files[i], line, len(windows), measures)
+				}
+				covered := 0
+				for k, w := range windows {
+					if w.first >= w.end || (k > 0 && w.first < windows[k-1].end) || w.end > total {
+						t.Fatalf("%s %s: window %d [%d,%d) out of order (total %d)", files[i], line, k, w.first, w.end, total)
+					}
+					covered += w.end - w.first
+				}
+				nodes += total
+				skeleton += total - covered
+				checked++
+			}
+		}
+	}
+	if checked < 20 {
+		t.Fatalf("checked %d runs", checked)
+	}
+	t.Logf("%d windowed runs, %d nodes, %d in the skeleton", checked, nodes, skeleton)
+}

@@ -45,6 +45,8 @@ var (
 	validationSetFinishObserver = validationlink.Hook[func(func(string, *validation.Account)) func(string, *validation.Account)]("Session.SetFinishObserver")
 	// validationSetWindowedStrategy is a test switch only.
 	validationSetWindowedStrategy = validationlink.Hook[func(bool) bool]("Session.SetWindowedStrategy")
+	// validationSetWindowObserver is a test observation point only.
+	validationSetWindowObserver = validationlink.Hook[func(func(validation.NodeID, int, int)) func(validation.NodeID, int, int)]("Session.SetWindowObserver")
 	// validationObserveFindingKeyOrder is a test observation point only.
 	validationObserveFindingKeyOrder                 = validationlink.Hook[func(func(bool, int))]("Report.SetFindingKeyObserver")
 	validationShareDictionarySet                     = validationlink.Hook[func(context.Context, *validation.DictionarySet, *validation.Account) (*validation.DictionarySet, error)]("ShareDictionarySet")
