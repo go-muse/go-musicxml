@@ -39,6 +39,7 @@ func init() {
 	validationlink.Register("RunOptions.ResourceSnapshot", resourceSnapshotRun)
 	validationlink.Register("Session.SetFinishObserver", setFinishObserver)
 	validationlink.Register("Session.SetWindowedStrategy", setWindowedStrategy)
+	validationlink.Register("Session.SetWindowObserver", setWindowObserver)
 	validationlink.Register("Report.SetFindingKeyObserver", setFindingKeyObserverOrdered)
 	validationlink.Register("Engine.SourceAttributeLexicalProvider", (*Engine).sourceAttributeLexicalProvider)
 	validationlink.Register("Engine.SourceDTDIDsSelected", (*Engine).sourceDTDIDsSelected)
