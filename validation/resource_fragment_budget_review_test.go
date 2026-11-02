@@ -88,7 +88,7 @@ func TestReviewFragmentIndexExactWorkAndCancellation(t *testing.T) {
 	for _, delta := range []int64{0, -1} {
 		p, snap = frameworkFixture(t)
 		used, _ := p.account.Usage(BudgetRuleSteps)
-		if err := p.account.Charge(BudgetRuleSteps, p.account.Limits().MaxRuleSteps-used-cost-delta); err != nil {
+		if err := p.account.Charge(BudgetRuleSteps, ruleStepLimit(t, p.account)-used-cost-delta); err != nil {
 			t.Fatal(err)
 		}
 		result, err := p.resolveFragmentID(context.Background(), snap, "anchor")

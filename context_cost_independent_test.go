@@ -106,15 +106,17 @@ func TestIndependentContextOrdinaryHundredNotesDefaultWork(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// The fixed base of the default rule-step limit, without its allowance.
+	base := validation.Budgets{MaxRuleSteps: validation.DefaultRuleStepBase}
 	for _, model := range []bool{false, true} {
 		var r validation.Report
 		if model {
-			r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext})
+			r, err = AssessModel(context.Background(), doc, ModelOptions{Profile: ProfileModelContext, Budgets: base})
 		} else {
-			r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext})
+			r, err = InspectXML(context.Background(), strings.NewReader(source), SourceOptions{Profile: ProfileSourceContext, Budgets: base})
 		}
 		if err != nil || !r.Satisfied() {
-			t.Errorf("ordinary 100-note context fixture exceeds unchanged finite defaults (model=%t): %v", model, err)
+			t.Errorf("ordinary 100-note context fixture exceeds the base rule-step limit (model=%t): %v", model, err)
 		}
 	}
 }

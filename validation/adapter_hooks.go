@@ -6,6 +6,7 @@ import "github.com/go-muse/go-musicxml/internal/validationlink"
 // exported. Each is a typed function; a method takes its receiver first.
 func init() {
 	validationlink.Register("AllocationSize", allocationSize)
+	validationlink.Register("Account.ChargeDocumentBytes", (*Account).chargeDocumentBytes)
 	validationlink.Register("NewBarlineLocationPlan", newBarlineLocationPlan)
 	validationlink.Register("NewBendReleaseSignPlan", newBendReleaseSignPlan)
 	validationlink.Register("NewChordDurationPlan", newChordDurationPlan)

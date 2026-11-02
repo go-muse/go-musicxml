@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -59,9 +58,9 @@ func TestSourceInternalDTDPublicExternalIdentifiersStayUnread(t *testing.T) {
 	}
 }
 
-// officialDTDCapacity is the configured capacity at which the two larger
+// officialDTDCapacity is a configured capacity at which the two larger
 // official scores complete source and model assessment with their bundled
-// external DTD. Their default-budget refusals are pinned separately.
+// external DTD; they also complete with the default budgets.
 var officialDTDCapacity = validation.Budgets{MaxBufferedBytes: 256 << 20, MaxRuleSteps: 100_000_000}
 
 func TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD(t *testing.T) {
@@ -101,25 +100,16 @@ func TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD(t *testing.T) {
 	}
 }
 
-// Both larger official scores exceed the default budgets once their external
-// DTD is read: source and model assessment then do their full work. The
-// default refusal is an amd64 receipt, not a portable storage-size promise;
-// every architecture runs the configured-capacity acceptance.
+// Both larger official scores load with the default budgets once their
+// external DTD is read, although source and model assessment then do their
+// full work: the default rule-step limit grows with the document. Until it did,
+// line 3 reached the fixed 20 million steps. The configured capacity is checked
+// as well.
 func decodeOfficialWithDeclaredCapacityControl(t *testing.T, input []byte, name string) (DecodeResult, error) {
 	t.Helper()
-	if runtime.GOARCH == "amd64" {
-		// The source line fits the defaults; line 3 reaches the default
-		// rule-step limit. Until the lines were split, the full source
-		// semantics exhausted the default buffer first.
-		result, err := DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
-		var resource *validation.ResourceError
-		if !errors.As(err, &resource) || resource.Kind != validation.BudgetRuleSteps || resource.Limit != validation.DefaultBudgets().MaxRuleSteps || resource.Used > resource.Limit || resource.Requested <= resource.Limit-resource.Used || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) {
-			t.Fatalf("original %s default capacity changed: resource=%+v error=%v", name, resource, err)
-		}
-		if result.Document != nil || !result.SourceLine.Satisfied() || result.ModelLine.AssessmentComplete || result.ModelLine.Terminal == nil || result.ModelLine.Terminal.Category != validation.CategoryResource {
-			t.Fatalf("default capacity refusal leaked acceptance: document=%T source=%t model complete=%t", result.Document, result.SourceLine.Satisfied(), result.ModelLine.AssessmentComplete)
-		}
-		t.Logf("original %s default rule-step checkpoint: used=%d requested=%d limit=%d conversion=%s", name, resource.Used, resource.Requested, resource.Limit, result.Conversion.State)
+	result, err := DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
+	if err != nil || result.Document == nil || !result.SourceLine.Satisfied() || !result.ModelLine.Satisfied() {
+		t.Fatalf("original %s with default budgets: document=%T source=%t model=%t error=%v", name, result.Document, result.SourceLine.Satisfied(), result.ModelLine.Satisfied(), err)
 	}
 	options := strictSourceOptions()
 	options.Assessment.Budgets = officialDTDCapacity

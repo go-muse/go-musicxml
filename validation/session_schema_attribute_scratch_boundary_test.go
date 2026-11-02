@@ -89,7 +89,7 @@ func TestSchemaAttributeScratchWorkBoundary(t *testing.T) {
 	for _, short := range []int64{0, 1} {
 		s, n, u, b := schemaAttributeScratchFixture(t)
 		used, _ := s.account.Usage(BudgetRuleSteps)
-		if err := s.account.Charge(BudgetRuleSteps, s.account.Limits().MaxRuleSteps-used-steps+short); err != nil {
+		if err := s.account.Charge(BudgetRuleSteps, ruleStepLimit(t, s.account)-used-steps+short); err != nil {
 			t.Fatal(err)
 		}
 		err := s.publishSchemaFacts(context.Background(), n, u, b)

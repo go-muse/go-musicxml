@@ -289,7 +289,7 @@ func TestSourceDeclarationExportExactAndOneShortBudgets(t *testing.T) {
 				limit := a.Limits().MaxBufferedBytes
 				if kind == validation.BudgetRuleSteps {
 					need = stepsAfter - stepsBefore
-					limit = a.Limits().MaxRuleSteps
+					limit = ruleStepLimit(t, a)
 				}
 				used, _ := a.Usage(kind)
 				filler := limit - used - need + short

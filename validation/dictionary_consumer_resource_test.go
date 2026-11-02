@@ -103,7 +103,7 @@ func TestDictionaryKnownNonmembershipSurvivesSecondaryLookupRefusal(t *testing.T
 	canonicalWork := after - before
 	r, _ := dictionaryConsumerReader(t, selection, input)
 	used, _ := r.s.account.Usage(BudgetRuleSteps)
-	hold := r.s.account.Limits().MaxRuleSteps - used - canonicalWork
+	hold := ruleStepLimit(t, r.s.account) - used - canonicalWork
 	if err := r.s.account.Charge(BudgetRuleSteps, hold); err != nil {
 		t.Fatal(err)
 	}

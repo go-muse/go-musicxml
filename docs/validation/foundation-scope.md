@@ -266,7 +266,7 @@ that every other quota can accommodate an input of that size.
 | `MaxEvents` | 8,000,000 | Cumulative admitted `OpenNode`/`Attribute`/`CloseNode` attempts; future raw-token work is a distinct additional unit. |
 | `MaxScalarBytes` | 1 MiB | Per-item lexeme/value payload cap via `Check`; no cumulative scalar quota. |
 | `MaxIDs` | 1,000,000 | Cumulative retained declaration and reference slots, charged by generic identity plans. |
-| `MaxRuleSteps` | 20,000,000 | Cumulative dispatch, dependency, search/index and comparison work; byte-proportional value work where implemented. |
+| `MaxRuleSteps` | 20,000,000 plus 10,000 per charged node, at most 1,000 per XML document byte read | Cumulative dispatch, dependency, search/index and comparison work; byte-proportional value work where implemented. |
 | `MaxContextFacts` | 1,000,000 | Cumulative context publication attempts, including conflict/provenance work; core providers. |
 | `MaxLinkedDocuments` | 128 | Cumulative linked document occurrences; future resolver/loader owner. |
 | `MaxDiagnostics` | 1,000 | Cumulative stored fail/unknown/unsupported/blocked findings, charged by report accumulation; pass/not-applicable outcomes are excluded. |

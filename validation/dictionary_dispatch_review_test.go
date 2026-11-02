@@ -121,7 +121,7 @@ func TestDictionaryRelevanceObservesCancellationAndQuota(t *testing.T) {
 			want = context.Canceled
 		} else {
 			used, _ := s.account.Usage(BudgetRuleSteps)
-			if err := s.account.Charge(BudgetRuleSteps, s.account.Limits().MaxRuleSteps-used); err != nil {
+			if err := s.account.Charge(BudgetRuleSteps, ruleStepLimit(t, s.account)-used); err != nil {
 				t.Fatal(err)
 			}
 		}

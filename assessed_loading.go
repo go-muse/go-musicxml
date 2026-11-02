@@ -93,6 +93,11 @@ func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions
 	}, lenient)
 }
 
+// assessedLoadingAccountObserver lets tests read the account that both
+// strict-loading lines share. It is an unsynchronized package variable: only
+// serial tests set it.
+var assessedLoadingAccountObserver func(*validation.Account)
+
 // assessedSourceLine configures line 2 of strict loading, ProfileSourceLine,
 // which reads the source without dictionaries, on a new account for both
 // lines. Every dictionary option is validated here, before the source is read.
@@ -108,6 +113,9 @@ func assessedSourceLine(normalized dictionaryAssessmentOptions) (assessmentRunCo
 	account, err := validation.NewBudgetAccount(normalized.Assessment.Budgets)
 	if err != nil {
 		return source, err
+	}
+	if assessedLoadingAccountObserver != nil {
+		assessedLoadingAccountObserver(account)
 	}
 	source.Account, source.Profile, source.Engine, source.DocumentID = account, profileSourceLine, engine, sourceDocumentID
 	source.DTD, source.Context = normalized.Assessment.DTD, normalized.Assessment.Context

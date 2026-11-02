@@ -146,7 +146,7 @@ and the shared dictionary set and real-layout context accounting by another
 fifth to a quarter: `DecodeAssessed` needs about 9.7 million rule steps and 27 MiB of
 buffer for the 31 KB `01a-Pitches-Pitches.xml` and 11.4 million steps and 35
 MiB for the 42 KB `41c-StaffGroups.xml` of the MusicXML test suite, both within
-the default budgets (20 million steps, 64 MiB), where it needed 21.7 and 24.9
+the default budgets, where it needed 21.7 and 24.9
 million steps before the split ([measurements][loading-budgets]).
 
 `InspectXML`, `InspectMXL`, `InspectXMLWithResources`,
@@ -1062,7 +1062,8 @@ is found by successful-run boundary search; it is not the account's usage after
 within a run; neither metric is process RSS or a Go heap ceiling. Compiled
 metadata, runtime caches, allocator overhead and the caller's model are not a
 promise made by the session's live-buffer allowance. Defaults remain **64 MiB
-live buffer, 20 million rule steps and one million context facts**. Size finite
+live buffer, a rule-step limit that grows with the document (see `Budgets`
+below), and one million context facts**. Size finite
 overrides for the selected profile and handle resource incompleteness.
 
 Matched warmed **1,000-note** results at production `22ae68a` (the same production
@@ -1201,12 +1202,13 @@ and context profiles with documented larger finite budgets; it does not close
 `B5-PERF-01` or promise default-budget throughput.
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
-and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
-profile under the default budgets. Both stop at the 20,000,000-step limit.
-Raising only the work, to `MaxRuleSteps: 1 << 34`, completes both profiles on
-both samples within the default 64 MiB buffer when no context family is
-selected (the default); with `validation.ContextFamilyAll` the MozaChlo source
-still exceeds it, and `MaxBufferedBytes: 512 << 20` completes every case. Source measurements remove
+and `MozaChloSample.musicxml` (278 notes) complete both context profiles under
+the default budgets when no context family is selected (the default); with
+`validation.ContextFamilyAll` the MozaChlo source exceeds the default 64 MiB
+buffer, and `MaxBufferedBytes: 512 << 20` completes every case
+(`TestContextProfilesOfficialSamplesFitTheDefaultBudgets`). Before the default
+rule-step limit grew with the document, both stopped at the fixed 20,000,000
+steps. Source measurements remove
 only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
 are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
 source assessment contract.
@@ -1358,8 +1360,41 @@ rule category. Selecting one terminal summary does
 not discard the underlying causes available through `errors.Is`/`errors.As`.
 
 `Budgets` has finite zero defaults; a shared `Account` cannot be reset or widened
-by child sessions. All limits, charging owners, exact-value constructor caps,
-plan boundaries and remaining obligations are documented in the
+by child sessions. The one limit that grows is the default rule-step limit,
+selected by a zero `MaxRuleSteps`: `validation.DefaultRuleStepBase` (20,000,000)
+steps plus `validation.DefaultRuleStepsPerNode` (10,000) for every node the
+account charges (`BudgetNodes`, once per assessment line, including MXL and
+package entries), but at most `validation.DefaultRuleStepsPerDocumentByte`
+(1,000) for every byte of XML document text read on the account: the primary
+input, linked documents and MXL members after decompression, but not external
+DTDs such as the bundled ones; ZIP bytes are not document bytes, although ZIP
+entries are nodes. Bytes count at every
+read, so strict MXL loading counts its members once per line and again for
+conversion, while strict XML loading reads its input once. Nodes from internal
+entity expansion therefore add at most the work of the document bytes read, and
+padding a document buys at most 1,000 steps per byte; when this was measured,
+the most expensive test-suite file cost 342 steps per byte. An account that has
+read no document bytes, such as one assessing an in-memory model alone, gets the
+node allowance alone. The limit never shrinks: nodes charged before the first document byte,
+such as those of an in-memory model or of ZIP central-directory entries, keep
+their allowance of 10,000 each, and any later work on the account, including
+expansion in a later document, may spend it. A ZIP entry costs at least 46
+archive bytes, so this allowance stays within about 220 steps per archive byte
+and `MaxNodes` (`TestDefaultRuleStepLimitBoundsPreReadEntries`).
+An explicit `MaxRuleSteps` is a fixed cap. `Account.Limit` reports the
+current maximum, and a rule-step `ResourceError` carries the limit in effect
+when it refused; a refused rule-step charge can succeed after further input.
+`TestDefaultRuleStepLimitGrowsWithChargedNodes` pins the rule;
+`TestDefaultRuleStepLimitIgnoresExpandedNodes` refuses an expanding document
+also when padded or linked from a model, and
+`TestDefaultRuleStepLimitCountsCompressedAndLinkedDocuments` accepts a
+54-times-compressed MXL, a score linked from a small opus and a model linking a
+7-byte document.
+`TestDefaultRuleStepAllowanceCoversTheCorpus` keeps a margin of 1.5 over the
+corpus files of at least 1000 nodes, as XML and as MXL; it does not bound other
+inputs. Raising `MaxNodes`, `MaxInputBytes` or `MaxExternalBytes` raises the
+worst-case default work accordingly. All limits, charging owners, exact-value
+constructor caps, plan boundaries and remaining obligations are documented in the
 [foundation scope](docs/validation/foundation-scope.md). Numeric constructor
 resource limits are not XSD facets. `validation.Rational` / `NewRational` add
 an immutable reduced fraction for musical positions, including nonterminating
@@ -1443,16 +1478,16 @@ official MusicXML DTDs or a caller DTD source, as described under
 still prevents source acceptance, including in the mandatory assessed-loading
 pipeline. With the bundled DTDs, `DecodeAssessed` accepts the committed official
 `Chant.musicxml` with default budgets. The larger `MozartTrio.musicxml` and
-UTF-16 `MozaChloSample.musicxml` now complete their full source and model
-assessment and need more than the default 64 MiB buffer and 20,000,000 rule
-steps; with 256 MiB and 100,000,000 steps both are accepted. Their default
-buffer refusals are architecture-dependent receipts, not portable input-size
-limits; 386 does not assert them. See the [capacity controls][loading-capacity]
-for provenance. Of the 154 score and opus files in `testdata/official` and the
-MusicXML test suite, default assessed loading accepted 140 when measured for
-this change, and `TestAssessedLoadingCorpusMeasurement` keeps that floor; the
-rest report genuine violations, unestablished semantic context or resource
-limits, none of them unread-DTD evidence. The source-XSD preview remains developmental and
+UTF-16 `MozaChloSample.musicxml` complete their full source and model
+assessment and are accepted with the default budgets
+(`TestStrictLoadingOfficialScoresFitTheDefaultBudgets`); until the default
+rule-step limit grew with the document they needed more than its fixed
+20,000,000 steps. See the [capacity controls][loading-capacity] for
+provenance. Of the 154 score and opus files in `testdata/official` and the
+MusicXML test suite, default assessed loading accepts 146, and
+`TestAssessedLoadingCorpusMeasurement` keeps that floor; the rest report
+genuine violations or unestablished semantic context, none of them unread-DTD
+evidence or an exhausted default budget. The source-XSD preview remains developmental and
 DTD-independent and still reports any external subset as unread. Removing a
 DOCTYPE changes the input and is not equivalent assessment of the original
 file. `Decode` and `DecodeWithOptions` remain transport/conversion only; those
@@ -1540,18 +1575,18 @@ before the shared absent-attribute optimization.
 Composition costs differ from that XSD-only table. In the historical
 linux/amd64 receipt below, the original 223,068-byte UTF-16BE
 `MozaChloSample.musicxml` with `ProfileSourceSemantics` exhausts the default
-64 MiB buffer; with real-layout projection accounting the default buffer and the
-default 20 million rule steps are both near exhaustion, and either may refuse
-first. Its external subset is now read from the bundled official DTD, so
+64 MiB buffer; with real-layout projection accounting and the default rule-step
+limit that grows with the document, the default buffer refuses. Its external subset is now read from the bundled official DTD, so
 the assessment does its full work: with `MaxBufferedBytes: 256 << 20` and
 `MaxRuleSteps: 100_000_000` this particular fixture completes and is satisfied.
 This is a measured finite allowance for that exact input and profile, not a new
 default or a minimum/general capacity guarantee.
 Removing the encoded DOCTYPE produces a different 222,824-byte control.
 `ProfileSourceInternalDTDDictionaries` assesses that control within defaults
-(observed live-account peak 44,036,266 bytes). `ProfileSourceSemantics` instead
-reaches the existing 20,000,000 rule-step limit, with an observed buffer peak of
-67,011,966 bytes before that refusal. These peaks are sampled logical account
+(observed live-account peak 44,036,266 bytes). `ProfileSourceSemantics` with the complete
+projection instead exceeds the default buffer; under the earlier fixed
+20,000,000-step default it reached that limit first, with an observed buffer
+peak of 67,011,966 bytes. These peaks are sampled logical account
 usage, not exact minimum budgets or heap measurements. The
 [composition and snapshot budget receipt](docs/validation/resource-fragment-budget-evidence.md)
 records the byte transformation, limits, ownership accounting and regressions.
@@ -2055,7 +2090,8 @@ corrections and are not current-head note-count boundaries. In the repeated-rest
 accidental fixture measured for the Round 1 correction, all four components are
 imported before assessment. Standalone source/model completed at 368 notes and
 refused at 369; graph and raw/current MXL completed operational enumeration at
-363 and refused at 364 on the unchanged 20,000,000-rule-step cap. When this was
+363 and refused at 364 on the then fixed 20,000,000-rule-step cap; the default
+now grows with the document. When this was
 measured, current-model bundles also kept their schema-hint unknown, which
 revision 2 of the pairing rule removed.
 The earlier published `a772914` observations were 320/321 and 316/317;
@@ -2351,7 +2387,7 @@ observations, not a general document-byte guarantee or heap/RSS limit.
 The separate 2,000-empty-measure, three-`#m1` fixture is only 86,052 source bytes
 but still refuses snapshot admission at default budgets: 54,486,816 live bytes
 plus a 34,741,264-byte request exceed 67,108,864 bytes. Its regression that uses
-512 MiB of buffer isolates the unchanged 20,000,000-step limit; it does not prove
+512 MiB of buffer completes within the default rule-step limit; it does not prove
 all-default capacity, nor is 512 MiB a measured minimum or recommendation.
 Choose explicit finite limits for the actual profile and input. See the
 [fixture definitions, provenance and boundary checks](docs/validation/resource-fragment-budget-evidence.md#default-buffer-capacity-is-fixture-specific).
@@ -2793,7 +2829,8 @@ completion, including technical errors and cancellation.
 
 Zero-valued graph budget fields select finite defaults, including 64 MiB each for
 primary input, external represented bytes and buffered working storage,
-20,000,000 rule steps and depth 1024. ZIP transport, CRC and buffer relocation
+the rule-step limit that grows with the document, and depth 1024. ZIP transport,
+CRC and buffer relocation
 charge bounded work units of at most 4096 bytes, with empty reads and EOF probes
 also charged; byte quotas remain exact and growing buffers reserve old and new
 storage simultaneously. The independent MXL byte defaults are

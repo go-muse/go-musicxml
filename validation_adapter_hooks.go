@@ -11,6 +11,7 @@ import (
 // than exported. A mismatched signature panics at initialization.
 var (
 	validationAllocationSize                         = validationlink.Hook[func(int64) (int, error)]("AllocationSize")
+	validationAccountChargeDocumentBytes             = validationlink.Hook[func(*validation.Account, int64) error]("Account.ChargeDocumentBytes")
 	validationNewBarlineLocationPlan                 = validationlink.Hook[func(validation.ContextPlanSpec) (validation.Plan, error)]("NewBarlineLocationPlan")
 	validationNewBendReleaseSignPlan                 = validationlink.Hook[func(validation.ConsumerSpec) (validation.Plan, error)]("NewBendReleaseSignPlan")
 	validationNewChordDurationPlan                   = validationlink.Hook[func(validation.ConsumerSpec) (validation.Plan, error)]("NewChordDurationPlan")

@@ -508,7 +508,7 @@ func TestAssessmentOptionsDTDIsHonoured(t *testing.T) {
 // TestAssessedLoadingCorpusMeasurement backs the documented measurement of
 // default assessed loading over the official files and the MusicXML test
 // suite. The accepted count is a floor that may rise; no rejection may come
-// from an unread external DTD.
+// from an unread external DTD or an exhausted default budget.
 func TestAssessedLoadingCorpusMeasurement(t *testing.T) {
 	t.Parallel()
 
@@ -533,9 +533,10 @@ func TestAssessedLoadingCorpusMeasurement(t *testing.T) {
 		}
 		assert.NotErrorIs(t, err, ErrUnsupportedXMLFeature, file)
 		assert.NotErrorIs(t, err, ErrDTDUnavailable, file)
+		assert.NotErrorIs(t, err, validation.ErrResourceLimit, file)
 		for _, f := range result.SourceLine.Findings {
 			assert.NotContains(t, string(f.Reason), "dtd-infoset-unavailable", file)
 		}
 	}
-	assert.GreaterOrEqual(t, accepted, 140)
+	assert.GreaterOrEqual(t, accepted, 146)
 }

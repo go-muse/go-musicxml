@@ -229,6 +229,9 @@ const ConversionNotRequested ConversionState = "not-requested"
 const ConversionUnrepresentable ConversionState = "unrepresentable"
 const CoordinateSpaceExternalDTD untyped string = "external-dtd-text"
 const CoordinateSpaceOriginalBytes untyped string = "original-bytes"
+const DefaultRuleStepBase untyped int = 20000000
+const DefaultRuleStepsPerDocumentByte untyped int = 1000
+const DefaultRuleStepsPerNode untyped int = 10000
 const DependencyExternal DependencyKind = "external"
 const DependencyFact DependencyKind = "fact"
 const DependencyRule DependencyKind = "rule"
@@ -515,6 +518,7 @@ func VerifyDictionaryComponent(ctx context.Context, a *Account, id DictionaryCom
 type Account struct, comparable
 type Account, method (*Account) Charge(kind BudgetKind, amount int64) error
 type Account, method (*Account) Check(kind BudgetKind, amount int64) error
+type Account, method (*Account) Limit(kind BudgetKind) (int64, error)
 type Account, method (*Account) Limits() Budgets
 type Account, method (*Account) Release(kind BudgetKind, amount int64) error
 type Account, method (*Account) Usage(kind BudgetKind) (int64, error)

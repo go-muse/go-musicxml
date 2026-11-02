@@ -1,10 +1,15 @@
 package validation
 
-import "sync"
+import (
+	"math"
+	"sync"
+)
 
 // Budgets limits assessment resources. All fields are int64; zero selects the
 // documented finite default, and negative values are invalid. Byte limits count
 // bytes, and other limits count individual objects, events, or operations.
+// A nonzero MaxRuleSteps is a fixed cap; zero selects a limit that grows with
+// the document (see DefaultRuleStepBase).
 type Budgets struct {
 	MaxInputBytes    int64
 	MaxExternalBytes int64
@@ -25,18 +30,41 @@ type Budgets struct {
 	MaxDiagnosticBytes int64
 }
 
+// The default rule-step limit, selected by a zero MaxRuleSteps, allows
+// DefaultRuleStepBase steps plus an allowance that grows with the document:
+// DefaultRuleStepsPerNode for every BudgetNodes charge on the account, but at
+// most DefaultRuleStepsPerDocumentByte for every byte of XML document text the
+// assessment has read on the account: the primary input, linked documents and
+// MXL members after decompression, but not external DTDs such as the bundled
+// ones, and not ZIP bookkeeping. Nodes from internal entity expansion therefore
+// add at most the work of the document bytes, and an account that has read no
+// document bytes, such as one assessing an in-memory model alone, gets the node
+// allowance alone. The limit never shrinks: nodes charged before the first
+// document byte, such as those of an in-memory model or of ZIP central-directory
+// entries, keep their allowance, and later work on the account may spend it.
+// Every assessment line charges its own nodes, so strict loading counts a
+// document's nodes once per line. Raising MaxNodes,
+// MaxInputBytes or MaxExternalBytes raises the worst-case default work
+// accordingly.
+const (
+	DefaultRuleStepBase             = 20_000_000
+	DefaultRuleStepsPerNode         = 10_000
+	DefaultRuleStepsPerDocumentByte = 1_000
+)
+
 // DefaultBudgets returns independent finite defaults: 64 MiB each of input,
 // external input and live buffered data; depth 1024; one million nodes and IDs;
-// four million attributes; eight million events; 1 MiB per scalar; twenty million
-// rule steps; one million context facts; 128 linked documents; and 1000 stored
-// diagnostics occupying at most 1 MiB. These are safety limits, not promises of
-// throughput or complete assessment for every input within the byte limits.
+// four million attributes; eight million events; 1 MiB per scalar; one million
+// context facts; 128 linked documents; and 1000 stored diagnostics occupying at
+// most 1 MiB. MaxRuleSteps is zero, which selects the limit that grows with the
+// document (see Budgets). These are safety limits, not promises of throughput or
+// complete assessment for every input within the byte limits.
 func DefaultBudgets() Budgets {
 	return Budgets{
 		MaxInputBytes: 64 << 20, MaxExternalBytes: 64 << 20, MaxBufferedBytes: 64 << 20,
 		MaxDepth: 1024, MaxNodes: 1_000_000, MaxAttributes: 4_000_000,
 		MaxEvents: 8_000_000, MaxScalarBytes: 1 << 20, MaxIDs: 1_000_000,
-		MaxRuleSteps: 20_000_000, MaxContextFacts: 1_000_000, MaxLinkedDocuments: 128,
+		MaxContextFacts: 1_000_000, MaxLinkedDocuments: 128,
 		MaxDiagnostics: 1000, MaxDiagnosticBytes: 1 << 20,
 	}
 }
@@ -79,7 +107,11 @@ const (
 	BudgetDiagnosticBytes BudgetKind = "diagnostic-bytes"
 )
 
-const budgetKindCount = 14
+const (
+	budgetKindCount      = 14
+	budgetNodesIndex     = 4
+	budgetRuleStepsIndex = 9
+)
 
 type budgetMode uint8
 
@@ -100,7 +132,7 @@ func budgetInfo(kind BudgetKind) (int, budgetMode, bool) {
 	case BudgetDepth:
 		return 3, budgetGauge, true
 	case BudgetNodes:
-		return 4, budgetCumulative, true
+		return budgetNodesIndex, budgetCumulative, true
 	case BudgetAttributes:
 		return 5, budgetCumulative, true
 	case BudgetEvents:
@@ -110,7 +142,7 @@ func budgetInfo(kind BudgetKind) (int, budgetMode, bool) {
 	case BudgetIDs:
 		return 8, budgetCumulative, true
 	case BudgetRuleSteps:
-		return 9, budgetCumulative, true
+		return budgetRuleStepsIndex, budgetCumulative, true
 	case BudgetContextFacts:
 		return 10, budgetCumulative, true
 	case BudgetLinkedDocuments:
@@ -130,18 +162,29 @@ func budgetValues(b *Budgets) [budgetKindCount]*int64 {
 
 // Account is a concurrency-safe resource account shared by an assessment and
 // its children. Only NewBudgetAccount initializes an account; its zero value is
-// invalid. Its limits cannot be reset or widened. Do not copy an Account after
-// first use; share its pointer instead. Callers must release only live resources
-// they acquired, and must never refund cumulative work.
+// invalid. Its limits cannot be reset or widened; only the default rule-step
+// limit grows, with the nodes and document bytes the account charges, so a
+// refused rule-step charge can succeed after further input. Do not copy an
+// Account after first use; share its pointer instead. Callers must release
+// only live resources they acquired, and must never refund cumulative work.
 type Account struct {
 	mu          sync.Mutex
 	initialized bool
 	limits      Budgets
 	maxima      [budgetKindCount]int64
 	usage       [budgetKindCount]int64
+	// stepsPerNode is nonzero when the rule-step limit grows with charged nodes.
+	stepsPerNode int64
+	// documentBytes counts the XML document bytes read on the account.
+	documentBytes int64
+	// stepPeak is the highest growing rule-step limit reached: the byte cap
+	// starts with the first document byte and must not lower the limit below
+	// what nodes charged before it already allowed.
+	stepPeak int64
 }
 
 // NewBudgetAccount validates limits and substitutes finite defaults for zeros.
+// A zero MaxRuleSteps stays zero in Limits and selects the growing default.
 // Large cumulative limits remain int64 even on 32-bit hosts; each concrete
 // allocation is validated separately before host-int conversion.
 func NewBudgetAccount(limits Budgets) (*Account, error) {
@@ -158,11 +201,48 @@ func NewBudgetAccount(limits Budgets) (*Account, error) {
 		}
 		maxima[i] = *field
 	}
-	return &Account{initialized: true, limits: limits, maxima: maxima}, nil
+	account := &Account{initialized: true, limits: limits, maxima: maxima}
+	if limits.MaxRuleSteps == 0 {
+		account.maxima[budgetRuleStepsIndex] = DefaultRuleStepBase
+		account.stepsPerNode = DefaultRuleStepsPerNode
+	}
+	return account, nil
+}
+
+// limit returns the current maximum of a resource. The growing rule-step
+// default saturates at math.MaxInt64.
+func (a *Account) limit(index int) int64 {
+	maximum := a.maxima[index]
+	if index != budgetRuleStepsIndex || a.stepsPerNode == 0 {
+		return maximum
+	}
+	allowance := saturatingProduct(a.usage[budgetNodesIndex], a.stepsPerNode)
+	if a.documentBytes != 0 {
+		allowance = min(allowance, saturatingProduct(a.documentBytes, DefaultRuleStepsPerDocumentByte))
+	}
+	a.stepPeak = max(a.stepPeak, saturatingSum(maximum, allowance))
+	return a.stepPeak
+}
+
+// saturatingProduct multiplies nonnegative values, saturating at math.MaxInt64.
+func saturatingProduct(a, b int64) int64 {
+	if b != 0 && a > math.MaxInt64/b {
+		return math.MaxInt64
+	}
+	return a * b
+}
+
+// saturatingSum adds nonnegative values, saturating at math.MaxInt64.
+func saturatingSum(a, b int64) int64 {
+	if a > math.MaxInt64-b {
+		return math.MaxInt64
+	}
+	return a + b
 }
 
 // Limits returns a value copy of the normalized limits, or zero for an invalid
-// account. An invalid account still rejects every accounting operation.
+// account. A zero MaxRuleSteps, which selects the growing default, stays
+// zero; Limit reports the current rule-step maximum.
 func (a *Account) Limits() Budgets {
 	if a == nil || !a.initialized {
 		return Budgets{}
@@ -196,8 +276,8 @@ func (a *Account) Charge(kind BudgetKind, amount int64) error {
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if amount > a.maxima[index]-a.usage[index] {
-		return &ResourceError{Kind: kind, Limit: a.maxima[index], Used: a.usage[index], Requested: amount}
+	if limit := a.limit(index); amount > limit-a.usage[index] {
+		return &ResourceError{Kind: kind, Limit: limit, Used: a.usage[index], Requested: amount}
 	}
 	a.usage[index] += amount
 	return nil
@@ -248,6 +328,34 @@ func (a *Account) Usage(kind BudgetKind) (int64, error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.usage[index], nil
+}
+
+// chargeDocumentBytes records XML document bytes the parser has read, which cap
+// the default rule-step allowance. It never refuses: the byte limits apply
+// where the bytes are charged.
+func (a *Account) chargeDocumentBytes(amount int64) error {
+	if _, _, err := a.validate(BudgetInputBytes, amount); err != nil {
+		return err
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.limit(budgetRuleStepsIndex) // keep what the uncapped nodes allowed
+	a.documentBytes = saturatingSum(a.documentBytes, amount)
+	return nil
+}
+
+// Limit returns one resource's current maximum, safe for concurrent use.
+// It equals the normalized limit except for the default rule-step limit, which
+// includes the allowance for the nodes and document bytes charged so far and
+// grows with them.
+func (a *Account) Limit(kind BudgetKind) (int64, error) {
+	index, _, err := a.validate(kind, 0)
+	if err != nil {
+		return 0, err
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.limit(index), nil
 }
 
 // allocationSize converts a nonnegative byte allocation to the host int size

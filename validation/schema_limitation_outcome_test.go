@@ -58,7 +58,7 @@ func TestSourceSchemaUnknownLimitationScanCancellationAndWork(t *testing.T) {
 			want = context.Canceled
 		} else {
 			used, _ := s.account.Usage(BudgetRuleSteps)
-			if err := s.account.Charge(BudgetRuleSteps, s.account.Limits().MaxRuleSteps-used-1); err != nil {
+			if err := s.account.Charge(BudgetRuleSteps, ruleStepLimit(t, s.account)-used-1); err != nil {
 				t.Fatal(err)
 			}
 		}

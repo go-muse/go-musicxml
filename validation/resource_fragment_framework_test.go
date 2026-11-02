@@ -141,7 +141,7 @@ func TestXMLFragmentAdoptionOwnedRemappingAndWorkAdmission(t *testing.T) {
 	// Exact pre-scan work is charged before inspecting the bounded input. One
 	// below the charge refuses without manufacturing a syntactic classification.
 	used, _ := p.account.Usage(BudgetRuleSteps)
-	hold := p.account.Limits().MaxRuleSteps - used - (1 + 3*int64(len("anchor"))) + 1
+	hold := ruleStepLimit(t, p.account) - used - (1 + 3*int64(len("anchor"))) + 1
 	if e = p.account.Charge(BudgetRuleSteps, hold); e != nil {
 		t.Fatal(e)
 	}

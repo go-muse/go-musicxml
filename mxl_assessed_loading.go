@@ -115,6 +115,9 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	if err != nil {
 		return result, err
 	}
+	if assessedLoadingAccountObserver != nil {
+		assessedLoadingAccountObserver(account)
+	}
 	stage := func(profile validation.ProfileID) linkedAssessmentOptions {
 		linked := assessment.linked()
 		linked.Graph.Profile, linked.Graph.Dictionaries = profile, nil

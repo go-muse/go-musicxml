@@ -256,7 +256,7 @@ func TestSourceEntityDeclarationsAdmissionBudgetsAndCancellation(t *testing.T) {
 			limit := s.account.Limits().MaxBufferedBytes
 			if kind == BudgetRuleSteps {
 				delta = afterSteps - beforeSteps
-				limit = s.account.Limits().MaxRuleSteps
+				limit = ruleStepLimit(t, s.account)
 			}
 			used, _ := s.account.Usage(kind)
 			held := limit - used - delta + short

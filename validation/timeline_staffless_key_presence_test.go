@@ -203,7 +203,7 @@ func TestTimelineStafflessKeyPresenceResourceAdmission(t *testing.T) {
 	// A caller-sized document identifier is charged before scope comparison,
 	// including a comparison that would immediately reject the different part.
 	at.Part.DocumentID = strings.Repeat("document", 4096)
-	heldSteps := s.account.Limits().MaxRuleSteps - rationalUsage(t, s, BudgetRuleSteps) - 100
+	heldSteps := ruleStepLimit(t, s.account) - rationalUsage(t, s, BudgetRuleSteps) - 100
 	if err := s.account.Charge(BudgetRuleSteps, heldSteps); err != nil {
 		t.Fatal(err)
 	}
@@ -287,7 +287,7 @@ func TestTimelineStafflessKeyPresenceStaffIdentityAdmission(t *testing.T) {
 		t.Fatal(err)
 	}
 	statePublish(t, s, &h.Keys, at, stateScope{Staff: staff}, stateKnown(stafflessPresenceKey(t, 0)), 10)
-	held := s.account.Limits().MaxRuleSteps - rationalUsage(t, s, BudgetRuleSteps) - 100
+	held := ruleStepLimit(t, s.account) - rationalUsage(t, s, BudgetRuleSteps) - 100
 	if err := s.account.Charge(BudgetRuleSteps, held); err != nil {
 		t.Fatal(err)
 	}

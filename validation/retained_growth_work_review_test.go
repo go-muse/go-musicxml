@@ -35,7 +35,7 @@ func TestReviewRetainedContainerCopyWork(t *testing.T) {
 					// Independent model: one growth operation plus exactly count copied entries.
 					want := int64(count + 1)
 					before, _ := s.account.Usage(BudgetRuleSteps)
-					hold := s.account.Limits().MaxRuleSteps - before - want + short
+					hold := ruleStepLimit(t, s.account) - before - want + short
 					if err := s.account.Charge(BudgetRuleSteps, hold); err != nil {
 						t.Fatal(err)
 					}

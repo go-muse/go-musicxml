@@ -145,7 +145,9 @@ report is represented as a whole-document cryptographic certificate.
 For requested assessment, one account is created before input. Nil-assessment
 transport retains a nil account and its depth-only policy. Negative limits, unknown/empty profiles and
 already canceled contexts fail before reading. Zero limits select finite
-foundation defaults. Budgets cannot be reset or widened by nested work.
+foundation defaults. Budgets cannot be reset or widened by nested work; only
+the default rule-step limit grows with the nodes and document bytes the account
+charges.
 
 | Resource | Charging owner |
 | --- | --- |

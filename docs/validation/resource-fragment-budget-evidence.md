@@ -55,8 +55,9 @@ the index; both graph traversal and final link decisions remain metered.
 `TestReviewFragmentGraphMediumScoreDefaultRuleBudget` exercises 2,000 measures
 with 2,000 IDs and three `#m1` links through the public graph entry point. The
 target `m1` is the final measure in document order, rather than an early return.
-The 86,052-byte control uses empty measures and raises only the buffer allowance to
-512 MiB, isolating the unchanged default 20,000,000 rule-step ceiling. It asserts
+The 86,052-byte control uses empty measures, raises the buffer allowance to
+512 MiB and sets `MaxRuleSteps` to `validation.DefaultRuleStepBase`, isolating
+the fixed 20,000,000 rule-step base of the default limit. It asserts
 three retained link contexts, four distinct adoptions and exactly three package
 Pass outcomes, with complete enumeration and a satisfied bundle. The same control
 on unpublished local baseline `9f49784` (tree-equivalent to published
@@ -179,8 +180,8 @@ graph profile, retrieval URI `https://budget.test/score.musicxml` and
 buffer refusal, zero adoptions, incomplete enumeration, unsatisfied bundle and
 retained failed-child report. The companion
 `TestReviewFragmentGraphMediumScoreDefaultRuleBudget` uses precisely the same
-source and options except `MaxBufferedBytes: 512 << 20`; its pass isolates the
-20,000,000-rule-step ceiling. That allowance is neither a measured minimum nor a
+source and options except `MaxBufferedBytes: 512 << 20` and `MaxRuleSteps` set to
+the 20,000,000-step base of the default limit; its pass isolates that base. That allowance is neither a measured minimum nor a
 production recommendation. A work-budget pass with lifted buffer is not an
 all-default admission pass. Refusal is incomplete processing, not XML invalidity.
 

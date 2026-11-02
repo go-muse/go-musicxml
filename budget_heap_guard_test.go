@@ -3,6 +3,8 @@ package musicxml
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -151,12 +153,13 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 	}
 }
 
-// The official scores load within the default buffer: the default empty
+// The official scores load with the default budgets: the default empty
 // context selection and the released XSD work charges bring MozartTrio and
 // MozaChloSample, which needed about 76 and 84 MiB when the complete
-// projection was the default, under 64 MiB. They still need more than the
-// default 20 million rule steps.
-func TestStrictLoadingOfficialScoresFitTheDefaultBuffer(t *testing.T) {
+// projection was the default, under 64 MiB, and the rule-step default, which
+// grows with the document, covers their 24 and 29 million steps, also when they
+// are packed as MXL.
+func TestStrictLoadingOfficialScoresFitTheDefaultBudgets(t *testing.T) {
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}
@@ -165,37 +168,55 @@ func TestStrictLoadingOfficialScoresFitTheDefaultBuffer(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Assessment: &SourceOptions{Budgets: validation.Budgets{MaxRuleSteps: 40_000_000}}})
+		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{})
 		if err != nil || !result.Accepted {
 			t.Errorf("%s: accepted=%v error=%v", name, result.Accepted, err)
+		}
+		packed, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(ruleStepMXL(t, data)), DecodeMXLAssessmentOptions{})
+		if err != nil || !packed.Accepted {
+			t.Errorf("%s as MXL: accepted=%v error=%v", name, packed.Accepted, err)
 		}
 	}
 }
 
-// With the default empty context selection, raising only the rule steps lets
-// both context profiles complete on both official samples within the default
-// buffer.
-func TestContextProfilesOfficialSamplesNeedOnlyMoreSteps(t *testing.T) {
+// With the default empty context selection, both context profiles complete on
+// both official samples with the default budgets. With the complete projection
+// only the MozaChlo source exceeds the default buffer, and raising only the
+// buffer to 512 MiB completes every case.
+func TestContextProfilesOfficialSamplesFitTheDefaultBudgets(t *testing.T) {
 	if raceEnabled || testing.Short() {
 		t.Skip("slow under the race detector")
 	}
-	budgets := validation.Budgets{MaxRuleSteps: 1 << 34}
-	for _, name := range []string{"MozartTrio.musicxml", "MozaChloSample.musicxml"} {
-		raw, err := os.ReadFile(filepath.Join("testdata", "official", name))
-		if err != nil {
-			t.Fatal(err)
-		}
-		document, err := Decode(bytes.NewReader(raw))
-		if err != nil {
-			t.Fatal(err)
-		}
-		source, err := InspectXML(context.Background(), bytes.NewReader(reviewBudgetRemoveDOCTYPE(t, raw)), SourceOptions{Profile: ProfileSourceContext, Budgets: budgets})
-		if err != nil || !source.Satisfied() {
-			t.Errorf("%s source: satisfied=%v error=%v", name, source.Satisfied(), err)
-		}
-		model, err := AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelContext, Budgets: budgets})
-		if err != nil || !model.Satisfied() {
-			t.Errorf("%s model: satisfied=%v error=%v", name, model.Satisfied(), err)
+	for _, families := range []validation.ContextFamilies{0, validation.ContextFamilyAll} {
+		for _, buffer := range []int64{0, 512 << 20} {
+			if families == 0 && buffer != 0 {
+				continue
+			}
+			budgets := validation.Budgets{MaxBufferedBytes: buffer}
+			for _, name := range []string{"MozartTrio.musicxml", "MozaChloSample.musicxml"} {
+				raw, err := os.ReadFile(filepath.Join("testdata", "official", name))
+				if err != nil {
+					t.Fatal(err)
+				}
+				document, err := Decode(bytes.NewReader(raw))
+				if err != nil {
+					t.Fatal(err)
+				}
+				label := fmt.Sprintf("%s context=%b buffer=%d", name, families, buffer)
+				source, err := InspectXML(context.Background(), bytes.NewReader(reviewBudgetRemoveDOCTYPE(t, raw)), SourceOptions{Profile: ProfileSourceContext, Budgets: budgets, Context: families})
+				if families != 0 && buffer == 0 && name == "MozaChloSample.musicxml" {
+					var limit *validation.ResourceError
+					if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || source.Satisfied() {
+						t.Errorf("%s source: want the default buffer refusal, got satisfied=%v error=%v", label, source.Satisfied(), err)
+					}
+				} else if err != nil || !source.Satisfied() {
+					t.Errorf("%s source: satisfied=%v error=%v", label, source.Satisfied(), err)
+				}
+				model, err := AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelContext, Budgets: budgets, Context: families})
+				if err != nil || !model.Satisfied() {
+					t.Errorf("%s model: satisfied=%v error=%v", label, model.Satisfied(), err)
+				}
+			}
 		}
 	}
 }

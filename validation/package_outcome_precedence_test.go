@@ -134,7 +134,7 @@ func TestPackageSchemaHintContinuedScanHonorsInterruption(t *testing.T) {
 			if mode == "budget" {
 				ctx, want = context.Background(), ErrResourceLimit
 				used, _ := s.account.Usage(BudgetRuleSteps)
-				if err := s.account.Charge(BudgetRuleSteps, s.account.Limits().MaxRuleSteps-used-8); err != nil {
+				if err := s.account.Charge(BudgetRuleSteps, ruleStepLimit(t, s.account)-used-8); err != nil {
 					t.Fatal(err)
 				}
 			}
