@@ -734,6 +734,11 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	if eventsValid && completionErr == nil && ctx != nil && ctx.Err() == nil && s.schema != nil && !s.schema.bound && s.root != nil && !errors.Is(end.Cause, ErrResourceLimit) {
 		addCause(s.bindSourceSchema(ctx))
 	}
+	// Without binding the document, windows bound before the root closed
+	// report nothing, as the buffered engine binds nothing.
+	if s.schema != nil && !s.schema.bound {
+		s.accumulator.dropHeld()
+	}
 	s.inputComplete = end.InputComplete && len(s.stack) == 0 && s.root != nil && end.Syntax != SyntaxMalformed
 	if s.terminalCause == nil && s.schema != nil && s.schema.bound {
 		addCause(s.finalizeSourceSchema(ctx))

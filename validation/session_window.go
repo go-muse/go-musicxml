@@ -221,8 +221,13 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	if err := s.ensureSchemaNodes(); err != nil {
 		return err
 	}
+	// Binding the document can still be skipped (a resource limit,
+	// cancellation or rejected event before the root closes); the window's
+	// proved failures wait until it is not.
 	var consumed int
+	s.accumulator.holding = true
 	completion, err := s.bindSubtree(ctx, s.nodes[w.root], use, w.first, len(s.stack), &consumed)
+	s.accumulator.holding = false
 	if err != nil {
 		return err
 	}
@@ -241,9 +246,15 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 
 // eulerEnter is the position of binding a node in a top-down traversal of
 // the whole document: its preorder index pre and its depth give the number of
-// earlier enter and exit steps. Its completion follows 2*size-1 steps later.
+// earlier enter and exit steps.
 func eulerEnter(pre, depth int) uint64 {
 	return uint64(2*pre - depth)
+}
+
+// eulerExit is the position of completing a node with the given number of
+// descendants: every descendant enters and exits in between.
+func eulerExit(pre, depth, descendants int) uint64 {
+	return eulerEnter(pre, depth) + 2*uint64(descendants) + 1
 }
 
 // subtreeOffsets returns, for each child of n, the number of nodes before

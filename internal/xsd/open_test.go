@@ -196,3 +196,80 @@ func TestIdentityEntryTakesTheEarliestSeed(t *testing.T) {
 		t.Fatalf("findings %v, want %v", got, want)
 	}
 }
+
+// Children bound before their parent, as windows are, leave the run with the
+// same charge as binding top-down once the parent completes: the parent
+// takes over the charge of the nodes its children created.
+func TestBindingChildrenFirstKeepsTheTopDownCharge(t *testing.T) {
+	ctx := context.Background()
+	c := prefixRunSchema(t)
+	use, _ := c.Root(QName{Local: "root"})
+	root := Subject{ID: 1, Name: QName{Local: "root"}, Path: "/root", TextKnown: true, AttributesComplete: true, ChildrenComplete: true,
+		Children: []Child{{ID: 2, Name: QName{Local: "child"}, Path: "/root/child"}, {ID: 3, Name: QName{Local: "tail"}, Path: "/root/tail"}}}
+	child := func(id SubjectID, name string) Subject {
+		return Subject{ID: id, Parent: 1, Name: QName{Local: name}, Path: "/root/" + name, Text: "1", TextKnown: true, AttributesComplete: true, ChildrenComplete: true}
+	}
+	bindLeaf := func(r *Run, w Witness, name string) Completion {
+		b, err := r.Bind(ctx, w.Use, child(w.Child, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		done, err := r.Complete(ctx, b, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return done
+	}
+	names := map[SubjectID]string{2: "child", 3: "tail"}
+
+	topDown := &testMeter{}
+	r, err := NewRun(c, topDown)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := r.Bind(ctx, use, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var done []Completion
+	for _, w := range r.Witnesses(b) {
+		done = append(done, bindLeaf(r, w, names[w.Child]))
+	}
+	if _, err := r.Complete(ctx, b, done); err != nil {
+		t.Fatal(err)
+	}
+	want := topDown.retained
+	_ = r.Close()
+
+	childrenFirst := &testMeter{}
+	r, err = NewRun(c, childrenFirst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	open, err := r.Open(ctx, use, Subject{ID: 1, Name: root.Name, Path: root.Path, AttributesComplete: true})
+	if err != nil || open == nil {
+		t.Fatalf("open=%v err=%v", open, err)
+	}
+	done = nil
+	for _, ch := range root.Children {
+		w, ok, err := r.PushChild(ctx, open, ch)
+		if err != nil || !ok {
+			t.Fatalf("push %v: ok=%v err=%v", ch, ok, err)
+		}
+		done = append(done, bindLeaf(r, w, names[w.Child]))
+	}
+	if err := r.CloseOpen(open); err != nil {
+		t.Fatal(err)
+	}
+	b, err = r.Bind(ctx, use, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Complete(ctx, b, done); err != nil {
+		t.Fatal(err)
+	}
+	if childrenFirst.retained != want {
+		t.Fatalf("children first keep %d bytes charged, top-down %d", childrenFirst.retained, want)
+	}
+}

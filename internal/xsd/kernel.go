@@ -229,17 +229,22 @@ type Context struct {
 	// registration arrived before an earlier-registered position.
 	identityOrder, identityOrderMax uint64
 	identityUnordered               bool
-	identityDiagnostic              identityDiagnostic
-	run                             *Run
-	local                           *boundState
-	AssessmentErr                   error
-	AssessmentVersion               uint64
-	TypeMetadata                    map[TypeIdentity]uint8
-	Derivations                     map[DerivationKey]bool
-	Schema                          *SchemaData
-	Issues                          []Issue
-	Effective                       map[*ComplexSchema]*EffectiveComplex
-	ParticleNullable                map[*ParticleSchema]bool // prepared immutable metadata, scoped to this validation
+	// identityOrdering is set once a run positions its registrations;
+	// entryOrders and referenceOrders then hold the position of each
+	// identity entry and reference.
+	identityOrdering             bool
+	entryOrders, referenceOrders []uint64
+	identityDiagnostic           identityDiagnostic
+	run                          *Run
+	local                        *boundState
+	AssessmentErr                error
+	AssessmentVersion            uint64
+	TypeMetadata                 map[TypeIdentity]uint8
+	Derivations                  map[DerivationKey]bool
+	Schema                       *SchemaData
+	Issues                       []Issue
+	Effective                    map[*ComplexSchema]*EffectiveComplex
+	ParticleNullable             map[*ParticleSchema]bool // prepared immutable metadata, scoped to this validation
 	// These per-context, schema-keyed caches are lazy: simpleSemantics is
 	// needed only when a simple schema is reached; enumerationValues only
 	// when enumeration literals need immutable lexical and value views.
@@ -255,7 +260,6 @@ type Context struct {
 
 type IdentityReference struct {
 	origin identityOrigin
-	order  uint64
 	Value  string
 	Path   string
 }

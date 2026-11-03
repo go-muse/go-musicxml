@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"unsafe"
 )
 
 // XSD 1.0 sic-id has two independent predicates: declaration-valid eligible
@@ -35,7 +36,6 @@ func (c *Context) origin() identityOrigin {
 
 type IdentityEntry struct {
 	origin                  identityOrigin
-	order                   uint64
 	Value, Path, Constraint string
 }
 
@@ -103,14 +103,16 @@ func (c *Context) RecordIdentity(reference *TypeRef, value, path string) {
 	case "IDREF":
 		c.identity(1)
 		c.reserve(int64(len(path)))
-		c.References = appendRetained(c, c.References, IdentityReference{Value: normalized, Path: path, origin: c.origin(), order: c.identityOrder})
+		c.References = appendRetained(c, c.References, IdentityReference{Value: normalized, Path: path, origin: c.origin()})
+		c.noteReferenceOrder()
 		c.SeedIdentity(normalized, path, "IDREF")
 	case "IDREFS":
 		for _, item := range splitList(normalized, c) {
 			c.step(1)
 			c.identity(1)
 			c.reserve(int64(len(path)))
-			c.References = appendRetained(c, c.References, IdentityReference{Value: item, Path: path, origin: c.origin(), order: c.identityOrder})
+			c.References = appendRetained(c, c.References, IdentityReference{Value: item, Path: path, origin: c.origin()})
+			c.noteReferenceOrder()
 			c.SeedIdentity(item, path, "IDREF")
 		}
 	}
@@ -127,7 +129,10 @@ func (c *Context) SeedIdentity(value, path, constraint string) {
 		c.identity(1)
 		c.reserve(c.sum(64, int64(len(path))))
 		c.IdentityEntrySeen[value] = true
-		c.IdentityEntries = appendRetained(c, c.IdentityEntries, IdentityEntry{Value: value, Path: path, Constraint: constraint, origin: c.origin(), order: c.identityOrder})
+		c.IdentityEntries = appendRetained(c, c.IdentityEntries, IdentityEntry{Value: value, Path: path, Constraint: constraint, origin: c.origin()})
+		if c.identityOrdering {
+			c.entryOrders = appendRetained(c, c.entryOrders, c.identityOrder)
+		}
 		return
 	}
 	if !c.identityUnordered {
@@ -138,9 +143,10 @@ func (c *Context) SeedIdentity(value, path, constraint string) {
 	for i := range c.IdentityEntries {
 		c.step(1)
 		entry := &c.IdentityEntries[i]
-		if entry.Value == value && entry.order > c.identityOrder {
+		if entry.Value == value && c.entryOrders[i] > c.identityOrder {
 			c.reserve(int64(len(path)))
-			entry.Path, entry.Constraint, entry.origin, entry.order = path, constraint, c.origin(), c.identityOrder
+			entry.Path, entry.Constraint, entry.origin = path, constraint, c.origin()
+			c.entryOrders[i] = c.identityOrder
 			return
 		}
 	}
@@ -344,11 +350,20 @@ func (r *Run) ResolveIdentity(ctx context.Context, value string) (IdentityResolu
 // operations' identity registrations. A run that binds subjects out of
 // document order sets each Bind and Complete to the position the operation
 // has when the document is bound top-down; identity entries, references and
-// the two earliest owners of an ID then follow that order. Without it every
-// registration has position zero and keeps the order it arrives in.
+// the two earliest owners of an ID then follow that order. A run that sets
+// it does so before its first registration. A run that never sets it keeps
+// every registration in the order it arrives and stores no positions.
 func (r *Run) SetIdentityOrder(position uint64) {
 	if r != nil {
+		r.context.identityOrdering = true
 		r.context.identityOrder = position
+	}
+}
+
+// noteReferenceOrder stores the position of the reference just appended.
+func (c *Context) noteReferenceOrder() {
+	if c.identityOrdering {
+		c.referenceOrders = appendRetained(c, c.referenceOrders, c.identityOrder)
 	}
 }
 
@@ -358,16 +373,34 @@ func (c *Context) sortIdentityRecords() {
 	if !c.identityUnordered {
 		return
 	}
-	byOrder := func(a, b uint64) int {
+	c.IdentityEntries = sortByOrder(c, c.IdentityEntries, c.entryOrders)
+	c.References = sortByOrder(c, c.References, c.referenceOrders)
+}
+
+// sortByOrder stably sorts records by their positions, both in place.
+func sortByOrder[T any](c *Context, records []T, orders []uint64) []T {
+	if len(records) != len(orders) {
+		panic(runAbort{errors.New("xsd: identity positions out of step")})
+	}
+	c.scratch(c.size(int64(len(records)), 8))
+	index := make([]int, len(records))
+	for i := range index {
+		index[i] = i
+	}
+	slices.SortStableFunc(index, func(a, b int) int {
 		c.step(1)
-		return cmp.Compare(a, b)
+		return cmp.Compare(orders[a], orders[b])
+	})
+	c.scratch(c.size(int64(len(records)), int64(unsafe.Sizeof(*new(T)))+8))
+	sorted := make([]T, len(records))
+	positions := make([]uint64, len(records))
+	for i, from := range index {
+		c.step(1)
+		sorted[i], positions[i] = records[from], orders[from]
 	}
-	if !slices.IsSortedFunc(c.IdentityEntries, func(a, b IdentityEntry) int { return byOrder(a.order, b.order) }) {
-		slices.SortStableFunc(c.IdentityEntries, func(a, b IdentityEntry) int { return byOrder(a.order, b.order) })
-	}
-	if !slices.IsSortedFunc(c.References, func(a, b IdentityReference) int { return byOrder(a.order, b.order) }) {
-		slices.SortStableFunc(c.References, func(a, b IdentityReference) int { return byOrder(a.order, b.order) })
-	}
+	copy(records, sorted)
+	copy(orders, positions)
+	return records
 }
 
 // noteIdentityOrder records whether the current position precedes one that

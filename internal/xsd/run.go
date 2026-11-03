@@ -419,6 +419,11 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 			r.nodes[ch.ID] = n
 		} else if n.Name != ch.Name {
 			return Binding{}, errors.New("xsd: conflicting child name")
+		} else {
+			// A child bound or opened before its parent created its own node.
+			// Completing the parent deletes it, so the parent's work takes
+			// over its charge.
+			work += nodeObjectBytes
 		}
 		node.Children[i] = n
 	}

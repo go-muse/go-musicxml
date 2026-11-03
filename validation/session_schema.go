@@ -257,10 +257,12 @@ func (s *Session) ensureSchemaRun() error {
 func (s *Session) ensureSchemaNodes() error {
 	state := s.schema
 	if state.nodes == nil {
-		if err := s.retain(128); err != nil {
+		if err := s.retain(128 + int64(len(s.nodes))*128); err != nil {
 			return err
 		}
 		state.nodes = make(map[NodeID]schemaNode, len(s.nodes))
+		state.nodesCharged = len(s.nodes)
+		return nil
 	}
 	if extra := len(s.nodes) - state.nodesCharged; extra > 0 {
 		if err := s.retain(int64(extra) * 128); err != nil {
@@ -280,6 +282,11 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		return nil
 	}
 	state.bound = true
+	// The windows bound so far are now confirmed: binding the document
+	// would have bound them.
+	if err := s.accumulator.commitHeld(); err != nil {
+		return err
+	}
 	if err := s.ensureSchemaNodes(); err != nil {
 		return err
 	}
@@ -464,8 +471,12 @@ func (s *Session) bindSubtree(ctx context.Context, top *factNode, use xsd.Use, p
 			continue
 		}
 		if windowed {
-			state.run.SetIdentityOrder(eulerEnter(f.pre, f.depth) + 2*uint64(f.offsets[len(f.offsets)-1]) + 1)
+			state.run.SetIdentityOrder(eulerExit(f.pre, f.depth, f.offsets[len(f.offsets)-1]))
 		}
+		// A finding recorded here numbers after the node's binding findings
+		// when no child finding came in between, which differs from the
+		// buffered order only for a window ancestor whose completion proves
+		// a failure; MusicXML's score roots and parts prove none there.
 		completion, completeErr := state.run.Complete(ctx, f.binding, f.children)
 		if err := s.checkRepresentable(ctx, f.node); err != nil {
 			return result, err
@@ -811,8 +822,9 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 			return nil
 		}
 		if previous.complete && !result.Complete {
-			s.accumulator.incomplete()
-			s.accumulator.report.BlockingProblems++
+			if err := s.accumulator.blockingIncomplete(); err != nil {
+				return err
+			}
 		}
 	} else if err := s.accumulator.recordCompositeOutcome(r, d, result.Complete); err != nil {
 		return err

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"reflect"
 	"slices"
 	"strconv"
@@ -351,6 +352,98 @@ type reportAccumulator struct {
 	stale     bool
 	// capacityBytes is the charge for the pending array's capacity.
 	capacityBytes int64
+	// holding keeps outcomes and findings in held instead of recording
+	// them, charged to the buffer for heldBytes, until commitHeld records
+	// them or dropHeld discards them. Binding a window holds its proved
+	// failures until binding the whole document confirms them.
+	holding   bool
+	held      []heldRecord
+	heldBytes int64
+}
+
+type heldKind uint8
+
+const (
+	heldComposite heldKind = iota
+	heldBlocking
+	heldFinding
+)
+
+// heldRecord is one held outcome (recordCompositeOutcome), blocking
+// incompleteness (blockingIncomplete) or finding (storeDiagnostic, with the
+// key it arrived with).
+type heldRecord struct {
+	kind     heldKind
+	rule     RuleDefinition
+	decision Decision
+	location Location
+	complete bool
+	key      findingKey
+}
+
+// heldRecordBytes is the charge of one held record before its strings.
+var heldRecordBytes = int64(unsafe.Sizeof(heldRecord{})) + pendingRuleBytes
+
+// hold keeps one record, charging it first.
+func (a *reportAccumulator) hold(record heldRecord) error {
+	size := reportStorageSize{limit: math.MaxInt64}
+	size.decision(record.decision)
+	size.location(record.location)
+	charge := heldRecordBytes + size.total
+	if err := a.account.Charge(BudgetBufferedBytes, charge); err != nil {
+		return err
+	}
+	a.heldBytes += charge
+	record.decision = cloneDecision(record.decision)
+	record.location = cloneLocation(record.location)
+	a.held = append(a.held, record)
+	return nil
+}
+
+// commitHeld records the held outcomes and findings in the order they
+// arrived, each finding at its own key.
+func (a *reportAccumulator) commitHeld() error {
+	held := a.held
+	a.held, a.holding = nil, false
+	defer a.releaseHeld()
+	for _, record := range held {
+		switch record.kind {
+		case heldComposite:
+			if err := a.recordCompositeOutcome(record.rule, record.decision, record.complete); err != nil {
+				return err
+			}
+		case heldBlocking:
+			a.blockingIncomplete()
+		case heldFinding:
+			if err := a.deferAt(record.rule, record.decision, record.location, record.key); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// dropHeld discards the held outcomes and findings.
+func (a *reportAccumulator) dropHeld() {
+	a.held, a.holding = nil, false
+	a.releaseHeld()
+}
+
+func (a *reportAccumulator) releaseHeld() {
+	if a.heldBytes > 0 {
+		_ = a.account.Release(BudgetBufferedBytes, a.heldBytes)
+		a.heldBytes = 0
+	}
+}
+
+// blockingIncomplete records that a proved failure turned out incomplete.
+func (a *reportAccumulator) blockingIncomplete() error {
+	if a.holding {
+		return a.hold(heldRecord{kind: heldBlocking})
+	}
+	a.incomplete()
+	a.report.BlockingProblems++
+	return nil
 }
 
 // pendingFinding is a finding that the deferred accumulator will store if no
@@ -388,6 +481,9 @@ func (a *reportAccumulator) recordCompositeOutcome(rule RuleDefinition, summary 
 	}
 	if complete && (summary.Outcome == OutcomeUnknown || summary.Outcome == OutcomeUnsupported || summary.Outcome == OutcomeBlocked) {
 		return contract("composite result", "unresolved work cannot be complete")
+	}
+	if a.holding {
+		return a.hold(heldRecord{kind: heldComposite, rule: rule, decision: summary, complete: complete})
 	}
 	if err := a.recordOutcome(rule, summary); err != nil {
 		return err
@@ -487,6 +583,11 @@ func (a *reportAccumulator) storeDiagnostic(rule RuleDefinition, decision Decisi
 	if decision.Outcome == OutcomePass || decision.Outcome == OutcomeNotApplicable {
 		return nil
 	}
+	if a.holding {
+		key := a.nextKey()
+		a.lastArrival, a.arrived = key, true
+		return a.hold(heldRecord{kind: heldFinding, rule: rule, decision: decision, location: location, key: key})
+	}
 	if a.deferred {
 		return a.deferDiagnostic(rule, decision, location)
 	}
@@ -536,6 +637,11 @@ func (a *reportAccumulator) storeDiagnostic(rule RuleDefinition, decision Decisi
 func (a *reportAccumulator) deferDiagnostic(rule RuleDefinition, decision Decision, location Location) error {
 	key := a.nextKey()
 	a.lastArrival, a.arrived = key, true
+	return a.deferAt(rule, decision, location, key)
+}
+
+// deferAt keeps a finding that arrived with key.
+func (a *reportAccumulator) deferAt(rule RuleDefinition, decision Decision, location Location, key findingKey) error {
 	if a.cutoff != nil && !key.less(*a.cutoff) {
 		return nil
 	}
