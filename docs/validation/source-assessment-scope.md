@@ -196,8 +196,9 @@ Every successfully begun assessment is finished exactly once, including fatal,
 I/O and cancellation paths. Cleanup releases owned live gauges, never cumulative
 work, and never closes the caller's reader. Known closed-prefix failures are
 assessed after a parse/I/O interruption only when the fact event stream remains
-valid and context/resources permit it. Safe complete-match prefix witnesses do
-not prove absent suffixes or unavailable original order.
+valid and context/resources permit it. Children of an incompletely enumerated
+element bind as far as their prefix determines their declarations; these
+prefix witnesses do not prove absent suffixes or unavailable original order.
 
 ## Verification contract
 

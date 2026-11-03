@@ -1606,6 +1606,13 @@ binding, element declarations, attributes, scalars, content grammar and document
 identity, reusing the authoritative shared XSD implementation. Each selected
 operation counts once per applicable subject, regardless of how many diagnostic
 details it emits. A proved failure and incomplete remaining work can coexist.
+A child's declaration is the one that the children before it and the child
+itself determine in the parent's content model, whatever follows. When the
+children do not match, the parent's content failure is reported, the children
+before the first rejected child are assessed against their declarations, and
+the later children stay unassessed (`blocked` with reason
+`exact-declaration-use-unavailable`). The known children of an incompletely
+enumerated element bind the same way, without proving absent suffixes.
 A small diagnostic quota cannot turn failure/incompleteness into acceptance.
 Repeated cause-free `dtd-infoset-unavailable` outcomes are displayed as one
 bounded summary per full rule key and document, with the number of summarized
