@@ -59,7 +59,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   within the default buffer also with the complete projection.
 - CI no longer runs the test suite with `GOARCH=386`, and no code, test or
   current document is specific to 32-bit platforms. Bounds on conversions to
-  `int` are written with `math.MaxInt`.
+  `int` are written with `math.MaxInt`. No test checks the operating system or
+  architecture either: the buffer capacity tests that ran only on amd64 now run
+  everywhere and take exact admissions from the refusal itself.
 - `ConversionError`, `SessionError` and `ConfigurationError` messages include
   the cause and omit empty parts instead of printing `: :`.
 - Strict loading runs two validation lines that no longer overlap. Line 2,
