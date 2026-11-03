@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"math"
 	"math/big"
 	"strconv"
 	"strings"
@@ -23,6 +24,14 @@ type schemaSession struct {
 	dtdSummaries  map[RuleKey]schemaDTDSummary
 	dtdOrder      []RuleKey
 	dtdOmitted    bool
+	// nodesCharged is the number of nodes entries already admitted.
+	nodesCharged int
+	// Under the windowed strategy (session_window.go): the open window
+	// ancestors, the uses their children got as they opened, and the windows
+	// bound before the root closed.
+	opened  map[NodeID]*xsd.OpenElement
+	uses    map[NodeID]xsd.Use
+	windows map[NodeID]boundWindow
 }
 
 // A session has one document. Only the fixed, cause-free DTD capability reason
@@ -137,6 +146,11 @@ type schemaBindFrame struct {
 	next      int
 	children  []xsd.Completion
 	entered   bool
+	// pre and depth place the node in document order for identity order
+	// (windowed strategy only); offsets[i] is the number of nodes before
+	// child i's subtree within the node's subtree.
+	pre, depth int
+	offsets    []int
 }
 
 // Fixed conservative slot envelopes (size-guarded in tests). Charge allocated
@@ -202,7 +216,7 @@ func (w *schemaBindScratch) push(ctx context.Context, frame schemaBindFrame) err
 
 func (w *schemaBindScratch) pop() {
 	last := len(w.frames) - 1
-	n := int64(cap(w.frames[last].children)) * schemaBindCompletionBytes
+	n := int64(cap(w.frames[last].children))*schemaBindCompletionBytes + int64(cap(w.frames[last].offsets))*8
 	w.frames[last] = schemaBindFrame{}
 	w.frames = w.frames[:last]
 	w.releaseBytes(n)
@@ -214,27 +228,16 @@ func (w *schemaBindScratch) release() {
 	w.releaseBytes(w.bytes)
 }
 
-// bindSourceSchema owns the pending source-fact transition. Exact child uses
-// come only from the shared grammar witness; a path or QName never guesses one.
-func (s *Session) bindSourceSchema(ctx context.Context) error {
-	s.accumulator.at = findingKey{stage: stageSchema}
+// schemaRootUnsupported reports a source root whose declaration or type the
+// selected schema cannot establish: then no node is bound.
+func (s *Session) schemaRootUnsupported() bool {
+	return s.profile.Target == TargetSource && (s.root.header.Declaration.State == EvidenceUnsupported || s.root.header.Type.State == EvidenceUnsupported)
+}
+
+// ensureSchemaRun creates the session's XSD run on first use.
+func (s *Session) ensureSchemaRun() error {
 	state := s.schema
-	if state == nil || state.bound || s.root == nil {
-		return nil
-	}
-	state.bound = true
-	if err := s.retain(128 + int64(len(s.nodes))*128); err != nil {
-		return err
-	}
-	state.nodes = make(map[NodeID]schemaNode, len(s.nodes))
-	if s.profile.Target == TargetSource && (s.root.header.Declaration.State == EvidenceUnsupported || s.root.header.Type.State == EvidenceUnsupported) {
-		reason := s.root.header.Declaration.Reason
-		if reason == "" {
-			reason = s.root.header.Type.Reason
-		}
-		for _, id := range s.sequence {
-			state.nodes[id] = schemaNode{reason: reason}
-		}
+	if state.run != nil {
 		return nil
 	}
 	var err error
@@ -247,94 +250,67 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 	} else {
 		state.run, err = xsd.NewRun(state.active.kernel, schemaMeter{s})
 	}
-	if err != nil {
+	return err
+}
+
+// ensureSchemaNodes admits nodes entries for every node seen so far.
+func (s *Session) ensureSchemaNodes() error {
+	state := s.schema
+	if state.nodes == nil {
+		if err := s.retain(128); err != nil {
+			return err
+		}
+		state.nodes = make(map[NodeID]schemaNode, len(s.nodes))
+	}
+	if extra := len(s.nodes) - state.nodesCharged; extra > 0 {
+		if err := s.retain(int64(extra) * 128); err != nil {
+			return err
+		}
+		state.nodesCharged = len(s.nodes)
+	}
+	return nil
+}
+
+// bindSourceSchema owns the pending source-fact transition. Exact child uses
+// come only from the shared grammar witness; a path or QName never guesses one.
+func (s *Session) bindSourceSchema(ctx context.Context) error {
+	s.accumulator.at = findingKey{stage: stageSchema}
+	state := s.schema
+	if state == nil || state.bound || s.root == nil {
+		return nil
+	}
+	state.bound = true
+	if err := s.ensureSchemaNodes(); err != nil {
+		return err
+	}
+	if s.schemaRootUnsupported() {
+		reason := s.root.header.Declaration.Reason
+		if reason == "" {
+			reason = s.root.header.Type.Reason
+		}
+		for _, id := range s.sequence {
+			state.nodes[id] = schemaNode{reason: reason}
+		}
+		return nil
+	}
+	if err := s.ensureSchemaRun(); err != nil {
 		return err
 	}
 	rootUse, ok := state.active.kernel.Root(xsd.QName{Space: s.root.header.Name.Space, Local: s.root.header.Name.Local})
 	if !ok {
 		return contract("source schema root", "no compiled root use")
 	}
-	scratch := schemaBindScratch{account: s.account}
-	defer scratch.release()
-	if err := scratch.push(ctx, schemaBindFrame{node: s.root, use: rootUse}); err != nil {
+	consumed := 0
+	if _, err := s.bindSubtree(ctx, s.root, rootUse, 0, 0, &consumed); err != nil {
 		return err
 	}
-	for len(scratch.frames) > 0 {
-		if err := s.step(ctx, 1); err != nil {
-			return err
-		}
-		f := &scratch.frames[len(scratch.frames)-1]
-		if !f.entered {
-			subject, subjectErr := s.schemaSubject(ctx, f.node)
-			if subjectErr != nil {
-				return subjectErr
-			}
-			binding, bindErr := state.run.Bind(ctx, f.use, subject)
-			f.binding = binding
-			f.entered = true
-			available := state.run.Results(binding).Binding.Applicable
-			state.nodes[f.node.header.ID] = schemaNode{binding: binding, available: available, reason: "schema-binding-unavailable"}
-			// Persist proved failures before later binding, exact-value or buffer work.
-			if err := s.recordXSDProvedFailures(ctx, f.node); err != nil {
-				return err
-			}
-			if bindErr != nil {
-				return bindErr
-			}
-			if err := s.publishSchemaFacts(ctx, f.node, f.use, binding); err != nil {
-				return err
-			}
-			f.witnesses = state.run.Witnesses(binding)
-			if err := scratch.reserve(int64(len(f.witnesses)), schemaBindCompletionBytes); err != nil {
-				return err
-			}
-			f.children = make([]xsd.Completion, 0, len(f.witnesses))
-		}
-		if f.next < len(f.witnesses) {
-			witness := f.witnesses[f.next]
-			f.next++
-			if witness.Mode != xsd.WitnessDeclared {
-				child := s.nodes[NodeID(witness.Child)]
-				if child == nil {
-					return contract("schema witness", "unknown child occurrence")
-				}
-				state.nodes[child.header.ID] = schemaNode{skipped: witness.Mode == xsd.WitnessSkip, reason: Code(witness.Mode)}
-				continue
-			}
-			child := s.nodes[NodeID(witness.Child)]
-			if child == nil {
-				return contract("schema witness", "unknown child occurrence")
-			}
-			// No pointer into the old backing array survives a possible resize.
-			f = nil
-			if err := scratch.push(ctx, schemaBindFrame{node: child, use: witness.Use}); err != nil {
-				return err
-			}
-			continue
-		}
-		completion, completeErr := state.run.Complete(ctx, f.binding, f.children)
-		if err := s.checkRepresentable(ctx, f.node); err != nil {
-			return err
-		}
-		if err := s.recordXSDProvedFailures(ctx, f.node); err != nil {
-			return err
-		}
-		if completeErr != nil {
-			return completeErr
-		}
-		// The completed run no longer holds the subject.
-		released := schemaSubjectBytes(f.node)
-		_ = s.account.Release(BudgetBufferedBytes, released)
-		s.retained -= released
-		f = nil
-		scratch.pop()
-		if len(scratch.frames) > 0 {
-			parent := &scratch.frames[len(scratch.frames)-1]
-			parent.children = append(parent.children, completion)
-		}
+	// A window is bound before its ancestors only on the evidence that their
+	// witnesses will reach it. Binding that disagrees, such as a current
+	// model whose ancestor ends without a known child order, cannot be
+	// undone; refuse it rather than report what the buffered engine would not.
+	if consumed != len(state.windows) {
+		return contract("schema window", "window bound although no witness reaches it")
 	}
-	// The remaining causal/identity work does not need traversal storage.
-	scratch.release()
 	// An unmatched subtree remains unavailable. Preserve its exact containing
 	// content failure as the causal identity when that rule was selected.
 	for _, id := range s.sequence {
@@ -389,12 +365,133 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		}
 		n.header.Type, n.header.Declaration = ownedType, ownedDeclaration
 	}
+	// Identity findings, and the findings of the rules evaluated once the
+	// root closed, follow every node's binding findings whatever order the
+	// nodes were bound in.
+	s.accumulator.at = findingKey{stage: stageSchema, trigger: math.MaxInt64}
 	identity, identityErr := state.run.IdentityPreview(ctx)
 	state.identity = identity
 	if err := s.recordXSDIdentityFailure(ctx); err != nil {
 		return err
 	}
 	return identityErr
+}
+
+// bindSubtree binds top with use and every descendant its witnesses reach,
+// top-down, and returns top's completion. A child that a window already
+// bound contributes its kept completion, once its witness is the use the
+// window bound it with, and counts in consumed. Under the windowed strategy,
+// pre and depth place top in document order, and each operation's identity
+// registrations take the position the operation has when the whole document
+// is bound top-down.
+func (s *Session) bindSubtree(ctx context.Context, top *factNode, use xsd.Use, pre, depth int, consumed *int) (xsd.Completion, error) {
+	state := s.schema
+	windowed := s.strategy == strategyWindowed
+	scratch := schemaBindScratch{account: s.account}
+	defer scratch.release()
+	if err := scratch.push(ctx, schemaBindFrame{node: top, use: use, pre: pre, depth: depth}); err != nil {
+		return xsd.Completion{}, err
+	}
+	var result xsd.Completion
+	for len(scratch.frames) > 0 {
+		if err := s.step(ctx, 1); err != nil {
+			return result, err
+		}
+		f := &scratch.frames[len(scratch.frames)-1]
+		if !f.entered {
+			if windowed {
+				offsets, err := s.subtreeOffsets(ctx, f.node, &scratch)
+				if err != nil {
+					return result, err
+				}
+				f = &scratch.frames[len(scratch.frames)-1]
+				f.offsets = offsets
+				state.run.SetIdentityOrder(eulerEnter(f.pre, f.depth))
+			}
+			subject, subjectErr := s.schemaSubject(ctx, f.node)
+			if subjectErr != nil {
+				return result, subjectErr
+			}
+			binding, bindErr := state.run.Bind(ctx, f.use, subject)
+			f.binding = binding
+			f.entered = true
+			available := state.run.Results(binding).Binding.Applicable
+			state.nodes[f.node.header.ID] = schemaNode{binding: binding, available: available, reason: "schema-binding-unavailable"}
+			// Persist proved failures before later binding, exact-value or buffer work.
+			if err := s.recordXSDProvedFailures(ctx, f.node); err != nil {
+				return result, err
+			}
+			if bindErr != nil {
+				return result, bindErr
+			}
+			if err := s.publishSchemaFacts(ctx, f.node, f.use, binding); err != nil {
+				return result, err
+			}
+			f.witnesses = state.run.Witnesses(binding)
+			if err := scratch.reserve(int64(len(f.witnesses)), schemaBindCompletionBytes); err != nil {
+				return result, err
+			}
+			f.children = make([]xsd.Completion, 0, len(f.witnesses))
+		}
+		if f.next < len(f.witnesses) {
+			witness := f.witnesses[f.next]
+			f.next++
+			child := s.nodes[NodeID(witness.Child)]
+			if child == nil {
+				return result, contract("schema witness", "unknown child occurrence")
+			}
+			if witness.Mode != xsd.WitnessDeclared {
+				state.nodes[child.header.ID] = schemaNode{skipped: witness.Mode == xsd.WitnessSkip, reason: Code(witness.Mode)}
+				continue
+			}
+			if window, ok := state.windows[child.header.ID]; ok {
+				if window.use != witness.Use {
+					return result, contract("schema window", "window bound with another declaration than its witness")
+				}
+				f.children = append(f.children, window.completion)
+				*consumed++
+				continue
+			}
+			childPre, childDepth := 0, 0
+			if windowed {
+				childPre, childDepth = f.pre+1+f.offsets[witness.Index], f.depth+1
+			}
+			// No pointer into the old backing array survives a possible resize.
+			f = nil
+			if err := scratch.push(ctx, schemaBindFrame{node: child, use: witness.Use, pre: childPre, depth: childDepth}); err != nil {
+				return result, err
+			}
+			continue
+		}
+		if windowed {
+			state.run.SetIdentityOrder(eulerEnter(f.pre, f.depth) + 2*uint64(f.offsets[len(f.offsets)-1]) + 1)
+		}
+		completion, completeErr := state.run.Complete(ctx, f.binding, f.children)
+		if err := s.checkRepresentable(ctx, f.node); err != nil {
+			return result, err
+		}
+		if err := s.recordXSDProvedFailures(ctx, f.node); err != nil {
+			return result, err
+		}
+		if completeErr != nil {
+			return result, completeErr
+		}
+		// The completed run no longer holds the subject.
+		released := schemaSubjectBytes(f.node)
+		_ = s.account.Release(BudgetBufferedBytes, released)
+		s.retained -= released
+		f = nil
+		scratch.pop()
+		if len(scratch.frames) > 0 {
+			parent := &scratch.frames[len(scratch.frames)-1]
+			parent.children = append(parent.children, completion)
+		} else {
+			result = completion
+		}
+	}
+	// The remaining causal/identity work does not need traversal storage.
+	scratch.release()
+	return result, nil
 }
 
 // The local QName-to-slot map needs a header and an entire first group even

@@ -308,6 +308,9 @@ type prefixMatcher struct {
 	kept    int64
 	next    int
 	stopped bool
+	// retained keeps states charged as retained storage between operations,
+	// for an open element; otherwise they are operation scratch.
+	retained bool
 	// ambiguous records that binding stopped at a child with two candidate
 	// particles or too many configurations, rather than at a child the
 	// content model rejects.
@@ -351,6 +354,40 @@ func (c *Context) releaseScratchBytes(n int64) {
 		panic(runAbort{err})
 	}
 	r.scratchRetained -= n
+}
+
+// retainScratch turns n bytes of operation scratch into retained storage.
+func (c *Context) retainScratch(n int64) {
+	if c == nil || c.run == nil || n <= 0 {
+		return
+	}
+	r := c.run
+	if n > r.scratchRetained {
+		panic(runAbort{errors.New("xsd: retained scratch exceeds charge")})
+	}
+	r.scratchRetained -= n
+	r.retained += n
+}
+
+// dropKept releases the surviving configurations and their charge.
+func (m *prefixMatcher) dropKept() {
+	c := m.c
+	m.states = nil
+	if m.kept == 0 || c == nil || c.run == nil {
+		m.kept = 0
+		return
+	}
+	if !m.retained {
+		c.releaseScratchBytes(m.kept)
+	} else {
+		r := c.run
+		r.retained -= m.kept
+		if err := r.meter.Release(m.kept); err != nil {
+			m.kept = 0
+			panic(runAbort{err})
+		}
+	}
+	m.kept = 0
 }
 
 // scratchCharged is the operation scratch charged so far.
@@ -415,7 +452,11 @@ func (m *prefixMatcher) push(child *Node) (ElementMatch, bool) {
 	}
 	searched := c.scratchCharged() - before
 	m.states, s = nil, prefixSearch{}
-	c.releaseScratchBytes(searched - kept + m.kept)
+	c.releaseScratchBytes(searched - kept)
+	m.dropKept()
+	if m.retained {
+		c.retainScratch(kept)
+	}
 	m.kept = kept
 	if stop {
 		m.stopped, m.ambiguous = true, overflow || leaf != nil
@@ -447,7 +488,6 @@ func (c *Context) prefixMatches(particle *ParticleSchema, children []*Node) []El
 		}
 		result = appendRetained(c, result, match)
 	}
-	c.releaseScratchBytes(matcher.kept)
-	matcher.states, matcher.kept = nil, 0
+	matcher.dropKept()
 	return result
 }
