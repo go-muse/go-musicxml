@@ -1606,6 +1606,19 @@ binding, element declarations, attributes, scalars, content grammar and document
 identity, reusing the authoritative shared XSD implementation. Each selected
 operation counts once per applicable subject, regardless of how many diagnostic
 details it emits. A proved failure and incomplete remaining work can coexist.
+A child's declaration is the one that the children before it and the child
+itself determine in the parent's content model, whatever follows. When the
+children do not match, the parent's content failure is reported, the children
+before the first rejected child are bound and assessed against their
+declarations, and the later children stay unassessed (`blocked` with reason
+`exact-declaration-use-unavailable`). Binding stops earlier, conservatively, at
+a child with two candidate particles (a schema that violates Unique Particle
+Attribution, or two references to one global element), at a child that leaves
+more than 64 configurations (nested bounded repetitions such as
+`(a{1,10}){1,10}`; the pinned MusicXML schemas have none) or whose search
+exceeds 4,096 configurations. The known
+children of an incompletely enumerated element bind the same way, without
+proving absent suffixes.
 A small diagnostic quota cannot turn failure/incompleteness into acceptance.
 Repeated cause-free `dtd-infoset-unavailable` outcomes are displayed as one
 bounded summary per full rule key and document, with the number of summarized
