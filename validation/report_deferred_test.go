@@ -234,3 +234,88 @@ func TestDeferredReportBatchesOutOfOrderFindings(t *testing.T) {
 		t.Fatalf("findings %d truncated %v first %v", len(r.Findings), r.DiagnosticsTruncated, r.Findings[0].Decision.Subject)
 	}
 }
+
+// Holding findings and committing them stores exactly what the buffered
+// accumulator stores: for random findings under tight and loose quotas,
+// positions shuffled and a random half of them held as window binding holds
+// them, committing the held findings before the report finishes gives the
+// buffered findings, rules, truncation flag and counts. Held findings stay
+// within the count quota while they wait, and their charge returns to zero.
+func TestHeldFindingsCommitTheBufferedPrefix(t *testing.T) {
+	random := rand.New(rand.NewSource(11))
+	rules := make([]RuleDefinition, 4)
+	for i := range rules {
+		rules[i] = RuleDefinition{Key: RuleKey{ID: RuleID(fmt.Sprintf("rule-%d", i)), Revision: 1}, Class: ClassMandatory, Role: RolePredicate, Category: CategoryNormative, Text: RuleText{Title: strings.Repeat("t", 40*i)}}
+	}
+	held := 0
+	for _, limits := range []Budgets{{}, {MaxDiagnostics: 3}, {MaxDiagnosticBytes: 2000}, {MaxDiagnosticBytes: 1200, MaxDiagnostics: 5}, {MaxDiagnosticBytes: 700}} {
+		for trial := 0; trial < 60; trial++ {
+			var items []deferredItem
+			for _, it := range deferredItems(random, rules) {
+				if !it.truncate {
+					items = append(items, it)
+				}
+			}
+			slices.SortStableFunc(items, func(x, y deferredItem) int {
+				if x.at.less(y.at) {
+					return -1
+				}
+				if y.at.less(x.at) {
+					return 1
+				}
+				return 0
+			})
+			newAccount := func() *Account {
+				a, err := NewBudgetAccount(limits)
+				if err != nil {
+					t.Fatal(err)
+				}
+				return a
+			}
+			want := newReportAccumulator(Profile{}, newAccount())
+			for _, it := range items {
+				deferredFeed(t, want, it)
+			}
+			var positions [][]deferredItem
+			for _, it := range items {
+				if n := len(positions); n > 0 && positions[n-1][0].at == it.at {
+					positions[n-1] = append(positions[n-1], it)
+				} else {
+					positions = append(positions, []deferredItem{it})
+				}
+			}
+			account := newAccount()
+			got := newReportAccumulator(Profile{}, account)
+			got.deferred = true
+			for _, i := range random.Perm(len(positions)) {
+				got.holding = random.Intn(2) == 0
+				for _, it := range positions[i] {
+					deferredFeed(t, got, it)
+					if got.holding {
+						held++
+					}
+				}
+				got.holding = false
+				if limit := account.Limits().MaxDiagnostics; int64(len(got.heldFindings)) > limit {
+					t.Fatalf("limits %+v trial %d: %d findings held for a quota of %d", limits, trial, len(got.heldFindings), limit)
+				}
+			}
+			if err := got.commitHeld(); err != nil {
+				t.Fatal(err)
+			}
+			if got.heldBytes != 0 {
+				t.Fatalf("limits %+v trial %d: %d held bytes after commit", limits, trial, got.heldBytes)
+			}
+			wantReport, gotReport := want.finish(true, SyntaxWellFormed), got.finish(true, SyntaxWellFormed)
+			if !reflect.DeepEqual(wantReport.Findings, gotReport.Findings) || !reflect.DeepEqual(wantReport.Rules, gotReport.Rules) || wantReport.DiagnosticsTruncated != gotReport.DiagnosticsTruncated || !reflect.DeepEqual(wantReport.Counts, gotReport.Counts) {
+				t.Fatalf("limits %+v trial %d: held report differs: %d/%d findings, truncated %v/%v", limits, trial, len(gotReport.Findings), len(wantReport.Findings), gotReport.DiagnosticsTruncated, wantReport.DiagnosticsTruncated)
+			}
+			if usage, _ := account.Usage(BudgetBufferedBytes); usage != 0 {
+				t.Fatalf("limits %+v trial %d: %d buffered bytes left", limits, trial, usage)
+			}
+		}
+	}
+	if held < 1000 {
+		t.Fatalf("only %d findings held", held)
+	}
+}

@@ -352,13 +352,20 @@ type reportAccumulator struct {
 	stale     bool
 	// capacityBytes is the charge for the pending array's capacity.
 	capacityBytes int64
-	// holding keeps outcomes and findings in held instead of recording
-	// them, charged to the buffer for heldBytes, until commitHeld records
-	// them or dropHeld discards them. Binding a window holds its proved
-	// failures until binding the whole document confirms them.
-	holding   bool
-	held      []heldRecord
-	heldBytes int64
+	// holding keeps outcomes and findings instead of recording them, until
+	// commitHeld records them or dropHeld discards them. Binding a window
+	// holds its proved failures until binding the whole document confirms
+	// them. heldOutcomes keep arrival order; heldFindings are sorted by key
+	// and bounded by the diagnostic quotas: a finding with as many held
+	// findings before it as the quotas store can never be stored, and
+	// heldCutoff is the first key dropped that way. heldBytes is their
+	// charge, slot capacity included.
+	holding      bool
+	heldOutcomes []heldRecord
+	heldFindings []heldRecord
+	heldCutoff   *findingKey
+	heldSize     int64
+	heldBytes    int64
 }
 
 type heldKind uint8
@@ -371,69 +378,162 @@ const (
 
 // heldRecord is one held outcome (recordCompositeOutcome), blocking
 // incompleteness (blockingIncomplete) or finding (storeDiagnostic, with the
-// key it arrived with).
+// key it arrived with, its stored size and its charge).
 type heldRecord struct {
-	kind     heldKind
-	rule     RuleDefinition
-	decision Decision
-	location Location
-	complete bool
-	key      findingKey
+	kind          heldKind
+	rule          RuleDefinition
+	decision      Decision
+	location      Location
+	complete      bool
+	key           findingKey
+	size, charged int64
 }
 
-// heldRecordBytes is the charge of one held record before its strings.
-var heldRecordBytes = int64(unsafe.Sizeof(heldRecord{})) + pendingRuleBytes
+// heldRecordBytes is one slot of a held array; a record's strings and its
+// rule copy are charged with it.
+var heldRecordBytes = int64(unsafe.Sizeof(heldRecord{}))
 
-// hold keeps one record, charging it first.
+// growHeld makes room for one more record, charging the new array before it
+// is allocated and releasing the old one after the copy.
+func (a *reportAccumulator) growHeld(records []heldRecord) ([]heldRecord, error) {
+	if len(records) < cap(records) {
+		return records, nil
+	}
+	grown := max(8, 2*cap(records))
+	charge := int64(grown) * heldRecordBytes
+	if err := a.account.Charge(BudgetBufferedBytes, charge); err != nil {
+		return records, err
+	}
+	next := make([]heldRecord, len(records), grown)
+	copy(next, records)
+	_ = a.account.Release(BudgetBufferedBytes, int64(cap(records))*heldRecordBytes)
+	a.heldBytes += charge - int64(cap(records))*heldRecordBytes
+	return next, nil
+}
+
+// hold keeps one outcome or blocking record.
 func (a *reportAccumulator) hold(record heldRecord) error {
 	size := reportStorageSize{limit: math.MaxInt64}
 	size.decision(record.decision)
-	size.location(record.location)
-	charge := heldRecordBytes + size.total
+	charge := pendingRuleBytes + size.total
+	grown, err := a.growHeld(a.heldOutcomes)
+	if err != nil {
+		return err
+	}
+	a.heldOutcomes = grown
 	if err := a.account.Charge(BudgetBufferedBytes, charge); err != nil {
 		return err
 	}
 	a.heldBytes += charge
-	record.decision = cloneDecision(record.decision)
-	record.location = cloneLocation(record.location)
-	a.held = append(a.held, record)
+	record.decision, record.charged = cloneDecision(record.decision), charge
+	a.heldOutcomes = append(a.heldOutcomes, record)
 	return nil
 }
 
-// commitHeld records the held outcomes and findings in the order they
-// arrived, each finding at its own key.
+// holdFinding keeps one finding by key, as deferAt would, unless the held
+// findings before it already fill the quotas.
+func (a *reportAccumulator) holdFinding(rule RuleDefinition, decision Decision, location Location, key findingKey) error {
+	if a.cutoff != nil && !key.less(*a.cutoff) || a.heldCutoff != nil && !key.less(*a.heldCutoff) {
+		return nil
+	}
+	decision.Expected = reportBoundedValue(decision.Expected, reportValueBytes)
+	decision.Actual = reportBoundedValue(decision.Actual, reportValueBytes)
+	limits := a.account.Limits()
+	size := reportStorageSize{limit: limits.MaxDiagnosticBytes}
+	size.decision(decision)
+	size.location(location)
+	if size.exceeded {
+		a.setHeldCutoff(key)
+		return nil
+	}
+	grown, err := a.growHeld(a.heldFindings)
+	if err != nil {
+		return err
+	}
+	a.heldFindings = grown
+	charge := pendingRuleBytes + size.total
+	if err := a.account.Charge(BudgetBufferedBytes, charge); err != nil {
+		return err
+	}
+	a.heldBytes += charge
+	a.heldSize += size.total
+	record := heldRecord{kind: heldFinding, rule: rule, decision: cloneDecision(decision), location: cloneLocation(location), key: key, size: size.total, charged: charge}
+	at, _ := slices.BinarySearchFunc(a.heldFindings, key, func(p heldRecord, k findingKey) int {
+		if k.less(p.key) {
+			return 1
+		}
+		return -1
+	})
+	a.heldFindings = slices.Insert(a.heldFindings, at, record)
+	// The last held finding has every other one before it: past either
+	// quota it can never be stored. Stored size is at least size.total.
+	for n := len(a.heldFindings); n > 0 && (int64(n) > limits.MaxDiagnostics || a.heldSize > limits.MaxDiagnosticBytes); n = len(a.heldFindings) {
+		last := a.heldFindings[n-1]
+		a.heldFindings[n-1] = heldRecord{}
+		a.heldFindings = a.heldFindings[:n-1]
+		_ = a.account.Release(BudgetBufferedBytes, last.charged)
+		a.heldBytes -= last.charged
+		a.heldSize -= last.size
+		a.setHeldCutoff(last.key)
+	}
+	return nil
+}
+
+func (a *reportAccumulator) setHeldCutoff(key findingKey) {
+	if a.heldCutoff == nil || key.less(*a.heldCutoff) {
+		a.heldCutoff = &key
+	}
+}
+
+// commitHeld records the held outcomes in the order they arrived and the
+// held findings at their keys, releasing each record's charge once it is
+// recorded.
 func (a *reportAccumulator) commitHeld() error {
-	held := a.held
-	a.held, a.holding = nil, false
+	outcomes, findings, cutoff := a.heldOutcomes, a.heldFindings, a.heldCutoff
+	a.heldOutcomes, a.heldFindings, a.heldCutoff, a.heldSize, a.holding = nil, nil, nil, 0, false
 	defer a.releaseHeld()
-	for _, record := range held {
+	for i := range outcomes {
+		record := outcomes[i]
 		switch record.kind {
 		case heldComposite:
 			if err := a.recordCompositeOutcome(record.rule, record.decision, record.complete); err != nil {
 				return err
 			}
 		case heldBlocking:
-			a.blockingIncomplete()
-		case heldFinding:
-			if err := a.deferAt(record.rule, record.decision, record.location, record.key); err != nil {
-				return err
-			}
+			_ = a.blockingIncomplete()
 		}
+		outcomes[i] = heldRecord{}
+		_ = a.account.Release(BudgetBufferedBytes, record.charged)
+		a.heldBytes -= record.charged
+	}
+	for i := range findings {
+		record := findings[i]
+		findings[i] = heldRecord{}
+		_ = a.account.Release(BudgetBufferedBytes, record.charged)
+		a.heldBytes -= record.charged
+		if err := a.deferAt(record.rule, record.decision, record.location, record.key); err != nil {
+			return err
+		}
+	}
+	// A finding dropped while held could never be stored: the report
+	// truncates there, as deferAt would have.
+	if cutoff != nil {
+		a.setCutoff(*cutoff)
 	}
 	return nil
 }
 
 // dropHeld discards the held outcomes and findings.
 func (a *reportAccumulator) dropHeld() {
-	a.held, a.holding = nil, false
+	a.heldOutcomes, a.heldFindings, a.heldCutoff, a.heldSize, a.holding = nil, nil, nil, 0, false
 	a.releaseHeld()
 }
 
 func (a *reportAccumulator) releaseHeld() {
 	if a.heldBytes > 0 {
 		_ = a.account.Release(BudgetBufferedBytes, a.heldBytes)
-		a.heldBytes = 0
 	}
+	a.heldBytes = 0
 }
 
 // blockingIncomplete records that a proved failure turned out incomplete.
@@ -563,7 +663,8 @@ func (a *reportAccumulator) diagnosticsTruncated() bool {
 	if !a.deferred {
 		return a.report.DiagnosticsTruncated
 	}
-	return a.cutoff != nil && !a.nextKey().less(*a.cutoff)
+	key := a.nextKey()
+	return a.cutoff != nil && !key.less(*a.cutoff) || a.holding && a.heldCutoff != nil && !key.less(*a.heldCutoff)
 }
 
 // truncateDiagnostics truncates diagnostic storage at the current position:
@@ -586,7 +687,7 @@ func (a *reportAccumulator) storeDiagnostic(rule RuleDefinition, decision Decisi
 	if a.holding {
 		key := a.nextKey()
 		a.lastArrival, a.arrived = key, true
-		return a.hold(heldRecord{kind: heldFinding, rule: rule, decision: decision, location: location, key: key})
+		return a.holdFinding(rule, decision, location, key)
 	}
 	if a.deferred {
 		return a.deferDiagnostic(rule, decision, location)

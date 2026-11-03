@@ -283,7 +283,10 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 	}
 	state.bound = true
 	// The windows bound so far are now confirmed: binding the document
-	// would have bound them.
+	// would have bound them. A rule-step or buffered-byte limit can still
+	// stop binding below the root before it reaches a window that the
+	// buffered engine binds later; such limits stop the two strategies at
+	// different points anyway, so what a stopped run assessed may differ.
 	if err := s.accumulator.commitHeld(); err != nil {
 		return err
 	}

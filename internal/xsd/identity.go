@@ -382,6 +382,10 @@ func sortByOrder[T any](c *Context, records []T, orders []uint64) []T {
 	if len(records) != len(orders) {
 		panic(runAbort{errors.New("xsd: identity positions out of step")})
 	}
+	c.step(int64(len(orders)))
+	if slices.IsSorted(orders) {
+		return records
+	}
 	c.scratch(c.size(int64(len(records)), 8))
 	index := make([]int, len(records))
 	for i := range index {

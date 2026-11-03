@@ -406,6 +406,10 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	r.context.bytes(len(subject.Text))
 	node.Text.WriteString(subject.Text)
 	node.Children = make([]*Node, len(subject.Children))
+	// The children seen so far, built when the first existing child node is
+	// met: a child node created by this subject or already taken over is
+	// charged to its work once.
+	var seen map[SubjectID]bool
 	for i, ch := range subject.Children {
 		r.step(1)
 		if ch.ID == 0 || ch.ID == subject.ID {
@@ -420,10 +424,24 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		} else if n.Name != ch.Name {
 			return Binding{}, errors.New("xsd: conflicting child name")
 		} else {
-			// A child bound or opened before its parent created its own node.
-			// Completing the parent deletes it, so the parent's work takes
-			// over its charge.
-			work += nodeObjectBytes
+			if seen == nil {
+				r.context.scratch(r.context.sum(256, r.context.size(int64(i), 64)))
+				seen = make(map[SubjectID]bool, i)
+				for _, earlier := range subject.Children[:i] {
+					r.step(1)
+					seen[earlier.ID] = true
+				}
+			}
+			// A child bound or opened before its parent created its own
+			// node. Completing the parent deletes it, so the parent's work
+			// takes over its charge.
+			if !seen[ch.ID] {
+				work += nodeObjectBytes
+			}
+		}
+		if seen != nil && !seen[ch.ID] {
+			r.context.scratch(64)
+			seen[ch.ID] = true
 		}
 		node.Children[i] = n
 	}

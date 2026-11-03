@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"testing"
+	"unsafe"
 )
 
 // An open element gives each child, as it opens, the witness Bind gives it
@@ -271,5 +272,64 @@ func TestBindingChildrenFirstKeepsTheTopDownCharge(t *testing.T) {
 	}
 	if childrenFirst.retained != want {
 		t.Fatalf("children first keep %d bytes charged, top-down %d", childrenFirst.retained, want)
+	}
+}
+
+// A child listed twice, whether its node is new or was created before its
+// parent bound, is charged to the parent's work once: completing the parent
+// leaves the charge of a single listing plus the second content match.
+func TestRepeatedChildNodeIsChargedOnce(t *testing.T) {
+	ctx := context.Background()
+	c := prefixRunSchema(t)
+	use, _ := c.Root(QName{Local: "root"})
+	retained := func(early bool, listings int) int64 {
+		m := &testMeter{}
+		r, err := NewRun(c, m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer r.Close()
+		if early {
+			open, err := r.Open(ctx, use, Subject{ID: 1, Name: QName{Local: "root"}, AttributesComplete: true})
+			if err != nil || open == nil {
+				t.Fatalf("open=%v err=%v", open, err)
+			}
+			w, ok, err := r.PushChild(ctx, open, Child{ID: 2, Name: QName{Local: "child"}})
+			if err != nil || !ok {
+				t.Fatalf("push ok=%v err=%v", ok, err)
+			}
+			b, err := r.Bind(ctx, w.Use, Subject{ID: 2, Parent: 1, Name: QName{Local: "child"}, Text: "1", TextKnown: true, AttributesComplete: true, ChildrenComplete: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := r.Complete(ctx, b, nil); err != nil {
+				t.Fatal(err)
+			}
+			if err := r.CloseOpen(open); err != nil {
+				t.Fatal(err)
+			}
+		}
+		subject := Subject{ID: 1, Name: QName{Local: "root"}, Path: "/root", TextKnown: true, AttributesComplete: true, ChildrenComplete: true}
+		for range listings {
+			subject.Children = append(subject.Children, Child{ID: 2, Name: QName{Local: "child"}, Path: "/root/child"})
+		}
+		b, err := r.Bind(ctx, use, subject)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Completing without the children's completions fails, and still
+		// releases the parent's work.
+		if _, err := r.Complete(ctx, b, nil); err == nil {
+			t.Fatal("completion without children's completions")
+		}
+		return m.retained
+	}
+	// The second listing keeps one more content match, in an array of
+	// capacity two instead of one; nothing else.
+	matches := 2 * int64(unsafe.Sizeof(ElementMatch{}))
+	for _, early := range []bool{false, true} {
+		if once, twice := retained(early, 1), retained(early, 2); twice-once != matches {
+			t.Errorf("early=%v: %d bytes charged after one listing, %d after two", early, once, twice)
+		}
 	}
 }

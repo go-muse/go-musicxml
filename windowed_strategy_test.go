@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -368,11 +369,14 @@ func windowedDifference(want, got string) string {
 	return fmt.Sprintf("byte %d:\nbuffered ...%s\nwindowed ...%s", i, want[from:min(len(want), i+200)], got[from:min(len(got), i+200)])
 }
 
-// A run stopped by a resource limit after windows were bound reports what the
-// buffered engine reports: the proved failures of those windows wait until
-// binding the document confirms them, which a stopped run never does. Every
-// event limit up to the complete run is compared, on a score whose second
-// measure holds a content-model error.
+// A run stopped by an event limit or by cancellation after windows were bound
+// reports what the buffered engine reports: the proved failures of those
+// windows wait until binding the document confirms them, which a stopped run
+// never does. Every event limit up to the complete run, and cancellation
+// after every 17th byte, are compared on a score whose second measure holds
+// a content-model error. Limits on rule steps and buffered bytes stop the two
+// strategies at different points, as their work and storage come at
+// different times, so what a run stopped by them has assessed may differ.
 func TestWindowedStrategyMatchesBufferedWhenStopped(t *testing.T) {
 	if raceEnabled {
 		t.Skip("slow under the race detector")
@@ -402,4 +406,46 @@ func TestWindowedStrategyMatchesBufferedWhenStopped(t *testing.T) {
 	if stopped < 100 {
 		t.Fatalf("only %d stopped runs compared", stopped)
 	}
+	// Cancellation after each prefix of the input stops both strategies at
+	// the same event.
+	canceled := func(windowed bool, after int) string {
+		previous := validationSetWindowedStrategy(windowed)
+		defer validationSetWindowedStrategy(previous)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		reader := &windowedCancelingReader{data: data, after: after, cancel: cancel}
+		out, err := InspectXML(ctx, reader, SourceOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxBufferedBytes: 1 << 34}})
+		encoded, marshalErr := json.Marshal(out)
+		if marshalErr != nil {
+			t.Fatal(marshalErr)
+		}
+		return fmt.Sprintf("%s error=%v invalid=%v", encoded, err, errors.Is(err, ErrInvalidDocument))
+	}
+	for after := 0; after < len(data); after += 17 {
+		want := canceled(false, after)
+		if got := canceled(true, after); got != want {
+			t.Fatalf("canceled after %d bytes: windowed report differs from buffered at %s", after, windowedDifference(want, got))
+		}
+	}
+}
+
+// windowedCancelingReader cancels its context once more than after bytes
+// were read, and returns its data one byte at a time.
+type windowedCancelingReader struct {
+	data   []byte
+	read   int
+	after  int
+	cancel context.CancelFunc
+}
+
+func (r *windowedCancelingReader) Read(p []byte) (int, error) {
+	if r.read >= len(r.data) {
+		return 0, io.EOF
+	}
+	if r.read > r.after {
+		r.cancel()
+	}
+	p[0] = r.data[r.read]
+	r.read++
+	return 1, nil
 }
