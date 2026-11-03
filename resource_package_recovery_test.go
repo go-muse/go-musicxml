@@ -192,7 +192,11 @@ func TestRecoveryPackageNestedDiagnosticIdentity(t *testing.T) {
 	}
 }
 
-func TestRecoveryPackageInvalidParentCannotInventRootContexts(t *testing.T) {
+// An invalid container adopts no rootfile. Children before the first child
+// its content model rejects keep their declarations, so the first rootfiles
+// element and its rootfile still have typed contexts; the container's own
+// content failure is proved, and the package resolves no rootfile.
+func TestRecoveryPackageInvalidParentAdoptsNoRootfile(t *testing.T) {
 	for _, content := range []string{`<rootfiles><rootfile full-path="main.opus"/></rootfiles><extra/>`, `<rootfiles><rootfile full-path="main.opus"/></rootfiles><rootfiles><rootfile full-path="other.opus"/></rootfiles>`} {
 		data := assessmentZIPBytes([]assessmentZIPFixture{{name: mxlContainerPath, body: `<container>` + content + `</container>`}, {name: "main.opus", body: `<opus/>`}, {name: "other.opus", body: `<opus/>`}}, nil, "")
 		g := packageMetadataGraph(t, data, packageGraphOptions())
@@ -204,6 +208,7 @@ func TestRecoveryPackageInvalidParentCannotInventRootContexts(t *testing.T) {
 			t.Fatal(err)
 		}
 		rootFailure := false
+		var rootfiles, rootfile int
 		for i := 0; i < adoption.ContextCount(); i++ {
 			row, ok, err := adoption.ContextAt(g.ctx, i)
 			if err != nil {
@@ -213,15 +218,23 @@ func TestRecoveryPackageInvalidParentCannotInventRootContexts(t *testing.T) {
 				continue
 			}
 			c := row.Container
-			if c.Role == validation.ContainerRoot {
+			switch c.Role {
+			case validation.ContainerRoot:
 				rootFailure = c.Content.State != validation.EvidenceKnown || !c.Content.Value
-			}
-			if c.Role == validation.ContainerRootfiles || c.Role == validation.ContainerRootfile {
-				t.Fatalf("fixture unexpectedly admitted typed child %+v", c)
+			case validation.ContainerRootfiles:
+				rootfiles++
+			case validation.ContainerRootfile:
+				rootfile++
+				if c.FullPath.State != validation.EvidenceKnown || c.FullPath.Value.Text != "main.opus" {
+					t.Fatalf("typed context for a rootfile after the content failure: %+v", c)
+				}
 			}
 		}
 		if !rootFailure {
 			t.Fatal("missing invalid parent proof")
+		}
+		if rootfiles != 1 || rootfile != 1 {
+			t.Fatalf("%d rootfiles and %d rootfile contexts, want the first of each", rootfiles, rootfile)
 		}
 		b, err := g.finish(nil)
 		if err != nil || b.ResourceCount() != 1 || b.FileMetadataCount() != 0 || b.EnumerationComplete() {

@@ -760,36 +760,39 @@ func (c *Context) ValidateComplex(
 		c.IdentityIncomplete = true
 		return false
 	}
+	if c.local != nil && !c.local.subject.ChildrenComplete {
+		// The known children bind as far as their prefix determines their
+		// declarations, whatever the unknown suffix holds; never turn this
+		// tentative match into an absence verdict.
+		c.local.matches = c.prefixMatches(effective.Particle, node.Children)
+		return false
+	}
 	result, failure, matched := c.MatchParticle(
 		effective.Particle,
 		node.Children,
 		0,
 	)
-	if c.local != nil && !c.local.subject.ChildrenComplete {
-		// A closed prefix may already fully satisfy this grammar. Recover only
-		// leaves whose exact declaration cannot change with an unknown suffix;
-		// never turn failure of this tentative match into an absence verdict.
-		if matched && result.Next == len(node.Children) {
-			c.local.matches = c.stablePrefixMatches(effective.Particle, result.Elements)
-		}
-		return false
-	}
 	if !matched || result.Next != len(node.Children) {
 		c.SkipIdentityChildren(node)
 		if !matched {
 			c.AddContentIssue(node, path, failure)
-			return false
+		} else {
+			c.childIssue(
+				node, path, result.Next,
+				"content-model",
+				format(c,
+					"unexpected element %s",
+					displayName(node.Children[result.Next].Name, c),
+				),
+			)
 		}
-
-		index := result.Next
-		c.childIssue(
-			node, path, index,
-			"content-model",
-			format(c,
-				"unexpected element %s",
-				displayName(node.Children[index].Name, c),
-			),
-		)
+		// Children before the first one the content model rejects keep the
+		// declarations their prefix determines; later children stay unbound.
+		// The proved failure above is recorded first, so stopping here on a
+		// resource limit cannot lose it.
+		if c.local != nil {
+			c.local.matches = c.prefixMatches(effective.Particle, node.Children)
+		}
 		return false
 	}
 

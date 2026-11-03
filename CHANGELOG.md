@@ -9,6 +9,37 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Breaking changes
 
+- **Children before a content-model error keep their declarations.** When an
+  element's children do not match its content model, every child before the
+  first one the model rejects is now bound to the declaration that the
+  children up to and including it determine (unique under XSD 1.0 Unique
+  Particle Attribution), whatever follows, and is assessed as in a valid
+  parent. Children from the rejected one on stay without a declaration, as
+  before, and the parent's content-model failure is reported as before. A
+  child list that only misses a required trailing element binds every child.
+  Binding also stops early, leaving the rest unbound, at a child with two
+  candidate particles (a schema that violates Unique Particle Attribution, or
+  two references to one global element), at a child that leaves more than 64
+  configurations (nested bounded repetitions such as `(a{1,10}){1,10}`, which
+  the pinned MusicXML schemas do not use), or at a child whose search exceeds
+  4,096 configurations. Bound
+  children take part in identity: their IDs are registered, so a duplicate ID
+  among them is now reported, while the parent's skipped children still keep
+  missing-ID and dangling-IDREF verdicts from being proved.
+  Previously a single stray element anywhere in a parent left all of its
+  children unassessed (`blocked` with reason
+  `exact-declaration-use-unavailable`); a stray element after the last
+  measure of a part blocked every measure of that part. The same rule replaces
+  the narrower recovery for an element whose child list is not known to be
+  complete (truncated or interrupted input): its known children bind as far as
+  their prefix determines, instead of only children whose name occurs once in
+  the content model and only when the known children already formed a complete
+  match. Reports change only for documents with a content-model error or an
+  incomplete child list, in every validation line that binds the schema,
+  including MXL container metadata, where the first `rootfiles` before a
+  stray element now has its typed context while the package still resolves no
+  rootfile. This makes a child's binding independent of later siblings, which
+  per-measure assessment needs.
 - **The default rule-step limit grows with the document.** A zero
   `MaxRuleSteps` now allows `validation.DefaultRuleStepBase` (20,000,000)
   steps plus `validation.DefaultRuleStepsPerNode` (10,000) for every node
