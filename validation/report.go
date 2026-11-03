@@ -446,6 +446,18 @@ func (a *reportAccumulator) holdFinding(rule RuleDefinition, decision Decision, 
 		a.setHeldCutoff(key)
 		return nil
 	}
+	at, _ := slices.BinarySearchFunc(a.heldFindings, key, func(p heldRecord, k findingKey) int {
+		if k.less(p.key) {
+			return 1
+		}
+		return -1
+	})
+	// As many held findings before it as the count quota stores: it can
+	// never be stored.
+	if int64(at) >= limits.MaxDiagnostics {
+		a.setHeldCutoff(key)
+		return nil
+	}
 	grown, err := a.growHeld(a.heldFindings)
 	if err != nil {
 		return err
@@ -458,12 +470,6 @@ func (a *reportAccumulator) holdFinding(rule RuleDefinition, decision Decision, 
 	a.heldBytes += charge
 	a.heldSize += size.total
 	record := heldRecord{kind: heldFinding, rule: rule, decision: cloneDecision(decision), location: cloneLocation(location), key: key, size: size.total, charged: charge}
-	at, _ := slices.BinarySearchFunc(a.heldFindings, key, func(p heldRecord, k findingKey) int {
-		if k.less(p.key) {
-			return 1
-		}
-		return -1
-	})
 	a.heldFindings = slices.Insert(a.heldFindings, at, record)
 	// The last held finding has every other one before it: past either
 	// quota it can never be stored. Stored size is at least size.total.
@@ -506,6 +512,8 @@ func (a *reportAccumulator) commitHeld() error {
 		_ = a.account.Release(BudgetBufferedBytes, record.charged)
 		a.heldBytes -= record.charged
 	}
+	// The held arrays stay charged until commit returns: they are live
+	// while their records are recorded.
 	for i := range findings {
 		record := findings[i]
 		findings[i] = heldRecord{}

@@ -238,9 +238,10 @@ func TestDeferredReportBatchesOutOfOrderFindings(t *testing.T) {
 // Holding findings and committing them stores exactly what the buffered
 // accumulator stores: for random findings under tight and loose quotas,
 // positions shuffled and a random half of them held as window binding holds
-// them, committing the held findings before the report finishes gives the
-// buffered findings, rules, truncation flag and counts. Held findings stay
-// within the count quota while they wait, and their charge returns to zero.
+// them, with quota already used by an earlier session, committing the held
+// findings before the report finishes gives the buffered findings, rules,
+// truncation flag and counts. Held findings stay within the count and byte
+// quotas while they wait, and their charge returns to zero.
 func TestHeldFindingsCommitTheBufferedPrefix(t *testing.T) {
 	random := rand.New(rand.NewSource(11))
 	rules := make([]RuleDefinition, 4)
@@ -248,8 +249,9 @@ func TestHeldFindingsCommitTheBufferedPrefix(t *testing.T) {
 		rules[i] = RuleDefinition{Key: RuleKey{ID: RuleID(fmt.Sprintf("rule-%d", i)), Revision: 1}, Class: ClassMandatory, Role: RolePredicate, Category: CategoryNormative, Text: RuleText{Title: strings.Repeat("t", 40*i)}}
 	}
 	held := 0
-	for _, limits := range []Budgets{{}, {MaxDiagnostics: 3}, {MaxDiagnosticBytes: 2000}, {MaxDiagnosticBytes: 1200, MaxDiagnostics: 5}, {MaxDiagnosticBytes: 700}} {
+	for _, limits := range []Budgets{{}, {MaxDiagnostics: 3}, {MaxDiagnosticBytes: 2000}, {MaxDiagnosticBytes: 1200, MaxDiagnostics: 5}, {MaxDiagnosticBytes: 700}, {MaxDiagnosticBytes: 450}} {
 		for trial := 0; trial < 60; trial++ {
+			used := int64(random.Intn(3)) * 150 // an earlier session's diagnostics
 			var items []deferredItem
 			for _, it := range deferredItems(random, rules) {
 				if !it.truncate {
@@ -269,6 +271,9 @@ func TestHeldFindingsCommitTheBufferedPrefix(t *testing.T) {
 				a, err := NewBudgetAccount(limits)
 				if err != nil {
 					t.Fatal(err)
+				}
+				if used > 0 {
+					_ = a.chargeDiagnostic(used)
 				}
 				return a
 			}
@@ -299,6 +304,9 @@ func TestHeldFindingsCommitTheBufferedPrefix(t *testing.T) {
 				if limit := account.Limits().MaxDiagnostics; int64(len(got.heldFindings)) > limit {
 					t.Fatalf("limits %+v trial %d: %d findings held for a quota of %d", limits, trial, len(got.heldFindings), limit)
 				}
+				if limit := account.Limits().MaxDiagnosticBytes; got.heldSize > limit {
+					t.Fatalf("limits %+v trial %d: %d bytes of findings held for a quota of %d", limits, trial, got.heldSize, limit)
+				}
 			}
 			if err := got.commitHeld(); err != nil {
 				t.Fatal(err)
@@ -317,5 +325,43 @@ func TestHeldFindingsCommitTheBufferedPrefix(t *testing.T) {
 	}
 	if held < 1000 {
 		t.Fatalf("only %d findings held", held)
+	}
+}
+
+// Held findings fill the byte quota exactly as the buffered accumulator does:
+// with a quota equal to what the buffered accumulator charges for twenty
+// findings, all twenty held findings are stored and the twenty-first is not.
+func TestHeldFindingsFillTheByteQuotaExactly(t *testing.T) {
+	rule := RuleDefinition{Key: RuleKey{ID: "rule", Revision: 1}, Class: ClassMandatory, Role: RolePredicate, Category: CategoryNormative}
+	feed := func(a *reportAccumulator, n int) {
+		for i := 0; i < n; i++ {
+			a.at = findingKey{stage: stageSchema, trigger: int64(i)}
+			d := Decision{Rule: rule.Key, Subject: NodeRef{"doc", NodeID(i + 1)}, Outcome: OutcomeFail, Actual: strings.Repeat("a", 50+i)}
+			if err := a.record(rule, d, Location{Target: TargetSource, DocumentID: "doc", Path: "/p"}); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	measure, err := NewBudgetAccount(Budgets{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	feed(newReportAccumulator(Profile{}, measure), 20)
+	quota, _ := measure.Usage(BudgetDiagnosticBytes)
+	for _, held := range []bool{false, true} {
+		account, err := NewBudgetAccount(Budgets{MaxDiagnosticBytes: quota})
+		if err != nil {
+			t.Fatal(err)
+		}
+		a := newReportAccumulator(Profile{}, account)
+		a.deferred, a.holding = true, held
+		feed(a, 21)
+		if err := a.commitHeld(); err != nil {
+			t.Fatal(err)
+		}
+		report := a.finish(true, SyntaxWellFormed)
+		if len(report.Findings) != 20 || !report.DiagnosticsTruncated {
+			t.Fatalf("held=%v: %d findings stored, truncated %v, for a quota of exactly 20", held, len(report.Findings), report.DiagnosticsTruncated)
+		}
 	}
 }

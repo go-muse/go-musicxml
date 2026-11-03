@@ -72,6 +72,7 @@ func (r *Run) Open(ctx context.Context, use Use, subject Subject) (open *OpenEle
 		r.nodes[subject.ID] = &Node{ID: subject.ID, Name: subject.Name}
 	}
 	r.reserve(openElementBytes)
+	r.opened = true
 	return &OpenElement{id: subject.ID, owner: owner, matcher: matcher}, nil
 }
 

@@ -275,9 +275,10 @@ func TestBindingChildrenFirstKeepsTheTopDownCharge(t *testing.T) {
 	}
 }
 
-// A child listed twice, whether its node is new or was created before its
-// parent bound, is charged to the parent's work once: completing the parent
-// leaves the charge of a single listing plus the second content match.
+// A child listed twice is charged to the parent's work once, whether its
+// node is new (a run that opened nothing binds as it always did) or was
+// created before its parent bound: completing the parent leaves the charge
+// of a single listing plus the second content match.
 func TestRepeatedChildNodeIsChargedOnce(t *testing.T) {
 	ctx := context.Background()
 	c := prefixRunSchema(t)
