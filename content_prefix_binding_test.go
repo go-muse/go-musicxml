@@ -64,3 +64,20 @@ func TestSourceLineBindsChildrenBeforeAContentFailure(t *testing.T) {
 		t.Fatalf("bogus element between measures: content failure %v, blocked %v", failed, blocked)
 	}
 }
+
+// Children bound before a content failure take part in identity: two
+// measures with the same ID before a stray element are reported as a
+// duplicate ID.
+func TestSourceLineFindsDuplicateIDsBeforeAContentFailure(t *testing.T) {
+	text := strings.NewReplacer("MIDDLE", "", "TRAILING", "<bogus/>", `<measure number="1">`, `<measure number="1" id="m">`, `<measure number="2">`, `<measure number="2" id="m">`).Replace(prefixBindingScore)
+	report, err := InspectXML(context.Background(), strings.NewReader(text), SourceOptions{Profile: ProfileSourceLine})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range report.Findings {
+		if f.Outcome == validation.OutcomeFail && f.Reason == "ID" && strings.Contains(f.Actual, `duplicate ID "m"`) {
+			return
+		}
+	}
+	t.Fatalf("no duplicate-ID finding among %d findings", len(report.Findings))
+}

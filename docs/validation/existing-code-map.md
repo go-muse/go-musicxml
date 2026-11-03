@@ -1252,8 +1252,8 @@ unchanged: the legacy wildcard consumes any child without declaration
 assessment; identity closure through accepted opaque anyType or wildcard
 paths is likewise unverified. The pinned production schemas have no element
 wildcards or all groups, while the synthetic fixture now proves the supported XSD 1.0 all
-subset. Since wave 3, a parent content-model failure binds the children before
-the first rejected child by their prefix-determined declarations; later children
+subset. A parent content-model failure now binds the children before the
+first rejected child by their prefix-determined declarations; later children
 stay unassessed. Skipped-child incompleteness still suppresses unproved
 empty-binding conclusions (see the CHANGELOG entry on prefix binding).
 

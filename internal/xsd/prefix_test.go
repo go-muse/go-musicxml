@@ -146,17 +146,19 @@ func prefixRandomParticle(rng *rand.Rand, depth int) *ParticleSchema {
 
 // The push matcher agrees with the content-model matcher on random models
 // and child lists. A child list the content model matches binds every child
-// to its witness particle unless binding stops as ambiguous, and a prefix the
-// push matcher rejects has no completion of up to three children that the
-// content model matches.
+// to its witness particle unless binding stops as ambiguous, every completion
+// of up to four children of a bound prefix that the content model matches
+// has the bound particles in its witness, and a prefix the push matcher
+// rejects has no completion of up to four children that the content model
+// matches.
 func TestPrefixMatchesAgreeWithTheContentModel(t *testing.T) {
 	rng := rand.New(rand.NewSource(1))
 	names := []string{"a", "b", "c"}
 	matched, rejected, ambiguous := 0, 0, 0
-	for range 4000 {
-		p := prefixRandomParticle(rng, 3)
+	for range 6000 {
+		p := prefixRandomParticle(rng, 4)
 		var list []string
-		for range rng.Intn(7) {
+		for range rng.Intn(9) {
 			list = append(list, names[rng.Intn(len(names))])
 		}
 		children := prefixChildren(list...)
@@ -187,12 +189,26 @@ func TestPrefixMatchesAgreeWithTheContentModel(t *testing.T) {
 			}
 			continue
 		}
+		// Every completion of the bound prefix that the content model
+		// matches has the bound particles in its witness.
+		for _, suffix := range prefixSuffixes(names, 4) {
+			candidate := append(slices.Clone(list[:len(got)]), suffix...)
+			result, _, ok := (&Context{}).MatchParticle(p, prefixChildren(candidate...), 0)
+			if !ok || result.Next != len(candidate) {
+				continue
+			}
+			for i, match := range got {
+				if match.Particle != result.Elements[i].Particle {
+					t.Fatalf("model %v: %v binds child %d to another particle than the witness of %v", prefixDescribe(p), list, i, candidate)
+				}
+			}
+		}
 		if matcher.ambiguous || len(got) == len(children) {
 			continue
 		}
 		rejected++
 		stop := len(got) + 1
-		for _, suffix := range prefixSuffixes(names, 3) {
+		for _, suffix := range prefixSuffixes(names, 4) {
 			candidate := append(slices.Clone(list[:stop]), suffix...)
 			result, _, ok := (&Context{}).MatchParticle(p, prefixChildren(candidate...), 0)
 			if ok && result.Next == len(candidate) {
@@ -260,7 +276,7 @@ func prefixRunSchema(t *testing.T) *Compiled {
 // content model rejects, whatever follows, and to none from there on, both
 // for a complete child list that fails the content model and for a child
 // list that is not known to be complete. The parent's content stays invalid
-// or incomplete.
+// or incomplete, and skipped children keep the identity scope incomplete.
 func TestBindWitnessesChildrenBeforeTheContentFailure(t *testing.T) {
 	ctx := context.Background()
 	c := prefixRunSchema(t)
@@ -304,9 +320,169 @@ func TestBindWitnessesChildrenBeforeTheContentFailure(t *testing.T) {
 			}
 			content := r.Results(b).Content
 			valid := tc.name == "valid"
+			// Skipped children keep identity absence unproved.
+			if !valid && len(tc.want) < len(tc.children) && !r.context.IdentityIncomplete {
+				t.Fatal("identity complete although children were skipped")
+			}
 			if content.Valid != (valid || !tc.complete) || content.Complete != tc.complete {
 				t.Fatalf("content valid=%v complete=%v", content.Valid, content.Complete)
 			}
 		})
+	}
+}
+
+// An unbounded particle's occurrence count saturates at its minimum, so long
+// child lists of valid nested repetitions stay unambiguous and bind entirely.
+func TestPrefixMatchesBindLongRepetitions(t *testing.T) {
+	a := func(min, max uint64, unbounded bool) *ParticleSchema { return prefixLeaf("a", min, max, unbounded) }
+	b := prefixLeaf("b", 0, 1, false)
+	for _, tc := range []struct {
+		name     string
+		particle *ParticleSchema
+	}{
+		{"(a+)+", prefixGroup(ParticleSequence, 1, 0, true, a(1, 0, true))},
+		{"(a*|b)*", prefixGroup(ParticleChoice, 0, 0, true, a(0, 0, true), prefixLeaf("b", 1, 1, false))},
+		{"(a*, b?)*", prefixGroup(ParticleSequence, 0, 0, true, a(0, 0, true), b)},
+	} {
+		names := make([]string, 1000)
+		for i := range names {
+			names[i] = "a"
+		}
+		got, matcher := prefixBind(tc.particle, prefixChildren(names...))
+		if len(got) != len(names) || matcher.ambiguous {
+			t.Errorf("%s: bound %d of %d children (ambiguous=%v)", tc.name, len(got), len(names), matcher.ambiguous)
+		}
+	}
+}
+
+// A content model that shares one particle under many alternatives cannot
+// make a child's search exponential: the search stops at prefixVisitLimit
+// configurations and binding stops as ambiguous.
+func TestPrefixMatchesBoundSharedParticles(t *testing.T) {
+	shared := prefixLeaf("a", 1, 1, false)
+	for range 18 {
+		shared = prefixGroup(ParticleChoice, 0, 1, false, shared, shared)
+	}
+	r, err := NewRun(testRunSchema(t), &testMeter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	m := r.meter.(*testMeter)
+	r.current = context.Background()
+	var got []ElementMatch
+	func() {
+		defer recoverRun(&err)
+		got = r.context.prefixMatches(prefixGroup(ParticleSequence, 1, 1, false, shared, prefixLeaf("z", 1, 1, false)), prefixChildren("b"))
+	}()
+	if err != nil || len(got) != 0 {
+		t.Fatalf("err=%v bound=%d", err, len(got))
+	}
+	if m.steps > 2_000_000 {
+		t.Fatalf("one child's search took %d steps", m.steps)
+	}
+	t.Logf("%d steps", m.steps)
+}
+
+// prefixScratchPeak binds n children of an unbounded ten-member choice and
+// returns the peak buffer charge less what the binding keeps.
+func prefixScratchPeak(t *testing.T, n int) int64 {
+	t.Helper()
+	var members []*ParticleSchema
+	for i := range 10 {
+		members = append(members, prefixLeaf(string(rune('a'+i)), 1, 1, false))
+	}
+	p := prefixGroup(ParticleChoice, 1, 0, true, members...)
+	names := make([]string, n)
+	for i := range names {
+		names[i] = string(rune('a' + i%10))
+	}
+	m := &boundaryMeter{}
+	r, err := NewRun(testRunSchema(t), m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	r.current = context.Background()
+	var got []ElementMatch
+	func() {
+		defer recoverRun(&err)
+		got = r.context.prefixMatches(p, prefixChildren(names...))
+	}()
+	if err != nil || len(got) != n {
+		t.Fatalf("err=%v bound=%d", err, len(got))
+	}
+	// Preparing the content model leaves fixed scratch until the operation
+	// ends; the configurations of the last child are released.
+	if r.scratchRetained > 4<<10 {
+		t.Fatalf("binding left %d bytes of scratch", r.scratchRetained)
+	}
+	return m.peak - m.buffer
+}
+
+// Binding keeps only the surviving configurations between children, so its
+// scratch does not grow with the number of children.
+func TestPrefixMatchesScratchIsPerChild(t *testing.T) {
+	small, large := prefixScratchPeak(t, 1000), prefixScratchPeak(t, 8000)
+	if small > 64<<10 || large > small+(4<<10) {
+		t.Fatalf("scratch peak %d bytes for 1000 children, %d for 8000", small, large)
+	}
+	t.Logf("scratch peak %d bytes for 1000 children, %d for 8000", small, large)
+}
+
+// The parent's content failure is recorded before prefix binding starts: a
+// work limit that stops binding still leaves the proved failure.
+func TestBindRecordsContentFailureBeforePrefixBinding(t *testing.T) {
+	ctx := context.Background()
+	c := prefixRunSchema(t)
+	use, _ := c.Root(QName{Local: "root"})
+	subject := Subject{ID: 1, Name: QName{Local: "root"}, Path: "/root", TextKnown: true, AttributesComplete: true, ChildrenComplete: true}
+	var nodes []*Node
+	for i := range 200 {
+		subject.Children = append(subject.Children, Child{ID: SubjectID(i + 2), Name: QName{Local: "child"}, Path: "/root/child"})
+		nodes = append(nodes, &Node{Name: QName{Local: "child"}})
+	}
+	subject.Children = append(subject.Children, Child{ID: 300, Name: QName{Local: "bogus"}, Path: "/root/bogus"})
+	nodes = append(nodes, &Node{Name: QName{Local: "bogus"}})
+	bind := func(limit int64) (bool, int64) {
+		m := &testMeter{limit: limit}
+		r, err := NewRun(c, m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer r.Close()
+		b, err := r.Bind(ctx, use, subject)
+		if limit == 0 && err != nil {
+			t.Fatal(err)
+		}
+		return !r.Results(b).Content.Valid, m.steps
+	}
+	failed, total := bind(0)
+	if !failed {
+		t.Fatal("content failure not proved")
+	}
+	// The steps of prefix binding alone.
+	m := &testMeter{}
+	r, err := NewRun(c, m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.current = ctx
+	root, _ := c.Root(QName{Local: "root"})
+	r.context.prefixMatches(root.original.Type.InlineComplex.Particle, nodes)
+	prefix := m.steps
+	_ = r.Close()
+	// The smallest work limit that proves the failure.
+	lo, hi := int64(1), total
+	for lo < hi {
+		mid := lo + (hi-lo)/2
+		if failed, _ := bind(mid); failed {
+			hi = mid
+		} else {
+			lo = mid + 1
+		}
+	}
+	if lo+prefix > total {
+		t.Fatalf("failure proved only after %d of %d steps; prefix binding takes %d", lo, total, prefix)
 	}
 }

@@ -17,6 +17,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   parent. Children from the rejected one on stay without a declaration, as
   before, and the parent's content-model failure is reported as before. A
   child list that only misses a required trailing element binds every child.
+  Binding also stops early, leaving the rest unbound, at a child with two
+  candidate declarations (a schema that violates Unique Particle Attribution)
+  or whose search exceeds a fixed bound of 4,096 configurations. Bound
+  children take part in identity: their IDs are registered, so a duplicate ID
+  among them is now reported, while the parent's skipped children still keep
+  missing-ID and dangling-IDREF verdicts from being proved.
   Previously a single stray element anywhere in a parent left all of its
   children unassessed (`blocked` with reason
   `exact-declaration-use-unavailable`); a stray element after the last
