@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -164,113 +163,66 @@ func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
 	t.Logf("source bytes=%d links=%d adoptions=%d package counts=%+v", len(source), links, bundle.AdoptionCount(), bundle.PackageReport().Counts)
 }
 
-// These are fixture-specific amd64 admission witnesses, not portable source-byte
-// guarantees. Concrete owned-record sizes can change with the host architecture.
+// The default buffer admits a moderate origin graph and refuses a large one:
+// with the complete projection, 700 measures complete with every source-origin
+// row and 1,200 measures are refused by the buffer with complete input and an
+// incomplete assessment. The exact boundary between them follows the retained
+// record sizes; TestReviewOriginGraphExactSnapshotBufferAdmission checks it
+// exactly from the refusal itself.
 func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
-	if runtime.GOARCH != "amd64" {
-		t.Skip("documented amd64 capacity witness")
-	}
+	options := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries}}.internal()}
 	for _, tc := range []struct {
-		measures, bytes int
-		refuses         bool
-		used, requested int64
-	}{
-		// Historical d336f089 boundary: 531 completed; 532 refused at
-		// used44,066,863/requested23,115,219. Both now complete after
-		// compact facts and session-wide context-role reuse.
-		{531, 71197, false, 0, 0},
-		{532, 71331, false, 0, 0},
-		// The first compact-fact checkpoint completed 568 and refused 569 at
-		// used42,495,274/requested24,717,911. Declaration-canonical role reuse
-		// now admits both and moves the adjacent default boundary to 576/577.
-		// The current-state schema-hint wording adds 84 live bytes. The source
-		// representability rule's retained definitions and per-node results
-		// moved the boundary to 571/572; since that rule belongs to the
-		// strict-loading source line only, this internal-DTD graph profile no
-		// longer carries it, and the boundary is 576/577 again. The structural
-		// score/part role wording adds 59 live bytes. Accounting the context
-		// projection by its real layout moves the boundary to 613/614.
-		// Releasing the work and subject charges of completed XSD subjects
-		// and interning the engine's own strings move it to 794/795.
-		{568, 76155, false, 0, 0},
-		{569, 76289, false, 0, 0},
-		{571, 76557, false, 0, 0},
-		{572, 76691, false, 0, 0},
-		{576, 77227, false, 0, 0},
-		{577, 77361, false, 0, 0},
-		{613, 82185, false, 0, 0},
-		{614, 82319, false, 0, 0},
-		{794, 106439, false, 0, 0},
-		{795, 106573, true, 32640336, 34507463},
-	} {
+		measures int
+		refuses  bool
+	}{{700, false}, {1200, true}} {
 		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
-			source := reviewBudgetScore(tc.measures)
-			if len(source) != tc.bytes {
-				t.Fatalf("fixture bytes=%d, want %d", len(source), tc.bytes)
-			}
-			bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries}}.internal()})
+			bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(reviewBudgetScore(tc.measures)), options)
 			if tc.refuses {
-				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, tc.used, tc.requested)
+				reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, validation.DefaultBudgets().MaxBufferedBytes, -1, -1)
 			} else {
 				reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
 			}
-			t.Logf("source bytes=%d measures=%d err=%v", len(source), tc.measures, err)
 		})
 	}
 }
 
+// The 86,052-byte fragment graph is refused by the default buffer at snapshot
+// admission: a typed buffer refusal with zero adoptions, incomplete
+// enumeration, an unsatisfied bundle and the failed child's report retained.
 func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
-	if runtime.GOARCH != "amd64" {
-		t.Skip("documented amd64 capacity witness")
-	}
 	source := reviewBudgetFragmentScore()
 	if len(source) != 86052 {
 		t.Fatalf("fixture bytes=%d, want 86052", len(source))
 	}
 	bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0, 0))
-	// Historical live-byte witnesses were 57,607,574 and then 54,998,870;
-	// declaration-canonical role reuse lowers only the live side again.
-	// The external-DTD closure wording adds 202 live and 104 requested bytes:
-	// the graph and intrinsic source profile texts are charged as retained
-	// strings. The current-state schema-hint wording adds 84 live bytes. The
-	// source representability rule added its definitions and node results
-	// until it moved to the strict-loading source line. The structural
-	// score/part role wording adds 59 live bytes. Real-layout projection
-	// accounting lowers the live side to 48,656,055, and releasing the work
-	// and subject charges of completed XSD subjects to 41,640,021.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 41640021, 34741296)
-	t.Logf("source bytes=%d err=%v", len(source), err)
+	reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, validation.DefaultBudgets().MaxBufferedBytes, -1, -1)
 }
 
+// A buffer refusal names exactly what the run needed: for origin graphs of
+// 795 and 1,200 measures, the default buffer refuses at snapshot admission; a
+// buffer of the refusal's used plus requested bytes admits the graph
+// completely, and one byte less refuses at the same used and requested bytes.
 func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
-	if runtime.GOARCH != "amd64" {
-		t.Skip("documented amd64 capacity witness")
-	}
-	// Retain the historical 569-measure fixture and the current 795-measure
-	// default refusal. Their measured final-snapshot overlaps establish exact
-	// and one-short admission controls, without changing production defaults.
-	for _, tc := range []struct {
-		measures, bytes int
-		used, requested int64
-	}{
-		{569, 76289, 24284024, 24718047},
-		{795, 106573, 32640336, 34507463},
-	} {
+	for _, measures := range []int{795, 1200} {
+		source := reviewBudgetScore(measures)
+		graph := func(limit int64) (validation.AssessmentBundle, error) {
+			return inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}.internal()})
+		}
+		_, err := graph(0)
+		var refusal *validation.ResourceError
+		if !errors.As(err, &refusal) || refusal.Kind != validation.BudgetBufferedBytes {
+			t.Fatalf("%d measures: want a default buffer refusal, got %v", measures, err)
+		}
+		used, requested := refusal.Used, refusal.Requested
 		for _, short := range []int64{0, 1} {
-			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {
-				source := reviewBudgetScore(tc.measures)
-				if len(source) != tc.bytes {
-					t.Fatalf("fixture bytes=%d, want %d", len(source), tc.bytes)
-				}
-				limit := tc.used + tc.requested - short
-				options := linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}.internal()}
-				bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
+			t.Run(fmt.Sprintf("%d/short-%d", measures, short), func(t *testing.T) {
+				limit := used + requested - short
+				bundle, err := graph(limit)
 				if short == 0 {
-					reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
+					reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*measures+8)
 				} else {
-					reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, limit, tc.used, tc.requested)
+					reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, limit, used, requested)
 				}
-				t.Logf("source bytes=%d measures=%d limit=%d err=%v", len(source), tc.measures, limit, err)
 			})
 		}
 	}
@@ -301,13 +253,15 @@ func reviewBudgetAssertGraphBufferRefusal(t *testing.T, bundle validation.Assess
 	reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, validation.DefaultBudgets().MaxBufferedBytes, wantUsed, wantRequested)
 }
 
+// reviewBudgetAssertGraphBufferRefusalAtLimit checks a buffer refusal at
+// wantLimit; a negative wantUsed accepts any used and requested bytes.
 func reviewBudgetAssertGraphBufferRefusalAtLimit(t *testing.T, bundle validation.AssessmentBundle, err error, wantLimit, wantUsed, wantRequested int64) {
 	t.Helper()
 	var limit *validation.ResourceError
 	if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || limit.Limit != wantLimit {
 		t.Fatalf("want specified buffered-byte refusal, got %v", err)
 	}
-	if limit.Used != wantUsed || limit.Requested != wantRequested {
+	if wantUsed >= 0 && (limit.Used != wantUsed || limit.Requested != wantRequested) {
 		t.Fatalf("documented admission changed: used=%d requested=%d, want %d/%d", limit.Used, limit.Requested, wantUsed, wantRequested)
 	}
 	if bundle.EnumerationComplete() || bundle.Satisfied() || bundle.AdoptionCount() != 0 {

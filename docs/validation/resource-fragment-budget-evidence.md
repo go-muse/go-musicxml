@@ -153,11 +153,14 @@ resource dependencies, resolver or identity override.
 | 531 | 71,197 | Complete, satisfied |
 | 532 | 71,331 | Buffered-byte refusal: used 44,066,863, requested 23,115,219; incomplete, unsatisfied |
 
-`TestReviewOriginGraphDefaultBufferBoundary` pins the adjacent 531/532 cases on
-amd64, alongside the unchanged public 500-measure regression. Concrete record
-sizes are architecture-dependent; these exact capacity checks skip other
-architectures. They characterize this generated family and revision, not all
-MusicXML documents of the same byte size, number of measures or number of nodes.
+That table records the boundary when it was measured. The current tests do not
+pin a boundary: `TestReviewOriginGraphDefaultBufferBoundary` checks that 700
+measures complete and 1,200 measures are refused by the default buffer, and
+`TestReviewOriginGraphExactSnapshotBufferAdmission` takes the exact admission
+from the refusal itself (its used plus requested bytes admit the graph, one byte
+less refuses at the same point). They characterize this generated family, not
+all MusicXML documents of the same byte size, number of measures or number of
+nodes.
 
 The [reviewer's comparison](https://github.com/go-muse/go-musicxml/pull/41#discussion_r4293498146)
 reported an earlier boundary of 494 measures (about 66 KB), the corrected
@@ -174,7 +177,7 @@ measures with ascending `number` and descending IDs `m2000` through `m1`, then
 three `#m1` links in the final measure, with an XLink namespace on the root.
 It contains 86,052 bytes. `reviewBudgetFragmentOptions(0)` selects the same DTD
 graph profile, retrieval URI `https://budget.test/score.musicxml` and
-`ResourceDocuments`. At all defaults, snapshot admission refuses with
+`ResourceDocuments`. At all defaults, snapshot admission refused, when this was recorded, with
 57,607,574 live bytes and a 34,741,160-byte request against 67,108,864 bytes.
 `TestReviewFragmentGraphMediumScoreDefaultBufferRefusal` preserves the typed
 buffer refusal, zero adoptions, incomplete enumeration, unsatisfied bundle and
