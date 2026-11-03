@@ -455,7 +455,9 @@ func TestBindRecordsContentFailureBeforePrefixBinding(t *testing.T) {
 		if limit == 0 && err != nil {
 			t.Fatal(err)
 		}
-		return !r.Results(b).Content.Valid, m.steps
+		// An aborted Bind can return a zero result; only a recorded issue
+		// proves the failure.
+		return len(r.Results(b).Content.Issues) != 0, m.steps
 	}
 	failed, total := bind(0)
 	if !failed {
@@ -485,4 +487,87 @@ func TestBindRecordsContentFailureBeforePrefixBinding(t *testing.T) {
 	if lo+prefix > total {
 		t.Fatalf("failure proved only after %d of %d steps; prefix binding takes %d", lo, total, prefix)
 	}
+}
+
+// prefixReleaseMeter rejects any release beyond what it charged and stops at
+// a work limit.
+type prefixReleaseMeter struct {
+	work, limit, buffer int64
+	overReleased        bool
+}
+
+func (m *prefixReleaseMeter) Step(_ context.Context, n int64) error {
+	if m.limit > 0 && m.work+n > m.limit {
+		return errMeterStop
+	}
+	m.work += n
+	return nil
+}
+func (m *prefixReleaseMeter) Reserve(n int64) error { m.buffer += n; return nil }
+func (m *prefixReleaseMeter) Release(n int64) error {
+	if n > m.buffer {
+		m.overReleased = true
+	}
+	m.buffer -= n
+	return nil
+}
+func (m *prefixReleaseMeter) Scalar(int64) error   { return nil }
+func (m *prefixReleaseMeter) Identity(int64) error { return nil }
+
+// On random content models, including all groups and nested repetitions,
+// prefix binding under a Run never releases more than it charged, also when a
+// work limit stops it in the middle of a child, and the operation's scratch
+// returns to its level after preparation once binding ends.
+func TestPrefixMatchesScratchAccountingOnRandomModels(t *testing.T) {
+	rng := rand.New(rand.NewSource(2))
+	names := []string{"a", "b", "c"}
+	stopped := 0
+	for range 3000 {
+		p := prefixRandomParticle(rng, 4)
+		var list []string
+		for range rng.Intn(12) {
+			list = append(list, names[rng.Intn(len(names))])
+		}
+		m := &prefixReleaseMeter{}
+		r, err := NewRun(testRunSchema(t), m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rng.Intn(4) != 0 {
+			m.limit = m.work + 1 + rng.Int63n(300)
+		}
+		r.current = context.Background()
+		var prepared int64 = -1
+		func() {
+			defer recoverRun(&err)
+			matcher, ok := r.context.newPrefixMatcher(p)
+			if !ok {
+				return
+			}
+			prepared = r.scratchRetained
+			for _, child := range prefixChildren(list...) {
+				if _, bound := matcher.push(child); !bound {
+					break
+				}
+			}
+			r.context.releaseScratchBytes(matcher.kept)
+			if r.scratchRetained != prepared {
+				t.Fatalf("model %v: scratch %d after binding, %d after preparation", prefixDescribe(p), r.scratchRetained, prepared)
+			}
+		}()
+		if err != nil {
+			if err != errMeterStop {
+				t.Fatal(err)
+			}
+			stopped++
+		}
+		r.releaseScratch()
+		if err := r.Close(); err != nil || m.overReleased || m.buffer != 0 {
+			t.Fatalf("model %v: close=%v over-released=%v buffer=%d", prefixDescribe(p), err, m.overReleased, m.buffer)
+		}
+	}
+	if stopped < 300 {
+		t.Fatalf("only %d runs stopped at the work limit", stopped)
+	}
+	t.Logf("%d runs stopped at the work limit", stopped)
 }

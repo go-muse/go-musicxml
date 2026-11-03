@@ -13,8 +13,11 @@ import (
 // children one by one and stops at the first child that no continuation of
 // the content model accepts. XSD 1.0 Unique Particle Attribution makes the
 // particle of every accepted child unique. Binding also stops, conservatively,
-// at a child with two candidate particles (a schema that violates the rule)
-// and at a child whose search exceeds prefixVisitLimit configurations.
+// at a child with two candidate particles (a schema that violates the rule,
+// or two references to one global element), at a child that leaves more than
+// prefixStateLimit configurations (nested bounded repetitions such as
+// (a{1,10}){1,10} count occurrences separately), and at a child whose search
+// exceeds prefixVisitLimit configurations.
 // Children from the stopping point on stay without a declaration.
 
 // prefixFrame is one open particle on the path from the content model's root
@@ -383,7 +386,8 @@ func (m *prefixMatcher) push(child *Node) (ElementMatch, bool) {
 	}
 	before := c.scratchCharged()
 	c.scratch(256)
-	s := prefixSearch{c: c, nullable: m.nullable, child: child, keys: make(map[string]bool), visited: make(map[string]bool)}
+	c.scratch(128)
+	s := prefixSearch{c: c, nullable: m.nullable, child: child, keys: make(map[string]bool), visited: make(map[string]bool), buffer: make([]byte, 0, 128)}
 	if m.next == 0 {
 		s.enter(nil, m.particle)
 	}

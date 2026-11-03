@@ -18,8 +18,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   before, and the parent's content-model failure is reported as before. A
   child list that only misses a required trailing element binds every child.
   Binding also stops early, leaving the rest unbound, at a child with two
-  candidate declarations (a schema that violates Unique Particle Attribution)
-  or whose search exceeds a fixed bound of 4,096 configurations. Bound
+  candidate particles (a schema that violates Unique Particle Attribution, or
+  two references to one global element), at a child that leaves more than 64
+  configurations (nested bounded repetitions such as `(a{1,10}){1,10}`, which
+  the pinned MusicXML schemas do not use), or at a child whose search exceeds
+  4,096 configurations. Bound
   children take part in identity: their IDs are registered, so a duplicate ID
   among them is now reported, while the parent's skipped children still keep
   missing-ID and dangling-IDREF verdicts from being proved.
