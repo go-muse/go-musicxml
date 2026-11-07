@@ -105,7 +105,7 @@ func TestContextRequiredAttributeConservativeBoundaries(t *testing.T) {
 			copy.assembly = AssemblyOpus
 			s.schema.active = &copy
 		}},
-		{name: "no-runtime-binding", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) { delete(s.schema.nodes, 1) }},
+		{name: "no-runtime-binding", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) { s.schema.nodes.remove(1) }},
 		{name: "same-name-present-wrong-declaration", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) {
 			a := b.Attributes["different"][contextNamedType("B")]
 			s.nodes[1].attributes = append(s.nodes[1].attributes, AttributeFact{Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}})

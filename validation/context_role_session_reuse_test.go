@@ -224,15 +224,15 @@ func TestContextRoleSessionReuseMissingBindings(t *testing.T) {
 		s, b, n := contextRoleReuseFixture(t)
 		before := s.retained
 		for _, node := range []*factNode{n, s.root} {
-			bound := s.schema.nodes[node.header.ID]
+			bound := s.schema.nodes.at(node.header.ID)
 			switch mode {
 			case "missing":
-				delete(s.schema.nodes, node.header.ID)
+				s.schema.nodes.remove(node.header.ID)
 			case "unavailable":
 				bound.available = false
-				s.schema.nodes[node.header.ID] = bound
+				s.schema.nodes.set(node.header.ID, bound)
 			case "zero":
-				s.schema.nodes[node.header.ID] = schemaNode{available: true}
+				s.schema.nodes.set(node.header.ID, schemaNode{available: true})
 			}
 		}
 		for _, node := range []*factNode{n, s.root} {

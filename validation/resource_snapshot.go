@@ -377,12 +377,12 @@ func (s *Session) resourceIDs(ctx context.Context) ([]ResourceIDFact, error) {
 			part = NodeRef{s.documentID, id}
 		}
 		parts[id] = part
-		bound := s.schema.nodes[id]
+		bound := s.schema.nodes.at(id)
 		if !bound.available {
 			continue
 		}
-		scalar := s.schema.run.Scalar(bound.binding)
-		results := s.schema.run.Results(bound.binding)
+		scalar := s.schema.scalar(bound)
+		results := s.schema.results(bound)
 		if n.header.Parent != 0 && scalar.Builtin == "ID" && scalar.Known && results.Scalar.Valid && results.Declaration.Valid && n.header.Declaration.State == EvidenceKnown {
 			fact, e := s.resourceID(ctx, n, n.header.Parent, part, scalar.Value.Text, n.header.Declaration.Value)
 			if e != nil {
@@ -390,7 +390,7 @@ func (s *Session) resourceIDs(ctx context.Context) ([]ResourceIDFact, error) {
 			}
 			out = append(out, fact)
 		}
-		for a := range s.schema.run.Attributes(bound.binding) {
+		for a := range s.schema.attributes(bound) {
 			if err = s.step(ctx, 1); err != nil {
 				return nil, err
 			}

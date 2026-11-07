@@ -205,7 +205,7 @@ func TestModelSchemaContentHoleKeepsIndependentAttributeFailure(t *testing.T) {
 	end.Order = Evidence[OrderKind]{State: EvidenceUnsupported, Reason: "content-hole"}
 	end.ChildrenComplete = Evidence[bool]{State: EvidenceUnsupported, Reason: "content-hole"}
 	modelSchemaClose(t, s, end, ModelProblem{Code: "model-content-hole", Axis: ModelAxisChildren, Location: h.Location, Expected: "valid content variant", Actual: "nil variant"})
-	bound := s.schema.nodes[1]
+	bound := s.schema.nodes.at(1)
 	if len(s.schema.run.Witnesses(bound.binding)) != 0 {
 		t.Fatal("compacted hole produced child witness")
 	}

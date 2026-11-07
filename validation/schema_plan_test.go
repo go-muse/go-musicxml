@@ -265,7 +265,7 @@ func TestSourceSchemaKnownProofPrecedesLaterCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	session.schema.nodes = map[NodeID]schemaNode{1: {binding: binding, available: true}}
+	session.schema.nodes = schemaNodesOf(map[NodeID]schemaNode{1: {binding: binding, available: true}})
 	cancel()
 	err = session.recordXSDProvedFailures(ctx, session.root)
 	if !errors.Is(err, context.Canceled) || session.accumulator.report.Counts.Fail != 1 {

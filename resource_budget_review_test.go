@@ -199,11 +199,11 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 }
 
 // A buffer refusal names exactly what the run needed: for origin graphs of
-// 795 and 1,200 measures, the default buffer refuses at snapshot admission; a
+// 900 and 1,200 measures, the default buffer refuses at snapshot admission; a
 // buffer of the refusal's used plus requested bytes admits the graph
 // completely, and one byte less refuses at the same used and requested bytes.
 func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
-	for _, measures := range []int{795, 1200} {
+	for _, measures := range []int{900, 1200} {
 		source := reviewBudgetScore(measures)
 		graph := func(limit int64) (validation.AssessmentBundle, error) {
 			return inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: GraphOptions{Context: validation.ContextFamilyAll, Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}.internal()})

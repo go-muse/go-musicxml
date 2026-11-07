@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"iter"
 	"math"
 	"math/big"
 	"strconv"
@@ -16,7 +17,7 @@ type schemaSession struct {
 	active        *CompiledSchema
 	run           *xsd.Run
 	bound         bool
-	nodes         map[NodeID]schemaNode
+	nodes         schemaNodeTable
 	identity      xsd.IdentityResults
 	identityReady bool
 	recorded      map[decisionID]schemaRecord
@@ -24,14 +25,64 @@ type schemaSession struct {
 	dtdSummaries  map[RuleKey]schemaDTDSummary
 	dtdOrder      []RuleKey
 	dtdOmitted    bool
-	// nodesCharged is the number of nodes entries already admitted.
-	nodesCharged int
 	// Under the windowed strategy (session_window.go): the open window
 	// ancestors, the uses their children got as they opened, and the windows
 	// bound before the root closed.
 	opened  map[NodeID]*xsd.OpenElement
 	uses    map[NodeID]xsd.Use
 	windows map[NodeID]boundWindow
+	// keepTyped keeps the typed results of completed subjects for the
+	// readers that finish the document; typedReleased records a read of
+	// typed results that were released, which Finish reports as a contract
+	// error instead of reporting what an empty result would give.
+	keepTyped     bool
+	typedReleased bool
+}
+
+// bound reports a subject the run bound: read through its binding until it
+// completes, then through what Settle kept.
+func (b schemaNode) bound() bool {
+	return b.settled.Valid() || b.binding != (xsd.Binding{})
+}
+
+// The XSD results of a subject, read through its run while it is bound and
+// from what Settle kept once it is complete.
+func (st *schemaSession) results(b schemaNode) xsd.NodeResults {
+	if b.settled.Valid() {
+		return b.settled.Results()
+	}
+	return st.run.Results(b.binding)
+}
+
+func (st *schemaSession) typedSettled(b schemaNode) bool {
+	if !b.settled.Valid() {
+		return false
+	}
+	if !b.settled.Typed() {
+		st.typedReleased = true
+	}
+	return true
+}
+
+func (st *schemaSession) scalar(b schemaNode) xsd.ScalarResult {
+	if st.typedSettled(b) {
+		return b.settled.Scalar()
+	}
+	return st.run.Scalar(b.binding)
+}
+
+func (st *schemaSession) actualType(b schemaNode) (xsd.TypeID, bool) {
+	if st.typedSettled(b) {
+		return b.settled.ActualType()
+	}
+	return st.run.ActualType(b.binding)
+}
+
+func (st *schemaSession) attributes(b schemaNode) iter.Seq[xsd.AttributeResult] {
+	if st.typedSettled(b) {
+		return b.settled.Attributes()
+	}
+	return st.run.Attributes(b.binding)
 }
 
 // A session has one document. Only the fixed, cause-free DTD capability reason
@@ -48,7 +99,12 @@ type schemaRecord struct {
 	complete bool
 }
 type schemaNode struct {
+	// set marks a stored state in the dense node table.
+	set bool
+	// binding reads a subject bound and not yet complete; settled reads it
+	// once complete, when its run no longer holds it.
 	binding   xsd.Binding
+	settled   xsd.Settled
 	available bool
 	skipped   bool
 	reason    Code
@@ -255,22 +311,7 @@ func (s *Session) ensureSchemaRun() error {
 
 // ensureSchemaNodes admits nodes entries for every node seen so far.
 func (s *Session) ensureSchemaNodes() error {
-	state := s.schema
-	if state.nodes == nil {
-		if err := s.retain(128 + int64(len(s.nodes))*128); err != nil {
-			return err
-		}
-		state.nodes = make(map[NodeID]schemaNode, len(s.nodes))
-		state.nodesCharged = len(s.nodes)
-		return nil
-	}
-	if extra := len(s.nodes) - state.nodesCharged; extra > 0 {
-		if err := s.retain(int64(extra) * 128); err != nil {
-			return err
-		}
-		state.nodesCharged = len(s.nodes)
-	}
-	return nil
+	return s.schema.nodes.grow(s, len(s.nodes))
 }
 
 // bindSourceSchema owns the pending source-fact transition. Exact child uses
@@ -299,7 +340,9 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 			reason = s.root.header.Type.Reason
 		}
 		for _, id := range s.sequence {
-			state.nodes[id] = schemaNode{reason: reason}
+			if err := state.nodes.put(s, id, schemaNode{reason: reason}); err != nil {
+				return err
+			}
 		}
 		return nil
 	}
@@ -324,14 +367,14 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 	// An unmatched subtree remains unavailable. Preserve its exact containing
 	// content failure as the causal identity when that rule was selected.
 	for _, id := range s.sequence {
-		if _, ok := state.nodes[id]; ok {
+		if _, ok := state.nodes.get(id); ok {
 			continue
 		}
 		n := s.nodes[id]
 		item := schemaNode{reason: "exact-declaration-use-unavailable"}
 		ancestor := s.nodes[n.header.Parent]
 		for ancestor != nil {
-			if bound, ok := state.nodes[ancestor.header.ID]; ok {
+			if bound, ok := state.nodes.get(ancestor.header.ID); ok {
 				if bound.skipped {
 					item.skipped = true
 					item.reason = "wildcard-skip"
@@ -358,7 +401,9 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 			}
 			ancestor = s.nodes[ancestor.header.Parent]
 		}
-		state.nodes[id] = item
+		if err := state.nodes.put(s, id, item); err != nil {
+			return err
+		}
 		typ := Evidence[ComponentID]{State: EvidenceUnsupported, Reason: item.reason}
 		decl := Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: item.reason}
 		if item.cause != nil {
@@ -426,7 +471,9 @@ func (s *Session) bindSubtree(ctx context.Context, top *factNode, use xsd.Use, p
 			f.binding = binding
 			f.entered = true
 			available := state.run.Results(binding).Binding.Applicable
-			state.nodes[f.node.header.ID] = schemaNode{binding: binding, available: available, reason: "schema-binding-unavailable"}
+			if err := state.nodes.put(s, f.node.header.ID, schemaNode{binding: binding, available: available, reason: "schema-binding-unavailable"}); err != nil {
+				return result, err
+			}
 			// Persist proved failures before later binding, exact-value or buffer work.
 			if err := s.recordXSDProvedFailures(ctx, f.node); err != nil {
 				return result, err
@@ -451,7 +498,9 @@ func (s *Session) bindSubtree(ctx context.Context, top *factNode, use xsd.Use, p
 				return result, contract("schema witness", "unknown child occurrence")
 			}
 			if witness.Mode != xsd.WitnessDeclared {
-				state.nodes[child.header.ID] = schemaNode{skipped: witness.Mode == xsd.WitnessSkip, reason: Code(witness.Mode)}
+				if err := state.nodes.put(s, child.header.ID, schemaNode{skipped: witness.Mode == xsd.WitnessSkip, reason: Code(witness.Mode)}); err != nil {
+					return result, err
+				}
 				continue
 			}
 			if window, ok := state.windows[child.header.ID]; ok {
@@ -489,6 +538,15 @@ func (s *Session) bindSubtree(ctx context.Context, top *factNode, use xsd.Use, p
 		}
 		if completeErr != nil {
 			return result, completeErr
+		}
+		bound := state.nodes.at(f.node.header.ID)
+		settled, settleErr := state.run.Settle(ctx, f.binding, state.keepTyped)
+		if settleErr != nil {
+			return result, settleErr
+		}
+		bound.binding, bound.settled = xsd.Binding{}, settled
+		if err := state.nodes.put(s, f.node.header.ID, bound); err != nil {
+			return result, err
 		}
 		// The completed run no longer holds the subject.
 		released := schemaSubjectBytes(f.node)
@@ -708,14 +766,14 @@ func (s *Session) schemaAtomic(ctx context.Context, value xsd.ScalarResult) (Evi
 
 func (s *Session) schemaResult(n *factNode, check XSDCheck) xsd.Result {
 	state := s.schema
-	bound := state.nodes[n.header.ID]
+	bound := state.nodes.at(n.header.ID)
 	if bound.skipped {
 		return xsd.Result{Applicable: false, Valid: true, Complete: true}
 	}
 	if !bound.available {
 		return xsd.Result{Applicable: true, Valid: true, Complete: false, Limitations: []xsd.Limitation{{Reason: string(bound.reason)}}}
 	}
-	results := state.run.Results(bound.binding)
+	results := state.results(bound)
 	switch check {
 	case XSDCheckBinding:
 		return results.Binding
@@ -1058,7 +1116,7 @@ func (s *Session) schemaResultCause(ctx context.Context, n *factNode, check XSDC
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}
-	if bound := s.schema.nodes[n.header.ID]; bound.cause != nil {
+	if bound := s.schema.nodes.at(n.header.ID); bound.cause != nil {
 		return bound.cause, nil
 	}
 	if s.profile.Target != TargetModel {
@@ -1106,7 +1164,7 @@ func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attrib
 	if n == nil {
 		return unknown, nil
 	}
-	bound, ok := s.schema.nodes[node]
+	bound, ok := s.schema.nodes.get(node)
 	if !ok || !bound.available {
 		if bound.cause != nil {
 			unknown.State = EvidenceInvalid
@@ -1118,14 +1176,14 @@ func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attrib
 		if n.end.Scalar.Value.State == EvidenceInvalid {
 			return *n.end.Scalar.Value, nil
 		}
-		result := s.schema.run.Results(bound.binding)
+		result := s.schema.results(bound)
 		if !result.Scalar.Valid {
 			return s.schemaInvalidValue(ctx, n, XSDCheckScalar)
 		}
 		if !result.Declaration.Valid {
 			return s.schemaInvalidValue(ctx, n, XSDCheckDeclaration)
 		}
-		return s.schemaAtomic(ctx, s.schema.run.Scalar(bound.binding))
+		return s.schemaAtomic(ctx, s.schema.scalar(bound))
 	}
 	for _, input := range n.attributes {
 		if err := s.step(ctx, 1); err != nil {
@@ -1135,7 +1193,7 @@ func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attrib
 			return input.Scalar.Value, nil
 		}
 	}
-	for result := range s.schema.run.Attributes(bound.binding) {
+	for result := range s.schema.attributes(bound) {
 		if err := s.step(ctx, 1); err != nil {
 			return unknown, err
 		}

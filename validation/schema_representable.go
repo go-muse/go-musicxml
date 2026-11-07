@@ -32,7 +32,7 @@ func (s *Session) checkRepresentable(ctx context.Context, n *factNode) error {
 	if len(state.proofRules[state.active.assembly][xsdCheckRepresentable]) == 0 {
 		return nil
 	}
-	bound := state.nodes[n.header.ID]
+	bound := state.nodes.at(n.header.ID)
 	if bound.representable || bound.skipped || !bound.available {
 		return nil
 	}
@@ -60,10 +60,10 @@ func (s *Session) checkRepresentable(ctx context.Context, n *factNode) error {
 		return nil
 	}
 	path := n.header.Location.Path
-	if err := check(state.run.Scalar(bound.binding), path, QName{}); err != nil {
+	if err := check(state.scalar(bound), path, QName{}); err != nil {
 		return err
 	}
-	for attribute := range state.run.Attributes(bound.binding) {
+	for attribute := range state.attributes(bound) {
 		if !attribute.Present {
 			continue
 		}
@@ -73,7 +73,9 @@ func (s *Session) checkRepresentable(ctx context.Context, n *factNode) error {
 		}
 	}
 	bound.representable, bound.unrepresentable = true, details
-	state.nodes[n.header.ID] = bound
+	if err := state.nodes.put(s, n.header.ID, bound); err != nil {
+		return err
+	}
 	return nil
 }
 

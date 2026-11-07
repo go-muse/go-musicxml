@@ -126,11 +126,11 @@ func TestSourceSchemaSummaryEligibilityIsNarrow(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s, rule := schemaDiagnosticSession(t, Budgets{})
-			s.schema.nodes = make(map[NodeID]schemaNode)
+			s.schema.nodes = schemaNodeTable{}
 			for id := NodeID(1); id <= 2; id++ {
 				n := schemaDiagnosticNode(s, id)
 				if tc.blocked {
-					s.schema.nodes[id] = schemaNode{cause: &DecisionRef{Rule: rule.Key, Subject: NodeRef{DocumentID: "source", Node: 99}}}
+					s.schema.nodes.set(id, schemaNode{cause: &DecisionRef{Rule: rule.Key, Subject: NodeRef{DocumentID: "source", Node: 99}}})
 				}
 				result := xsd.Result{Applicable: true, Valid: true, Complete: false, Limitations: []xsd.Limitation{{Reason: tc.reason}}}
 				if err := s.recordXSDResult(context.Background(), n, rule, result); err != nil {

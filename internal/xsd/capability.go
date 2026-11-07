@@ -264,5 +264,8 @@ func (c *Context) absentAttributeResult(effective *EffectiveComplex, owner strin
 		result = &AttributeResult{Name: schema.Name, Use: use, DeclarationValid: true, Complete: true, Scalar: ScalarResult{Complete: true}}
 		effective.absent.records[index] = result
 	}
+	// The record is the effective type's; only the slot is the subject's.
+	before := s.run.retained
 	s.attributes = appendRetained(c, s.attributes, result)
+	s.typedCharged += s.run.retained - before
 }

@@ -39,6 +39,7 @@ func init() {
 	validationlink.Register("RunOptions.ResourceSnapshot", resourceSnapshotRun)
 	validationlink.Register("Session.SetFinishObserver", setFinishObserver)
 	validationlink.Register("Session.SetWindowedStrategy", setWindowedStrategy)
+	validationlink.Register("Session.SetKeepTypedXSD", setKeepTypedXSD)
 	validationlink.Register("Session.SetWindowObserver", setWindowObserver)
 	validationlink.Register("Session.SetWindowBindObserver", setWindowBindObserver)
 	validationlink.Register("Report.SetFindingKeyObserver", setFindingKeyObserverOrdered)
