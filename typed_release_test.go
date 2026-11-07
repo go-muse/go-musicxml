@@ -13,20 +13,29 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// typedReleaseReports adds to windowedReports the source profiles whose rules
-// read no typed XSD result once binding completes, which therefore release
-// them, through the inspector and the strict loader.
+// typedReleaseReports adds to windowedReports the profiles whose rules read no
+// typed XSD result once binding completes, which therefore release them: the
+// source line, the XSD preview, the internal-DTD source profile, model XSD
+// and Validate.
 func typedReleaseReports(t *testing.T, name string, data []byte) map[string]string {
 	t.Helper()
 	out := windowedReports(t, name, data)
 	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 34}
-	for _, profile := range []SourceProfile{ProfileSourceLine, ProfileSourceXSDPreview} {
-		report, err := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: profile, Budgets: big})
-		encoded, marshalErr := json.Marshal(report)
+	add := func(label string, value any, err error) {
+		encoded, marshalErr := json.Marshal(value)
 		if marshalErr != nil {
 			t.Fatal(marshalErr)
 		}
-		out["InspectXML/"+string(profile)] = string(encoded) + fmt.Sprintf(" error=%v", err)
+		out[label] = string(encoded) + fmt.Sprintf(" error=%v", err)
+	}
+	for _, profile := range []SourceProfile{ProfileSourceLine, ProfileSourceXSDPreview, ProfileSourceInternalDTD} {
+		report, err := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: profile, Budgets: big})
+		add("InspectXML/"+string(profile), report, err)
+	}
+	if document, err := Decode(bytes.NewReader(data)); err == nil {
+		report, err := AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelXSD, Budgets: big})
+		add("AssessModel/"+string(ProfileModelXSD), report, err)
+		add("Validate", nil, Validate(document))
 	}
 	return out
 }
@@ -64,9 +73,10 @@ func typedReleaseCases() map[string][]byte {
 // Releasing the typed XSD results of completed subjects changes no report:
 // on the official and test-suite files and on documents chosen for what the
 // typed results carry, every entry point the windowed harness covers and the
-// two profiles that release them return identical reports whether the
-// sessions release or keep them. A session that read a released typed result
-// would fail Finish with a contract error instead.
+// profiles that release them return the reports of buffered sessions that
+// keep them, whether the sessions that release them are buffered or windowed.
+// A session that read a released typed result would fail Finish with a
+// contract error instead.
 func TestReleasingTypedXSDResultsChangesNoReport(t *testing.T) {
 	if raceEnabled {
 		t.Skip("slow under the race detector")
@@ -92,17 +102,23 @@ func TestReleasingTypedXSDResultsChangesNoReport(t *testing.T) {
 	}
 	compared := 0
 	for name, data := range inputs {
-		previous := validationSetKeepTypedXSD(true)
+		previousKeep := validationSetKeepTypedXSD(true)
+		previousStrategy := validationSetWindowedStrategy(false)
 		kept := typedReleaseReports(t, name, data)
 		validationSetKeepTypedXSD(false)
 		released := typedReleaseReports(t, name, data)
-		validationSetKeepTypedXSD(previous)
+		validationSetWindowedStrategy(true)
+		windowed := typedReleaseReports(t, name, data)
+		validationSetWindowedStrategy(previousStrategy)
+		validationSetKeepTypedXSD(previousKeep)
 		for label, want := range kept {
-			if got := released[label]; got != want {
-				t.Errorf("%s %s: report differs when typed results are released%s", name, label, windowedDifference(want, got))
-			}
-			if strings.Contains(released[label], "read after they were released") {
-				t.Errorf("%s %s: a reader read released typed results", name, label)
+			for strategy, reports := range map[string]map[string]string{"buffered": released, "windowed": windowed} {
+				if got := reports[label]; got != want {
+					t.Errorf("%s %s: %s report differs when typed results are released%s", name, label, strategy, windowedDifference(want, got))
+				}
+				if strings.Contains(reports[label], "read after they were released") {
+					t.Errorf("%s %s: a %s reader read released typed results", name, label, strategy)
+				}
 			}
 			compared++
 		}

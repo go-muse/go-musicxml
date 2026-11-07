@@ -17,8 +17,9 @@ func TestContextRoleSessionReuseCanonicalDeclarationsAcrossNodes(t *testing.T) {
 		for _, id := range s.sequence {
 			n := s.nodes[id]
 			bound := s.schema.nodes.at(id)
-			if !bound.available || !bound.bound() {
-				t.Fatalf("node %d lacks an available run binding", id)
+			// Each completed node was settled on its own by the run.
+			if !bound.available || !bound.settled.Valid() || bound.binding != (xsd.Binding{}) {
+				t.Fatalf("node %d lacks an available settled binding", id)
 			}
 			canonical := false
 			for key, declaration := range s.facts.declarations {

@@ -51,17 +51,20 @@ func (r *Run) Settle(ctx context.Context, b Binding, keepTyped bool) (out Settle
 	s := b.state
 	out = Settled{run: r, results: s.final}
 	release := boundStateObjectBytes
-	if keepTyped {
-		r.reserve(settledTypedBytes)
-		out.typed = &settledTyped{scalar: s.finalScalar, actual: s.actual, attributes: s.attributes}
-	} else {
+	if !keepTyped {
 		release += s.typedCharged
 	}
+	typed := settledTyped{scalar: s.finalScalar, actual: s.actual, attributes: s.attributes}
 	r.states[s.id] = settledState
 	s.run, s.actual, s.attributes, s.final, s.finalScalar = nil, nil, nil, nil, nil
+	// Release first, so keeping the typed record does not raise the peak.
 	r.retained -= release
 	if err := r.meter.Release(release); err != nil {
 		return Settled{}, err
+	}
+	if keepTyped {
+		r.reserve(settledTypedBytes)
+		out.typed = &typed
 	}
 	return out, nil
 }

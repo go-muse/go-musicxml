@@ -17,7 +17,9 @@ var (
 	schemaNodeOverflowEntryBytes = 3 * (int64(unsafe.Sizeof(NodeID(0))) + schemaNodeSlotBytes)
 )
 
-const schemaNodeOverflowHeaderBytes int64 = 256
+// The map header and its first groups: about 1 KiB live for one or two
+// entries.
+const schemaNodeOverflowHeaderBytes int64 = 1024
 
 func (t *schemaNodeTable) get(id NodeID) (schemaNode, bool) {
 	if id != 0 && id <= NodeID(len(t.dense)) {
@@ -65,7 +67,9 @@ func (t *schemaNodeTable) grow(s *Session, n int) error {
 	if n <= len(t.dense) {
 		return nil
 	}
-	size := max(n, 2*len(t.dense))
+	// A quarter more each time keeps copying linear in the number of nodes
+	// while windows grow the table by small steps.
+	size := max(n, len(t.dense)+len(t.dense)/4)
 	if err := s.retain(int64(size) * schemaNodeSlotBytes); err != nil {
 		return err
 	}
@@ -78,7 +82,7 @@ func (t *schemaNodeTable) grow(s *Session, n int) error {
 	t.dense = next
 	// Entries of IDs now in the dense range move there.
 	for id, v := range t.overflow {
-		if id <= NodeID(len(t.dense)) {
+		if id != 0 && id <= NodeID(len(t.dense)) {
 			t.dense[id-1] = v
 			delete(t.overflow, id)
 		}

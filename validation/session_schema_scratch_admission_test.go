@@ -342,7 +342,7 @@ func TestSchemaBindingScratchSkippedWitnessUsesCompletionCapacity(t *testing.T) 
 	if err := s.bindSourceSchema(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if s.schema.run.Witnesses(s.schema.nodes.at(1).binding) != nil || !s.schema.nodes.at(2).available || !s.schema.nodes.at(3).skipped {
+	if root := s.schema.nodes.at(1); !root.settled.Valid() || root.binding != (xsd.Binding{}) || !s.schema.nodes.at(2).available || !s.schema.nodes.at(3).skipped {
 		t.Fatalf("mixed witnesses lost: %+v", s.schema.nodes)
 	}
 	// Node table for three nodes and the declared child's retained scalar;
