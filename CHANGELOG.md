@@ -89,7 +89,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   reports are unchanged; budgets charge less, so documents near the old
   buffer limit may now complete. On MozartTrio the source line
   (`ProfileSourceLine`) needs an 11.8 MiB buffer instead of 12.9 MiB and its
-  live memory at the end of `Finish` drops by about 13%; model semantics,
+  live memory at the end of `Finish` drops by about 16%; model semantics,
   whose rules read typed results, changes little (18.3 instead of 18.4 MiB).
 - While `Finish` evaluates the document families, evaluation scratch (layout
   formatting, navigation runs, performance records) is charged to
