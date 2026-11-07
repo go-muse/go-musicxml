@@ -82,74 +82,130 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 		}
 		measured++
 	}
-	for _, in := range inputs {
-		name, data := in.name, in.data
-		document, err := Decode(bytes.NewReader(data))
-		if err != nil {
-			continue
-		}
-		for _, profile := range sources {
-			engine, err := sourceAssessmentEngineForProfile(profile)
+	for _, windowed := range []bool{false, true} {
+		previousStrategy := validationSetWindowedStrategy(windowed)
+		for _, in := range inputs {
+			name, data := in.name, in.data
+			if windowed {
+				name += " (windowed)"
+			}
+			document, err := Decode(bytes.NewReader(data))
 			if err != nil {
-				t.Fatal(err)
+				continue
 			}
-			for repeat := 0; repeat < 2; repeat++ { // the first run warms caches
-				account, err := validation.NewBudgetAccount(big)
+			for _, profile := range sources {
+				engine, err := sourceAssessmentEngineForProfile(profile)
 				if err != nil {
 					t.Fatal(err)
 				}
-				reader := bytes.NewReader(data)
-				before := liveHeap()
-				run, err := newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: profile, Engine: engine}, ByteOwner: sourceBytesPrimary}, false)
+				for repeat := 0; repeat < 2; repeat++ { // the first run warms caches
+					account, err := validation.NewBudgetAccount(big)
+					if err != nil {
+						t.Fatal(err)
+					}
+					reader := bytes.NewReader(data)
+					before := liveHeap()
+					run, err := newSourceAssessmentRunWithConfig(context.Background(), reader, DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: profile, Engine: engine}, ByteOwner: sourceBytesPrimary}, false)
+					if err != nil {
+						t.Fatal(err)
+					}
+					inputErr := run.drain()
+					heap := liveHeap() - before
+					if inputErr != nil {
+						t.Fatalf("%s %s: %v", name, profile, inputErr)
+					}
+					if repeat == 1 {
+						check(name, profile, account, heap)
+					}
+					completion, err := run.finishInput(inputErr)
+					if err == nil {
+						_, _ = run.session.Finish(context.Background(), completion)
+					}
+				}
+			}
+			for _, profile := range models {
+				engine, err := modelAssessmentEngineForProfile(profile)
 				if err != nil {
 					t.Fatal(err)
 				}
-				inputErr := run.drain()
-				heap := liveHeap() - before
-				if inputErr != nil {
-					t.Fatalf("%s %s: %v", name, profile, inputErr)
-				}
-				if repeat == 1 {
-					check(name, profile, account, heap)
-				}
-				completion, err := run.finishInput(inputErr)
-				if err == nil {
-					_, _ = run.session.Finish(context.Background(), completion)
+				for repeat := 0; repeat < 2; repeat++ {
+					account, err := validation.NewBudgetAccount(big)
+					if err != nil {
+						t.Fatal(err)
+					}
+					before := liveHeap()
+					run, err := newModelAssessmentRun(context.Background(), document, assessmentRunConfig{Account: account, DocumentID: modelDocumentID, Profile: profile, Engine: engine})
+					if err != nil {
+						t.Fatal(err)
+					}
+					_, walkErr := run.walk(modelWalkOptions{})
+					heap := liveHeap() - before
+					if walkErr != nil {
+						t.Fatalf("%s %s: %v", name, profile, walkErr)
+					}
+					if repeat == 1 {
+						check(name, profile, account, heap)
+					}
+					completion, err := run.finishInput(walkErr)
+					if err == nil {
+						_, _ = run.session.Finish(context.Background(), completion)
+					}
 				}
 			}
 		}
-		for _, profile := range models {
-			engine, err := modelAssessmentEngineForProfile(profile)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for repeat := 0; repeat < 2; repeat++ {
-				account, err := validation.NewBudgetAccount(big)
-				if err != nil {
-					t.Fatal(err)
-				}
-				before := liveHeap()
-				run, err := newModelAssessmentRun(context.Background(), document, assessmentRunConfig{Account: account, DocumentID: modelDocumentID, Profile: profile, Engine: engine})
-				if err != nil {
-					t.Fatal(err)
-				}
-				_, walkErr := run.walk(modelWalkOptions{})
-				heap := liveHeap() - before
-				if walkErr != nil {
-					t.Fatalf("%s %s: %v", name, profile, walkErr)
-				}
-				if repeat == 1 {
-					check(name, profile, account, heap)
-				}
-				completion, err := run.finishInput(walkErr)
-				if err == nil {
-					_, _ = run.session.Finish(context.Background(), completion)
-				}
-			}
-		}
+		validationSetWindowedStrategy(previousStrategy)
 	}
-	if measured < 20 {
+	if measured < 40 {
 		t.Fatalf("measured %d runs", measured)
+	}
+}
+
+// The windowed strategy keeps an entry per measure for the declaration its
+// part gave it and another for its bound completion. On a part of many empty
+// measures, where those entries are most of what windowed adds, the heap it
+// adds over the buffered strategy stays within the charge it adds.
+func TestWindowedMeasureEntriesAreCharged(t *testing.T) {
+	if raceEnabled {
+		t.Skip("the race detector changes the heap")
+	}
+	data := []byte(`<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>P</part-name></score-part></part-list><part id="P1">` + strings.Repeat(`<measure number="1"/>`, 20000) + `</part></score-partwise>`)
+	engine, err := sourceAssessmentEngineForProfile(profileSourceLine)
+	if err != nil {
+		t.Fatal(err)
+	}
+	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}
+	measure := func(windowed bool) (heap, used int64) {
+		previous := validationSetWindowedStrategy(windowed)
+		defer validationSetWindowedStrategy(previous)
+		for repeat := 0; repeat < 2; repeat++ { // the first run warms caches
+			account, err := validation.NewBudgetAccount(big)
+			if err != nil {
+				t.Fatal(err)
+			}
+			before := liveHeap()
+			run, err := newSourceAssessmentRunWithConfig(context.Background(), bytes.NewReader(data), DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: profileSourceLine, Engine: engine}, ByteOwner: sourceBytesPrimary}, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			inputErr := run.drain()
+			heap = liveHeap() - before
+			if inputErr != nil {
+				t.Fatal(inputErr)
+			}
+			if used, err = account.Usage(validation.BudgetBufferedBytes); err != nil {
+				t.Fatal(err)
+			}
+			completion, err := run.finishInput(inputErr)
+			if err == nil {
+				_, _ = run.session.Finish(context.Background(), completion)
+			}
+		}
+		return heap, used
+	}
+	bufferedHeap, bufferedUsed := measure(false)
+	windowedHeap, windowedUsed := measure(true)
+	if added, charged := windowedHeap-bufferedHeap, windowedUsed-bufferedUsed; added > charged {
+		t.Errorf("windowed adds %d bytes of heap over buffered but %d bytes of charge", added, charged)
 	}
 }
 

@@ -52,7 +52,8 @@ func scaledScore(t testing.TB, raw []byte, factor int) []byte {
 }
 
 // TestMemoryPerElement measures the live session heap per element at the end
-// of Finish for validation lines 2 and 3 on MozartTrio scaled up. It is a
+// of Finish for validation lines 2 and 3 under both strategies on MozartTrio
+// scaled up. It is a
 // measurement, not a check: it runs only with MUSICXML_MEMORY_PROBE=1 and
 // prints a table for the wave 3 design notes.
 func TestMemoryPerElement(t *testing.T) {
@@ -72,7 +73,7 @@ func TestMemoryPerElement(t *testing.T) {
 		runtime.ReadMemStats(&m)
 		return int64(m.HeapAlloc)
 	}
-	fmt.Printf("| Input | Bytes | Elements | Line | Live at end of Finish | Per element | Per input byte | Charged |\n")
+	fmt.Printf("| Input | Bytes | Elements | Line | Strategy | Live at end of Finish | Per element | Per input byte | Charged |\n")
 	for _, factor := range []int{1, 4, 16, 110} {
 		data := scaledScore(t, source, factor)
 		document, err := Decode(bytes.NewReader(data))
@@ -81,26 +82,34 @@ func TestMemoryPerElement(t *testing.T) {
 		}
 		elements := int64(strings.Count(string(data), "<") - strings.Count(string(data), "</") - strings.Count(string(data), "<?") - strings.Count(string(data), "<!"))
 		for _, line := range []string{"2 source", "3 model"} {
-			var live, charged int64
-			for repeat := 0; repeat < 2; repeat++ { // the first run warms process caches
-				before := heap()
-				previous := validationSetFinishObserver(func(stage string, a *validation.Account) {
-					if stage == "finished" {
-						live = heap() - before
-						charged, _ = a.Usage(validation.BudgetBufferedBytes)
+			for _, windowed := range []bool{false, true} {
+				previousStrategy := validationSetWindowedStrategy(windowed)
+				var live, charged int64
+				for repeat := 0; repeat < 2; repeat++ { // the first run warms process caches
+					before := heap()
+					previous := validationSetFinishObserver(func(stage string, a *validation.Account) {
+						if stage == "finished" {
+							live = heap() - before
+							charged, _ = a.Usage(validation.BudgetBufferedBytes)
+						}
+					})
+					if line == "2 source" {
+						_, err = InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceLine, Budgets: unlimited})
+					} else {
+						_, err = AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics, Budgets: unlimited})
 					}
-				})
-				if line == "2 source" {
-					_, err = InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceLine, Budgets: unlimited})
-				} else {
-					_, err = AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics, Budgets: unlimited})
+					validationSetFinishObserver(previous)
+					if err != nil {
+						t.Fatalf("x%d line %s: %v", factor, line, err)
+					}
 				}
-				validationSetFinishObserver(previous)
-				if err != nil {
-					t.Fatalf("x%d line %s: %v", factor, line, err)
+				validationSetWindowedStrategy(previousStrategy)
+				strategy := "buffered"
+				if windowed {
+					strategy = "windowed"
 				}
+				fmt.Printf("| MozartTrio x%d | %d | %d | %s | %s | %.1f MB | %d B | %d B | %.1f MB |\n", factor, len(data), elements, line, strategy, float64(live)/1e6, live/elements, live/int64(len(data)), float64(charged)/1e6)
 			}
-			fmt.Printf("| MozartTrio x%d | %d | %d | %s | %.1f MB | %d B | %d B | %.1f MB |\n", factor, len(data), elements, line, float64(live)/1e6, live/elements, live/int64(len(data)), float64(charged)/1e6)
 		}
 	}
 }

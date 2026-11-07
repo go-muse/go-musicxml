@@ -224,6 +224,9 @@ type Run struct {
 	identitySeen          map[identityDiagnostic]bool
 	identityValid         bool
 	identityOutput        *IdentityResults
+	// opened records that Open was called: children may then be bound
+	// before their parent.
+	opened bool
 }
 
 func NewRun(schema *Compiled, meter Meter) (out *Run, err error) {
@@ -406,6 +409,11 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	r.context.bytes(len(subject.Text))
 	node.Text.WriteString(subject.Text)
 	node.Children = make([]*Node, len(subject.Children))
+	// In a run that opened elements, children can be bound before their
+	// parent. The children seen so far, built when the first existing child
+	// node is met, keep a child node created by this subject or already
+	// taken over charged to its work once.
+	var seen map[SubjectID]bool
 	for i, ch := range subject.Children {
 		r.step(1)
 		if ch.ID == 0 || ch.ID == subject.ID {
@@ -419,6 +427,25 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 			r.nodes[ch.ID] = n
 		} else if n.Name != ch.Name {
 			return Binding{}, errors.New("xsd: conflicting child name")
+		} else if r.opened {
+			if seen == nil {
+				r.context.scratch(r.context.sum(256, r.context.size(int64(i), 64)))
+				seen = make(map[SubjectID]bool, i)
+				for _, earlier := range subject.Children[:i] {
+					r.step(1)
+					seen[earlier.ID] = true
+				}
+			}
+			// A child bound or opened before its parent created its own
+			// node. Completing the parent deletes it, so the parent's work
+			// takes over its charge.
+			if !seen[ch.ID] {
+				work += nodeObjectBytes
+			}
+		}
+		if seen != nil && !seen[ch.ID] {
+			r.context.scratch(64)
+			seen[ch.ID] = true
 		}
 		node.Children[i] = n
 	}

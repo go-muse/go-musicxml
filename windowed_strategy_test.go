@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -168,8 +170,9 @@ func TestFindingKeysFollowInsertionOrder(t *testing.T) {
 // Under the windowed strategy every measure is one evaluation window: through
 // both validation lines, on the official and test-suite files, the windows
 // close in document order without overlapping, there is one per measure of a
-// partwise score, and the nodes outside them, the skeleton that stays until
-// Finish, are the header and the parts. The buffered strategy opens none.
+// partwise score, every window is bound to the schema when it closes, and the
+// nodes outside them, the skeleton that stays until Finish, are the header and
+// the parts. The buffered strategy opens and binds none.
 func TestWindowsCoverMeasures(t *testing.T) {
 	if raceEnabled {
 		t.Skip("slow under the race detector")
@@ -190,7 +193,8 @@ func TestWindowsCoverMeasures(t *testing.T) {
 	type window struct{ first, end int }
 	var windows []window
 	total := -1
-	t.Cleanup(func() { validationSetWindowObserver(nil) })
+	var bound int
+	t.Cleanup(func() { validationSetWindowObserver(nil); validationSetWindowBindObserver(nil) })
 	observe := func(root validation.NodeID, first, end int) {
 		if root == 0 {
 			total = end
@@ -212,27 +216,32 @@ func TestWindowsCoverMeasures(t *testing.T) {
 		measures := len(measure.FindAll(data, -1))
 		for _, line := range []string{"source", "model"} {
 			for _, windowed := range []bool{false, true} {
-				windows, total = nil, -1
+				windows, total, bound = nil, -1, 0
 				previousStrategy := validationSetWindowedStrategy(windowed)
 				validationSetWindowObserver(observe)
+				validationSetWindowBindObserver(func(validation.NodeID) { bound++ })
 				if line == "source" {
 					_, err = InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceLine, Budgets: big})
 				} else {
 					_, err = AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics, Budgets: big})
 				}
 				validationSetWindowObserver(nil)
+				validationSetWindowBindObserver(nil)
 				validationSetWindowedStrategy(previousStrategy)
 				if err != nil {
 					t.Fatalf("%s %s: %v", files[i], line, err)
 				}
 				if !windowed {
-					if len(windows) != 0 || total != -1 {
+					if len(windows) != 0 || total != -1 || bound != 0 {
 						t.Fatalf("%s %s: buffered strategy observed %d windows", files[i], line, len(windows))
 					}
 					continue
 				}
 				if partwise.Match(data) && len(windows) != measures {
 					t.Errorf("%s %s: %d windows for %d measures", files[i], line, len(windows), measures)
+				}
+				if bound != len(windows) {
+					t.Errorf("%s %s: %d of %d windows bound when they closed", files[i], line, bound, len(windows))
 				}
 				covered := 0
 				for k, w := range windows {
@@ -251,4 +260,192 @@ func TestWindowsCoverMeasures(t *testing.T) {
 		t.Fatalf("checked %d runs", checked)
 	}
 	t.Logf("%d windowed runs, %d nodes, %d in the skeleton", checked, nodes, skeleton)
+}
+
+// windowedRiskScore is a two-part partwise score whose elements carry IDs.
+const windowedRiskScore = `<?xml version="1.0" encoding="UTF-8"?>
+<score-partwise version="4.0" ROOTATTR>
+  <work><work-title id="w1">Risk</work-title></work>
+  CREDITS
+  <part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P2"><part-name>B</part-name></score-part></part-list>
+  <part id="P1" PART1ATTR>
+    <measure number="1" id="m1"><attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes><note id="n1"><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><type>whole</type></note></measure>
+    <measure number="2" id="M2ID"><attributes><divisions>DIV2</divisions></attributes><note id="n2"><rest/><duration>DUR2</duration></note>MIDDLE</measure>
+    <measure number="3" id="m3"><note id="n3"><rest/><duration>4</duration></note></measure>
+    TRAILING
+  </part>
+  <part id="PART2ID">
+    <measure number="1" id="q1"><attributes><divisions>2</divisions></attributes><note id="NOTEID"><rest/><duration>8</duration></note></measure>
+    <measure number="2" id="q2"><note id="o2"><rest/><duration>8</duration></note></measure>
+    <measure number="3" id="q3"><note id="o3"><rest/><duration>8</duration></note></measure>
+  </part>
+  ROOTTRAILING
+</score-partwise>`
+
+// windowedTimewiseScore is a two-part timewise score.
+const windowedTimewiseScore = `<?xml version="1.0" encoding="UTF-8"?>
+<score-timewise version="4.0">
+  <part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P2"><part-name>B</part-name></score-part></part-list>
+  <measure number="1" id="m1"><part id="P1"><attributes><divisions>1</divisions></attributes><note id="a"><rest/><duration>4</duration></note></part><part id="P2"><attributes><divisions>2</divisions></attributes><note id="b"><rest/><duration>8</duration></note></part></measure>
+  <measure number="2" id="m2"><part id="P1"><note id="TWID"><rest/><duration>4</duration></note></part><part id="P2"><attributes><divisions>4</divisions></attributes><note id="d"><rest/><duration>16</duration></note>TWMIDDLE</part></measure>
+  TWTRAILING
+</score-timewise>`
+
+// The windowed strategy matches the buffered one on documents chosen for the
+// risks of binding windows before the root closes: IDs on every level with
+// duplicates across the header, measures and parts, a dangling part IDREF,
+// an element and its first child sharing an ID, an ID with three owners,
+// divisions changing inside a part, content-model errors inside a measure,
+// after the last measure of a part and after the last part, a schema-instance
+// attribute on the root or a part, a timewise score, and input cut off
+// inside a measure. The buffered engine stores their findings in key order.
+func TestWindowedStrategyMatchesBufferedOnRiskCases(t *testing.T) {
+	if raceEnabled {
+		t.Skip("slow under the race detector")
+	}
+	base := map[string]string{"CREDITS": "", "ROOTATTR": "", "PART1ATTR": "", "M2ID": "m2", "DIV2": "1", "DUR2": "4", "MIDDLE": "", "TRAILING": "", "PART2ID": "P2", "NOTEID": "o1", "ROOTTRAILING": ""}
+	timewise := map[string]string{"TWID": "c", "TWMIDDLE": "", "TWTRAILING": ""}
+	render := func(text string, values map[string]string, changes map[string]string) []byte {
+		for key, value := range values {
+			if changed, ok := changes[key]; ok {
+				value = changed
+			}
+			text = strings.ReplaceAll(text, key, value)
+		}
+		return []byte(text)
+	}
+	cases := map[string][]byte{
+		"valid":                         render(windowedRiskScore, base, nil),
+		"duplicate IDs across levels":   render(windowedRiskScore, base, map[string]string{"M2ID": "w1", "NOTEID": "n1"}),
+		"duplicate ID of a score part":  render(windowedRiskScore, base, map[string]string{"M2ID": "P1", "NOTEID": "P2"}),
+		"dangling part IDREF":           render(windowedRiskScore, base, map[string]string{"PART2ID": "P9"}),
+		"element and child share an ID": render(windowedRiskScore, base, map[string]string{"CREDITS": `<credit page="1" id="z"><credit-words id="z">c</credit-words></credit>`}),
+		"three owners of an ID":         render(windowedRiskScore, base, map[string]string{"CREDITS": `<credit page="1" id="w9"><credit-words>c</credit-words></credit><credit page="1" id="w9"><credit-words>d</credit-words></credit>`, "M2ID": "w9"}),
+		"divisions change":              render(windowedRiskScore, base, map[string]string{"DIV2": "4", "DUR2": "16"}),
+		"error inside a measure":        render(windowedRiskScore, base, map[string]string{"MIDDLE": "<bogus/>"}),
+		"error after the last measure":  render(windowedRiskScore, base, map[string]string{"TRAILING": "<bogus/>"}),
+		"measure-level element in part": render(windowedRiskScore, base, map[string]string{"TRAILING": "<note><rest/><duration>4</duration></note><measure number=\"4\"/>"}),
+		"error after the last part":     render(windowedRiskScore, base, map[string]string{"ROOTTRAILING": "<bogus/>"}),
+		"schema instance on the root":   render(windowedRiskScore, base, map[string]string{"ROOTATTR": `xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="musicxml.xsd"`}),
+		"schema instance on a part":     render(windowedRiskScore, base, map[string]string{"ROOTATTR": `xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"`, "PART1ATTR": `xsi:type="part"`}),
+		"timewise":                      render(windowedTimewiseScore, timewise, nil),
+		"timewise duplicate ID":         render(windowedTimewiseScore, timewise, map[string]string{"TWID": "m1"}),
+		"timewise errors":               render(windowedTimewiseScore, timewise, map[string]string{"TWMIDDLE": "<bogus/>", "TWTRAILING": "<bogus/>"}),
+	}
+	valid := cases["valid"]
+	cases["cut inside a measure"] = valid[:bytes.Index(valid, []byte(`<measure number="2" id="q2">`))+20]
+	t.Cleanup(func() { validationObserveFindingKeyOrder(nil) })
+	for name, data := range cases {
+		previous := validationSetWindowedStrategy(false)
+		unordered := 0
+		validationObserveFindingKeyOrder(func(ordered bool, _ int) {
+			if !ordered {
+				unordered++
+			}
+		})
+		buffered := windowedReports(t, name, data)
+		validationObserveFindingKeyOrder(nil)
+		if unordered != 0 {
+			t.Errorf("%s: %d buffered reports stored findings out of key order", name, unordered)
+		}
+		validationSetWindowedStrategy(true)
+		windowed := windowedReports(t, name, data)
+		validationSetWindowedStrategy(previous)
+		for label, want := range buffered {
+			if got := windowed[label]; got != want {
+				t.Errorf("%s %s: windowed report differs from buffered at %s", name, label, windowedDifference(want, got))
+			}
+		}
+	}
+}
+
+// windowedDifference shows both texts around their first difference.
+func windowedDifference(want, got string) string {
+	i := 0
+	for i < len(want) && i < len(got) && want[i] == got[i] {
+		i++
+	}
+	from := max(0, i-200)
+	return fmt.Sprintf("byte %d:\nbuffered ...%s\nwindowed ...%s", i, want[from:min(len(want), i+200)], got[from:min(len(got), i+200)])
+}
+
+// A run stopped by an event limit or by cancellation after windows were bound
+// reports what the buffered engine reports: the proved failures of those
+// windows wait until binding the document confirms them, which a stopped run
+// never does. Every event limit up to the complete run, and cancellation
+// after every 17th byte, are compared on a score whose second measure holds
+// a content-model error. Limits on rule steps and buffered bytes stop the two
+// strategies at different points, as their work and storage come at
+// different times, so what a run stopped by them has assessed may differ.
+func TestWindowedStrategyMatchesBufferedWhenStopped(t *testing.T) {
+	if raceEnabled {
+		t.Skip("slow under the race detector")
+	}
+	data := []byte(strings.NewReplacer("CREDITS", "", "ROOTATTR", "", "PART1ATTR", "", "M2ID", "m2", "DIV2", "1", "DUR2", "4", "MIDDLE", "<bogus/>", "TRAILING", "", "PART2ID", "P2", "NOTEID", "o1", "ROOTTRAILING", "").Replace(windowedRiskScore))
+	report := func(windowed bool, events int64) string {
+		previous := validationSetWindowedStrategy(windowed)
+		defer validationSetWindowedStrategy(previous)
+		out, err := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxEvents: events, MaxBufferedBytes: 1 << 34}})
+		encoded, marshalErr := json.Marshal(out)
+		if marshalErr != nil {
+			t.Fatal(marshalErr)
+		}
+		return fmt.Sprintf("%s error=%v invalid=%v", encoded, err, errors.Is(err, ErrInvalidDocument))
+	}
+	stopped := 0
+	for events := int64(1); ; events++ {
+		want := report(false, events)
+		if got := report(true, events); got != want {
+			t.Fatalf("MaxEvents %d: windowed report differs from buffered at %s", events, windowedDifference(want, got))
+		}
+		if !strings.Contains(want, "resource-limit") {
+			break
+		}
+		stopped++
+	}
+	if stopped < 100 {
+		t.Fatalf("only %d stopped runs compared", stopped)
+	}
+	// Cancellation after each prefix of the input stops both strategies at
+	// the same event.
+	canceled := func(windowed bool, after int) string {
+		previous := validationSetWindowedStrategy(windowed)
+		defer validationSetWindowedStrategy(previous)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		reader := &windowedCancelingReader{data: data, after: after, cancel: cancel}
+		out, err := InspectXML(ctx, reader, SourceOptions{Profile: ProfileSourceLine, Budgets: validation.Budgets{MaxBufferedBytes: 1 << 34}})
+		encoded, marshalErr := json.Marshal(out)
+		if marshalErr != nil {
+			t.Fatal(marshalErr)
+		}
+		return fmt.Sprintf("%s error=%v invalid=%v", encoded, err, errors.Is(err, ErrInvalidDocument))
+	}
+	for after := 0; after < len(data); after += 17 {
+		want := canceled(false, after)
+		if got := canceled(true, after); got != want {
+			t.Fatalf("canceled after %d bytes: windowed report differs from buffered at %s", after, windowedDifference(want, got))
+		}
+	}
+}
+
+// windowedCancelingReader cancels its context once more than after bytes
+// were read, and returns its data one byte at a time.
+type windowedCancelingReader struct {
+	data   []byte
+	read   int
+	after  int
+	cancel context.CancelFunc
+}
+
+func (r *windowedCancelingReader) Read(p []byte) (int, error) {
+	if r.read >= len(r.data) {
+		return 0, io.EOF
+	}
+	if r.read > r.after {
+		r.cancel()
+	}
+	p[0] = r.data[r.read]
+	r.read++
+	return 1, nil
 }

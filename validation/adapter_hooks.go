@@ -40,6 +40,7 @@ func init() {
 	validationlink.Register("Session.SetFinishObserver", setFinishObserver)
 	validationlink.Register("Session.SetWindowedStrategy", setWindowedStrategy)
 	validationlink.Register("Session.SetWindowObserver", setWindowObserver)
+	validationlink.Register("Session.SetWindowBindObserver", setWindowBindObserver)
 	validationlink.Register("Report.SetFindingKeyObserver", setFindingKeyObserverOrdered)
 	validationlink.Register("Engine.SourceAttributeLexicalProvider", (*Engine).sourceAttributeLexicalProvider)
 	validationlink.Register("Engine.SourceDTDIDsSelected", (*Engine).sourceDTDIDsSelected)

@@ -1,8 +1,11 @@
 package xsd
 
 import (
+	"cmp"
 	"context"
 	"errors"
+	"slices"
+	"unsafe"
 )
 
 // XSD 1.0 sic-id has two independent predicates: declaration-valid eligible
@@ -36,9 +39,13 @@ type IdentityEntry struct {
 	Value, Path, Constraint string
 }
 
+// IdentityBindings keeps the owners of one ID value. First and second are
+// the two earliest registrations in document order (see SetIdentityOrder),
+// whatever order the run binds subjects in.
 type IdentityBindings struct {
 	firstOrigin, secondOrigin identityOrigin
 	firstOwner, secondOwner   SubjectID
+	firstOrder, secondOrder   uint64
 	Owners                    map[*Node]struct{}
 	FirstPath, SecondPath     string
 }
@@ -77,6 +84,7 @@ func (c *Context) RecordElementIdentity(declared, actual *TypeRef, value, path s
 // multiplicity. Dynamic IDs can precede or follow a separately seeded entry.
 func (c *Context) RecordIdentity(reference *TypeRef, value, path string) {
 	c.step(1)
+	c.noteIdentityOrder()
 	c.noteConstructedIdentity(reference)
 	builtin := c.IdentityBuiltin(reference)
 	normalized := normalizeWhitespace(builtin, value, c)
@@ -96,6 +104,7 @@ func (c *Context) RecordIdentity(reference *TypeRef, value, path string) {
 		c.identity(1)
 		c.reserve(int64(len(path)))
 		c.References = appendRetained(c, c.References, IdentityReference{Value: normalized, Path: path, origin: c.origin()})
+		c.noteReferenceOrder()
 		c.SeedIdentity(normalized, path, "IDREF")
 	case "IDREFS":
 		for _, item := range splitList(normalized, c) {
@@ -103,6 +112,7 @@ func (c *Context) RecordIdentity(reference *TypeRef, value, path string) {
 			c.identity(1)
 			c.reserve(int64(len(path)))
 			c.References = appendRetained(c, c.References, IdentityReference{Value: item, Path: path, origin: c.origin()})
+			c.noteReferenceOrder()
 			c.SeedIdentity(item, path, "IDREF")
 		}
 	}
@@ -120,6 +130,25 @@ func (c *Context) SeedIdentity(value, path, constraint string) {
 		c.reserve(c.sum(64, int64(len(path))))
 		c.IdentityEntrySeen[value] = true
 		c.IdentityEntries = appendRetained(c, c.IdentityEntries, IdentityEntry{Value: value, Path: path, Constraint: constraint, origin: c.origin()})
+		if c.identityOrdering {
+			c.entryOrders = appendRetained(c, c.entryOrders, c.identityOrder)
+		}
+		return
+	}
+	if !c.identityUnordered {
+		return
+	}
+	// A subject bound out of document order can seed a value earlier than
+	// its recorded entry; the earliest seed is the entry.
+	for i := range c.IdentityEntries {
+		c.step(1)
+		entry := &c.IdentityEntries[i]
+		if entry.Value == value && c.entryOrders[i] > c.identityOrder {
+			c.reserve(int64(len(path)))
+			entry.Path, entry.Constraint, entry.origin = path, constraint, c.origin()
+			c.entryOrders[i] = c.identityOrder
+			return
+		}
 	}
 }
 
@@ -127,6 +156,7 @@ func (c *Context) SeedIdentity(value, path, constraint string) {
 // A root's scalar has no owner inside the validation scope and cannot self-bind.
 func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, owner *Node) {
 	c.step(1)
+	c.noteIdentityOrder()
 	c.noteConstructedIdentity(reference)
 	if owner == nil || c.IdentityBuiltin(reference) != "ID" {
 		return
@@ -144,8 +174,11 @@ func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, 
 		}
 	}
 	c.identity(1)
+	order := c.identityOrder
+	// Only one of the two earliest registrations keeps its origin.
+	early := bindings == nil || len(bindings.Owners) == 1 || order < bindings.secondOrder
 	var origin identityOrigin
-	if bindings == nil || len(bindings.Owners) == 1 {
+	if early {
 		origin = c.origin()
 	}
 	// Admit the actual owner entry before publishing bounded owner evidence.
@@ -153,16 +186,25 @@ func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, 
 	// The entry keeps the owner's node object alive after its parent
 	// completes and releases the object's charge.
 	c.reserve(32 + nodeObjectBytes)
-	if bindings == nil {
+	switch {
+	case bindings == nil:
 		c.reserve(c.sum(272, int64(len(path))))
-		bindings = &IdentityBindings{Owners: make(map[*Node]struct{}), FirstPath: path, firstOrigin: origin, firstOwner: owner.ID}
+		bindings = &IdentityBindings{Owners: make(map[*Node]struct{}), FirstPath: path, firstOrigin: origin, firstOwner: owner.ID, firstOrder: order}
 		c.IdentityBindings[value] = bindings
-	}
-	if len(bindings.Owners) == 1 {
+	case len(bindings.Owners) == 1 && order < bindings.firstOrder:
 		c.reserve(int64(len(path)))
-		bindings.SecondPath = path
-		bindings.secondOrigin = origin
-		bindings.secondOwner = owner.ID
+		bindings.SecondPath, bindings.secondOrigin, bindings.secondOwner, bindings.secondOrder = bindings.FirstPath, bindings.firstOrigin, bindings.firstOwner, bindings.firstOrder
+		bindings.FirstPath, bindings.firstOrigin, bindings.firstOwner, bindings.firstOrder = path, origin, owner.ID, order
+	case len(bindings.Owners) == 1:
+		c.reserve(int64(len(path)))
+		bindings.SecondPath, bindings.secondOrigin, bindings.secondOwner, bindings.secondOrder = path, origin, owner.ID, order
+	case order < bindings.firstOrder:
+		c.reserve(int64(len(path)))
+		bindings.SecondPath, bindings.secondOrigin, bindings.secondOwner, bindings.secondOrder = bindings.FirstPath, bindings.firstOrigin, bindings.firstOwner, bindings.firstOrder
+		bindings.FirstPath, bindings.firstOrigin, bindings.firstOwner, bindings.firstOrder = path, origin, owner.ID, order
+	case order < bindings.secondOrder:
+		c.reserve(int64(len(path)))
+		bindings.SecondPath, bindings.secondOrigin, bindings.secondOwner, bindings.secondOrder = path, origin, owner.ID, order
 	}
 	bindings.Owners[owner] = struct{}{}
 }
@@ -180,6 +222,7 @@ func (c *Context) SkipIdentityChildren(node *Node) {
 
 func (c *Context) ValidateIdentityReferences() {
 	c.step(1)
+	c.sortIdentityRecords()
 	for index, entry := range c.IdentityEntries {
 		c.identityDiagnostic = identityDiagnostic{kind: 1, index: index}
 		c.step(1)
@@ -301,4 +344,74 @@ func (r *Run) ResolveIdentity(ctx context.Context, value string) (IdentityResolu
 		out.Status = IdentityMissing
 	}
 	return out, nil
+}
+
+// SetIdentityOrder sets the document-order position of the following
+// operations' identity registrations. A run that binds subjects out of
+// document order sets each Bind and Complete to the position the operation
+// has when the document is bound top-down; identity entries, references and
+// the two earliest owners of an ID then follow that order. A run that sets
+// it does so before its first registration. A run that never sets it keeps
+// every registration in the order it arrives and stores no positions.
+func (r *Run) SetIdentityOrder(position uint64) {
+	if r != nil {
+		r.context.identityOrdering = true
+		r.context.identityOrder = position
+	}
+}
+
+// noteReferenceOrder stores the position of the reference just appended.
+func (c *Context) noteReferenceOrder() {
+	if c.identityOrdering {
+		c.referenceOrders = appendRetained(c, c.referenceOrders, c.identityOrder)
+	}
+}
+
+// sortIdentityRecords puts identity entries and references in document
+// order. Registrations in document order are already sorted.
+func (c *Context) sortIdentityRecords() {
+	if !c.identityUnordered {
+		return
+	}
+	c.IdentityEntries = sortByOrder(c, c.IdentityEntries, c.entryOrders)
+	c.References = sortByOrder(c, c.References, c.referenceOrders)
+}
+
+// sortByOrder stably sorts records by their positions, both in place.
+func sortByOrder[T any](c *Context, records []T, orders []uint64) []T {
+	if len(records) != len(orders) {
+		panic(runAbort{errors.New("xsd: identity positions out of step")})
+	}
+	c.step(int64(len(orders)))
+	if slices.IsSorted(orders) {
+		return records
+	}
+	c.scratch(c.size(int64(len(records)), 8))
+	index := make([]int, len(records))
+	for i := range index {
+		index[i] = i
+	}
+	slices.SortStableFunc(index, func(a, b int) int {
+		c.step(1)
+		return cmp.Compare(orders[a], orders[b])
+	})
+	c.scratch(c.size(int64(len(records)), int64(unsafe.Sizeof(*new(T)))+8))
+	sorted := make([]T, len(records))
+	positions := make([]uint64, len(records))
+	for i, from := range index {
+		c.step(1)
+		sorted[i], positions[i] = records[from], orders[from]
+	}
+	copy(records, sorted)
+	copy(orders, positions)
+	return records
+}
+
+// noteIdentityOrder records whether the current position precedes one that
+// already registered identity.
+func (c *Context) noteIdentityOrder() {
+	if c.identityOrder < c.identityOrderMax {
+		c.identityUnordered = true
+	}
+	c.identityOrderMax = max(c.identityOrderMax, c.identityOrder)
 }

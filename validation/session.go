@@ -500,6 +500,9 @@ func (s *Session) OpenNode(ctx context.Context, node NodeHeader) error {
 		parent.children = append(parent.children, retained)
 	}
 	opensWindow := s.opensWindow(header.Name)
+	if err := s.pushWindowChild(ctx, retained); err != nil {
+		return s.fail(err)
+	}
 	s.nodes[node.ID] = retained
 	s.sequence = append(s.sequence, node.ID)
 	s.stack = append(s.stack, retained)
@@ -576,15 +579,18 @@ func (s *Session) CompleteAttributes(ctx context.Context, id NodeID, complete Ev
 	}
 	if canonicalComplete(complete) && s.commonAttributeSeal != nil {
 		n.attributeSeal = s.commonAttributeSeal
-		return nil
+	} else {
+		if err := s.retain(64 + evidenceLogicalBytes(complete)); err != nil {
+			return s.fail(err)
+		}
+		owned := cloneEvidence(complete)
+		n.attributeSeal = &owned
+		if canonicalComplete(complete) {
+			s.commonAttributeSeal = n.attributeSeal
+		}
 	}
-	if err := s.retain(64 + evidenceLogicalBytes(complete)); err != nil {
+	if err := s.openWindowAncestor(ctx, n); err != nil {
 		return s.fail(err)
-	}
-	owned := cloneEvidence(complete)
-	n.attributeSeal = &owned
-	if canonicalComplete(complete) {
-		s.commonAttributeSeal = n.attributeSeal
 	}
 	return nil
 }
@@ -629,11 +635,6 @@ func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
 	n.end = ownedEnd
 	n.closed = true
 	s.stack = s.stack[:len(s.stack)-1]
-	if s.window != nil && s.window.root == n.header.ID {
-		s.window.end = len(s.sequence)
-		s.closeWindow(*s.window)
-		s.window = nil
-	}
 	if err := s.account.Release(BudgetDepth, 1); err != nil {
 		return s.fail(err)
 	}
@@ -644,6 +645,17 @@ func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
 		if err := s.evaluate(ctx, n, key, false); err != nil {
 			return s.fail(err)
 		}
+	}
+	if s.window != nil && s.window.root == n.header.ID {
+		s.window.end = len(s.sequence)
+		w := *s.window
+		s.window = nil
+		if err := s.closeWindow(ctx, w); err != nil {
+			return s.fail(err)
+		}
+	}
+	if err := s.closeWindowAncestor(n); err != nil {
+		return s.fail(err)
 	}
 	if s.schema != nil && !s.schema.bound {
 		if n != s.root {
@@ -721,6 +733,11 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	// rejected fact event, or exhausted resources.
 	if eventsValid && completionErr == nil && ctx != nil && ctx.Err() == nil && s.schema != nil && !s.schema.bound && s.root != nil && !errors.Is(end.Cause, ErrResourceLimit) {
 		addCause(s.bindSourceSchema(ctx))
+	}
+	// Without binding the document, windows bound before the root closed
+	// report nothing, as the buffered engine binds nothing.
+	if s.schema != nil && !s.schema.bound {
+		s.accumulator.dropHeld()
 	}
 	s.inputComplete = end.InputComplete && len(s.stack) == 0 && s.root != nil && end.Syntax != SyntaxMalformed
 	if s.terminalCause == nil && s.schema != nil && s.schema.bound {
