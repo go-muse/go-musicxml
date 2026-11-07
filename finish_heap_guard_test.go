@@ -14,7 +14,8 @@ import (
 // While Finish evaluates the document's phases, the buffered charge covers
 // the heap: on corpus documents, the official scores and hostile documents,
 // for the semantic and context profiles with and without the complete
-// projection, the live heap never exceeds what has been charged to the buffer
+// projection and for the source line, which releases typed XSD results, the
+// live heap never exceeds what has been charged to the buffer
 // and the diagnostic quota, plus 64 KiB for the runtime's own allocations.
 // Two measurements: the whole run's heap against its whole charge, and,
 // from the start of Finish, the heap the evaluation adds against what it
@@ -103,6 +104,7 @@ func TestFinishChargeCoversTheHeapItAdds(t *testing.T) {
 			"model context":                        model(ModelOptions{Profile: ProfileModelContext}),
 			"model context, complete projection":   model(ModelOptions{Profile: ProfileModelContext, Context: validation.ContextFamilyAll}),
 			"source semantics":                     source(SourceOptions{}),
+			"source line":                          source(SourceOptions{Profile: ProfileSourceLine}),
 			"source context, complete projection":  source(SourceOptions{Profile: ProfileSourceContext, Context: validation.ContextFamilyAll}),
 		}
 		for label, run := range runs {

@@ -236,7 +236,11 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 			s.cleanup()
 			return nil, err
 		}
-		s.schema = &schemaSession{schemas: e.catalog.schemas[profile.ID], proofRules: make(map[Assembly]map[XSDCheck][]RuleKey)}
+		// The resource snapshot reads typed results after Finish. Context
+		// projections come from context plans, which keep them already; a
+		// context selection keeps them too, defensively.
+		keepTyped := opts.Context != 0 || opts.resourceSnapshot || keepTypedXSD || !e.catalog.releasesTypedXSD(profile.ID)
+		s.schema = &schemaSession{schemas: e.catalog.schemas[profile.ID], proofRules: make(map[Assembly]map[XSDCheck][]RuleKey), keepTyped: keepTyped}
 	}
 
 	for _, key := range e.catalog.orders[profile.ID] {
@@ -392,6 +396,35 @@ var defaultStrategy = strategyBuffered
 
 // setWindowedStrategy selects the strategy of new sessions and returns whether
 // the windowed one was selected before.
+// typedXSDFreePlans are the plan kinds whose evaluation reads no typed XSD
+// result (scalar, actual type or attribute results) of a completed subject:
+// XSD checks read the five results, model representation reads the model,
+// source origin reads source facts, and schema hints read the facts and the
+// XSD results. Every other plan kind may read typed results, through the
+// context reader, local scalars, identity resolution or timeline readers.
+var typedXSDFreePlans = map[planKind]bool{planXSD: true, planModelRepresentation: true, planSourceOrigin: true, planContextMusicXMLHints: true, planContextOpusHints: true}
+
+// releasesTypedXSD reports a profile none of whose rules reads typed XSD
+// results once binding completes, so its sessions need not keep them.
+func (c *CompiledCatalog) releasesTypedXSD(id ProfileID) bool {
+	for _, key := range c.orders[id] {
+		if !typedXSDFreePlans[c.plans[c.rules[key].Predicate].kind] {
+			return false
+		}
+	}
+	return true
+}
+
+// keepTypedXSD makes every session keep the typed XSD results of completed
+// subjects. It is a test switch only: reports must not depend on it.
+var keepTypedXSD bool
+
+func setKeepTypedXSD(keep bool) bool {
+	previous := keepTypedXSD
+	keepTypedXSD = keep
+	return previous
+}
+
 func setWindowedStrategy(windowed bool) bool {
 	previous := defaultStrategy == strategyWindowed
 	defaultStrategy = strategyBuffered
@@ -805,6 +838,11 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 			report.Terminal = &TerminalSummary{Category: category, Reason: reason}
 			report.BlockingProblems++
 		}
+	}
+	// A reader of typed XSD results the session released would have read
+	// empty results: fail loudly instead of returning what they gave.
+	if s.schema != nil && s.schema.typedReleased {
+		addCause(contract("schema typed results", "read after they were released"))
 	}
 	if s.terminalCause != nil {
 		return report, resource, &IncompleteError{Reason: "session-terminated", Cause: s.terminalCause}

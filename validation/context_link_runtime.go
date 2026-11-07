@@ -34,8 +34,8 @@ func resourceAttribute(r *contextReader, n *factNode, role contextRole) Resource
 	// anyURI identity globally. This exact resource slot exports the shared
 	// kernel's already assessed normalized URI text without revalidating it.
 	if out.Value.State == EvidenceUnsupported && out.Value.Reason == "typed-scalar-unavailable" && r.s.schema != nil && r.s.schema.run != nil {
-		bound := r.s.schema.nodes[n.header.ID]
-		for result := range r.s.schema.run.Attributes(bound.binding) {
+		bound := r.s.schema.nodes.at(n.header.ID)
+		for result := range r.s.schema.attributes(bound) {
 			if !r.step(1) {
 				return out
 			}

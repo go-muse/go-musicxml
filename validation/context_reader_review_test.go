@@ -196,7 +196,7 @@ func TestContextReviewSameTypePreservesAssessedUses(t *testing.T) {
 	s, b := contextReviewSameTypeFixture(t)
 	defer s.cleanup()
 	r := &contextReader{ctx: context.Background(), s: s, b: b}
-	actual, ok := s.schema.run.ActualType(s.schema.nodes[2].binding)
+	actual, ok := s.schema.actualType(s.schema.nodes.at(2))
 	if !ok {
 		t.Fatal("actual type unavailable")
 	}
@@ -205,7 +205,7 @@ func TestContextReviewSameTypePreservesAssessedUses(t *testing.T) {
 		id                 NodeID
 		required, optional bool
 	}{{2, true, true}, {3, false, true}, {4, false, false}, {5, true, true}} {
-		next, ok := s.schema.run.ActualType(s.schema.nodes[tc.id].binding)
+		next, ok := s.schema.actualType(s.schema.nodes.at(tc.id))
 		if tc.id == 4 {
 			if ok {
 				t.Fatal("incomplete attribute axis unexpectedly selected actual type")

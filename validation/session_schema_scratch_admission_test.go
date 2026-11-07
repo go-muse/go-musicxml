@@ -342,12 +342,12 @@ func TestSchemaBindingScratchSkippedWitnessUsesCompletionCapacity(t *testing.T) 
 	if err := s.bindSourceSchema(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if s.schema.run.Witnesses(s.schema.nodes[1].binding) != nil || !s.schema.nodes[2].available || !s.schema.nodes[3].skipped {
+	if s.schema.run.Witnesses(s.schema.nodes.at(1).binding) != nil || !s.schema.nodes.at(2).available || !s.schema.nodes.at(3).skipped {
 		t.Fatalf("mixed witnesses lost: %+v", s.schema.nodes)
 	}
-	// Map for three nodes and the declared child's retained scalar; the
-	// subject projections are released when their subjects complete.
-	want := before + 128 + 3*128 + 129 + testSchemaScratchRetainedFacts(1)
+	// Node table for three nodes and the declared child's retained scalar;
+	// the subject projections are released when their subjects complete.
+	want := before + 3*schemaNodeSlotBytes + 129 + testSchemaScratchRetainedFacts(1)
 	if s.retained != want {
 		t.Fatalf("completion capacity retained after skip: got %d want %d", s.retained, want)
 	}

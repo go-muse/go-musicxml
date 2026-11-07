@@ -75,8 +75,8 @@ func TestSchemaBindingScratchCanceledBeforeTraversal(t *testing.T) {
 			if err := s.bindSourceSchema(ctx); !errors.Is(err, context.Canceled) {
 				t.Fatalf("binding cancellation: %v", err)
 			}
-			// Only the persistent schema-node map may be newly session-owned.
-			want := before + 128 + int64(len(s.nodes))*128
+			// Only the persistent schema-node table may be newly session-owned.
+			want := before + int64(len(s.nodes))*schemaNodeSlotBytes
 			if s.retained != want {
 				t.Errorf("DFS scratch retained until Finish: got %d, want %d", s.retained, want)
 			}
@@ -101,19 +101,19 @@ func TestSchemaBindingScratchReleasesCompletedTraversal(t *testing.T) {
 			if err := s.bindSourceSchema(context.Background()); err != nil {
 				t.Fatal(err)
 			}
-			// Persistent map + owned scalar strings. Subject projections,
+			// Persistent node table + owned scalar strings. Subject projections,
 			// consumed completion arrays and the depth-bounded DFS stack must
 			// not outlive traversal.
-			want := before + 128 + int64(children+1)*128 + int64(children)*129 + testSchemaScratchRetainedFacts(children)
+			want := before + int64(children+1)*schemaNodeSlotBytes + int64(children)*129 + testSchemaScratchRetainedFacts(children)
 			if s.retained != want {
 				t.Errorf("completed traversal retained scratch: got %d, want %d", s.retained, want)
 			}
-			root := s.schema.nodes[1]
+			root := s.schema.nodes.at(1)
 			// Witnesses are completion scratch: Run releases them at Complete.
 			if witnesses := s.schema.run.Witnesses(root.binding); witnesses != nil {
 				t.Fatalf("completed witnesses retained: %d", len(witnesses))
 			}
-			if result := s.schema.run.Results(root.binding).Content; !result.Valid || !result.Complete {
+			if result := s.schema.results(root).Content; !result.Valid || !result.Complete {
 				t.Fatalf("lost content result: %+v", result)
 			}
 			if err := s.schema.run.Close(); err != nil {

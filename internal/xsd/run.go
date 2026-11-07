@@ -125,7 +125,11 @@ type boundState struct {
 	// valid, complete, no details); nil finalScalar means the zero scalar.
 	final       *NodeResults
 	finalScalar *ScalarResult
-	done        bool
+	// typedCharged is the retention of the typed results Settle can
+	// release: the subject's own attribute results and their slice, and the
+	// kept scalar record.
+	typedCharged int64
+	done         bool
 }
 
 func (s *boundState) nodeResults() NodeResults {
@@ -693,6 +697,9 @@ func (r *Run) releaseWork(s *boundState) error {
 		scalar := w.scalar
 		s.finalScalar = &scalar
 		release -= finalScalarSize + w.text
+		// Settle may release the record but not the text: identity
+		// tables can keep the effective value, which may share it.
+		s.typedCharged += finalScalarSize
 	}
 	if n := w.node; n != nil {
 		for _, ch := range n.Children {
@@ -842,9 +849,11 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	if s.subject.CurrentModel {
 		scalar.Lexeme = ""
 	}
+	before := s.run.retained
 	c.reserve(int64(unsafe.Sizeof(AttributeResult{})))
 	result := &AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Violation: s.attributeInvalid, Scalar: scalar}
 	s.attributes = appendRetained(c, s.attributes, result)
+	s.typedCharged += s.run.retained - before
 }
 
 // size validates arithmetic and host allocation width before any allocation.

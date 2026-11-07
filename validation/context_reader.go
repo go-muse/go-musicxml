@@ -16,7 +16,7 @@ type contextReader struct {
 	s               *Session
 	b               *contextBindings
 	err             error
-	attributeCache  map[xsd.Binding]*contextAttributeTable
+	attributeCache  map[NodeID]*contextAttributeTable
 	attributeIntern map[contextAttributeInternKey]*contextAttributeTable
 	elementCache    map[DeclarationID][]contextRole
 	ownerCache      map[ComponentID]*contextAttributeTable
@@ -102,8 +102,8 @@ func (r *contextReader) boundElementRoles(n *factNode) ([]contextRole, bool) {
 	if !r.step(1) {
 		return nil, false
 	}
-	bound, ok := r.s.schema.nodes[n.header.ID]
-	if !ok || !bound.available || bound.binding == (xsd.Binding{}) {
+	bound, ok := r.s.schema.nodes.get(n.header.ID)
+	if !ok || !bound.available || !bound.bound() {
 		return nil, false
 	}
 	if !r.step(1) {
@@ -261,16 +261,16 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 	// A run binding identifies one immutable final assessed subject, including
 	// its actual type and public owner evidence. Check that compact identity
 	// before repeating any owner-key hashing on cached negative lookups.
-	var binding xsd.Binding
+	var bound schemaNode
 	hasBinding := false
 	if r.s.schema != nil && r.s.schema.run != nil && r.s.schema.active != nil {
 		if !r.step(1) {
 			return nil
 		}
-		bound, ok := r.s.schema.nodes[n.header.ID]
-		if ok && bound.available {
-			binding, hasBinding = bound.binding, true
-			if table, ready := r.cachedAttributeTable(binding); ready {
+		node, ok := r.s.schema.nodes.get(n.header.ID)
+		if ok && node.available {
+			bound, hasBinding = node, true
+			if table, ready := r.cachedAttributeTable(n.header.ID); ready {
 				return table
 			}
 		}
@@ -305,7 +305,7 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 		selected = append(selected, v)
 		return true
 	}
-	for attr := range r.s.schema.run.Attributes(binding) {
+	for attr := range r.s.schema.attributes(bound) {
 		d := r.s.schema.active.declaration(attr.Use)
 		if !r.step(contextDeclarationBytes(d)) {
 			return nil
@@ -359,7 +359,7 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 		if !ok {
 			return nil
 		}
-		actual, known := r.s.schema.run.ActualType(binding)
+		actual, known := r.s.schema.actualType(bound)
 		internKey = contextAttributeInternKey{actual, r.s.schema.active.assembly, r.s.schema.active.Digest(), digest}
 		if !r.step(32 + contextComponentBytes(r.s.schema.active.component(actual)) + int64(len(internKey.assembly)+len(internKey.schema))) {
 			return nil
@@ -439,13 +439,13 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 		if r.s.contextAttributeTables == nil {
 			r.s.contextAttributeTables = make(map[contextAttributeTableKey]*contextAttributeTable)
 		}
-		r.s.contextAttributeTables[contextAttributeTableKey{r.b, binding}] = table
+		r.s.contextAttributeTables[contextAttributeTableKey{r.b, n.header.ID}] = table
 		return table
 	}
 	if r.attributeCache == nil {
-		r.attributeCache = make(map[xsd.Binding]*contextAttributeTable)
+		r.attributeCache = make(map[NodeID]*contextAttributeTable)
 	}
-	r.attributeCache[binding] = table
+	r.attributeCache[n.header.ID] = table
 	return table
 }
 
@@ -458,7 +458,7 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 // private hand-built bindings keep their own caches.
 type contextAttributeTableKey struct {
 	bindings *contextBindings
-	binding  xsd.Binding
+	node     NodeID
 }
 
 type contextSharedInternKey struct {
@@ -470,12 +470,12 @@ func (r *contextReader) attributeTablesShared() bool {
 	return r.b.bindingDigest != "" && r.s.finished && r.s.schema != nil && r.s.schema.bound && r.s.schema.identityReady && r.s.schema.run != nil
 }
 
-func (r *contextReader) cachedAttributeTable(binding xsd.Binding) (*contextAttributeTable, bool) {
+func (r *contextReader) cachedAttributeTable(node NodeID) (*contextAttributeTable, bool) {
 	if r.attributeTablesShared() {
-		table, ready := r.s.contextAttributeTables[contextAttributeTableKey{r.b, binding}]
+		table, ready := r.s.contextAttributeTables[contextAttributeTableKey{r.b, node}]
 		return table, ready
 	}
-	table, ready := r.attributeCache[binding]
+	table, ready := r.attributeCache[node]
 	return table, ready
 }
 
@@ -721,11 +721,11 @@ func (r *contextReader) missingRequiredAttribute(n *factNode, a AttributeSelecto
 	if !required || !n.closed || n.end.AttributesComplete.State != EvidenceKnown || !n.end.AttributesComplete.Value || r.s.schema == nil || r.s.schema.run == nil || r.s.schema.active == nil || r.s.schema.active.assembly != a.Declaration.Assembly || r.b.requiredSchemaDigest == "" || r.s.schema.active.Digest() != r.b.requiredSchemaDigest {
 		return Evidence[Atomic]{}, false
 	}
-	bound, ok := r.s.schema.nodes[n.header.ID]
+	bound, ok := r.s.schema.nodes.get(n.header.ID)
 	if !ok || !bound.available {
 		return Evidence[Atomic]{}, false
 	}
-	actual, known := r.s.schema.run.ActualType(bound.binding)
+	actual, known := r.s.schema.actualType(bound)
 	if !known {
 		return Evidence[Atomic]{}, false
 	}
@@ -765,7 +765,7 @@ func (r *contextReader) attributeSelector(n *factNode, role contextRole) (Attrib
 		}
 	}
 	if r.s.schema != nil && r.s.schema.run != nil {
-		bound := r.s.schema.nodes[n.header.ID]
+		bound := r.s.schema.nodes.at(n.header.ID)
 		if r.b.AttributeRoles != nil {
 			if !r.step(1 + int64(len(role))) {
 				return AttributeSelector{}, false
@@ -777,7 +777,7 @@ func (r *contextReader) attributeSelector(n *factNode, role contextRole) (Attrib
 			a, ok := table.selectors[role]
 			return a, ok
 		}
-		for attr := range r.s.schema.run.Attributes(bound.binding) {
+		for attr := range r.s.schema.attributes(bound) {
 			d := r.s.schema.active.declaration(attr.Use)
 			if !r.step(contextDeclarationBytes(d)) {
 				return AttributeSelector{}, false

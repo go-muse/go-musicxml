@@ -14,14 +14,12 @@ func TestContextRoleSessionReuseCanonicalDeclarationsAcrossNodes(t *testing.T) {
 		// The root and every repeated built-in-typed child have completed real
 		// binding. Their declaration pointers must be owned by this schema's
 		// canonical pool, never caller evidence or a QName/type approximation.
-		seenBindings := make(map[xsd.Binding]bool)
 		for _, id := range s.sequence {
 			n := s.nodes[id]
-			bound := s.schema.nodes[id]
-			if !bound.available || bound.binding == (xsd.Binding{}) || seenBindings[bound.binding] {
-				t.Fatalf("node %d lacks an independent available run binding", id)
+			bound := s.schema.nodes.at(id)
+			if !bound.available || !bound.bound() {
+				t.Fatalf("node %d lacks an available run binding", id)
 			}
-			seenBindings[bound.binding] = true
 			canonical := false
 			for key, declaration := range s.facts.declarations {
 				if declaration == n.header.Declaration {

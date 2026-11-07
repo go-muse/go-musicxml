@@ -28,7 +28,7 @@ func TestSourceSchemaUnknownLimitationOrderAndPrecedence(t *testing.T) {
 					result.Valid = false
 					want, reason = OutcomeFail, "xsd-constraint-violation"
 				case "blocked":
-					s.schema.nodes = map[NodeID]schemaNode{1: {cause: &DecisionRef{Rule: rule.Key, Subject: NodeRef{DocumentID: "source", Node: 99}}}}
+					s.schema.nodes = schemaNodesOf(map[NodeID]schemaNode{1: {cause: &DecisionRef{Rule: rule.Key, Subject: NodeRef{DocumentID: "source", Node: 99}}}})
 					want = OutcomeBlocked
 				case "unsupported":
 					result.Limitations = []xsd.Limitation{unavailable}

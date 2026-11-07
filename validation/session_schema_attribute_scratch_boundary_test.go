@@ -103,7 +103,7 @@ func TestSchemaAttributeScratchWorkBoundary(t *testing.T) {
 func TestSchemaAttributeScratchRefusalPreservesPriorFailure(t *testing.T) {
 	s, n, u, b := schemaAttributeScratchFixture(t, true)
 	s.schema.bound = true
-	s.schema.nodes = map[NodeID]schemaNode{1: {binding: b, available: true}}
+	s.schema.nodes = schemaNodesOf(map[NodeID]schemaNode{1: {binding: b, available: true}})
 	if err := s.recordXSDProvedFailures(context.Background(), n); err != nil {
 		t.Fatal(err)
 	}

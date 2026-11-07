@@ -81,6 +81,16 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- Once an element's XSD binding completes, the session keeps of it only what
+  the profile's rules still read: its five XSD results, and its typed scalar,
+  actual type and attribute results only when a rule, a context projection
+  or the resource snapshot can read them. XSD state of every node is now one
+  dense table entry instead of a map entry and a bound state. Verdicts and
+  reports are unchanged; budgets charge less, so documents near the old
+  buffer limit may now complete. On MozartTrio the source line
+  (`ProfileSourceLine`) needs an 11.8 MiB buffer instead of 12.9 MiB and its
+  live memory at the end of `Finish` drops by about 13%; model semantics,
+  whose rules read typed results, changes little (18.3 instead of 18.4 MiB).
 - While `Finish` evaluates the document families, evaluation scratch (layout
   formatting, navigation runs, performance records) is charged to
   `MaxBufferedBytes` only while its rule evaluation runs, not until the
