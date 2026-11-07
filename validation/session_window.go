@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"unsafe"
 
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
@@ -178,7 +179,7 @@ func (s *Session) pushWindowChild(ctx context.Context, child *factNode) error {
 	if !s.opensWindow(child.header.Name) && !s.windowAncestor(child.header.Name) {
 		return nil
 	}
-	if err := s.retain(128); err != nil {
+	if err := s.retain(windowUseEntryBytes); err != nil {
 		return err
 	}
 	if state.uses == nil {
@@ -187,6 +188,14 @@ func (s *Session) pushWindowChild(ctx context.Context, child *factNode) error {
 	state.uses[child.header.ID] = w.Use
 	return nil
 }
+
+// Map entries of the per-window tables are charged at three times their key
+// and value: hash metadata, overflow buckets and growth more than double the
+// bare entry.
+var (
+	windowUseEntryBytes   = 3 * (int64(unsafe.Sizeof(NodeID(0))) + int64(unsafe.Sizeof(xsd.Use{})))
+	boundWindowEntryBytes = 3 * (int64(unsafe.Sizeof(NodeID(0))) + int64(unsafe.Sizeof(boundWindow{})))
+)
 
 // closeWindowAncestor stops matching the children of a closed window
 // ancestor.
@@ -231,7 +240,7 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	if err != nil {
 		return err
 	}
-	if err := s.retain(128); err != nil {
+	if err := s.retain(boundWindowEntryBytes); err != nil {
 		return err
 	}
 	if state.windows == nil {
