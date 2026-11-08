@@ -2,9 +2,11 @@ package musicxml
 
 import (
 	"bytes"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -49,10 +51,11 @@ func TestBundledDictionaryLinkage(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = os.RemoveAll(root) })
-	index := 0
-	for call, embeds := range calls {
-		index++
-		dir := filepath.Join(root, "p"+strings.Repeat("x", index))
+	// The programs build in parallel; the build cache is safe for that.
+	ordered := slices.Sorted(maps.Keys(calls))
+	inParallel(t, "programs", len(ordered), func(i int) string { name, _, _ := strings.Cut(ordered[i], "("); return name }, func(t *testing.T, i int) {
+		call, embeds := ordered[i], calls[ordered[i]]
+		dir := filepath.Join(root, "p"+strings.Repeat("x", i+1))
 		if err := os.Mkdir(dir, 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -70,10 +73,10 @@ func TestBundledDictionaryLinkage(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for i, marker := range markers {
+		for component, marker := range markers {
 			if got := bytes.Contains(linked, marker); got != embeds {
-				t.Errorf("%s: embeds bundled dictionary component %d = %v, want %v", call, i, got, embeds)
+				t.Errorf("%s: embeds bundled dictionary component %d = %v, want %v", call, component, got, embeds)
 			}
 		}
-	}
+	})
 }

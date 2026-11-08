@@ -96,20 +96,29 @@ func TestWindowedStrategyMatchesBuffered(t *testing.T) {
 		t.Fatalf("corpus: %d files", len(files))
 	}
 	stride := windowedStride()
-	compared := 0
+	var inputs []string
 	for i := 0; i < len(files); i += stride {
-		data, err := os.ReadFile(files[i])
-		if err != nil {
-			t.Fatal(err)
-		}
-		previous := validationSetWindowedStrategy(false)
-		buffered := windowedReports(t, files[i], data)
-		validationSetWindowedStrategy(true)
-		windowed := windowedReports(t, files[i], data)
-		validationSetWindowedStrategy(previous)
-		for label, want := range buffered {
-			if windowed[label] != want {
-				t.Errorf("%s %s: windowed report differs from buffered", files[i], label)
+		inputs = append(inputs, files[i])
+	}
+	// Each phase sets the strategy once and assesses every input in parallel.
+	phase := func(group string, windowed bool) []map[string]string {
+		defer validationSetWindowedStrategy(validationSetWindowedStrategy(windowed))
+		out := make([]map[string]string, len(inputs))
+		inParallel(t, group, len(inputs), func(i int) string { return filepath.Base(inputs[i]) }, func(t *testing.T, i int) {
+			data, err := os.ReadFile(inputs[i])
+			if err != nil {
+				t.Fatal(err)
+			}
+			out[i] = windowedReports(t, inputs[i], data)
+		})
+		return out
+	}
+	buffered, windowed := phase("buffered", false), phase("windowed", true)
+	compared := 0
+	for i, file := range inputs {
+		for label, want := range buffered[i] {
+			if windowed[i][label] != want {
+				t.Errorf("%s %s: windowed report differs from buffered", file, label)
 			}
 			compared++
 		}

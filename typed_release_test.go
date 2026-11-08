@@ -5,8 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -100,19 +102,24 @@ func TestReleasingTypedXSDResultsChangesNoReport(t *testing.T) {
 		}
 		inputs[files[i]] = data
 	}
+	names := slices.Sorted(maps.Keys(inputs))
+	// Each phase sets the switches once and assesses every input in parallel.
+	phase := func(group string, keep, windowed bool) []map[string]string {
+		previousKeep := validationSetKeepTypedXSD(keep)
+		previousStrategy := validationSetWindowedStrategy(windowed)
+		defer validationSetKeepTypedXSD(previousKeep)
+		defer validationSetWindowedStrategy(previousStrategy)
+		out := make([]map[string]string, len(names))
+		inParallel(t, group, len(names), func(i int) string { return filepath.Base(names[i]) }, func(t *testing.T, i int) {
+			out[i] = typedReleaseReports(t, names[i], inputs[names[i]])
+		})
+		return out
+	}
+	kept, released, windowed := phase("kept", true, false), phase("released", false, false), phase("released windowed", false, true)
 	compared := 0
-	for name, data := range inputs {
-		previousKeep := validationSetKeepTypedXSD(true)
-		previousStrategy := validationSetWindowedStrategy(false)
-		kept := typedReleaseReports(t, name, data)
-		validationSetKeepTypedXSD(false)
-		released := typedReleaseReports(t, name, data)
-		validationSetWindowedStrategy(true)
-		windowed := typedReleaseReports(t, name, data)
-		validationSetWindowedStrategy(previousStrategy)
-		validationSetKeepTypedXSD(previousKeep)
-		for label, want := range kept {
-			for strategy, reports := range map[string]map[string]string{"buffered": released, "windowed": windowed} {
+	for i, name := range names {
+		for label, want := range kept[i] {
+			for strategy, reports := range map[string]map[string]string{"buffered": released[i], "windowed": windowed[i]} {
 				if got := reports[label]; got != want {
 					t.Errorf("%s %s: %s report differs when typed results are released%s", name, label, strategy, windowedDifference(want, got))
 				}

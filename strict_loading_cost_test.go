@@ -181,9 +181,13 @@ func TestBundledDictionaryCacheReportsMatchAFreshImport(t *testing.T) {
 	if raceEnabled || testing.Short() {
 		stride = 80
 	}
-	compared := 0
+	var inputs []string
 	for i := 0; i < len(names); i += stride {
-		data, err := os.ReadFile(names[i])
+		inputs = append(inputs, names[i])
+	}
+	var compared atomic.Int64
+	inParallel(t, "files", len(inputs), func(i int) string { return filepath.Base(inputs[i]) }, func(t *testing.T, i int) {
+		data, err := os.ReadFile(inputs[i])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -191,12 +195,12 @@ func TestBundledDictionaryCacheReportsMatchAFreshImport(t *testing.T) {
 			cached, cachedErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient})
 			fresh, freshErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient, Assessment: &SourceOptions{Dictionaries: &DictionaryOptions{Source: &bundledPassThroughSource{}, Selections: requiredDictionarySelections()}}})
 			if (cachedErr == nil) != (freshErr == nil) || cached.Accepted != fresh.Accepted || !reflect.DeepEqual(cached.SourceLine, fresh.SourceLine) || !reflect.DeepEqual(cached.ModelLine, fresh.ModelLine) || !reflect.DeepEqual(cached.Conversion, fresh.Conversion) {
-				t.Errorf("%s lenient=%v: cached and fresh loads differ: errors %v / %v", filepath.Base(names[i]), lenient, cachedErr, freshErr)
+				t.Errorf("%s lenient=%v: cached and fresh loads differ: errors %v / %v", filepath.Base(inputs[i]), lenient, cachedErr, freshErr)
 			}
-			compared++
+			compared.Add(1)
 		}
-	}
-	t.Logf("compared %d loads", compared)
+	})
+	t.Logf("compared %d loads", compared.Load())
 }
 
 // Line 3 alone reads the dictionaries, so strict loading opens a caller source
@@ -478,18 +482,23 @@ func TestContextSelectionKeepsEveryVerdict(t *testing.T) {
 	if raceEnabled || testing.Short() {
 		stride = 75
 	}
-	projected, partial := 0, 0
+	var projected, partial atomic.Int64
 	same := func(all validation.Report, families validation.ContextFamilies, got validation.Report) bool {
 		want := selectedContext(all, families)
 		if len(want.Context) == 0 && len(got.Context) == 0 {
 			want.Context, got.Context = nil, nil
 		}
 		if families != 0 && len(want.Context) != 0 && len(want.Context) != len(all.Context) {
-			partial++
+			partial.Add(1)
 		}
 		return reflect.DeepEqual(want, got)
 	}
+	var inputs []int
 	for i := 0; i < len(names); i += stride {
+		inputs = append(inputs, i)
+	}
+	inParallel(t, "files", len(inputs), func(k int) string { return filepath.Base(names[inputs[k]]) }, func(t *testing.T, k int) {
+		i := inputs[k]
 		data, err := os.ReadFile(names[i])
 		if err != nil {
 			t.Fatal(err)
@@ -498,7 +507,7 @@ func TestContextSelectionKeepsEveryVerdict(t *testing.T) {
 		one := validation.ContextFamilies(1) << (i / stride % 11)
 		for _, lenient := range []bool{false, true} {
 			all, allErr := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{Lenient: lenient, Assessment: &SourceOptions{Context: validation.ContextFamilyAll}})
-			projected += len(all.SourceLine.Context) + len(all.ModelLine.Context)
+			projected.Add(int64(len(all.SourceLine.Context) + len(all.ModelLine.Context)))
 			for _, c := range append(slices.Clip(all.SourceLine.Context), all.ModelLine.Context...) {
 				if f := c.Family(); f == 0 || f&(f-1) != 0 {
 					t.Fatalf("%s: property %q has family %b", name, c.Property, f)
@@ -535,9 +544,9 @@ func TestContextSelectionKeepsEveryVerdict(t *testing.T) {
 				}
 			}
 		}
-	}
-	if projected == 0 || partial == 0 && !testing.Short() && !raceEnabled {
-		t.Fatalf("no projection to select: %d records, %d partial selections", projected, partial)
+	})
+	if projected.Load() == 0 || partial.Load() == 0 && !testing.Short() && !raceEnabled {
+		t.Fatalf("no projection to select: %d records, %d partial selections", projected.Load(), partial.Load())
 	}
 }
 
