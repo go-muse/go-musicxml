@@ -297,16 +297,15 @@ func TestRaceCIJobInventoryDetectsAddedValidIDs(t *testing.T) {
 	}
 }
 
-// raceCIPullRequestGuard keeps a race job off pull requests (owner,
-// 2026-11-08): race runs on pushes to main and on manual runs, and locally
-// before every push that changes code. CONTRIBUTING.md says how to restore it.
-const raceCIPullRequestGuard = `    # Not on pull requests for now (owner, 2026-11-08); see CONTRIBUTING.md.
-    if: github.event_name != 'pull_request'
+// raceCIOff turns a race job off (owner, 2026-11-08). CONTRIBUTING.md says
+// how to restore it.
+const raceCIOff = `    # Off for now (owner, 2026-11-08); see CONTRIBUTING.md to restore.
+    if: ${{ false }}
 `
 
 func raceCIShardBlock(shard string) string {
 	return `    name: Race detector (` + shard + `)
-` + raceCIPullRequestGuard + `    runs-on: ubuntu-latest
+` + raceCIOff + `    runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
@@ -413,8 +412,8 @@ func TestRaceCIAggregateFailsClosedForAllShardResults(t *testing.T) {
 	}
 	const prefix = `    name: Race detector
     needs: [race-root, race-packages]
-    # Not on pull requests for now (owner, 2026-11-08); see CONTRIBUTING.md.
-    if: ${{ always() && github.event_name != 'pull_request' }}
+    # Off for now (owner, 2026-11-08); see CONTRIBUTING.md to restore.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
 

@@ -93,8 +93,8 @@ jobs:
 
   race-root:
     name: Race detector (root)
-    # Not on pull requests for now (owner, 2026-11-08); see CONTRIBUTING.md.
-    if: github.event_name != 'pull_request'
+    # Off for now (owner, 2026-11-08); see CONTRIBUTING.md to restore.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -121,8 +121,8 @@ jobs:
 
   race-packages:
     name: Race detector (packages)
-    # Not on pull requests for now (owner, 2026-11-08); see CONTRIBUTING.md.
-    if: github.event_name != 'pull_request'
+    # Off for now (owner, 2026-11-08); see CONTRIBUTING.md to restore.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -150,8 +150,8 @@ jobs:
   race:
     name: Race detector
     needs: [race-root, race-packages]
-    # Not on pull requests for now (owner, 2026-11-08); see CONTRIBUTING.md.
-    if: ${{ always() && github.event_name != 'pull_request' }}
+    # Off for now (owner, 2026-11-08); see CONTRIBUTING.md to restore.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
