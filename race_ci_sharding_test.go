@@ -297,9 +297,16 @@ func TestRaceCIJobInventoryDetectsAddedValidIDs(t *testing.T) {
 	}
 }
 
+// raceCIPullRequestGuard keeps a race job off pull requests (owner,
+// 2026-11-08): race runs on pushes to main and on manual runs, and locally
+// before every push that changes code. CONTRIBUTING.md says how to restore it.
+const raceCIPullRequestGuard = `    # Not on pull requests for now (owner, 2026-11-08); see CONTRIBUTING.md.
+    if: github.event_name != 'pull_request'
+`
+
 func raceCIShardBlock(shard string) string {
 	return `    name: Race detector (` + shard + `)
-    runs-on: ubuntu-latest
+` + raceCIPullRequestGuard + `    runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
@@ -346,7 +353,11 @@ func TestRaceCIShardsPreserveRunnerActionsAndBudgets(t *testing.T) {
 	}
 }
 
-func TestRaceCIHasElevenExplicitExpandedChecks(t *testing.T) {
+// raceCIOperatingSystems are the runners of the quality and test matrices.
+// macOS and Windows are off for now (owner, 2026-11-08).
+var raceCIOperatingSystems = []string{"ubuntu-latest"}
+
+func TestRaceCIHasSevenExplicitExpandedChecks(t *testing.T) {
 	jobs := raceCIJobs(t)
 	var ids, names []string
 	for id, job := range jobs {
@@ -366,13 +377,14 @@ func TestRaceCIHasElevenExplicitExpandedChecks(t *testing.T) {
       matrix:
         os:
           - ubuntu-latest
-          - macos-latest
-          - windows-latest
+          # Off for now (owner, 2026-11-08); see CONTRIBUTING.md to restore.
+          # - macos-latest
+          # - windows-latest
 `
 			if !ok || header != wantHeader {
-				t.Fatalf("%s must retain exactly the three existing OS checks", id)
+				t.Fatalf("%s must retain exactly the Linux check, with macOS and Windows commented out", id)
 			}
-			for _, os := range []string{"ubuntu-latest", "macos-latest", "windows-latest"} {
+			for _, os := range raceCIOperatingSystems {
 				names = append(names, strings.ReplaceAll(name, "${{ matrix.os }}", os))
 			}
 		} else {
@@ -388,9 +400,9 @@ func TestRaceCIHasElevenExplicitExpandedChecks(t *testing.T) {
 		t.Fatalf("job IDs = %q, want %q", ids, wantIDs)
 	}
 	sort.Strings(names)
-	wantNames := []string{"External XSD conformance", "Fuzz smoke", "Quality (macos-latest)", "Quality (ubuntu-latest)", "Quality (windows-latest)", "Race detector", "Race detector (packages)", "Race detector (root)", "Test (macos-latest)", "Test (ubuntu-latest)", "Test (windows-latest)"}
+	wantNames := []string{"External XSD conformance", "Fuzz smoke", "Quality (ubuntu-latest)", "Race detector", "Race detector (packages)", "Race detector (root)", "Test (ubuntu-latest)"}
 	if !reflect.DeepEqual(names, wantNames) {
-		t.Fatalf("expanded checks = %q, want all eleven %q", names, wantNames)
+		t.Fatalf("expanded checks = %q, want all seven %q", names, wantNames)
 	}
 }
 
@@ -401,7 +413,8 @@ func TestRaceCIAggregateFailsClosedForAllShardResults(t *testing.T) {
 	}
 	const prefix = `    name: Race detector
     needs: [race-root, race-packages]
-    if: ${{ always() }}
+    # Not on pull requests for now (owner, 2026-11-08); see CONTRIBUTING.md.
+    if: ${{ always() && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
 

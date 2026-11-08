@@ -106,9 +106,33 @@ The latter also checks `go mod tidy` and reproducible generation, uses the
 race detector, and runs short fuzzing passes. It works on a worktree with
 uncommitted changes. The external XSD test runs locally when `xmllint` is
 available; Linux CI installs it and requires that test to execute. The
-underlying `scripts/check-all.sh` is also used by CI and the release workflow
-on Linux, macOS, and Windows. Tag, changelog, and README version checks run
-only in the release workflow.
+underlying `scripts/check-all.sh` is also used by CI on Linux and by the
+release workflow on Linux, macOS, and Windows. Tag, changelog, and README
+version checks run only in the release workflow.
+
+For now (owner's decision, 2026-11-08) CI is narrower than the release
+workflow:
+
+- The quality and test matrices run on Linux only. Their macOS and Windows
+  entries are commented out in `.github/workflows/ci.yml`.
+- The three race jobs are skipped on pull requests and run on pushes to `main`
+  and on manual runs. Before every push that changes code, run
+  `bash scripts/check-all.sh race` locally.
+- The "Protect main" ruleset requires only the checks that run on pull
+  requests: `Quality (ubuntu-latest)`, `Test (ubuntu-latest)`,
+  `External XSD conformance` and `Fuzz smoke`.
+
+To restore the full pull-request CI:
+
+1. Uncomment `macos-latest` and `windows-latest` in both matrices.
+2. Remove the `if: github.event_name != 'pull_request'` lines of `race-root`
+   and `race-packages`, and set the `race` job's condition back to
+   `if: ${{ always() }}`.
+3. Update `raceCIOperatingSystems`, `raceCIPullRequestGuard` and the expected
+   headers and names in `race_ci_sharding_test.go`.
+4. Add `Quality (macos-latest)`, `Quality (windows-latest)`,
+   `Test (macos-latest)`, `Test (windows-latest)` and `Race detector` back to
+   the ruleset's required status checks.
 
 Single stages can be run directly, for example
 `bash scripts/check-all.sh mod generate`; the stages are `mod`, `generate`,
@@ -132,7 +156,8 @@ root, and an empty selected shard also fail before tests start.
 The stable `Race detector` check succeeds only when both shards succeed; failed,
 cancelled, skipped, or missing shard results cannot pass its aggregate gate.
 This deliberately changes CI from nine jobs to eleven without changing the
-seven local stages or the release checks.
+seven local stages or the release checks. With macOS and Windows commented out
+of the matrices, CI has seven checks.
 
 Package obligation inventories also have standard-library Go checks,
 required in the Linux CI jobs:
