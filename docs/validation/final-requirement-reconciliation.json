@@ -19410,7 +19410,7 @@
       "anchors": [
         {
           "file": "race_ci_sharding_test.go",
-          "text": "\tjob, ok := raceCIJobs(t)[\"race\"]\n\tif !ok {\n\t\tt.Fatal(\"missing stable race aggregate job\")\n\t}\n\tconst prefix = `    name: Race detector\n    needs: [race-root, race-packages]\n    if: ${{ always() }}\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n\n    steps:"
+          "text": "\tjob, ok := raceCIJobs(t)[\"race\"]\n\tif !ok {\n\t\tt.Fatal(\"missing stable race aggregate job\")\n\t}\n\tconst prefix = `    name: Race detector\n    needs: [race-root, race-packages]\n    # Not on pull requests for now (owner, 2026-11-08); see CONTRIBUTING.md.\n    if: ${{ always() && github.event_name != 'pull_request' }}\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n\n    steps:"
         },
         {
           "file": "race_ci_sharding_test.go",

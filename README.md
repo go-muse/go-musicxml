@@ -394,9 +394,10 @@ type assertion through `AsScorePartwise`, `AsScoreTimewise`, and
 - A dedicated Linux CI job validates every re-encoded, originally valid corpus
   document with `xmllint` against the bundled MusicXML 4.0 XSD without network
   access.
-- CI runs tests, module and generation reproducibility checks, and formatting
-  checks on Linux, macOS, and Windows, plus the race detector and ten counted fuzz
-  targets.
+- CI runs tests, module and generation reproducibility checks, formatting
+  checks and ten counted fuzz targets on Linux, and the race detector on every
+  push to `main`. The release workflow runs the full checks on Linux, macOS,
+  and Windows.
 
 ## Limitations
 
