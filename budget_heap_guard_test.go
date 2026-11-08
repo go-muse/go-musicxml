@@ -66,6 +66,25 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 	models := []validation.ProfileID{profileModelXSD, profileModelContext}
 	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}
 	measured := 0
+	// The first run of each profile under each strategy warms the
+	// process-wide caches and is not measured; warm returns the repeat to
+	// start from. Finish, which this test does not measure, only releases each
+	// session: with its context canceled it evaluates no rule.
+	type warmKey struct {
+		windowed bool
+		profile  validation.ProfileID
+	}
+	warmed := map[warmKey]bool{}
+	warm := func(windowed bool, profile validation.ProfileID) int {
+		key := warmKey{windowed, profile}
+		if warmed[key] {
+			return 1
+		}
+		warmed[key] = true
+		return 0
+	}
+	canceled, cancel := context.WithCancel(context.Background())
+	cancel()
 	check := func(name string, profile validation.ProfileID, account *validation.Account, heap int64) {
 		t.Helper()
 		used, err := account.Usage(validation.BudgetBufferedBytes)
@@ -98,7 +117,7 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				for repeat := 0; repeat < 2; repeat++ { // the first run warms caches
+				for repeat := warm(windowed, profile); repeat < 2; repeat++ {
 					account, err := validation.NewBudgetAccount(big)
 					if err != nil {
 						t.Fatal(err)
@@ -119,7 +138,7 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 					}
 					completion, err := run.finishInput(inputErr)
 					if err == nil {
-						_, _ = run.session.Finish(context.Background(), completion)
+						_, _ = run.session.Finish(canceled, completion)
 					}
 				}
 			}
@@ -128,7 +147,7 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				for repeat := 0; repeat < 2; repeat++ {
+				for repeat := warm(windowed, profile); repeat < 2; repeat++ {
 					account, err := validation.NewBudgetAccount(big)
 					if err != nil {
 						t.Fatal(err)
@@ -148,7 +167,7 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 					}
 					completion, err := run.finishInput(walkErr)
 					if err == nil {
-						_, _ = run.session.Finish(context.Background(), completion)
+						_, _ = run.session.Finish(canceled, completion)
 					}
 				}
 			}
