@@ -115,9 +115,8 @@ workflow:
 
 - The quality and test matrices run on Linux only. Their macOS and Windows
   entries are commented out in `.github/workflows/ci.yml`.
-- The three race jobs are skipped on pull requests and run on pushes to `main`
-  and on manual runs. Before every push that changes code, run
-  `bash scripts/check-all.sh race` locally.
+- The three race jobs are off (`if: ${{ false }}`). The race stage still runs
+  locally with `bash scripts/check-all.sh race` and in the release workflow.
 - The "Protect main" ruleset requires only the checks that run on pull
   requests: `Quality (ubuntu-latest)`, `Test (ubuntu-latest)`,
   `External XSD conformance` and `Fuzz smoke`.
@@ -125,10 +124,9 @@ workflow:
 To restore the full pull-request CI:
 
 1. Uncomment `macos-latest` and `windows-latest` in both matrices.
-2. Remove the `if: github.event_name != 'pull_request'` lines of `race-root`
-   and `race-packages`, and set the `race` job's condition back to
-   `if: ${{ always() }}`.
-3. Update `raceCIOperatingSystems`, `raceCIPullRequestGuard` and the expected
+2. Remove the `if: ${{ false }}` lines of `race-root` and `race-packages`,
+   and set the `race` job's condition back to `if: ${{ always() }}`.
+3. Update `raceCIOperatingSystems`, `raceCIOff` and the expected
    headers and names in `race_ci_sharding_test.go`.
 4. Add `Quality (macos-latest)`, `Quality (windows-latest)`,
    `Test (macos-latest)`, `Test (windows-latest)` and `Race detector` back to
