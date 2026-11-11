@@ -47,7 +47,7 @@ func performanceLocalRoles(r *contextReader, key RuleKey, n *factNode, out *Timi
 		publishPerformanceScalar(r, key, n, "performance-figure-suffix", r.scalar(n))
 	}
 	if roles.has(performanceAccidental) {
-		parent := r.s.nodes[n.header.Parent]
+		parent := r.s.node(n.header.Parent)
 		if r.matches(parent, "perf-ornaments") {
 			publish = true
 			out.Kind = TimingKindOrnamentAccidental

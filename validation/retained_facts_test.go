@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"unsafe"
@@ -14,8 +15,14 @@ import (
 )
 
 func TestRetainedFactNodeCompactEnvelope(t *testing.T) {
-	if n := unsafe.Sizeof(factNode{}); n > 320 {
-		t.Fatalf("retained fact node occupies %d bytes; compact inline envelope is 320", n)
+	if n := unsafe.Sizeof(factNode{}); n > 240 {
+		t.Fatalf("retained fact node occupies %d bytes; compact inline envelope is 240", n)
+	}
+	if n := unsafe.Sizeof(retainedAttribute{}); n > 128 {
+		t.Fatalf("retained attribute occupies %d bytes; compact inline envelope is 128", n)
+	}
+	if n := unsafe.Sizeof(retainedLocation{}); n > 56 {
+		t.Fatalf("retained location occupies %d bytes; compact inline envelope is 56", n)
 	}
 }
 
@@ -31,8 +38,8 @@ func TestRetainedFactCanonicalClosureStorage(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	a := reflect.ValueOf(s.nodes[2].end).FieldByName("ChildrenComplete")
-	b := reflect.ValueOf(s.nodes[3].end).FieldByName("ChildrenComplete")
+	a := reflect.ValueOf(s.node(2).end).FieldByName("ChildrenComplete")
+	b := reflect.ValueOf(s.node(3).end).FieldByName("ChildrenComplete")
 	if a.Kind() != reflect.Pointer || b.Kind() != reflect.Pointer {
 		t.Fatal("ordinary closure completeness is still stored inline per occurrence")
 	}
@@ -45,7 +52,7 @@ func TestRetainedFactOpenClosureStaysZero(t *testing.T) {
 	s := representationFixture(t, Budgets{}, false)
 	defer s.cleanup()
 	representationOpen(t, s)
-	n := s.nodes[1]
+	n := s.node(1)
 	if n.closed || n.end.ChildrenComplete.State != "" || n.end.AttributesComplete.State != "" || n.end.Order.State != "" || n.end.Scalar.Lexeme.State != "" || n.end.Scalar.Value.State != "" {
 		t.Fatal("unclosed occurrence gained closure evidence")
 	}
@@ -69,7 +76,7 @@ const _ = uint64(retainedSchemaCacheHeaderBytes) - 8*uint64(unsafe.Sizeof(xsd.Ca
 const _ = uint64(retainedSchemaTypeSlotBytes) - 2*uint64(unsafe.Sizeof(xsd.CacheIdentity{})+unsafe.Sizeof((*Evidence[ComponentID])(nil))+2)
 const _ = uint64(retainedSchemaDeclarationSlotBytes) - 2*uint64(unsafe.Sizeof(xsd.CacheIdentity{})+unsafe.Sizeof((*Evidence[DeclarationID])(nil))+2)
 
-const _ = uint64(retainedNodeMapSlotBytes) - 2*uint64(unsafe.Sizeof(NodeID(0))+unsafe.Sizeof((*factNode)(nil))+2)
+const _ = uint64(retainedNodeMapSlotBytes) - uint64(unsafe.Sizeof((*factNode)(nil)))
 
 func retainedStorageSession(t *testing.T) *Session {
 	t.Helper()
@@ -348,7 +355,7 @@ func TestRetainedFactRejectedRootAdmission(t *testing.T) {
 		} else if !errors.Is(err, ErrResourceLimit) || s.rejectedRootName != (QName{}) {
 			t.Fatalf("unadmitted root copied: %v", err)
 		}
-		if s.root != nil || len(s.nodes) != 0 {
+		if s.root != nil || s.totalNodes() != 0 {
 			t.Fatal("rejected root became an admitted occurrence")
 		}
 		_ = s.account.Release(BudgetBufferedBytes, hold)
@@ -429,9 +436,9 @@ func TestRetainedFactNodeMapGrowthAndCancellation(t *testing.T) {
 				if err := s.retain(oldBytes); err != nil {
 					t.Fatal(err)
 				}
-				s.nodes = make(map[NodeID]*factNode, oldCapacity)
+				s.denseNodes = make([]*factNode, oldCapacity)
 				for i := 0; i < oldCapacity; i++ {
-					s.nodes[NodeID(i+1)] = &factNode{}
+					s.putNode(NodeID(i+1), &factNode{})
 				}
 			}
 			before, _ := s.account.Usage(BudgetBufferedBytes)
@@ -442,7 +449,7 @@ func TestRetainedFactNodeMapGrowthAndCancellation(t *testing.T) {
 			}
 			err := s.growFactNodes(context.Background())
 			if short == 0 {
-				if err != nil || s.nodeCapacity != max(8, oldCapacity*2) || len(s.nodes) != oldCapacity {
+				if err != nil || s.nodeCapacity != max(8, oldCapacity*2) || s.totalNodes() != oldCapacity {
 					t.Fatalf("map growth=%v capacity=%d", err, s.nodeCapacity)
 				}
 			} else if !errors.Is(err, ErrResourceLimit) || s.nodeCapacity != oldCapacity {
@@ -462,7 +469,7 @@ func TestRetainedFactNodeMapGrowthAndCancellation(t *testing.T) {
 	if err := s.growFactNodes(ctx); !errors.Is(err, context.Canceled) {
 		t.Fatal(err)
 	}
-	if used, _ := s.account.Usage(BudgetBufferedBytes); used != before || s.nodes != nil || s.nodeCapacity != 0 {
+	if used, _ := s.account.Usage(BudgetBufferedBytes); used != before || s.denseNodes != nil || s.nodes != nil || s.nodeCapacity != 0 {
 		t.Fatal("canceled map growth changed retained storage")
 	}
 }
@@ -634,7 +641,7 @@ func TestRetainedFactInvalidHeaderPrecedesNewStorageAdmission(t *testing.T) {
 	h.Name.Local = ""
 	err := s.OpenNode(context.Background(), h)
 	var session *SessionError
-	if !errors.As(err, &session) || errors.Is(err, ErrResourceLimit) || s.facts != nil || len(s.nodes) != 0 {
+	if !errors.As(err, &session) || errors.Is(err, ErrResourceLimit) || s.facts != nil || s.totalNodes() != 0 {
 		t.Fatalf("invalid header gained storage or changed precedence: %v", err)
 	}
 	_ = account.Release(BudgetBufferedBytes, hold)
@@ -822,4 +829,191 @@ func measuredRetainedEndBytes(t *testing.T, end NodeEnd) int64 {
 		t.Fatal(err)
 	}
 	return probe.retained - before
+}
+
+func TestRetainedNodeSkeletonAndLocationReconstruction(t *testing.T) {
+	s := representationFixture(t, Budgets{}, false)
+	defer s.cleanup()
+	ctx := context.Background()
+
+	srcSession := retainedStorageSession(t)
+	srcSession.profile.Target = TargetSource
+	rootHeader := representationHeader(1, 0, "test.root", "root")
+	rootHeader.Location = Location{
+		Target:     TargetSource,
+		DocumentID: srcSession.documentID,
+		Entry:      "META-INF/container.xml",
+		Path:       "/root[1]",
+		Position:   &SourcePosition{ByteOffset: 42, Line: 3, Column: 7, CoordinateSpace: CoordinateSpaceOriginalBytes},
+	}
+	rootHeader.Bindings = []Binding{{"xml", "http://www.w3.org/XML/1998/namespace"}}
+	retainedRoot, err := srcSession.retainFactHeader(ctx, rootHeader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srcSession.putNode(1, &factNode{header: retainedRoot})
+	srcSession.stack = []*factNode{srcSession.node(1), srcSession.node(1), srcSession.node(1)}
+	gotRoot := retainedRoot.value()
+	if !reflect.DeepEqual(gotRoot.Location, rootHeader.Location) || !reflect.DeepEqual(gotRoot.Bindings, rootHeader.Bindings) {
+		t.Fatalf("root header round-trip mismatch: got=%+v want=%+v", gotRoot, rootHeader)
+	}
+	gotRoot.Bindings[0].Prefix = "mutated"
+	if retainedRoot.loc.bindings()[0].Prefix != "xml" {
+		t.Fatal("returned bindings slice aliases internal metadata")
+	}
+
+	childHeader := representationHeader(2, 1, "test.child", "child")
+	childHeader.Location = Location{
+		Target:     TargetSource,
+		DocumentID: srcSession.documentID,
+		Entry:      "META-INF/container.xml",
+		Path:       "/root[1]/child[1]",
+		Position:   &SourcePosition{ByteOffset: 100, Line: math.MaxInt32 + 5, Column: (1 << 28) + 9, CoordinateSpace: "custom-space"},
+	}
+	childHeader.Bindings = []Binding{{"xlink", "http://www.w3.org/1999/xlink"}, {"a", "urn:a"}}
+	retainedChild, err := srcSession.retainFactHeader(ctx, childHeader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if retainedChild.loc.pathPrefix != "/root[1]" || retainedChild.loc.pathSuffix != "/child[1]" {
+		t.Fatalf("path prefix/suffix split failed: prefix=%q suffix=%q", retainedChild.loc.pathPrefix, retainedChild.loc.pathSuffix)
+	}
+	nonBoundary := srcSession.buildRetainedLocation(TargetSource, srcSession.documentID, Location{Target: TargetSource, DocumentID: srcSession.documentID, Path: "/root[1]/child[10]"}, nil, "/root[1]/child[1]")
+	if nonBoundary.pathPrefix != "/root[1]/child[10]" || nonBoundary.pathSuffix != "" {
+		t.Fatalf("non-boundary prefix split occurred: prefix=%q suffix=%q", nonBoundary.pathPrefix, nonBoundary.pathSuffix)
+	}
+	gotChild := retainedChild.value()
+	if !reflect.DeepEqual(gotChild.Location, childHeader.Location) || !reflect.DeepEqual(gotChild.Bindings, childHeader.Bindings) {
+		t.Fatalf("child header with custom pos/coord/bindings mismatch: got=%+v want=%+v", gotChild, childHeader)
+	}
+
+	representationOpen(t, s)
+	h2 := representationHeader(2, 1, "test.child", "child")
+	h2.Location.Path = "/root[1]/child[2]"
+	if err := s.OpenNode(ctx, h2); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.CloseNode(ctx, representationEnd(2)); err != nil {
+		t.Fatal(err)
+	}
+	if s.node(2).path() != "/root[1]/child[2]" {
+		t.Fatalf("OpenNode path reconstruction failed: got=%q", s.node(2).path())
+	}
+
+	// Sparse node injection migrates into denseNodes when denseNodes grows past its ID.
+	sparse := &factNode{header: testRetainedHeader(representationHeader(12, 1, "test.child", "child"))}
+	s.putNode(12, sparse)
+	if len(s.nodes) != 1 || s.node(12) != sparse {
+		t.Fatalf("sparse fallback failed: nodes=%d got=%v", len(s.nodes), s.node(12))
+	}
+	for id := NodeID(3); id <= 11; id++ {
+		h := representationHeader(id, 1, "test.child", "child")
+		h.Location.Path = fmt.Sprintf("/root[1]/child[%d]", id)
+		if err := s.OpenNode(ctx, h); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.CloseNode(ctx, representationEnd(id)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(s.nodes) != 0 || s.node(12) != sparse {
+		t.Fatalf("sparse node did not migrate into denseNodes: mapLen=%d got=%v", len(s.nodes), s.node(12))
+	}
+}
+
+func TestRetainedNodeSkeletonHeapCoveredByCharge(t *testing.T) {
+	measure := func(count int) (heap, used int64) {
+		ctx := context.Background()
+		for repeat := 0; repeat < 2; repeat++ {
+			runtime.GC()
+			runtime.GC()
+			var mBefore, mAfter runtime.MemStats
+			runtime.ReadMemStats(&mBefore)
+
+			s := representationFixture(t, Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}, false)
+			representationOpen(t, s)
+			for i := 0; i < count; i++ {
+				id := NodeID(i + 2)
+				h := representationHeader(id, 1, "test.child", "child")
+				h.Location.Path = fmt.Sprintf("/root[1]/child[%d]", i+1)
+				if err := s.OpenNode(ctx, h); err != nil {
+					t.Fatal(err)
+				}
+				for a := 0; a < 2; a++ {
+					name := "flag"
+					if a == 1 {
+						name = "alt"
+					}
+					attr := AttributeFact{
+						Owner:       id,
+						Name:        QName{Local: name},
+						Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: DeclarationID{Assembly: AssemblyMusicXML, OwnerOccurrence: "test.child", Occurrence: "test.child.@" + name}},
+						Presence:    Evidence[bool]{State: EvidenceKnown, Value: true},
+						Scalar: Scalar{
+							Lexeme: Evidence[string]{State: EvidenceUnsupported, Reason: "model-lexeme-unavailable"},
+							Value:  Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "yes"}},
+						},
+						Location: Location{Target: TargetModel, DocumentID: "doc", Path: h.Location.Path + "/@" + name},
+					}
+					if err := s.Attribute(ctx, attr); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if err := s.CloseNode(ctx, representationEnd(id)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			runtime.GC()
+			runtime.GC()
+			runtime.ReadMemStats(&mAfter)
+			if mAfter.HeapAlloc > mBefore.HeapAlloc {
+				heap = int64(mAfter.HeapAlloc - mBefore.HeapAlloc)
+			} else {
+				heap = 0
+			}
+			var err error
+			if used, err = s.account.Usage(BudgetBufferedBytes); err != nil {
+				t.Fatal(err)
+			}
+			s.cleanup()
+		}
+		return heap, used
+	}
+	smallHeap, smallUsed := measure(1)
+	largeHeap, largeUsed := measure(4000)
+	if added, charged := largeHeap-smallHeap, largeUsed-smallUsed; added > charged {
+		t.Fatalf("node skeleton adds %d bytes of heap over small fixture but %d bytes of charge", added, charged)
+	}
+}
+
+func TestReleasedFactReadReportsContractError(t *testing.T) {
+	for _, kind := range []string{"lexeme", "atomic"} {
+		t.Run(kind, func(t *testing.T) {
+			s := representationFixture(t, Budgets{}, false)
+			defer s.cleanup()
+			representationOpen(t, s)
+			if err := s.ModelRepresentation(context.Background(), representationFact(1)); err != nil {
+				t.Fatal(err)
+			}
+			if err := s.CloseNode(context.Background(), representationEnd(1)); err != nil {
+				t.Fatal(err)
+			}
+			s.schema = &schemaSession{bound: true}
+			if kind == "lexeme" {
+				_ = s.readLexeme(&s.facts.releasedLexeme)
+			} else {
+				_ = s.readAtomic(&s.facts.releasedAtomic)
+			}
+			if !s.schema.typedReleased {
+				t.Fatalf("reading released %s did not mark typedReleased", kind)
+			}
+			report, err := s.Finish(context.Background(), Completion{InputComplete: true, Syntax: SyntaxNotAssessed})
+			if !errors.Is(err, ErrInvalidConfiguration) {
+				t.Fatalf("Finish did not fail with contract error after reading released %s: %v", kind, err)
+			}
+			if report.AssessmentComplete || report.Terminal == nil || report.BlockingProblems == 0 || report.Satisfied() {
+				t.Fatalf("Finish returned satisfied/complete report on released %s read: %+v", kind, report)
+			}
+		})
+	}
 }

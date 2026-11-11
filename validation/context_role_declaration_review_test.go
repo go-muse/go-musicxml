@@ -15,7 +15,7 @@ func TestContextRoleSessionReuseCanonicalDeclarationsAcrossNodes(t *testing.T) {
 		// binding. Their declaration pointers must be owned by this schema's
 		// canonical pool, never caller evidence or a QName/type approximation.
 		for _, id := range s.sequence {
-			n := s.nodes[id]
+			n := s.node(id)
 			bound := s.schema.nodes.at(id)
 			// Each completed node was settled on its own by the run.
 			if !bound.available || !bound.settled.Valid() || bound.binding != (xsd.Binding{}) {
@@ -43,7 +43,7 @@ func TestContextRoleSessionReuseCanonicalDeclarationsAcrossNodes(t *testing.T) {
 		before := s.retained
 		for _, table := range []*contextBindings{b, &other, b, &other} {
 			for _, id := range s.sequence {
-				n := s.nodes[id]
+				n := s.node(id)
 				r := &contextReader{ctx: context.Background(), s: s, b: table}
 				if r.matches(n, "item-role") != (n != s.root) || r.matches(n, "item-alias") != (n != s.root) || r.matches(n, "absent-role") || r.err != nil {
 					t.Fatalf("node %d exact membership changed: %v", id, r.err)
@@ -51,10 +51,10 @@ func TestContextRoleSessionReuseCanonicalDeclarationsAcrossNodes(t *testing.T) {
 			}
 		}
 		if got := len(s.contextElementRoles); got != 4 {
-			t.Errorf("%d nodes produced %d cache entries; want two declarations x two tables", len(s.nodes), got)
+			t.Errorf("%d nodes produced %d cache entries; want two declarations x two tables", s.totalNodes(), got)
 		}
 		if got := s.retained - before; got != 512+3*256 {
-			t.Errorf("%d nodes retained %d role-cache bytes; want 1280", len(s.nodes), got)
+			t.Errorf("%d nodes retained %d role-cache bytes; want 1280", s.totalNodes(), got)
 		}
 		s.cleanup()
 		if s.contextElementRoles != nil || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
@@ -66,7 +66,7 @@ func TestContextRoleSessionReuseCanonicalDeclarationsAcrossNodes(t *testing.T) {
 func TestContextRoleSessionReuseDeclarationEvidenceIsolation(t *testing.T) {
 	s, b, n := contextRoleRepeatedFixture(t, 2)
 	defer s.cleanup()
-	sibling := s.nodes[3]
+	sibling := s.node(3)
 	canonical := n.header.Declaration
 	var key xsd.CacheIdentity
 	for candidate, declaration := range s.facts.declarations {
@@ -115,7 +115,7 @@ func TestContextRoleSessionReuseSharedSchemaIsolation(t *testing.T) {
 	}
 	second := contextRoleEngineSession(t, engine, 2)
 	defer second.cleanup()
-	other := second.nodes[node.header.ID]
+	other := second.node(node.header.ID)
 	if first.schema.active != second.schema.active || node.header.Declaration == other.header.Declaration || *node.header.Declaration != *other.header.Declaration {
 		t.Fatal("shared compiled schema did not produce equal, independently owned declarations")
 	}
@@ -123,7 +123,7 @@ func TestContextRoleSessionReuseSharedSchemaIsolation(t *testing.T) {
 		before := s.retained
 		r := &contextReader{ctx: context.Background(), s: s, b: b}
 		for _, id := range []NodeID{2, 3} {
-			if !r.matches(s.nodes[id], "item-role") || r.err != nil {
+			if !r.matches(s.node(id), "item-role") || r.err != nil {
 				t.Fatal(r.err)
 			}
 		}

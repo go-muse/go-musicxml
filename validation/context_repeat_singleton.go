@@ -156,7 +156,7 @@ func contextRepeatProveSingletons(r *contextReader, timeline *timelineService, r
 			if !r.step(1) {
 				return r.err
 			}
-			n := r.s.nodes[id]
+			n := r.s.node(id)
 			if r.matches(n, contextRepeatAnyNote) {
 				note, status, e := contextRepeatSingletonReadNote(r, timeline, n, instruments[id])
 				if e != nil {
@@ -261,10 +261,10 @@ func contextRepeatSingletonAttributes(r *contextReader, n *factNode, exact *Attr
 			continue
 		}
 		if a.Presence.State != EvidenceKnown {
-			return a.Presence
+			return *a.Presence
 		}
 		if a.Declaration.State != EvidenceKnown {
-			return stateUnavailable[DeclarationID, bool](a.Declaration)
+			return stateUnavailable[DeclarationID, bool](*a.Declaration)
 		}
 		found := exact != nil && r.sameDeclaration(a.Declaration.Value, exact.Declaration)
 		for _, role := range allowed {

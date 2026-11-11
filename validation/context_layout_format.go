@@ -41,7 +41,7 @@ func newLayoutFormatting(r *contextReader, key RuleKey) (*layoutFormatting, erro
 		if !r.step(1) {
 			return nil, r.err
 		}
-		n := r.s.nodes[id]
+		n := r.s.node(id)
 		if n == nil {
 			continue
 		}
@@ -142,11 +142,13 @@ func (f *layoutFormatting) lyricValue(lyric *factNode, component int) layoutForm
 		if !r.step(1 + atomicLogicalBytes(result.Value.Value) + atomicLogicalBytes(value.Value)) {
 			return
 		}
-		if err := r.s.retainTransient(768 + locationLogicalBytes(p.Node.header.Location)); err != nil {
+		if err := r.s.retainTransient(768 + p.Node.header.loc.logicalBytes()); err != nil {
 			r.err = err
 			return
 		}
-		result.Origins = append(result.Origins, p.Node.header.Location)
+		if r.s.contextFamilies != 0 || r.s.resourceSnapshot {
+			result.Origins = append(result.Origins, p.Node.location())
+		}
 		result.Value = layoutConsensusPair(result.Value, value)
 		if result.Origin.Node == 0 {
 			result.Origin = NodeRef{r.s.documentID, p.Node.header.ID}
@@ -183,7 +185,7 @@ func (f *layoutFormatting) lyricValue(lyric *factNode, component int) layoutForm
 }
 func (f *layoutFormatting) resolve(n *factNode) error {
 	r := f.r
-	parent := r.s.nodes[n.header.Parent]
+	parent := r.s.node(n.header.Parent)
 	isDirection := r.matches(parent, layoutRole("direction-type"))
 	isCredit := r.matches(parent, layoutRole("credit")) && (r.matches(n, layoutRole("credit-words")) || r.matches(n, layoutRole("credit-symbol")))
 	hasFont := r.attributeOwner(n, layoutRole("@font-family"))
@@ -204,7 +206,7 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 		previous = f.previous[parent.header.ID]
 	}
 	lyric := (*factNode)(nil)
-	for a := parent; a != nil; a = r.s.nodes[a.header.Parent] {
+	for a := parent; a != nil; a = r.s.node(a.header.Parent) {
 		if !r.step(1) {
 			return r.err
 		}
@@ -235,7 +237,7 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 		}
 		value := layoutFormatField{Value: raw, Origin: ref}
 		if raw.State != EvidenceAbsent {
-			value.Origins = []Location{n.header.Location}
+			value.Origins = r.s.nodeOrigins(n)
 		}
 		inheritedXMLLanguage := false
 		if raw.State == EvidenceAbsent && previous != nil {
@@ -252,7 +254,7 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 			}
 		}
 		if value.Value.State == EvidenceAbsent && (i < 4 || name == "color") {
-			for a := parent; a != nil; a = r.s.nodes[a.header.Parent] {
+			for a := parent; a != nil; a = r.s.node(a.header.Parent) {
 				if !r.step(1) {
 					return r.err
 				}
@@ -268,13 +270,13 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 			}
 		}
 		if value.Value.State == EvidenceAbsent && name == "language" {
-			for a := parent; a != nil; a = r.s.nodes[a.header.Parent] {
+			for a := parent; a != nil; a = r.s.node(a.header.Parent) {
 				if !r.step(1) {
 					return r.err
 				}
 				lang := layoutLanguage(r, a)
 				if lang.State != EvidenceAbsent {
-					value = layoutFormatField{Value: lang, Origin: NodeRef{r.s.documentID, a.header.ID}, Origins: []Location{a.header.Location}}
+					value = layoutFormatField{Value: lang, Origin: NodeRef{r.s.documentID, a.header.ID}, Origins: r.s.nodeOrigins(a)}
 					inheritedXMLLanguage = true
 					break
 				}

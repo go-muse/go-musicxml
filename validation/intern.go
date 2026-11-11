@@ -1,6 +1,9 @@
 package validation
 
-import "strings"
+import (
+	"math"
+	"strings"
+)
 
 // own returns a session-owned copy of v that is shared by every equal value
 // published by this session. The first occurrence is copied, so the result
@@ -150,23 +153,72 @@ func cloneEvidenceState[T any](v Evidence[T]) Evidence[T] {
 
 // ownAttribute is cloneAttribute with shared closed-vocabulary strings. The
 // attribute path and lexeme stay private copies.
-func (s *Session) ownAttribute(v AttributeFact) AttributeFact {
-	v.Location.Target = Target(s.own(string(v.Location.Target)))
-	v.Location.DocumentID = s.own(v.Location.DocumentID)
-	v.Location.Entry = s.own(v.Location.Entry)
-	v.Location.Path = strings.Clone(v.Location.Path)
-	if v.Location.Position != nil {
-		p := *v.Location.Position
-		p.CoordinateSpace = s.own(p.CoordinateSpace)
-		v.Location.Position = &p
+func (s *Session) ownAttribute(n *factNode, v AttributeFact) retainedAttribute {
+	target := Target(s.own(string(v.Location.Target)))
+	docID := s.own(v.Location.DocumentID)
+	var anchor string
+	if n != nil {
+		anchor = n.header.loc.pathPrefix
 	}
-	v.Declaration = ownEvidence(s, v.Declaration)
-	v.Declaration.Value = DeclarationID{Assembly: Assembly(s.own(string(v.Declaration.Value.Assembly))), OwnerOccurrence: s.own(v.Declaration.Value.OwnerOccurrence), Occurrence: s.own(v.Declaration.Value.Occurrence)}
-	v.Presence = ownEvidence(s, v.Presence)
-	v.Scalar.Lexeme = ownEvidence(s, v.Scalar.Lexeme)
-	v.Scalar.Lexeme.Value = strings.Clone(v.Scalar.Lexeme.Value)
-	v.Scalar.Value = ownEvidence(s, v.Scalar.Value)
-	v.Scalar.Value.Value = s.ownAtomic(v.Scalar.Value.Value)
-	v.Name = QName{s.own(v.Name.Space), s.own(v.Name.Local)}
-	return v
+	loc := s.buildRetainedLocation(target, docID, v.Location, nil, anchor)
+	decl := ownEvidence(s, v.Declaration)
+	decl.Value = DeclarationID{Assembly: Assembly(s.own(string(v.Declaration.Value.Assembly))), OwnerOccurrence: s.own(v.Declaration.Value.OwnerOccurrence), Occurrence: s.own(v.Declaration.Value.Occurrence)}
+	var declPtr *Evidence[DeclarationID]
+	if s.facts != nil && decl == s.facts.pendingDeclaration {
+		declPtr = &s.facts.pendingDeclaration
+	} else if s.facts != nil && decl == s.facts.modelDeclaration {
+		declPtr = &s.facts.modelDeclaration
+	} else {
+		declPtr = &decl
+	}
+	pres := ownEvidence(s, v.Presence)
+	var presPtr *Evidence[bool]
+	if s.facts != nil && pres == s.facts.complete {
+		presPtr = &s.facts.complete
+	} else if s.facts != nil && pres == s.facts.incomplete {
+		presPtr = &s.facts.incomplete
+	} else if s.facts != nil && pres == s.facts.absentBool {
+		presPtr = &s.facts.absentBool
+	} else {
+		presPtr = &pres
+	}
+	lex := ownEvidence(s, v.Scalar.Lexeme)
+	var lexPtr *Evidence[string]
+	var lexBytes int32
+	if s.facts != nil && lex == s.facts.modelLexeme {
+		lexPtr = &s.facts.modelLexeme
+	} else if s.facts != nil && lex == s.facts.absentLexeme {
+		lexPtr = &s.facts.absentLexeme
+	} else if s.facts != nil && s.facts.emptyKnownLexeme != nil && lex == *s.facts.emptyKnownLexeme {
+		lexPtr = s.facts.emptyKnownLexeme
+	} else {
+		lex.Value = strings.Clone(v.Scalar.Lexeme.Value)
+		lexPtr = &lex
+		if b := int64(64 + len(lex.Value)); b <= math.MaxInt32 {
+			lexBytes = int32(b)
+		}
+	}
+	val := ownEvidence(s, v.Scalar.Value)
+	val.Value = s.ownAtomic(v.Scalar.Value.Value)
+	var valPtr *Evidence[Atomic]
+	var atomicBytes int32
+	if s.facts != nil && atomicEvidenceIdentical(val, s.facts.pendingAtomic) {
+		valPtr = &s.facts.pendingAtomic
+	} else if s.facts != nil && atomicEvidenceIdentical(val, s.facts.absentAtomic) {
+		valPtr = &s.facts.absentAtomic
+	} else {
+		valPtr = &val
+		if b := 128 + atomicLogicalBytes(val.Value); b <= math.MaxInt32 {
+			atomicBytes = int32(b)
+		}
+	}
+	return retainedAttribute{
+		Name:                QName{s.own(v.Name.Space), s.own(v.Name.Local)},
+		Declaration:         declPtr,
+		Presence:            presPtr,
+		Scalar:              retainedScalar{Lexeme: lexPtr, Value: valPtr},
+		loc:                 loc,
+		lexemeRetainedBytes: lexBytes,
+		atomicRetainedBytes: atomicBytes,
+	}
 }

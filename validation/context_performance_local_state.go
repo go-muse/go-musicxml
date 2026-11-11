@@ -20,7 +20,7 @@ func performanceLocalState(r *contextReader, sr *stateReader, n *factNode, out *
 		publish = true
 		out.Kind = TimingKindPartOrder
 		*partOrder++
-		complete := r.enumerated(r.s.nodes[n.header.Parent])
+		complete := r.enumerated(r.s.node(n.header.Parent))
 		out.PartOrder = stateUnavailable[bool, Integer](complete)
 		if complete.State == EvidenceKnown {
 			if r.err = r.s.retain(256); r.err != nil {

@@ -35,7 +35,7 @@ func evaluateContextLocal(ctx context.Context, s *Session, n *factNode, key Rule
 		if !r.step(1) {
 			return Decision{}, false, r.err
 		}
-		node := s.nodes[id]
+		node := s.node(id)
 		if node == nil {
 			continue
 		}
@@ -143,7 +143,7 @@ func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r
 		raw := localRawAttribute(r, n, localPrintObject)
 		value := localDefault(stateYesNo(raw), true)
 		if r.matches(n, localLyric) && raw.State == EvidenceAbsent {
-			parent := s.nodes[n.header.Parent]
+			parent := s.node(n.header.Parent)
 			if parent == nil || !r.matches(parent, localNote) {
 				value = stateUnknown[bool]("lyric-note-parent-unavailable")
 			} else {
@@ -154,7 +154,7 @@ func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r
 			return r.err
 		}
 		var err error
-		parent := s.nodes[n.header.Parent]
+		parent := s.node(n.header.Parent)
 		if r.matches(n, localLyric) && raw.State == EvidenceAbsent && parent != nil && r.matches(parent, localNote) {
 			err = localPublishAtOrigin(ctx, s, key, n, parent, ContextPrintObject, raw, localBoolAtomic(value), active, ContextInherited)
 		} else {
@@ -166,7 +166,7 @@ func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r
 	}
 	if r.matches(n, localNoteType) {
 		raw := localRawAttribute(r, n, localTypeSize)
-		parent := s.nodes[n.header.Parent]
+		parent := s.node(n.header.Parent)
 		grace, cue := stateUnknown[bool]("note-owner-unavailable"), stateUnknown[bool]("note-owner-unavailable")
 		if parent != nil && r.matches(parent, localNote) {
 			grace, cue = localPresence(r, parent, localGrace), localPresence(r, parent, localCue)
@@ -192,7 +192,7 @@ func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r
 			} else if !enclosed.Value {
 				value = Evidence[Atomic]{State: EvidenceAbsent}
 			} else {
-				parent := s.nodes[n.header.Parent]
+				parent := s.node(n.header.Parent)
 				value = stateUnknown[Atomic]("notehead-note-type-unavailable")
 				if parent != nil && r.matches(parent, localNote) {
 					value = localNoteheadFill(r.childScalar(parent, localNoteType))

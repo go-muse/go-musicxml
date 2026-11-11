@@ -112,7 +112,7 @@ func contextRepeatTransformParts(ctx context.Context, s *Session, timeline *time
 
 func contextRepeatReadNote(r *contextReader, timeline *timelineService, transformed map[NodeRef]bool, id NodeID) (contextRepeatNote, error) {
 	note := contextRepeatNote{source: NodeRef{r.s.documentID, id}, available: navigationKnownBool(true)}
-	node := r.s.nodes[id]
+	node := r.s.node(id)
 	fact, ok := timeline.Facts[id]
 	if !ok {
 		note.available = stateUnknown[bool]("context-repeat-note-timing-unavailable")

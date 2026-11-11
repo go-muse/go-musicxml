@@ -112,7 +112,7 @@ func distinctScratchFixture(t *testing.T, count int, budgets Budgets) (*Session,
 	n := localNode(1, 0, "note")
 	for i := 0; i < count; i++ {
 		child := localNode(NodeID(i+2), 1, "beam")
-		child.header.Location.Path = fmt.Sprintf("/note/beam[%d]", i+1)
+		child.header.loc.pathPrefix = fmt.Sprintf("/note/beam[%d]", i+1)
 		localSetAttr(child, "number", localInteger(t, int64(i)))
 		n.children = append(n.children, child)
 	}
@@ -198,7 +198,7 @@ func TestLocalDistinctMixedFamiliesAndEncounterOrder(t *testing.T) {
 		if err != nil || d.Outcome != want {
 			t.Fatalf("duplicate=%v mixed-family outcome: %+v %v", duplicate, d, err)
 		}
-		if duplicate && (len(d.Related) != 2 || d.Related[0].Path != n.children[0].header.Location.Path || d.Related[1].Path != n.children[4].header.Location.Path) {
+		if duplicate && (len(d.Related) != 2 || d.Related[0].Path != n.children[0].location().Path || d.Related[1].Path != n.children[4].location().Path) {
 			t.Fatalf("encounter-order related locations changed: %+v", d.Related)
 		}
 		s.cleanup()

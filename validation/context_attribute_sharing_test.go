@@ -26,7 +26,7 @@ func finalAttributeFixture(t *testing.T) (*Session, *contextBindings) {
 func TestContextAttributeTablesSharedAcrossFinalReaders(t *testing.T) {
 	s, b := contextReviewSameTypeFixture(t)
 	early := &contextReader{ctx: context.Background(), s: s, b: b}
-	if _, ok := early.attributeSelector(s.nodes[2], "required"); !ok || early.err != nil {
+	if _, ok := early.attributeSelector(s.node(2), "required"); !ok || early.err != nil {
 		t.Fatal(early.err)
 	}
 	if len(early.attributeCache) != 1 || s.contextAttributeTables != nil {
@@ -38,7 +38,7 @@ func TestContextAttributeTablesSharedAcrossFinalReaders(t *testing.T) {
 	steps := func() int64 { return rationalUsage(t, s, BudgetRuleSteps) }
 	first := &contextReader{ctx: context.Background(), s: s, b: b}
 	before, retained := steps(), s.retained
-	if _, ok := first.attributeSelector(s.nodes[2], "required"); !ok || first.err != nil {
+	if _, ok := first.attributeSelector(s.node(2), "required"); !ok || first.err != nil {
 		t.Fatal(first.err)
 	}
 	built := steps() - before
@@ -48,19 +48,19 @@ func TestContextAttributeTablesSharedAcrossFinalReaders(t *testing.T) {
 	}
 	second := &contextReader{ctx: context.Background(), s: s, b: b}
 	before = steps()
-	if _, ok := second.attributeSelector(s.nodes[2], "required"); !ok || second.err != nil {
+	if _, ok := second.attributeSelector(s.node(2), "required"); !ok || second.err != nil {
 		t.Fatal(second.err)
 	}
 	borrowed := steps() - before
 	if borrowed >= built || len(first.attributeCache) != 0 || len(second.attributeCache) != 0 || len(s.contextAttributeTables) != 1 {
 		t.Fatalf("second reader rebuilt the table: built=%d borrowed=%d own=%d/%d shared=%d", built, borrowed, len(first.attributeCache), len(second.attributeCache), len(s.contextAttributeTables))
 	}
-	if first.attributeTable(s.nodes[2]) != second.attributeTable(s.nodes[2]) {
+	if first.attributeTable(s.node(2)) != second.attributeTable(s.node(2)) {
 		t.Fatal("readers hold different tables")
 	}
 	other := *b
 	third := &contextReader{ctx: context.Background(), s: s, b: &other}
-	if _, ok := third.attributeSelector(s.nodes[2], "required"); !ok || third.err != nil || len(s.contextAttributeTables) != 2 {
+	if _, ok := third.attributeSelector(s.node(2), "required"); !ok || third.err != nil || len(s.contextAttributeTables) != 2 {
 		t.Fatalf("other bindings shared a table: %v entries=%d", third.err, len(s.contextAttributeTables))
 	}
 	s.cleanup()
@@ -76,7 +76,7 @@ func TestContextAttributeTablesSharedOnlyWhenBuilt(t *testing.T) {
 	defer s.cleanup()
 	probe := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
 	count := &contextReader{ctx: probe, s: s, b: b}
-	if _, ok := count.attributeSelector(s.nodes[2], "required"); !ok || count.err != nil {
+	if _, ok := count.attributeSelector(s.node(2), "required"); !ok || count.err != nil {
 		t.Fatal(count.err)
 	}
 	polls := probe.calls
@@ -85,12 +85,12 @@ func TestContextAttributeTablesSharedOnlyWhenBuilt(t *testing.T) {
 		s, b := finalAttributeFixture(t)
 		retained := s.retained
 		r := &contextReader{ctx: &rationalCancelContext{Context: context.Background(), at: at}, s: s, b: b}
-		_, _ = r.attributeSelector(s.nodes[2], "required")
+		_, _ = r.attributeSelector(s.node(2), "required")
 		if !errors.Is(r.err, context.Canceled) || len(s.contextAttributeTables) != 0 || len(s.contextAttributeIntern) != 0 || s.retained != retained {
 			t.Fatalf("poll %d published a partial table: err=%v shared=%d retained=%d/%d", at, r.err, len(s.contextAttributeTables), s.retained, retained)
 		}
 		next := &contextReader{ctx: context.Background(), s: s, b: b}
-		if _, ok := next.attributeSelector(s.nodes[2], "required"); !ok || next.err != nil || len(s.contextAttributeTables) != 1 {
+		if _, ok := next.attributeSelector(s.node(2), "required"); !ok || next.err != nil || len(s.contextAttributeTables) != 1 {
 			t.Fatalf("poll %d: next reader did not build: %v", at, next.err)
 		}
 		s.cleanup()

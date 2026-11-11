@@ -36,10 +36,10 @@ func TestCommonExaminationSealsShareOnlyCanonicalEvidence(t *testing.T) {
 		// already admitted evidence, including any shared internal record.
 		complete.Value = false
 		fact.Complete.Value = false
-		if !s.nodes[id].attributeSeal.Value || !s.nodes[id].modelRepresentation.Complete.Value {
+		if !s.node(id).attributeSeal.Value || !s.node(id).modelRepresentation.Complete.Value {
 			t.Fatal("caller mutation changed seal")
 		}
-		if id > 2 && (s.nodes[id].attributeSeal != s.nodes[2].attributeSeal || s.nodes[id].modelRepresentation != s.nodes[2].modelRepresentation) {
+		if id > 2 && (s.node(id).attributeSeal != s.node(2).attributeSeal || s.node(id).modelRepresentation != s.node(2).modelRepresentation) {
 			t.Fatal("canonical seals still allocate per node")
 		}
 		if err := s.CloseNode(ctx, representationEnd(id)); err != nil {
@@ -86,7 +86,7 @@ func TestCommonExaminationSealAdmissionAndCleanup(t *testing.T) {
 				if !errors.As(err, &resource) {
 					t.Fatalf("one-short admission: %v", err)
 				}
-				if s.nodes[1].attributeSeal != nil || s.nodes[1].modelRepresentation != nil {
+				if s.node(1).attributeSeal != nil || s.node(1).modelRepresentation != nil {
 					t.Fatal("failed admission published seal")
 				}
 			}
@@ -121,7 +121,7 @@ func TestCommonExaminationSealEnvelopesAndSessionIsolation(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if a.nodes[1].attributeSeal == b.nodes[1].attributeSeal || a.nodes[1].modelRepresentation == b.nodes[1].modelRepresentation {
+	if a.node(1).attributeSeal == b.node(1).attributeSeal || a.node(1).modelRepresentation == b.node(1).modelRepresentation {
 		t.Fatal("records escaped account/session ownership")
 	}
 }
@@ -148,7 +148,7 @@ func TestCommonExaminationSealsDoNotShareExceptionalEvidence(t *testing.T) {
 				if err := s.ModelRepresentation(ctx, ModelRepresentationFact{Owner: id, Complete: complete}); err != nil {
 					t.Fatal(err)
 				}
-				if id == 3 && (s.nodes[2].attributeSeal == s.nodes[3].attributeSeal || s.nodes[2].modelRepresentation == s.nodes[3].modelRepresentation) {
+				if id == 3 && (s.node(2).attributeSeal == s.node(3).attributeSeal || s.node(2).modelRepresentation == s.node(3).modelRepresentation) {
 					t.Fatal("exceptional evidence was shared")
 				}
 				end := representationEnd(id)

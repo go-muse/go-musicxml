@@ -30,7 +30,7 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 		return Decision{}, false, err
 	}
 	for _, part := range index.Parts {
-		if err = service.State.readInstrumentDefinitions(ctx, s, p.Bindings, s.nodes[part.Node], part); err != nil {
+		if err = service.State.readInstrumentDefinitions(ctx, s, p.Bindings, s.node(part.Node), part); err != nil {
 			return Decision{}, false, err
 		}
 	}

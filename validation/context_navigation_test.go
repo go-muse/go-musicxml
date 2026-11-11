@@ -229,7 +229,7 @@ func TestContextNavigationLocalSoundWithoutTimeline(t *testing.T) {
 	}
 	n := &factNode{header: testRetainedHeader(NodeHeader{ID: 1, Declaration: stateKnown(b.Roles[contextNavRawSound][0].Declaration), Type: stateKnown(typ)}), closed: true, end: testRetainedEnd(NodeEnd{AttributesComplete: stateKnown(true), ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 	a := b.Attributes[contextNavRawDaCapo][typ]
-	n.attributes = []AttributeFact{{Owner: 1, Name: a.Name, Declaration: stateKnown(a.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: stateAtomicText("yes")}}}
+	n.attributes = []retainedAttribute{testRetainedAttribute(AttributeFact{Owner: 1, Name: a.Name, Declaration: stateKnown(a.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: stateAtomicText("yes")}})}
 	s.nodes = map[NodeID]*factNode{1: n}
 	s.sequence = []NodeID{1}
 	rows, release, err := navigationReadRows(context.Background(), s, &contextPlan{Bindings: b}, &timelineService{})

@@ -39,7 +39,7 @@ func (l *layoutScopes) supports(attribute string) Evidence[bool] {
 		if !r.step(1) {
 			return stateUnknown[bool]("context-interrupted")
 		}
-		n := r.s.nodes[id]
+		n := r.s.node(id)
 		if !r.matches(n, layoutRole("supports")) {
 			continue
 		}

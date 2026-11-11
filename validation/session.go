@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -90,10 +91,61 @@ type factNode struct {
 	modelRepresentation *modelRepresentationRecord
 	header              retainedHeader
 	end                 retainedEnd
-	closed              bool
 	children            []*factNode
-	attributes          []AttributeFact
+	attributes          []retainedAttribute
 	attributeSeal       *Evidence[bool]
+	lexemeRetainedBytes int32
+	atomicRetainedBytes int32
+	closed              bool
+}
+
+func (n *factNode) location() Location  { return n.header.loc.value() }
+func (n *factNode) path() string        { return n.header.loc.Path() }
+func (n *factNode) bindings() []Binding { return n.header.loc.bindings() }
+
+func (s *Session) node(id NodeID) *factNode {
+	if len(s.nodes) != 0 {
+		if n, ok := s.nodes[id]; ok {
+			return n
+		}
+	}
+	if id != 0 && int(id) <= len(s.denseNodes) {
+		return s.denseNodes[id-1]
+	}
+	return nil
+}
+
+func (s *Session) hasNode(id NodeID) bool {
+	return s.node(id) != nil
+}
+
+func (s *Session) totalNodes() int {
+	return s.nodeCount + len(s.nodes)
+}
+
+func (s *Session) putNode(id NodeID, n *factNode) {
+	if id != 0 && int(id) <= len(s.denseNodes) {
+		if s.denseNodes[id-1] == nil {
+			s.nodeCount++
+		}
+		s.denseNodes[id-1] = n
+		return
+	}
+	if s.nodes == nil {
+		s.nodes = make(map[NodeID]*factNode)
+	}
+	s.nodes[id] = n
+}
+
+func (s *Session) nodeOrigins(nodes ...*factNode) []Location {
+	if s.contextFamilies == 0 && !s.resourceSnapshot {
+		return nil
+	}
+	out := make([]Location, len(nodes))
+	for i, n := range nodes {
+		out[i] = n.location()
+	}
+	return out
 }
 
 type decisionID struct {
@@ -165,6 +217,12 @@ type Session struct {
 	profile                 Profile
 	account                 *Account
 	accumulator             *reportAccumulator
+	denseNodes              []*factNode
+	attrChunk               []retainedAttribute
+	attrOwner               *factNode
+	attrOwnerBase           []retainedAttribute
+	nodeCount               int
+	attrCount               int
 	nodes                   map[NodeID]*factNode
 	sequence                []NodeID
 	stack                   []*factNode
@@ -415,6 +473,28 @@ func (c *CompiledCatalog) releasesTypedXSD(id ProfileID) bool {
 	return true
 }
 
+// directScalarPlans are the generic foundation plan kinds whose evaluation
+// reads a node or attribute's retained Scalar.Value directly after schema
+// binding rather than through localScalar.
+var directScalarPlans = map[planKind]bool{
+	planAtomic:            true,
+	planIdentityDeclare:   true,
+	planIdentityReference: true,
+	planContextDefault:    true,
+}
+
+func (c *CompiledCatalog) directScalarFree(id ProfileID) bool {
+	if c == nil {
+		return false
+	}
+	for _, key := range c.orders[id] {
+		if directScalarPlans[c.plans[c.rules[key].Predicate].kind] {
+			return false
+		}
+	}
+	return true
+}
+
 // keepTypedXSD makes every session keep the typed XSD results of completed
 // subjects. It is a test switch only: reports must not depend on it.
 var keepTypedXSD bool
@@ -465,7 +545,7 @@ func (s *Session) OpenNode(ctx context.Context, node NodeHeader) error {
 		}
 		return s.fail(&SessionError{Operation: "OpenNode", Reason: "invalid node header", Cause: err})
 	}
-	if _, exists := s.nodes[node.ID]; exists {
+	if s.hasNode(node.ID) {
 		return s.fail(&SessionError{Operation: "OpenNode", Reason: "duplicate occurrence ID"})
 	}
 	if len(s.stack) == 0 {
@@ -525,7 +605,7 @@ func (s *Session) OpenNode(ctx context.Context, node NodeHeader) error {
 			return s.fail(err)
 		}
 	}
-	retained := &factNode{header: header, end: s.zeroEnd()}
+	retained := s.allocFactNode(header, s.zeroEnd())
 	if len(s.stack) == 0 {
 		s.root = retained
 	} else {
@@ -536,7 +616,7 @@ func (s *Session) OpenNode(ctx context.Context, node NodeHeader) error {
 	if err := s.pushWindowChild(ctx, retained); err != nil {
 		return s.fail(err)
 	}
-	s.nodes[node.ID] = retained
+	s.putNode(node.ID, retained)
 	s.sequence = append(s.sequence, node.ID)
 	s.stack = append(s.stack, retained)
 	if opensWindow {
@@ -580,7 +660,7 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 			return s.fail(&SessionError{Operation: "Attribute", Reason: "duplicate expanded attribute slot"})
 		}
 	}
-	n.attributes = append(n.attributes, s.ownAttribute(attribute))
+	s.appendRetainedAttribute(n, s.ownAttribute(n, attribute))
 	if s.sourceOriginKey() != (RuleKey{}) {
 		if attribute.Presence.State == EvidenceKnown && attribute.Presence.Value {
 			s.sourceOriginExpected++
@@ -661,11 +741,17 @@ func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
 	if end.AttributesComplete.State != EvidenceKnown || !end.AttributesComplete.Value {
 		s.attributeEnumerationIncomplete = true
 	}
-	ownedEnd, err := s.retainFactEnd(end)
+	ownedEnd, lexBytes, atomicBytes, err := s.retainFactEndCounted(end)
 	if err != nil {
 		return s.fail(err)
 	}
 	n.end = ownedEnd
+	if lexBytes > 0 && lexBytes <= math.MaxInt32 {
+		n.lexemeRetainedBytes = int32(lexBytes)
+	}
+	if atomicBytes > 0 && atomicBytes <= math.MaxInt32 {
+		n.atomicRetainedBytes = int32(atomicBytes)
+	}
 	n.closed = true
 	s.stack = s.stack[:len(s.stack)-1]
 	if err := s.account.Release(BudgetDepth, 1); err != nil {
@@ -701,7 +787,7 @@ func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
 		// can cache an unavailable result. Evaluate in schema witness order.
 		for _, id := range s.sequence {
 			for _, key := range s.catalog.orders[s.profile.ID] {
-				if err := s.evaluate(ctx, s.nodes[id], key, false); err != nil {
+				if err := s.evaluate(ctx, s.node(id), key, false); err != nil {
 					return s.fail(err)
 				}
 			}
@@ -787,7 +873,7 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 			s.collectingIdentity = phase.registration
 			for trigger, id := range s.sequence {
 				s.accumulator.at = findingKey{stage: stagePhases, phase: phaseIndex, trigger: int64(trigger)}
-				n := s.nodes[id]
+				n := s.node(id)
 				if !n.closed {
 					continue
 				}
@@ -811,6 +897,11 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	}
 	s.accumulator.at = findingKey{stage: stageSummaries}
 	addCause(s.flushSourceDTDSummaries())
+	// A reader of typed XSD results the session released would have read
+	// empty results: fail loudly instead of returning what they gave.
+	if s.schema != nil && s.schema.typedReleased {
+		addCause(contract("schema typed results", "read after they were released"))
+	}
 	if !s.inputComplete || !reportSyntaxComplete(s.profile.Target, end.Syntax) || s.terminalCause != nil || s.enumerationIncomplete {
 		s.accumulator.incomplete()
 	}
@@ -827,6 +918,9 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	} else if reportLease != nil {
 		*reportLease, ownershipErr = s.retainFinishedReport()
 	}
+	if ownershipErr == nil && s.schema != nil && s.schema.typedReleased {
+		ownershipErr = contract("schema typed results", "read after they were released")
+	}
 	if ownershipErr != nil {
 		addCause(ownershipErr)
 		report.AssessmentComplete = false
@@ -838,11 +932,6 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 			report.Terminal = &TerminalSummary{Category: category, Reason: reason}
 			report.BlockingProblems++
 		}
-	}
-	// A reader of typed XSD results the session released would have read
-	// empty results: fail loudly instead of returning what they gave.
-	if s.schema != nil && s.schema.typedReleased {
-		addCause(contract("schema typed results", "read after they were released"))
 	}
 	if s.terminalCause != nil {
 		return report, resource, &IncompleteError{Reason: "session-terminated", Cause: s.terminalCause}
@@ -937,6 +1026,12 @@ func (s *Session) cleanup() {
 	s.releaseTransient(0)
 	s.internRetained = 0 // released with s.retained above
 	s.strings = nil
+	s.denseNodes = nil
+	s.attrChunk = nil
+	s.attrOwner = nil
+	s.attrOwnerBase = nil
+	s.nodeCount = 0
+	s.attrCount = 0
 	s.nodes = nil
 	s.facts = nil
 	s.nodeCapacity = 0

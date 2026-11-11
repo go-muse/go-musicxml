@@ -101,10 +101,10 @@ func TestModelSchemaBindsPendingCurrentRoot(t *testing.T) {
 	value, _ := NewInteger(big.NewInt(0))
 	input := Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: value}}
 	modelSchemaClose(t, s, modelSchemaEnd(1, input, OrderModelFields))
-	if s.nodes[1].header.Declaration.State != EvidenceKnown {
-		t.Fatalf("no exact root binding: %+v", s.nodes[1].header)
+	if s.node(1).header.Declaration.State != EvidenceKnown {
+		t.Fatalf("no exact root binding: %+v", s.node(1).header)
 	}
-	if got := s.nodes[1].end.Scalar.value(); got.Lexeme.State != EvidenceUnsupported || got.Value.Value.Integer.String() != "0" {
+	if got := s.node(1).end.Scalar.value(); got.Lexeme.State != EvidenceUnsupported || got.Value.Value.Integer.String() != "0" {
 		t.Fatalf("current input overwritten: %+v", got)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxNotAssessed})
@@ -138,7 +138,7 @@ func TestModelSchemaEffectiveValuesRemainDistinctFromInput(t *testing.T) {
 		}
 	}
 	modelSchemaClose(t, s, modelSchemaEnd(1, Evidence[Atomic]{State: EvidenceAbsent}, OrderModelFields))
-	if s.nodes[1].attributes[0].Scalar.Value.Value.Text != " a\t b " {
+	if s.node(1).attributes[0].Scalar.Value.Value.Text != " a\t b " {
 		t.Fatal("raw current text normalized in place")
 	}
 	for _, pair := range []struct {
@@ -166,7 +166,7 @@ func TestModelSchemaEffectiveValuesRemainDistinctFromInput(t *testing.T) {
 			t.Fatal("invalid without actual scalar cause")
 		}
 	}
-	if len(s.nodes[1].attributes) != 2 {
+	if len(s.node(1).attributes) != 2 {
 		t.Fatal("effective default mutated model fact attributes")
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxNotAssessed})
@@ -209,13 +209,13 @@ func TestModelSchemaContentHoleKeepsIndependentAttributeFailure(t *testing.T) {
 	if len(s.schema.run.Witnesses(bound.binding)) != 0 {
 		t.Fatal("compacted hole produced child witness")
 	}
-	if got := s.schemaResult(s.nodes[1], XSDCheckAttributes); got.Valid || !got.Complete {
+	if got := s.schemaResult(s.node(1), XSDCheckAttributes); got.Valid || !got.Complete {
 		t.Fatalf("independent attribute failure lost: %+v", got)
 	}
-	if got := *s.nodes[2].header.Declaration; got.State != EvidenceInvalid || got.Cause == nil || got.Cause.Rule.ID != "test.model-representation" {
+	if got := *s.node(2).header.Declaration; got.State != EvidenceInvalid || got.Cause == nil || got.Cause.Rule.ID != "test.model-representation" {
 		t.Fatalf("child lost representation cause: %+v", got)
 	}
-	if got := s.schemaResult(s.nodes[1], XSDCheckContent); !got.Valid || got.Complete || len(got.Issues) != 0 {
+	if got := s.schemaResult(s.node(1), XSDCheckContent); !got.Valid || got.Complete || len(got.Issues) != 0 {
 		t.Fatalf("hole invented grammar failure: %+v", got)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxNotAssessed})

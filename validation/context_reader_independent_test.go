@@ -53,7 +53,7 @@ func independentContextFallbackFixture(t *testing.T) (*Session, *contextBindings
 	// Force the authoritative fallback instead of its static owner fast path.
 	// Equal public type evidence must not merge two distinct exact use bindings.
 	for _, id := range []NodeID{2, 3} {
-		s.nodes[id].header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceUnknown, Reason: "independent-fallback-probe"})
+		s.node(id).header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceUnknown, Reason: "independent-fallback-probe"})
 	}
 	return s, bindings
 }
@@ -68,7 +68,7 @@ func TestIndependentContextAttributeFallbackBindingIsolation(t *testing.T) {
 			role contextRole
 			want bool
 		}{{2, "b-id", false}, {2, "a-id", true}, {3, "a-id", false}, {3, "b-id", true}} {
-			got, ok := reader.attributeSelector(s.nodes[tc.id], tc.role)
+			got, ok := reader.attributeSelector(s.node(tc.id), tc.role)
 			if reader.err != nil {
 				t.Fatal(reader.err)
 			}
@@ -83,7 +83,7 @@ func TestIndependentContextAttributeFallbackBindingIsolation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	reader.ctx = ctx
-	_, _ = reader.attributeSelector(s.nodes[2], "a-id")
+	_, _ = reader.attributeSelector(s.node(2), "a-id")
 	if !errors.Is(reader.err, context.Canceled) {
 		t.Fatalf("cached positive lookup lost cancellation: %v", reader.err)
 	}
@@ -107,18 +107,18 @@ func TestIndependentContextAttributeCacheNeverPublishesInterruptedEnumeration(t 
 	defer s.cleanup()
 	c := &rationalCancelContext{Context: context.Background(), at: 1000000}
 	probe := &contextReader{ctx: c, s: s, b: b}
-	if _, ok := probe.attributeSelector(s.nodes[2], "a-id"); !ok || probe.err != nil {
+	if _, ok := probe.attributeSelector(s.node(2), "a-id"); !ok || probe.err != nil {
 		t.Fatalf("reference fallback: %v", probe.err)
 	}
 	polls := c.calls
 	for at := 1; at <= polls; at++ {
 		r := &contextReader{ctx: &rationalCancelContext{Context: context.Background(), at: at}, s: s, b: b}
-		_, _ = r.attributeSelector(s.nodes[2], "a-id")
+		_, _ = r.attributeSelector(s.node(2), "a-id")
 		if !errors.Is(r.err, context.Canceled) || len(r.attributeCache) != 0 {
 			t.Fatalf("poll%d cached incomplete attribute enumeration: err=%v cache=%d", at, r.err, len(r.attributeCache))
 		}
 		r.ctx = context.Background()
-		_, _ = r.attributeSelector(s.nodes[2], "a-id")
+		_, _ = r.attributeSelector(s.node(2), "a-id")
 		if !errors.Is(r.err, context.Canceled) || len(r.attributeCache) != 0 {
 			t.Fatal("first interruption was reset or cached")
 		}

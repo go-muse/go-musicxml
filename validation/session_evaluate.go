@@ -31,7 +31,7 @@ func (s *Session) evaluateRule(ctx context.Context, n *factNode, key RuleKey, fi
 		return err
 	}
 	p, hasPlan := s.catalog.plans[r.Predicate]
-	selected := selectorDecision(r.Selector, n.header.value())
+	selected := selectorDecision(r.Selector, n.header)
 	if r.Selector.Assembly != nil && p.kind == planModelRepresentation {
 		selected = s.modelAssemblyDecision(*r.Selector.Assembly)
 	} else if r.Selector.Assembly != nil {
@@ -133,7 +133,7 @@ func (s *Session) evaluateRule(ctx context.Context, n *factNode, key RuleKey, fi
 	}
 	return s.record(r, n, decision)
 }
-func selectorDecision(selector Selector, n NodeHeader) Decision {
+func selectorDecision(selector Selector, n retainedHeader) Decision {
 	if selector.Component != nil {
 		if selector.Component.Kind != ComponentType {
 			return Decision{Outcome: OutcomeUnsupported, Reason: "selector-component-kind-unavailable"}
@@ -205,8 +205,13 @@ func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 	d.Subject = NodeRef{s.documentID, n.header.ID}
 	// Once established, a finding remains authoritative even if retaining its
 	// dependency-cache entry exhausts the session buffer afterwards.
-	if err := s.accumulator.record(r, d, n.header.Location); err != nil {
+	if err := s.accumulator.recordOutcome(r, d); err != nil {
 		return err
+	}
+	if d.Outcome != OutcomePass && d.Outcome != OutcomeNotApplicable {
+		if err := s.accumulator.storeDiagnostic(r, d, n.location()); err != nil {
+			return err
+		}
 	}
 	return s.cacheDecision(r, n, d)
 }
@@ -515,7 +520,7 @@ func (s *Session) evaluatePlan(ctx context.Context, n *factNode, r RuleDefinitio
 			d.Reason = "attribute-presence"
 		}
 	case planAtomic:
-		value := n.end.Scalar.Value
+		value := s.readAtomic(n.end.Scalar.Value)
 		if value.State != EvidenceKnown {
 			gap := evidenceDecision(value.State, value.Reason, value.Cause, false)
 			gap.Rule = d.Rule
@@ -564,7 +569,7 @@ func atomicDisplay(v Atomic) string {
 		return v.Text
 	}
 }
-func (s *Session) attributeEvidence(ctx context.Context, n *factNode, selector AttributeSelector) (Evidence[bool], *AttributeFact, error) {
+func (s *Session) attributeEvidence(ctx context.Context, n *factNode, selector AttributeSelector) (Evidence[bool], *retainedAttribute, error) {
 	var uncertain *Evidence[bool]
 	for i := range n.attributes {
 		if err := s.step(ctx, 1); err != nil {
@@ -586,7 +591,7 @@ func (s *Session) attributeEvidence(ctx context.Context, n *factNode, selector A
 			continue
 		}
 		if a.Declaration.Value == selector.Declaration {
-			return a.Presence, a, nil
+			return *a.Presence, a, nil
 		}
 	}
 	if uncertain != nil {
@@ -612,6 +617,6 @@ func (s *Session) lookupAttribute(ctx context.Context, n *factNode, selector Att
 	if a == nil {
 		return Evidence[Atomic]{State: EvidenceUnknown, Reason: "attribute-value-unavailable"}, nil, nil
 	}
-	location := a.Location
-	return a.Scalar.Value, &location, nil
+	location := a.location()
+	return s.readAtomic(a.Scalar.Value), &location, nil
 }

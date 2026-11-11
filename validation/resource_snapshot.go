@@ -371,7 +371,7 @@ func (s *Session) resourceIDs(ctx context.Context) ([]ResourceIDFact, error) {
 		if err = s.step(ctx, 1); err != nil {
 			return nil, err
 		}
-		n := s.nodes[id]
+		n := s.node(id)
 		part := parts[n.header.Parent]
 		if n.header.Type.State == EvidenceKnown && n.header.Type.Value.Assembly == AssemblyMusicXML && n.header.Type.Value.Name == (QName{Local: "score-part"}) {
 			part = NodeRef{s.documentID, id}
@@ -431,10 +431,10 @@ func (s *Session) resourceID(ctx context.Context, n *factNode, actualOwner NodeI
 		owner = Evidence[NodeRef]{State: EvidenceKnown, Value: part}
 	}
 	kind := n.header.Name
-	if actual := s.nodes[actualOwner]; actual != nil {
+	if actual := s.node(actualOwner); actual != nil {
 		kind = actual.header.Name
 	}
-	fact := ResourceIDFact{Value: value, Declaration: declaration, Subject: NodeRef{s.documentID, actualOwner}, Source: NodeRef{s.documentID, n.header.ID}, Part: owner, Kind: Evidence[QName]{State: EvidenceKnown, Value: kind}, Unique: unique, Location: n.header.Location}
+	fact := ResourceIDFact{Value: value, Declaration: declaration, Subject: NodeRef{s.documentID, actualOwner}, Source: NodeRef{s.documentID, n.header.ID}, Part: owner, Kind: Evidence[QName]{State: EvidenceKnown, Value: kind}, Unique: unique, Location: n.location()}
 	cost, e := resourceMeasure(ctx, s.account, reflect.ValueOf(fact))
 	if e != nil {
 		return ResourceIDFact{}, e

@@ -11,13 +11,13 @@ func TestLocalProjectionOwnsRawCausalAndLocationEvidence(t *testing.T) {
 	s.documentID = "score"
 	defer s.cleanup()
 	n := localNode(3, 1, "note")
-	n.header.Location = Location{Target: TargetSource, DocumentID: "score", Path: "/note", Position: &SourcePosition{Line: 4}}
+	n.header.loc = testRetainedLocation(Location{Target: TargetSource, DocumentID: "score", Path: "/note", Position: &SourcePosition{Line: 4}}, nil)
 	raw := Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-print-object", Cause: &DecisionRef{Rule: RuleKey{"xsd-enumeration", 1}, Subject: NodeRef{"score", 3}}}
 	if err := localPublish(context.Background(), s, RuleKey{"local-test", 1}, n, ContextPrintObject, raw, raw, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{}, ContextUnitNone); err != nil {
 		t.Fatal(err)
 	}
 	raw.Cause.Rule.ID = "changed"
-	n.header.Location.Position.Line = 999
+	n.header.loc.meta.posLine = 999
 	got := s.contextResults[0]
 	if got.Value.Cause.Rule.ID != "xsd-enumeration" || got.Layout.Raw.Cause.Rule.ID != "xsd-enumeration" || got.Origins[0].Position.Line != 4 {
 		t.Fatalf("borrowed evidence escaped: %+v", got)

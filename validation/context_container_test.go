@@ -67,7 +67,7 @@ func containerTestFixture(t *testing.T) (*Session, *contextPlan) {
 	for i, n := range []*factNode{root, files, first, second} {
 		n.header.Declaration.Value.Assembly = AssemblyContainer
 		n.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextAssemblyType(AssemblyContainer, []string{"container", "rootfiles", "rootfile", "rootfile"}[i])})
-		n.header.Location = Location{Target: TargetSource, DocumentID: s.documentID, Path: "/container", Position: &SourcePosition{Line: 1, Column: i + 1}}
+		n.header.loc = testRetainedLocation(Location{Target: TargetSource, DocumentID: s.documentID, Path: "/container", Position: &SourcePosition{Line: 1, Column: i + 1}}, nil)
 		role := []contextRole{containerRoot, containerRootfiles, containerRootfile, containerRootfile}[i]
 		b.Elements[role] = map[DeclarationID]struct{}{n.header.Declaration.Value: {}}
 	}
@@ -79,7 +79,7 @@ func containerTestFixture(t *testing.T) (*Session, *contextPlan) {
 			a := localAttr(v.name)
 			a.Declaration.Assembly = AssemblyContainer
 			b.Attributes[v.role] = map[ComponentID]AttributeSelector{n.header.Type.Value: a}
-			n.attributes = append(n.attributes, AttributeFact{Owner: n.header.ID, Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceKnown, Value: " " + v.text + " "}, Value: localKnownText(v.text)}, Location: n.header.Location})
+			n.attributes = append(n.attributes, testRetainedAttribute(AttributeFact{Owner: n.header.ID, Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceKnown, Value: " " + v.text + " "}, Value: localKnownText(v.text)}, Location: n.location()}))
 		}
 	}
 	root.children, files.children = []*factNode{files}, []*factNode{first, second}
@@ -96,9 +96,9 @@ func TestContainerMetadataUnavailableEvidence(t *testing.T) {
 				cause := &DecisionRef{Rule: RuleKey{"source-cause", 1}, Subject: NodeRef{s.documentID, 3}}
 				switch field {
 				case "value":
-					s.nodes[3].attributes[0].Scalar.Value = Evidence[Atomic]{State: state, Reason: "source-gap", Cause: cause}
+					s.nodes[3].attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: state, Reason: "source-gap", Cause: cause})
 				case "lexeme":
-					s.nodes[3].attributes[0].Scalar.Lexeme = Evidence[string]{State: state, Reason: "source-gap", Cause: cause}
+					s.nodes[3].attributes[0].Scalar.Lexeme = testEvidence(Evidence[string]{State: state, Reason: "source-gap", Cause: cause})
 				case "enumeration":
 					s.nodes[2].end.ChildrenComplete = testEvidence(Evidence[bool]{State: state, Reason: "source-gap", Cause: cause})
 				case "order":

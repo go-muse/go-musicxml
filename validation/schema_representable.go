@@ -37,7 +37,16 @@ func (s *Session) checkRepresentable(ctx context.Context, n *factNode) error {
 		return nil
 	}
 	var details []xsd.Detail
-	check := func(scalar xsd.ScalarResult, path string, attribute QName) error {
+	var path string
+	var havePath bool
+	nodePath := func() string {
+		if !havePath {
+			path = n.path()
+			havePath = true
+		}
+		return path
+	}
+	check := func(scalar xsd.ScalarResult, attribute QName) error {
 		if err := s.step(ctx, 1); err != nil {
 			return err
 		}
@@ -48,19 +57,22 @@ func (s *Session) checkRepresentable(ctx context.Context, n *factNode) error {
 		if !ok || representation.Represents(scalar.Value.Number) {
 			return nil
 		}
+		issuePath := nodePath()
+		if attribute.Local != "" {
+			issuePath += "/@" + attribute.Local
+		}
 		form := "a binary64"
 		if !representation.Binary64 {
 			form = "its Go integer range"
 		}
 		message := fmt.Sprintf("value %q of xs:%s has no exact form in %s", truncateRepresentable(scalar.EffectiveLexeme), scalar.Builtin, form)
-		if err := s.retain(int64(64 + len(path) + len(message))); err != nil {
+		if err := s.retain(int64(64 + len(issuePath) + len(message))); err != nil {
 			return err
 		}
-		details = append(details, xsd.Detail{Issue: xsd.Issue{Path: path, Constraint: "representable", Message: message}, Subject: xsd.SubjectID(n.header.ID), Attribute: xsd.QName{Space: attribute.Space, Local: attribute.Local}})
+		details = append(details, xsd.Detail{Issue: xsd.Issue{Path: issuePath, Constraint: "representable", Message: message}, Subject: xsd.SubjectID(n.header.ID), Attribute: xsd.QName{Space: attribute.Space, Local: attribute.Local}})
 		return nil
 	}
-	path := n.header.Location.Path
-	if err := check(state.scalar(bound), path, QName{}); err != nil {
+	if err := check(state.scalar(bound), QName{}); err != nil {
 		return err
 	}
 	for attribute := range state.attributes(bound) {
@@ -68,7 +80,7 @@ func (s *Session) checkRepresentable(ctx context.Context, n *factNode) error {
 			continue
 		}
 		name := QName{Space: attribute.Name.Space, Local: attribute.Name.Local}
-		if err := check(attribute.Scalar, path+"/@"+name.Local, name); err != nil {
+		if err := check(attribute.Scalar, name); err != nil {
 			return err
 		}
 	}

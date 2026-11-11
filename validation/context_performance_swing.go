@@ -25,7 +25,7 @@ func performanceBuildSwing(r *contextReader, service *timelineService) (performa
 		if !r.step(1) {
 			return out, r.err
 		}
-		n := r.s.nodes[id]
+		n := r.s.node(id)
 		if !r.matches(n, "perf-sound") {
 			continue
 		}

@@ -255,7 +255,7 @@ func TestTimelineStafflessKeyPresenceKeepsUnknownScopeCause(t *testing.T) {
 			cause := &DecisionRef{Rule: RuleKey{"staff-number", 1}, Subject: NodeRef{"d", 42}}
 			key := stateNode(b, timelineRoleAttributesKey, 42, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 43, stateAtomicInteger(t, 3)))
 			stateAttribute(b, key, timelineRoleKeyNumber, Atomic{Kind: AtomicInteger, Integer: stateInt(t, 2)})
-			key.attributes[0].Scalar.Value = Evidence[Atomic]{State: status, Reason: "number-unavailable", Cause: cause}
+			key.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: status, Reason: "number-unavailable", Cause: cause})
 			changed := stateNode(b, timelineRoleAttributes, 40, stateAbsent[Atomic](), key)
 			blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, runtimeNote(t, b, 30, 1, false), changed, runtimeNote(t, b, 50, 1, false))}
 			if err := svc.readMeasure(ctx, s, b, blocks[0]); err != nil {

@@ -154,7 +154,7 @@ func navigationSoundOwner(ctx context.Context, s *Session, timeline *timelineSer
 		if _, ok := timeline.Playback.Sounds[id]; ok {
 			return id, nil
 		}
-		node := s.nodes[id]
+		node := s.node(id)
 		if node == nil {
 			return 0, nil
 		}

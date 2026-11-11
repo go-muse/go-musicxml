@@ -191,7 +191,7 @@ func TestTimelineReadSoundUnplacedChangeCannotLeaveInitialStateEffective(t *test
 	cause := &DecisionRef{Rule: RuleKey{ID: "instrument-reference", Revision: 1}, Subject: NodeRef{"d", 60}}
 	change := stateNode(b, timelineRoleSoundInstrumentChange, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleInstrumentChangeInstrumentSound, 61, stateAtomicText("changed")))
 	use := b.Roles[timelineRoleInstrumentChangeID][0]
-	change.attributes = []AttributeFact{{Owner: 60, Name: use.Name, Declaration: stateKnown(use.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-change-reference", Cause: cause}}}}
+	change.attributes = []retainedAttribute{testRetainedAttribute(AttributeFact{Owner: 60, Name: use.Name, Declaration: stateKnown(use.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-change-reference", Cause: cause}}})}
 	sound := offsetSoundNode(t, b, timelineRoleSound, stateAbsent[Decimal]())
 	sound.children = append(sound.children, change)
 	if err := service.readSoundAt(context.Background(), s, b, sound, runtimeBlock(b, 1), stateUnknown[musicalPosition]("unknown-cursor"), stateAbsent[Decimal](), stateAbsent[Decimal](), stateAbsent[bool]()); err != nil {

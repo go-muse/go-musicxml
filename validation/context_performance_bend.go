@@ -30,7 +30,7 @@ func performanceBendRelation(r *contextReader, n *factNode, present Evidence[boo
 		out.Satisfied = Evidence[bool]{State: EvidenceAbsent}
 		return out
 	}
-	parent := r.s.nodes[n.header.Parent]
+	parent := r.s.node(n.header.Parent)
 	if parent == nil {
 		return out
 	}

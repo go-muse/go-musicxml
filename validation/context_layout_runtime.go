@@ -44,7 +44,7 @@ func evaluateContextLayout(ctx context.Context, s *Session, n *factNode, key Rul
 		if !r.step(1) {
 			return Decision{}, false, r.err
 		}
-		node := s.nodes[id]
+		node := s.node(id)
 		if node == nil {
 			continue
 		}
@@ -61,7 +61,7 @@ func evaluateContextLayout(ctx context.Context, s *Session, n *factNode, key Rul
 		// of its own. In particular, an unavailable child declaration is not absence.
 		static := dispatch.has(layoutStaticFamily)
 		if !static {
-			static = r.matches(s.nodes[node.header.Parent], layoutRole("direction-type"))
+			static = r.matches(s.node(node.header.Parent), layoutRole("direction-type"))
 		}
 		if r.err != nil {
 			return Decision{}, false, r.err

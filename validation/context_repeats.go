@@ -85,7 +85,7 @@ func contextRepeatOrigin(ctx context.Context, s *Session, timeline *timelineServ
 		if fact, ok := timeline.Facts[n.header.ID]; ok {
 			return fact, nil
 		}
-		n = s.nodes[n.header.Parent]
+		n = s.node(n.header.Parent)
 	}
 	gap := stateUnknown[musicalPosition]("context-origin-unavailable")
 	return timelineEventFact{Origin: gap, Position: gap, Part: stateUnknown[NodeRef]("context-part-unavailable")}, nil
@@ -382,7 +382,7 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 	meterRoster := &contextRepeatMeterRoster{}
 	defer meterRoster.close()
 	for _, id := range s.sequence {
-		node := s.nodes[id]
+		node := s.node(id)
 		kind := RepeatStyleKind("")
 		typeRole, slashRole, dotsRole, displayRole, dotRole, exceptRole := contextRole(""), contextRole(""), contextRole(""), contextRole(""), contextRole(""), contextRole("")
 		switch {
@@ -416,7 +416,7 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 		if e != nil {
 			return Decision{}, false, e
 		}
-		value := RepeatContextResult{Beat: Evidence[Rational]{State: EvidenceAbsent}, PatternMeasures: Evidence[Integer]{State: EvidenceAbsent}, Kind: kind, Part: fact.Part, Type: stateText(r.attribute(node, typeRole)), Staff: stateInteger(r.attribute(s.nodes[node.header.Parent], contextRepeatStaff)), Slashes: Evidence[Integer]{State: EvidenceAbsent}, UseDots: Evidence[bool]{State: EvidenceAbsent}, UseStems: Evidence[bool]{State: EvidenceAbsent}, Start: Evidence[NodeRef]{State: EvidenceAbsent}, Stop: Evidence[NodeRef]{State: EvidenceAbsent}, ContentEquivalent: stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), Complete: r.complete(node)}
+		value := RepeatContextResult{Beat: Evidence[Rational]{State: EvidenceAbsent}, PatternMeasures: Evidence[Integer]{State: EvidenceAbsent}, Kind: kind, Part: fact.Part, Type: stateText(r.attribute(node, typeRole)), Staff: stateInteger(r.attribute(s.node(node.header.Parent), contextRepeatStaff)), Slashes: Evidence[Integer]{State: EvidenceAbsent}, UseDots: Evidence[bool]{State: EvidenceAbsent}, UseStems: Evidence[bool]{State: EvidenceAbsent}, Start: Evidence[NodeRef]{State: EvidenceAbsent}, Stop: Evidence[NodeRef]{State: EvidenceAbsent}, ContentEquivalent: stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), Complete: r.complete(node)}
 		if slashRole != "" {
 			value.Slashes = stateInteger(r.attribute(node, slashRole))
 		}

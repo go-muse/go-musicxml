@@ -207,7 +207,7 @@ func spanPartGroupMembers(r *contextReader, es []*spanEndpoint) error {
 		if !r.step(1) {
 			return r.err
 		}
-		n := r.s.nodes[id]
+		n := r.s.node(id)
 		if !r.matches(n, spanRole_scorePart) {
 			continue
 		}
@@ -286,7 +286,7 @@ func spanLyricUnavailable(r *contextReader, key RuleKey, n *factNode, v Evidence
 	if r.err != nil {
 		return
 	}
-	r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: ContextPropertySpanLyricSyllable, Span: &p, Origins: []Location{n.header.Location}})
+	r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: ContextPropertySpanLyricSyllable, Span: &p, Origins: r.s.nodeOrigins(n)})
 }
 
 func spanLyricFacts(r *contextReader, key RuleKey, n *factNode) {
@@ -304,7 +304,7 @@ func spanLyricFacts(r *contextReader, key RuleKey, n *factNode) {
 		if r.err != nil {
 			return
 		}
-		r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: members[0], Property: ContextPropertySpanLyricSyllable, Span: &p, Origins: []Location{n.header.Location}})
+		r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: members[0], Property: ContextPropertySpanLyricSyllable, Span: &p, Origins: r.s.nodeOrigins(n)})
 		members = nil
 	}
 	for _, ch := range n.children {
@@ -353,7 +353,7 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 		if !r.step(1) {
 			return
 		}
-		n := r.s.nodes[e.ref.Node]
+		n := r.s.node(e.ref.Node)
 		role := e.payload.Role
 		var start *spanEndpoint
 		if e.payload.Association.State == EvidenceKnown && len(e.payload.Members) == 2 {
@@ -429,7 +429,7 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 			}
 		}
 		if e.payload.Family == SpanTie && role.State == EvidenceKnown && e.payload.Anchor.State == EvidenceKnown {
-			note := r.s.nodes[e.payload.Anchor.Value.Node]
+			note := r.s.node(e.payload.Anchor.Value.Node)
 			attr, property := spanRole_noteAttack, ContextPropertySpanTieAttackRecommended
 			if role.Value == "start" {
 				attr = spanRole_noteRelease

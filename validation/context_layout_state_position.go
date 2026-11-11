@@ -60,7 +60,7 @@ func layoutStatePosition(ctx context.Context, s *Session, key RuleKey, n *factNo
 	isDot := r.matches(n, layoutStateRole("dot"))
 	subject := n
 	if isDot {
-		subject = s.nodes[n.header.Parent]
+		subject = s.node(n.header.Parent)
 		if subject == nil {
 			return nil
 		}
@@ -145,7 +145,7 @@ func layoutStatePosition(ctx context.Context, s *Session, key RuleKey, n *factNo
 	if r.err != nil {
 		return r.err
 	}
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: ref, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: ContextExplicit, Staff: fact.Staff, Basis: "diatonic-half-space-offset-from-bottom-staff-line; hidden-lines-included; no-sounding-pitch"}})
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: s.nodeOrigins(n), Layout: &LayoutContextResult{Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: ref, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: ContextExplicit, Staff: fact.Staff, Basis: "diatonic-half-space-offset-from-bottom-staff-line; hidden-lines-included; no-sounding-pitch"}})
 }
 func layoutStateStaffStep(ctx context.Context, s *Session, step Evidence[string], octave Evidence[Integer], clef clefState) (Evidence[Integer], error) {
 	if step.State != EvidenceKnown {

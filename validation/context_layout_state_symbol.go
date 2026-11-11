@@ -66,7 +66,7 @@ func layoutStatePartSymbol(ctx context.Context, s *Session, key RuleKey, n *fact
 		if r.err != nil {
 			return r.err
 		}
-		return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: from, Raw: raw, Applicability: app, Unit: ContextUnitNone, Provenance: provenance, Basis: basis}})
+		return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: s.nodeOrigins(n), Layout: &LayoutContextResult{Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: from, Raw: raw, Applicability: app, Unit: ContextUnitNone, Provenance: provenance, Basis: basis}})
 	}
 	if e := publish("part-symbol", raw, value, active); e != nil {
 		return e
@@ -147,5 +147,5 @@ func layoutStatePriorSymbol(r *contextReader, key RuleKey, p *contextPlan, n *fa
 	if result.Value.State != EvidenceKnown {
 		return nil, stateUnavailable[NodeRef, bool](result.Value)
 	}
-	return r.s.nodes[result.Value.Value.Node], Evidence[bool]{State: EvidenceKnown, Value: true}
+	return r.s.node(result.Value.Value.Node), Evidence[bool]{State: EvidenceKnown, Value: true}
 }

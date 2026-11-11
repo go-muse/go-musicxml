@@ -160,7 +160,7 @@ func TestPlaybackInvalidCauseOwnedAndIndependentFromRaw(t *testing.T) {
 	n := stateNode(b, timelineRoleSound, 50, stateAbsent[Atomic]())
 	stateAttribute(b, n, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 88, 1)})
 	cause := &DecisionRef{Rule: RuleKey{ID: "scalar", Revision: 1}, Subject: NodeRef{DocumentID: "d", Node: 50}}
-	n.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "tempo-invalid", Cause: cause}
+	n.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "tempo-invalid", Cause: cause})
 	if err := p.readSound(context.Background(), s, b, n, block, fact); err != nil {
 		t.Fatal(err)
 	}
@@ -325,11 +325,11 @@ func TestPlaybackRawAttributePresenceIsNotSharedXSDDefault(t *testing.T) {
 			use := localUse(t, schema, "beam", "number", true)
 			b.Roles[timelineRoleBarlineLocation] = []SchemaUse{use}
 			r := &stateReader{ctx: context.Background(), s: s, b: b}
-			effective := r.attribute(s.nodes[3], timelineRoleBarlineLocation)
+			effective := r.attribute(s.node(3), timelineRoleBarlineLocation)
 			if r.err != nil || effective.State != EvidenceKnown || effective.Value.Integer.String() != "1" {
 				t.Fatalf("fixture lacks XSD default: %+v,%v", effective, r.err)
 			}
-			raw := r.playbackRawAttribute(s.nodes[3], timelineRoleBarlineLocation)
+			raw := r.playbackRawAttribute(s.node(3), timelineRoleBarlineLocation)
 			if r.err != nil || raw.State != EvidenceAbsent {
 				t.Fatalf("default presented as explicit: %+v,%v", raw, r.err)
 			}

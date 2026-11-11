@@ -32,7 +32,7 @@ func contextRoleRepeatedFixture(t *testing.T, count int) (*Session, *contextBind
 		t.Fatal(err)
 	}
 	s := contextRoleEngineSession(t, sourceSchemaEngineFor(t, schema, XSDCheckContent), count)
-	return s, b, s.nodes[2]
+	return s, b, s.node(2)
 }
 
 func contextRoleEngineSession(t *testing.T, engine *Engine, count int) *Session {

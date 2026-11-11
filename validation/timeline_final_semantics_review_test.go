@@ -605,7 +605,7 @@ func TestTimelineFinalReviewFloatingInvalidPublicationPreservesActualCause(t *te
 	floating := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundOffset, 41, stateAtomicDecimal(t, -1, 1)))
 	stateAttribute(b, floating, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
 	cause := &DecisionRef{Rule: RuleKey{"review-invalid-tempo-scalar", 1}, Subject: NodeRef{"d", 40}}
-	floating.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-tempo-scalar", Cause: cause}
+	floating.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-tempo-scalar", Cause: cause})
 	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, initial, runtimeNote(t, b, 50, 1, false)), runtimeBlock(b, 1, floating)}
 	for _, block := range blocks {
 		if err := svc.readMeasure(ctx, s, b, block); err != nil {
@@ -948,7 +948,7 @@ func TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses(t *testing.T) {
 			}
 			if mode == "unknown-scope" {
 				stateAttribute(b, key, timelineRoleKeyNumber, Atomic{Kind: AtomicInteger, Integer: stateInt(t, 1)})
-				key.attributes[0].Scalar.Value = stateUnknown[Atomic]("key-scope-unavailable")
+				key.attributes[0].Scalar.Value = testEvidence(stateUnknown[Atomic]("key-scope-unavailable"))
 			}
 			unplaced := stateNode(b, timelineRoleAttributes, 80, stateAbsent[Atomic](), key)
 			blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, runtimeNote(t, b, 30, 1, false), runtimeNote(t, b, 40, 1, false), changed, backup, unplaced)}

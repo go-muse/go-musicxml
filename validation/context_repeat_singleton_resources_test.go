@@ -130,7 +130,7 @@ func TestIndependentSingletonRepeatOwnedPrerequisiteCauses(t *testing.T) {
 			invalid := Evidence[bool]{State: EvidenceInvalid, Reason: "independent-unavailable", Cause: cause}
 			switch kind {
 			case "attributes":
-				r.s.nodes[id].end.AttributesComplete = testEvidence(invalid)
+				r.s.node(id).end.AttributesComplete = testEvidence(invalid)
 			case "end":
 				f := timeline.Facts[id]
 				f.End = stateUnavailable[bool, musicalPosition](invalid)
@@ -228,7 +228,7 @@ func TestIndependentSingletonRepeatDeclinesIncompleteDomain(t *testing.T) {
 				r.s.sequence = append(r.s.sequence, id)
 				index.events[part] = append(index.events[part], id)
 			case "unknown-attributes":
-				r.s.nodes[ids[0]].end.AttributesComplete = testEvidence(stateUnknown[bool]("unknown-attributes"))
+				r.s.node(ids[0]).end.AttributesComplete = testEvidence(stateUnknown[bool]("unknown-attributes"))
 			case "wrong-instrument-part":
 				timeline.State.NoteInstruments[0].Part = NodeRef{"d", 200}
 			case "wrong-instrument-document":

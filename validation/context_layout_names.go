@@ -17,7 +17,7 @@ func (l *layoutScopes) publishName(n *factNode, frame layoutFrame, start Evidenc
 	} else if !start.Value {
 		onset = Evidence[NodeRef]{State: EvidenceAbsent}
 	}
-	return l.r.s.publishContextResult(l.r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: "layout.name-display-onset", Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: part, Scope: ref, Origin: ref, Raw: Evidence[Atomic]{State: EvidenceAbsent}, Applicability: start, System: onset, Page: frame.page, Provenance: ContextExplicit, Basis: "current-or-next-new-system"}})
+	return l.r.s.publishContextResult(l.r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: "layout.name-display-onset", Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: l.r.s.nodeOrigins(n), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: part, Scope: ref, Origin: ref, Raw: Evidence[Atomic]{State: EvidenceAbsent}, Applicability: start, System: onset, Page: frame.page, Provenance: ContextExplicit, Basis: "current-or-next-new-system"}})
 }
 func (l *layoutScopes) nameUpdates(b timelineMeasureBlock, frame layoutFrame, start Evidence[bool]) error {
 	r := l.r

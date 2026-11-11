@@ -59,7 +59,7 @@ func evaluateBarlineLocation(ctx context.Context, s *Session, n *factNode, p *co
 	if provider == nil {
 		return Decision{}, false, contract("barline timeline", "selected timeline plan required")
 	}
-	content := s.nodes[n.header.Parent]
+	content := s.node(n.header.Parent)
 	if location == "left" {
 		earlier, err := barlineMovementSide(ctx, s, provider.Bindings, content, n.header.ID, true)
 		if err != nil {

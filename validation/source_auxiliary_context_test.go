@@ -312,7 +312,7 @@ func TestSourceContainerRawExactAttributeAndCausalEvidence(t *testing.T) {
 			case "absent":
 				n.attributes = n.attributes[:1]
 			case "empty":
-				n.attributes[1].Scalar.Value = localKnownText("")
+				n.attributes[1].Scalar.Value = testEvidence(localKnownText(""))
 				s.sourceAttributeLexical[slot] = stateKnown("")
 			case "invalid-raw":
 				s.sourceAttributeLexical[slot] = Evidence[string]{State: EvidenceInvalid, Reason: "raw-gap", Cause: cause}

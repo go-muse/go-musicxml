@@ -267,7 +267,7 @@ func buildPerformanceAdviceIndex(ctx context.Context, s *Session, service *timel
 		if err := s.step(ctx, 1); err != nil {
 			return nil, err
 		}
-		n := s.nodes[m.Source.Node]
+		n := s.node(m.Source.Node)
 		if n != nil {
 			x.midiByParent[n.header.Parent] = append(x.midiByParent[n.header.Parent], i)
 		}

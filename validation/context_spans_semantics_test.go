@@ -36,8 +36,8 @@ func spanUnitNode(r *contextReader, role contextRole, parent *factNode) *factNod
 	n := localNode(id, pid, string(role))
 	n.header.Declaration.Value = u.Declaration
 	n.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: u.DeclaredType})
-	n.header.Location.DocumentID = r.s.documentID
-	n.header.Location.Target = TargetSource
+	n.header.loc.meta.documentID = r.s.documentID
+	n.header.loc.meta.target = TargetSource
 	r.s.nodes[id] = n
 	r.s.sequence = append(r.s.sequence, id)
 	if parent != nil {
@@ -49,7 +49,7 @@ func spanUnitNode(r *contextReader, role contextRole, parent *factNode) *factNod
 }
 func spanUnitAttribute(r *contextReader, n *factNode, role contextRole, v Evidence[Atomic]) {
 	u := r.b.Roles[role][0]
-	n.attributes = append(n.attributes, AttributeFact{Owner: n.header.ID, Name: u.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: u.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Value: v}, Location: n.header.Location})
+	n.attributes = append(n.attributes, testRetainedAttribute(AttributeFact{Owner: n.header.ID, Name: u.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: u.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Value: v}, Location: n.location()}))
 }
 func spanUnitValue(t *testing.T, r *contextReader, p ContextProperty) Evidence[Atomic] {
 	t.Helper()

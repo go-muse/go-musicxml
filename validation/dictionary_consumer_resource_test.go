@@ -170,7 +170,7 @@ func TestDictionaryInheritedAttributeUsesOriginalDeclaration(t *testing.T) {
 		t.Fatal(err)
 	}
 	reader := &contextReader{ctx: context.Background(), s: s, b: b}
-	node := s.nodes[2]
+	node := s.node(2)
 	d, err := dictionaryCanonicalNode(reader, node, RuleKey{ID: "dictionary", Revision: 1}, &dictionaryPlan{Bindings: b})
 	if err != nil {
 		t.Fatal(err)

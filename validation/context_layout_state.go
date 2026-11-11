@@ -155,7 +155,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 	if matches("rest") {
 		raw := attr("rest", "measure")
 		scope := NodeRef{}
-		for ancestor := s.nodes[n.header.Parent]; ancestor != nil; ancestor = s.nodes[ancestor.header.Parent] {
+		for ancestor := s.node(n.header.Parent); ancestor != nil; ancestor = s.node(ancestor.header.Parent) {
 			if !r.step(1) {
 				return r.err
 			}
@@ -169,7 +169,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 		}
 	}
 	if matches("stem") {
-		parent := s.nodes[n.header.Parent]
+		parent := s.node(n.header.Parent)
 		rest := stateUnknown[bool]("stem-note-unavailable")
 		if parent != nil {
 			rest = localPresence(r, parent, layoutStateRole("rest"))
@@ -274,7 +274,7 @@ func layoutStateFact(r *contextReader, p *contextPlan, n *factNode) timelineEven
 	if service == nil {
 		return missing
 	}
-	for current := n; current != nil; current = r.s.nodes[current.header.Parent] {
+	for current := n; current != nil; current = r.s.node(current.header.Parent) {
 		if !r.step(1) {
 			return missing
 		}

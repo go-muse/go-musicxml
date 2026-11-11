@@ -133,7 +133,7 @@ func TestPerformanceEveryDefaultEvidenceAxes(t *testing.T) {
 						value.Cause = cause
 						value.Reason = "test-field-unavailable"
 					}
-					n.attributes = []AttributeFact{{Owner: 1, Name: attr.Name, Declaration: stateKnown(decl), Presence: stateKnown(true), Scalar: Scalar{Value: value}}}
+					n.attributes = []retainedAttribute{testRetainedAttribute(AttributeFact{Owner: 1, Name: attr.Name, Declaration: stateKnown(decl), Presence: stateKnown(true), Scalar: Scalar{Value: value}})}
 				}
 				r := &contextReader{ctx: context.Background(), s: s, b: b}
 				performanceStatic(r, RuleKey{"test-performance", 1}, n)

@@ -32,7 +32,7 @@ func schemaAttributeScratchFixture(t *testing.T, invalid ...bool) (*Session, *fa
 		t.Fatal(err)
 	}
 	for _, item := range []struct{ name, value string }{{"a", "x"}, {"b", "yy"}} {
-		if err := s.Attribute(context.Background(), AttributeFact{Owner: 1, Name: QName{Local: item.name}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Declaration: Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "schema-binding-pending"}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceKnown, Value: item.value}, Value: Evidence[Atomic]{State: EvidenceUnknown, Reason: "schema-binding-pending"}}, Location: s.root.header.Location}); err != nil {
+		if err := s.Attribute(context.Background(), AttributeFact{Owner: 1, Name: QName{Local: item.name}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Declaration: Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "schema-binding-pending"}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceKnown, Value: item.value}, Value: Evidence[Atomic]{State: EvidenceUnknown, Reason: "schema-binding-pending"}}, Location: s.root.location()}); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -112,7 +112,7 @@ func TestIndependentModelScopedAttributeCauseAndDefault(t *testing.T) {
 			}
 		}
 	}
-	for _, a := range s.nodes[1].attributes {
+	for _, a := range s.node(1).attributes {
 		if a.Name.Local == "good" && (a.Scalar.Value.Value.Text != "0004" || a.Scalar.Lexeme.State == EvidenceKnown) {
 			t.Errorf("current raw fact overwritten: %+v", a)
 		}

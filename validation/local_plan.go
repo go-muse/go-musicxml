@@ -451,7 +451,7 @@ func (s *Session) localScalar(ctx context.Context, n *factNode, a *AttributeSele
 	// Generic fact streams already promise domain-validated typed values. They
 	// have no implicit defaults; production source/model catalogs use the kernel.
 	if a == nil {
-		return *n.end.Scalar.Value, nil
+		return s.readAtomic(n.end.Scalar.Value), nil
 	}
 	v, _, e := s.lookupAttribute(ctx, n, *a)
 	return v, e
@@ -472,7 +472,7 @@ func (s *Session) localPresence(ctx context.Context, n *factNode, declarations [
 	}
 	if document {
 		for _, id := range s.sequence {
-			ch := s.nodes[id]
+			ch := s.node(id)
 			if err := s.step(ctx, 1); err != nil {
 				return Decision{}, nil, err
 			}
@@ -534,7 +534,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 		return Decision{}, true, nil
 	}
 	if !final && p.Operation == localAttributeChild && p.Relation == RelationParent {
-		parent := s.nodes[n.header.Parent]
+		parent := s.node(n.header.Parent)
 		if parent != nil && !parent.closed {
 			return Decision{}, true, nil
 		}
@@ -619,7 +619,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 			}
 			return Decision{Outcome: OutcomeNotApplicable, Reason: "trigger-absent"}, false, nil
 		}
-		owner := selectorDecision(p.Owner, n.header.value())
+		owner := selectorDecision(p.Owner, n.header)
 		if owner.Outcome == OutcomeNotApplicable {
 			return Decision{Outcome: OutcomeFail, Reason: "local-owner-mismatch", Expected: "the required exact owner selector", Actual: n.header.Name.Local}, false, nil
 		}
@@ -652,7 +652,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 		}
 		at := n
 		if p.Relation == RelationParent {
-			at = s.nodes[n.header.Parent]
+			at = s.node(n.header.Parent)
 		}
 		if p.Relation == RelationDocument {
 			at = s.root
@@ -709,7 +709,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 					continue
 				}
 				if markerNode != nil {
-					comparison, e = s.withProvedPlanRelated(n, p, nil, comparison, markerNode.header.Location)
+					comparison, e = s.withProvedPlanRelated(n, p, nil, comparison, markerNode.location())
 					return comparison, false, e
 				}
 				return comparison, false, nil
@@ -762,7 +762,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 				}
 				if comparison.Outcome == OutcomePass {
 					duplicate := Decision{Outcome: OutcomeFail, Reason: "duplicate-effective-child-value", Expected: "distinct effective child values", Actual: atomicDisplay(v.Value)}
-					duplicate, e = s.withProvedPlanRelated(n, p, nil, duplicate, previous.node.header.Location, ch.header.Location)
+					duplicate, e = s.withProvedPlanRelated(n, p, nil, duplicate, previous.node.location(), ch.location())
 					return duplicate, false, e
 				}
 				if comparison.Outcome != OutcomeFail {

@@ -57,7 +57,7 @@ func resourceAttribute(r *contextReader, n *factNode, role contextRole) Resource
 	}
 	out.Presence = presence
 	if attribute != nil {
-		out.Raw = attribute.Scalar.Lexeme
+		out.Raw = r.s.readLexeme(attribute.Scalar.Lexeme)
 	} else {
 		out.Raw = stateUnavailable[bool, string](presence)
 	}
@@ -67,7 +67,7 @@ func resourcePublish(r *contextReader, key RuleKey, n *factNode, property Contex
 	if r.err != nil {
 		return r.err
 	}
-	return r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: []Location{n.header.Location}, Resource: value})
+	return r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: r.s.nodeOrigins(n), Resource: value})
 }
 func resourceShell(s *Session, n *factNode, part Evidence[NodeRef]) *ResourceContextResult {
 	owner := n.header.Parent
@@ -136,7 +136,7 @@ func evaluateResourceLinks(ctx context.Context, s *Session, _ *factNode, key Rul
 		if !r.step(1) {
 			return Decision{}, false, r.err
 		}
-		n := s.nodes[id]
+		n := s.node(id)
 		if n == nil {
 			continue
 		}

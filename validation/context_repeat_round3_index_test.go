@@ -323,7 +323,7 @@ func TestRound3RepeatKnownPartEventlessContainerIsolation(t *testing.T) {
 			var containers []*factNode
 			var parts []Evidence[NodeRef]
 			for _, id := range s.sequence {
-				n := s.nodes[id]
+				n := s.node(id)
 				if n.header.Declaration.State == EvidenceKnown && n.header.Declaration.Value == partUse.Declaration {
 					part, err := s.timelinePart(context.Background(), n, p)
 					if err != nil || part.State != EvidenceKnown {

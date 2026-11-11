@@ -70,7 +70,7 @@ func TestLocalStructuralUnavailableAttributeMatrix(t *testing.T) {
 				a := localAttr(c.name)
 				r.b.Attributes[c.attribute] = map[ComponentID]AttributeSelector{n.header.Type.Value: a}
 				localSetAttr(n, c.name, localString("unused"))
-				n.attributes[0].Scalar.Value = *n.end.Scalar.Value
+				n.attributes[0].Scalar.Value = n.end.Scalar.Value
 				if err := localStructuralNode(r.ctx, s, RuleKey{"local-test", 1}, n, r); err != nil {
 					t.Fatal(err)
 				}

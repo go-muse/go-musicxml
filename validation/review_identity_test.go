@@ -13,7 +13,7 @@ func reviewIdentityNode(t *testing.T, s *Session, id NodeID, occurrence string, 
 	if err := s.OpenNode(ctx, factHeader(id, 1, occurrence, "slot")); err != nil {
 		t.Fatal(err)
 	}
-	a := ciStringNode(id, "unused").attributes[0]
+	a := ciStringNode(id, "unused").attributes[0].value(id)
 	a.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: value}
 	if err := s.Attribute(ctx, a); err != nil {
 		t.Fatal(err)
@@ -74,7 +74,7 @@ func TestReviewMalformedAtomicPayloadRemainsContractFailure(t *testing.T) {
 	declare, _ := NewIdentityDeclarationPlan("ids", ciSelector())
 	s := qaSession(t, qaSpec{id: "declare", occurrence: "test.root", p: declare})
 	qaOpenRoot(t, s)
-	a := ciStringNode(1, "unused").attributes[0]
+	a := ciStringNode(1, "unused").attributes[0].value(1)
 	a.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Text: "not-an-integer-wrapper"}}
 	if err := s.Attribute(context.Background(), a); !errors.Is(err, ErrInvalidConfiguration) || !errors.Is(err, ErrInvalidSession) {
 		t.Fatalf("malformed fact was accepted: %v", err)

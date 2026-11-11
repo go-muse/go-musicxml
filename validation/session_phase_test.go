@@ -59,7 +59,7 @@ func TestQARound2DefaultDoesNotReplacePresentMissingScalar(t *testing.T) {
 		t.Run(string(state), func(t *testing.T) {
 			s := qaSession(t, qaSpec{id: "a-default", occurrence: "test.root", p: provider, role: RoleContextProvider}, qaSpec{id: "z-consumer", occurrence: "test.root", p: consumer})
 			qaOpenRoot(t, s)
-			a := ciStringNode(1, "K").attributes[0]
+			a := ciStringNode(1, "K").attributes[0].value(1)
 			a.Scalar.Value = Evidence[Atomic]{State: state}
 			if state != EvidenceAbsent {
 				a.Scalar.Value.Reason = "unavailable"

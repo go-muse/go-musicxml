@@ -27,7 +27,7 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 		if !r.step(1) {
 			break
 		}
-		n := s.nodes[id]
+		n := s.node(id)
 		elements, attributes := r.roles(n), r.attributeRoles(n)
 		if r.err != nil {
 			break

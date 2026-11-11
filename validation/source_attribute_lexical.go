@@ -163,7 +163,7 @@ func (s *Session) observeSourceAttributeLexical(ctx context.Context, provider Ru
 // sourcePhysicalAttribute consumes an exact declaration-matched attribute from
 // attributeEvidence (or the exact standard xsi hint slot). Origin lookup is a
 // charged constant-time index over already owned publications, not a report scan.
-func (s *Session) sourcePhysicalAttribute(ctx context.Context, n *factNode, attribute *AttributeFact, presence Evidence[bool]) (Evidence[bool], Evidence[string], error) {
+func (s *Session) sourcePhysicalAttribute(ctx context.Context, n *factNode, attribute *retainedAttribute, presence Evidence[bool]) (Evidence[bool], Evidence[string], error) {
 	if presence.State == EvidenceAbsent || presence.State == EvidenceKnown && !presence.Value {
 		return Evidence[bool]{State: EvidenceAbsent}, Evidence[string]{State: EvidenceAbsent}, nil
 	}
