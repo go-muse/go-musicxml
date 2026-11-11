@@ -18,7 +18,7 @@ func navigationResolvePlayer(r *contextReader, part Evidence[NodeRef], raw Evide
 	if part.State != EvidenceKnown {
 		return stateUnavailable[NodeRef, NodeRef](part)
 	}
-	owner := r.s.nodes[part.Value.Node]
+	owner := r.s.node(part.Value.Node)
 	complete := r.complete(owner)
 	if complete.State != EvidenceKnown {
 		return stateUnavailable[bool, NodeRef](complete)

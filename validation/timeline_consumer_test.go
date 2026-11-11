@@ -71,7 +71,7 @@ func TestTimelineConsumerChordBoundUsesPrincipal(t *testing.T) {
 			if d.Outcome != tc.want {
 				t.Fatalf("got %+v want %s", d, tc.want)
 			}
-			if tc.want == OutcomeFail && (len(d.Related) != 1 || d.Related[0] != principal.header.Location) {
+			if tc.want == OutcomeFail && (len(d.Related) != 1 || d.Related[0] != principal.location()) {
 				t.Fatalf("missing principal location %+v", d)
 			}
 		})
@@ -321,8 +321,8 @@ func TestTimelineConsumerNumeralLocalSchemaProof(t *testing.T) {
 				s := localAdmit(t, localEngine(t, schema, target), target, lt("root", lt("harmony", lt("numeral", key))), nil)
 				defer s.cleanup()
 				var n *factNode
-				for _, node := range s.nodes {
-					if node.header.Name.Local == "numeral" {
+				for _, id := range s.sequence {
+					if node := s.node(id); node.header.Name.Local == "numeral" {
 						n = node
 						break
 					}
@@ -451,7 +451,7 @@ func TestTimelineConsumerFailureSurvivesRelatedRetentionStop(t *testing.T) {
 			s.retained = 0
 			s.accumulator = newReportAccumulator(Profile{Target: TargetSource}, account)
 			s.decisions = map[decisionID]Decision{}
-			got, e := s.withTimelineProvedRelated(n, p, kind, d, n.header.Location)
+			got, e := s.withTimelineProvedRelated(n, p, kind, d, n.location())
 			if got.Outcome != OutcomeFail || !errors.Is(e, ErrResourceLimit) {
 				t.Fatalf("proof lost %+v %v", got, e)
 			}

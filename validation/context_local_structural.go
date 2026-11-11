@@ -168,7 +168,7 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 	}
 	if r.matches(n, localDegreeAlter) {
 		raw := r.scalar(n)
-		parent := s.nodes[n.header.Parent]
+		parent := s.node(n.header.Parent)
 		kind := r.childScalar(parent, localDegreeType)
 		v := kind
 		if kind.State == EvidenceKnown {

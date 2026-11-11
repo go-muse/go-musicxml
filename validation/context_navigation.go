@@ -115,7 +115,7 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 		if err := s.step(ctx, 1); err != nil {
 			return nil, release, err
 		}
-		node := s.nodes[id]
+		node := s.node(id)
 		if r.matches(node, contextNavListening) {
 			fact, e := contextRepeatOrigin(ctx, s, timeline, node)
 			if e != nil {
@@ -220,7 +220,7 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 				row.event.AfterJump = row.value.AfterJump
 				row.value.AttributesActive = navigationBackwardApplicability(direction, stateUnknown[bool]("navigation-ending-membership-unavailable"))
 				if direction.State == EvidenceKnown && direction.Value == "backward" {
-					ending, present := r.child(s.nodes[node.header.Parent], contextBarlineEnding)
+					ending, present := r.child(s.node(node.header.Parent), contextBarlineEnding)
 					if present.State == EvidenceKnown {
 						typ := stateText(r.attribute(ending, contextEndingType))
 						if typ.State == EvidenceKnown && (typ.Value == "stop" || typ.Value == "discontinue") {
@@ -388,7 +388,7 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 			return err
 		}
 		if row.event.Kind == NavigationEnding {
-			if node := s.nodes[row.event.Source.Node]; node != nil {
+			if node := s.node(row.event.Source.Node); node != nil {
 				endingBarlines[node.header.Parent] = true
 			}
 		}
@@ -445,7 +445,7 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 				ending.Value = endingDepth > 0
 				// A stop/discontinue on this same barline owns its trailing repeat even
 				// though its ending interval is otherwise half-open.
-				if node := s.nodes[row.event.Source.Node]; node != nil && endingBarlines[node.header.Parent] {
+				if node := s.node(row.event.Source.Node); node != nil && endingBarlines[node.header.Parent] {
 					ending.Value = true
 				}
 			}

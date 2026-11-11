@@ -56,7 +56,7 @@ func (sound soundPlaybackContext) spatial(ctx context.Context, s *Session, instr
 					}
 					return playbackSpatialState{}, contract("sound spatial precedence", "matching canonical part and instrument required")
 				}
-				node := s.nodes[record.Source.Node]
+				node := s.node(record.Source.Node)
 				if node == nil {
 					unavailable(stateUnknown[bool]("playback-midi-owner-unavailable"))
 				} else if node.header.Parent != sound.Origin.Source.Node {

@@ -126,7 +126,7 @@ func contextPerformancePropertyValid(p ContextProperty) bool {
 }
 func publishPerformanceScalar(r *contextReader, key RuleKey, n *factNode, property ContextProperty, v Evidence[Atomic]) {
 	if r.err == nil {
-		r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: v, Origins: []Location{n.header.Location}})
+		r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: v, Origins: r.s.nodeOrigins(n)})
 	}
 }
 func performanceDefaultOwner(owner, name string) string {
@@ -176,5 +176,5 @@ func performanceStaticRoles(r *contextReader, key RuleKey, n *factNode, roles []
 	}
 }
 func publishPerformanceTiming(ctx context.Context, s *Session, key RuleKey, n *factNode, v *TimingContextResult) error {
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: NodeRef{s.documentID, n.header.ID}, Property: ContextPropertyTiming, Origins: []Location{n.header.Location}, Timing: v})
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: NodeRef{s.documentID, n.header.ID}, Property: ContextPropertyTiming, Origins: s.nodeOrigins(n), Timing: v})
 }

@@ -26,7 +26,7 @@ func evaluateContextOpusLayout(ctx context.Context, s *Session, _ *factNode, key
 		if !r.step(1) {
 			return Decision{}, false, r.err
 		}
-		n := s.nodes[id]
+		n := s.node(id)
 		if r.attributeOwner(n, layoutOpusVersion) {
 			raw := localRawAttribute(r, n, layoutOpusVersion)
 			value := localDefault(raw, Atomic{Kind: AtomicString, Text: "1.0"})

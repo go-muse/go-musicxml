@@ -10,7 +10,7 @@ import (
 func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *int64) (out ResourceAttribute, observed bool) {
 	out = resourceAbsentAttribute()
 	q := QName{Space: xsd.XSINamespace, Local: name}
-	var a *AttributeFact
+	var a *retainedAttribute
 	for i := range n.attributes {
 		if !r.step(1) {
 			return out, false
@@ -31,13 +31,13 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 		}
 		return out, false
 	}
-	out.Presence = a.Presence
-	out.Raw = a.Scalar.Lexeme
-	effective := a.Scalar.Lexeme
+	out.Presence = *a.Presence
+	out.Raw = r.s.readLexeme(a.Scalar.Lexeme)
+	effective := out.Raw
 	if r.sourceInfoset {
 		defer func() {
 			if r.err == nil {
-				out.Presence, out.Raw, r.err = r.s.sourcePhysicalAttribute(r.ctx, n, a, a.Presence)
+				out.Presence, out.Raw, r.err = r.s.sourcePhysicalAttribute(r.ctx, n, a, *a.Presence)
 			}
 		}()
 	}
@@ -64,10 +64,11 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 			}
 			exactAttribute := issue.Attribute == (xsd.QName{Space: q.Space, Local: q.Local})
 			if issue.Attribute == (xsd.QName{}) {
-				if !r.step(int64(len(issue.Path)+len(n.header.Location.Path)+len(q.Space)+len(q.Local)) + 4) {
+				nodePath := n.path()
+				if !r.step(int64(len(issue.Path)+len(nodePath)+len(q.Space)+len(q.Local)) + 4) {
 					return out, true
 				}
-				exactAttribute = resourceHintPathMatches(issue.Path, n.header.Location.Path, name)
+				exactAttribute = resourceHintPathMatches(issue.Path, nodePath, name)
 			}
 			if exactAttribute && issue.Subject == xsd.SubjectID(n.header.ID) {
 				out.Value, r.err = r.s.schemaInvalidValue(r.ctx, n, check)
@@ -114,7 +115,7 @@ func evaluateResourceHints(ctx context.Context, s *Session, _ *factNode, key Rul
 		if !r.step(1) {
 			return Decision{}, false, r.err
 		}
-		n := s.nodes[id]
+		n := s.node(id)
 		if n == nil {
 			continue
 		}
@@ -152,7 +153,7 @@ func projectResourceHintNode(r *contextReader, key RuleKey, n *factNode) error {
 				return r.err
 			}
 			if n.attributes[i].Name == (QName{Space: xsd.XSINamespace, Local: "schemaLocation"}) {
-				lexical = n.attributes[i].Scalar.Lexeme
+				lexical = r.s.readLexeme(n.attributes[i].Scalar.Lexeme)
 				break
 			}
 		}
@@ -186,13 +187,13 @@ func projectResourceHintNode(r *contextReader, key RuleKey, n *factNode) error {
 		if hint.Value.State != EvidenceKnown {
 			state = stateUnavailable[Atomic, string](hint.Value)
 		}
-		origin := n.header.Location
+		origin := n.location()
 		for _, attribute := range n.attributes {
 			if !r.step(1) {
 				return r.err
 			}
 			if attribute.Name == (QName{Space: xsd.XSINamespace, Local: "schemaLocation"}) {
-				origin = attribute.Location
+				origin = attribute.location()
 				break
 			}
 		}

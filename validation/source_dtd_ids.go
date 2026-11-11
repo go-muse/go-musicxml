@@ -180,10 +180,10 @@ func (s *Session) sourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribu
 		if d.Sequence == 0 || len(d.Element) > 2*maxIdentityBytes || len(d.Attribute) > 2*maxIdentityBytes {
 			return s.fail(contract("source DTD ID declaration", "bounded positive first-binding identity required"))
 		}
-		if err = s.sourceDTDIDLexical(ctx, d.Element, n.header.Name, n.header.Bindings, true); err != nil {
+		if err = s.sourceDTDIDLexical(ctx, d.Element, n.header.Name, n.bindings(), true); err != nil {
 			return s.fail(err)
 		}
-		if err = s.sourceDTDIDLexical(ctx, d.Attribute, f.Attribute, n.header.Bindings, false); err != nil {
+		if err = s.sourceDTDIDLexical(ctx, d.Attribute, f.Attribute, n.bindings(), false); err != nil {
 			return s.fail(err)
 		}
 		switch d.DefaultKind {
@@ -303,7 +303,7 @@ func (s *Session) completeSourceDTDIDs(ctx context.Context, doc string) error {
 		return s.fail(&SessionError{Operation: "CompleteSourceDTDIDs", Reason: "one selected closed-document seal required"})
 	}
 	for _, id := range s.sequence {
-		n := s.nodes[id]
+		n := s.node(id)
 		for _, a := range n.attributes {
 			if err := s.step(ctx, 1); err != nil {
 				return s.fail(err)

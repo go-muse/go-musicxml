@@ -59,7 +59,7 @@ func TestModelBlockedCompositeCanRetainIndependentLimitations(t *testing.T) {
 			Code: "model-nonfinite", Axis: ModelAxisAttribute, Attribute: QName{Local: "broken"},
 			Location: header.Location, Expected: "finite", Actual: "NaN",
 		})
-		result := session.schemaResult(session.nodes[1], XSDCheckAttributes)
+		result := session.schemaResult(session.node(1), XSDCheckAttributes)
 		reasons := make([]string, 0, len(result.Limitations))
 		for _, limitation := range result.Limitations {
 			reasons = append(reasons, limitation.Reason)

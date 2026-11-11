@@ -450,7 +450,7 @@ func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *t
 		if err := s.step(ctx, 1); err != nil {
 			return nil, err
 		}
-		if node := s.nodes[closure.Part.Node]; node != nil {
+		if node := s.node(closure.Part.Node); node != nil {
 			if err := out.State.readInstrumentDefinitions(ctx, s, b, node, closure.Part); err != nil {
 				return nil, err
 			}

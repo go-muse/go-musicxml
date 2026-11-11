@@ -60,7 +60,7 @@ func localPublishWithProvenance(ctx context.Context, s *Session, key RuleKey, n 
 	if scope.Node == 0 {
 		scope = ref
 	}
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: provenance}})
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: s.nodeOrigins(n), Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: provenance}})
 }
 func localPublishConstant(ctx context.Context, s *Session, key RuleKey, n *factNode, r *contextReader, i int) error {
 	spec := localConstantRules[i]
@@ -111,7 +111,7 @@ func localRawAttribute(r *contextReader, n *factNode, role contextRole) Evidence
 func localPublishAtOrigin(ctx context.Context, s *Session, key RuleKey, n, origin *factNode, property ContextProperty, raw, value Evidence[Atomic], active Evidence[bool], provenance ContextProvenance) error {
 	ref := NodeRef{s.documentID, n.header.ID}
 	from := NodeRef{s.documentID, origin.header.ID}
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location, origin.header.Location}, Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: provenance}})
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: s.nodeOrigins(n, origin), Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: provenance}})
 }
 
 func localConstantProvenance(spec localConstantRule, raw Evidence[Atomic]) ContextProvenance {

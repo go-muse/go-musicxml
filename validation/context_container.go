@@ -132,7 +132,7 @@ func containerRawAttribute(r *contextReader, n *factNode, role contextRole) Evid
 	if fact == nil {
 		return stateUnknown[string]("container-attribute-lexeme-unavailable")
 	}
-	return fact.Scalar.Lexeme
+	return r.s.readLexeme(fact.Scalar.Lexeme)
 }
 
 func evaluateContextContainerMetadata(ctx context.Context, s *Session, _ *factNode, key RuleKey, p *contextPlan, final bool) (Decision, bool, error) {
@@ -159,7 +159,7 @@ func evaluateContextContainerMetadata(ctx context.Context, s *Session, _ *factNo
 			return r.err
 		}
 		return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: NodeRef{s.documentID, n.header.ID}, Property: ContextPropertyContainerMetadata,
-			Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: []Location{n.header.Location}, Container: &value})
+			Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: s.nodeOrigins(n), Container: &value})
 	}
 	if err := publish(root, ContainerRoot, containerContent(r, root, containerRootfiles), Evidence[uint64]{State: EvidenceAbsent}); err != nil {
 		return Decision{}, false, err

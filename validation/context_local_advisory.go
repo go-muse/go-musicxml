@@ -121,7 +121,7 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 		app := localAdvisoryCondition(raw, "none")
 		value := localKnownText("set-root-step-text-to-empty-to-suppress-root")
 		if app.State == EvidenceKnown && app.Value {
-			parent := s.nodes[n.header.Parent]
+			parent := s.node(n.header.Parent)
 			var subject *factNode
 			association := Evidence[bool]{State: EvidenceKnown, Value: true}
 			complete := stateUnknown[bool]("harmony-parent-unavailable")
@@ -177,7 +177,7 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 			return e
 		}
 		app := stateUnknown[bool]("aligned-partwise-left-barlines-not-established")
-		if parent := s.nodes[n.header.Parent]; parent != nil && parent.header.Parent == 0 {
+		if parent := s.node(n.header.Parent); parent != nil && parent.header.Parent == 0 {
 			app = Evidence[bool]{State: EvidenceKnown, Value: false}
 		}
 		if e := recommendation("measure-label-alignment", localRawAttribute(r, n, localAdvisoryRole("measure.@number")), "aligned-partwise-measures-prefer-equal-labels-nonnumeric-and-repeated-labels-remain-permitted", app); e != nil {
@@ -232,7 +232,7 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 		}
 	}
 	if r.matches(n, localEncoder) {
-		parent := s.nodes[n.header.Parent]
+		parent := s.node(n.header.Parent)
 		app := r.complete(parent)
 		count := 0
 		if app.State == EvidenceKnown {

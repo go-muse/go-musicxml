@@ -27,7 +27,7 @@ func ciSelector() AttributeSelector {
 func ciStringNode(id NodeID, value string) *factNode {
 	n := ciNode(id, 0)
 	a := ciSelector()
-	n.attributes = []AttributeFact{{Owner: id, Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceUnknown, Reason: "not-needed"}, Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: value}}}, Location: Location{Target: TargetSource, DocumentID: "doc", Path: "/slot/@id", Position: &SourcePosition{Line: int(id), Column: 1, CoordinateSpace: "source"}}}}
+	n.attributes = []retainedAttribute{testRetainedAttribute(AttributeFact{Owner: id, Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceUnknown, Reason: "not-needed"}, Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: value}}}, Location: Location{Target: TargetSource, DocumentID: "doc", Path: "/slot/@id", Position: &SourcePosition{Line: int(id), Column: 1, CoordinateSpace: "source"}}})}
 	return n
 }
 func ciEvalIdentity(t *testing.T, s *Session, n *factNode, r RuleDefinition, p Plan, final bool) (Decision, bool) {
@@ -101,7 +101,7 @@ func TestIdentityDuplicateProofAndCausalAmbiguitySurviveIncompleteIndex(t *testi
 	if pending || d.Outcome != OutcomeBlocked || d.Cause == nil || *d.Cause != want || len(d.Related) != 2 {
 		t.Fatalf("ambiguous reference lost cause: %+v", d)
 	}
-	first.attributes[0].Location.Position.Line = 999
+	first.attributes[0].loc.meta.posLine = 999
 	if d.Related[0].Position.Line != 1 {
 		t.Fatal("identity origins alias input")
 	}
@@ -155,9 +155,9 @@ func TestIdentityEvidenceAndTypedStringContract(t *testing.T) {
 			if state == EvidenceInvalid {
 				evidence.Cause = &DecisionRef{Rule: ciRule("lexical").Key, Subject: NodeRef{DocumentID: "doc", Node: 1}}
 			}
-			n.attributes[0].Scalar.Value = evidence
+			n.attributes[0].Scalar.Value = testEvidence(evidence)
 			if state == EvidenceAbsent {
-				n.attributes[0].Presence = Evidence[bool]{State: EvidenceAbsent}
+				n.attributes[0].Presence = testEvidence(Evidence[bool]{State: EvidenceAbsent})
 			}
 			d, pending := ciEvalIdentity(t, s, n, ciRule("declaration"), p, true)
 			want := map[EvidenceState]Outcome{EvidenceAbsent: OutcomeNotApplicable, EvidenceUnknown: OutcomeUnknown, EvidenceUnsupported: OutcomeUnsupported, EvidenceInvalid: OutcomeBlocked}[state]
@@ -218,7 +218,7 @@ func TestContextPublicationIsCopiedAndScopeExact(t *testing.T) {
 			s.inputComplete = true
 			s.nodes[1] = ciNode(1, 0)
 			n := ciNode(2, 1)
-			n.header.Location.Position = &SourcePosition{Line: 2, Column: 1, CoordinateSpace: "source"}
+			n.header.loc = testRetainedLocation(Location{Target: TargetSource, DocumentID: "doc", Path: "/slot", Position: &SourcePosition{Line: 2, Column: 1, CoordinateSpace: "source"}}, nil)
 			value := Atomic{Kind: AtomicString, Text: "original"}
 			p, _ := NewContextValuePlan("effective", relation, value)
 			c, _ := NewContextComparisonPlan("effective", relation, ComparisonEqual, value)
@@ -228,7 +228,7 @@ func TestContextPublicationIsCopiedAndScopeExact(t *testing.T) {
 			if d, pending := ciEvalContext(t, s, n, ciRule("consumer"), c, false); !pending {
 				t.Fatalf("consumer decided before all providers: %+v", d)
 			}
-			n.header.Location.Position.Line = 999
+			n.header.loc.meta.posLine = 999
 			p.expected.Text = "mutated"
 			d, pending := ciEvalContext(t, s, n, ciRule("consumer"), c, true)
 			if pending || d.Outcome != OutcomePass {
@@ -341,7 +341,7 @@ func ciStreamNode(t *testing.T, s *Session, id, parent NodeID, occurrence, key s
 		t.Fatal(err)
 	}
 	if key != "" {
-		a := ciStringNode(id, key).attributes[0]
+		a := ciStringNode(id, key).attributes[0].value(id)
 		if err := s.Attribute(ctx, a); err != nil {
 			t.Fatal(err)
 		}
@@ -582,20 +582,20 @@ func TestContextDefaultUsesOnlyProvenAbsentSlot(t *testing.T) {
 			}
 			switch mode {
 			case "explicit-absent":
-				n.attributes[0].Presence = Evidence[bool]{State: EvidenceAbsent}
+				n.attributes[0].Presence = testEvidence(Evidence[bool]{State: EvidenceAbsent})
 			case "enumerated-absent":
 				n.attributes = nil
 			case "incomplete":
 				n.attributes = nil
 				n.end.AttributesComplete = testEvidence(Evidence[bool]{State: EvidenceKnown, Value: false})
 			case "unknown-presence":
-				n.attributes[0].Presence = Evidence[bool]{State: EvidenceUnknown, Reason: "upstream-missing"}
+				n.attributes[0].Presence = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "upstream-missing"})
 			case "unsupported-presence":
-				n.attributes[0].Presence = Evidence[bool]{State: EvidenceUnsupported, Reason: "upstream-unsupported"}
+				n.attributes[0].Presence = testEvidence(Evidence[bool]{State: EvidenceUnsupported, Reason: "upstream-unsupported"})
 			case "invalid-value":
-				n.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "upstream-invalid", Cause: &DecisionRef{Rule: ciRule("domain").Key, Subject: NodeRef{DocumentID: "doc", Node: 1}}}
+				n.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "upstream-invalid", Cause: &DecisionRef{Rule: ciRule("domain").Key, Subject: NodeRef{DocumentID: "doc", Node: 1}}})
 			case "absent-value":
-				n.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceAbsent}
+				n.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceAbsent})
 			}
 			d, pending := ciEvalContext(t, s, n, ciRule("provider"), p, false)
 			if pending {
@@ -635,7 +635,7 @@ func TestContextDefaultActualValueAndFallbackAreCopied(t *testing.T) {
 	}
 	ciEvalContext(t, s, n, ciRule("provider"), p, false)
 	n.attributes[0].Scalar.Value.Value.Text = "changed"
-	n.attributes[0].Location.Position.Line = 99
+	n.attributes[0].loc.meta.posLine = 99
 	fact := s.contexts[ContextKey{Name: "default", At: NodeRef{DocumentID: "doc", Node: 1}}]
 	if fact.Value.Value.Text != "actual" || fact.Origins[0].Position.Line != 1 {
 		t.Fatalf("explicit default source aliases retained: %+v", fact)
@@ -647,7 +647,7 @@ func TestIdentityPresentSlotWithoutTypedValueIsUnknown(t *testing.T) {
 	s.inputComplete = true
 	p, _ := NewIdentityDeclarationPlan("ids", ciSelector())
 	n := ciStringNode(1, "unused")
-	n.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceAbsent}
+	n.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceAbsent})
 	d, pending := ciEvalIdentity(t, s, n, ciRule("declaration"), p, true)
 	if pending || d.Outcome != OutcomeUnknown || !s.identities["ids"].incomplete {
 		t.Fatalf("present slot with no typed identity was treated as absent: %+v", d)

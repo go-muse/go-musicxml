@@ -257,7 +257,10 @@ func (s *Session) evaluateModelRepresentation(ctx context.Context, n *factNode, 
 		}
 		return nil
 	}
-	return s.accumulator.storeDiagnostic(r, d, n.header.Location)
+	if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
+		return nil
+	}
+	return s.accumulator.storeDiagnostic(r, d, n.location())
 }
 
 func (s *Session) invalidateModelRepresentation(ctx context.Context, n *factNode, d Decision) error {
@@ -283,7 +286,8 @@ func (s *Session) invalidateModelRepresentation(ctx context.Context, n *factNode
 					return err
 				}
 				if n.attributes[i].Name == p.Attribute {
-					n.attributes[i].Scalar.Value = invalid
+					val := invalid
+					n.attributes[i].Scalar.Value = &val
 					break
 				}
 			}

@@ -17,12 +17,13 @@ func TestReviewRetainedContainerCopyWork(t *testing.T) {
 					var values []NodeID
 					if kind == "map" {
 						if count > 0 {
-							s.nodes = make(map[NodeID]*factNode, count)
+							s.denseNodes = make([]*factNode, count)
 							s.nodeCapacity = count
 							for i := 0; i < count; i++ {
-								s.nodes[NodeID(i+1)] = &factNode{}
+								s.denseNodes[i] = &factNode{}
+								s.nodeCount++
 							}
-							if err := s.retain(256 + 48*int64(count)); err != nil {
+							if err := s.retain(retainedNodeMapHeaderBytes + retainedNodeMapSlotBytes*int64(count)); err != nil {
 								t.Fatal(err)
 							}
 						}

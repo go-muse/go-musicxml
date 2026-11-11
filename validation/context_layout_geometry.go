@@ -6,7 +6,7 @@ func layoutKnownText(text string) Evidence[Atomic] {
 	return Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: text}}
 }
 func layoutAncestor(r *contextReader, n *factNode, roles ...string) *factNode {
-	for a := n; a != nil; a = r.s.nodes[a.header.Parent] {
+	for a := n; a != nil; a = r.s.node(a.header.Parent) {
 		if !r.step(1) {
 			return nil
 		}
@@ -30,7 +30,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 		scope := ref
 		if property == "system" && value.State == EvidenceKnown && value.Value.Text == "none" {
 			if timeline := s.timeline[p.Timeline]; timeline != nil {
-				for a := n; a != nil; a = s.nodes[a.header.Parent] {
+				for a := n; a != nil; a = s.node(a.header.Parent) {
 					if !r.step(1) {
 						return r.err
 					}
@@ -44,7 +44,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 		if r.err != nil {
 			return r.err
 		}
-		return s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: provenance, Basis: basis}})
+		return s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: s.nodeOrigins(n), Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: provenance, Basis: basis}})
 	}
 	if r.matches(n, layoutRole("staff-layout")) {
 		raw := localRawAttribute(r, n, layoutRole("staff-layout.@number"))
@@ -101,7 +101,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 				basis = "physical-page-lower-left"
 			} else if layoutAncestor(r, n, "part-name-display", "part-abbreviation-display", "group-name-display", "group-abbreviation-display") != nil || r.matches(n, layoutRole("group-symbol")) {
 				basis = "first-measure-of-system-x-staff-top-y"
-			} else if layoutAncestor(r, n, "part-list") != nil || r.matches(n, layoutRole("note")) || r.matches(n, layoutRole("figured-bass")) || r.matches(n, layoutRole("harmony")) || r.matches(n, layoutRole("link")) || r.matches(n, layoutRole("directive")) || r.matches(n, layoutRole("measure-numbering")) || r.matches(s.nodes[n.header.Parent], layoutRole("direction-type")) {
+			} else if layoutAncestor(r, n, "part-list") != nil || r.matches(n, layoutRole("note")) || r.matches(n, layoutRole("figured-bass")) || r.matches(n, layoutRole("harmony")) || r.matches(n, layoutRole("link")) || r.matches(n, layoutRole("directive")) || r.matches(n, layoutRole("measure-numbering")) || r.matches(s.node(n.header.Parent), layoutRole("direction-type")) {
 				basis = "current-measure-start-x-staff-top-y"
 			}
 		case "bezier-x", "bezier-x2", "bezier-y", "bezier-y2":
@@ -155,9 +155,9 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 			return err
 		}
 	}
-	parent := s.nodes[n.header.Parent]
+	parent := s.node(n.header.Parent)
 	if r.matches(parent, layoutRole("direction-type")) {
-		direction := s.nodes[parent.header.Parent]
+		direction := s.node(parent.header.Parent)
 		raw := layoutAttribute(r, direction, "directive")
 		active := yes
 		for _, name := range []string{"default-x", "justify", "halign"} {
@@ -192,7 +192,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 	if r.matches(n, layoutRole("dynamics")) {
 		raw := layoutAttribute(r, n, "placement")
 		value := raw
-		if direction := layoutAncestor(r, s.nodes[n.header.Parent], "direction"); direction != nil {
+		if direction := layoutAncestor(r, s.node(n.header.Parent), "direction"); direction != nil {
 			parent := layoutAttribute(r, direction, "placement")
 			value = layoutUnknownDefault(parent, "application-direction-placement")
 		}

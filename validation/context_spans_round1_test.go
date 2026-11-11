@@ -79,7 +79,7 @@ func TestSpanRound1HierarchyGapWithEstablishedPartIdentity(t *testing.T) {
 						pid = parent.header.ID
 					}
 					n := localNode(id, pid, name)
-					n.header.Location.DocumentID = r.s.documentID
+					n.header.loc.meta.documentID = r.s.documentID
 					r.s.nodes[id] = n
 					r.s.sequence = append(r.s.sequence, id)
 					if parent != nil {

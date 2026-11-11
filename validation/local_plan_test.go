@@ -43,7 +43,7 @@ func localNode(id, parent NodeID, d string) *factNode {
 }
 func localSetAttr(n *factNode, name string, v Atomic) {
 	a := localAttr(name)
-	n.attributes = append(n.attributes, AttributeFact{Owner: n.header.ID, Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Value: Evidence[Atomic]{State: EvidenceKnown, Value: v}}, Location: n.header.Location})
+	n.attributes = append(n.attributes, testRetainedAttribute(AttributeFact{Owner: n.header.ID, Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Value: Evidence[Atomic]{State: EvidenceKnown, Value: v}}, Location: n.location()}))
 }
 func localRun(t *testing.T, p Plan, root, n *factNode, nodes ...*factNode) Decision {
 	t.Helper()
@@ -477,7 +477,7 @@ func TestLocalDistinctIndependentDuplicateSurvivesUnavailableNumbers(t *testing.
 							if state == EvidenceInvalid {
 								gap.Cause = &DecisionRef{Rule: RuleKey{ID: "schema.attribute", Revision: 1}, Subject: NodeRef{DocumentID: "doc", Node: ch.header.ID}}
 							}
-							ch.attributes[0].Scalar.Value = gap
+							ch.attributes[0].Scalar.Value = testEvidence(gap)
 						} else {
 							count++
 						}
@@ -507,7 +507,7 @@ func TestLocalTriggerDisjunctionContinuesAfterUnknownPresence(t *testing.T) {
 	}
 	n := localNode(1, 0, "slur")
 	localSetAttr(n, "a-control", localInteger(t, 0))
-	n.attributes[0].Presence = Evidence[bool]{State: EvidenceUnknown, Reason: "unknown-first-trigger"}
+	n.attributes[0].Presence = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "unknown-first-trigger"})
 	localSetAttr(n, "b-control", localInteger(t, 0))
 	localSetAttr(n, "type", localString("start"))
 	if d := localRun(t, p, n, n); d.Outcome != OutcomeFail {

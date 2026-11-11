@@ -107,7 +107,7 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 		if !r.step(1) {
 			return nil, nil, r.err
 		}
-		n := r.s.nodes[id]
+		n := r.s.node(id)
 		v := scopes[n.header.Parent]
 		parentLevel := v.level
 		v.level = 0
@@ -205,7 +205,7 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 			v.note = r.matches(n, contextRepeatAnyNote)
 			// Only structural ancestors and the note universe are prerequisites.
 			// Unrelated metadata/part-list and other parts' descendants are independent.
-			for parent := r.s.nodes[n.header.Parent]; parent != nil; parent = r.s.nodes[parent.header.Parent] {
+			for parent := r.s.node(n.header.Parent); parent != nil; parent = r.s.node(parent.header.Parent) {
 				if !r.step(1 + int64(len(v.part.Value.DocumentID))) {
 					return nil, nil, r.err
 				}

@@ -254,8 +254,8 @@ func TestTypedReferenceProvedKindFailureSurvivesRelatedStorageStop(t *testing.T)
 			t.Fatal(e)
 		}
 		var subject *factNode
-		for _, n := range s.nodes {
-			if n.header.Name.Local == "part" {
+		for _, id := range s.sequence {
+			if n := s.node(id); n.header.Name.Local == "part" {
 				subject = n
 			}
 		}
@@ -306,7 +306,8 @@ func TestTypedReferenceNestedOwnerProofIsNotCountedForConsumer(t *testing.T) {
 			t.Fatal(e)
 		}
 		var part, consumer *factNode
-		for _, n := range s.nodes {
+		for _, id := range s.sequence {
+			n := s.node(id)
 			switch n.header.Name.Local {
 			case "part":
 				part = n

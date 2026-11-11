@@ -354,7 +354,7 @@ func TestIndependentReviewIdentityDuplicateOutranksUnavailableFamily(t *testing.
 				if err := s.OpenNode(context.Background(), factHeader(id, 1, "test.decl", "child")); err != nil {
 					t.Fatal(err)
 				}
-				attribute := ciStringNode(id, "unused").attributes[0]
+				attribute := ciStringNode(id, "unused").attributes[0].value(id)
 				attribute.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: value}
 				if err := s.Attribute(context.Background(), attribute); err != nil {
 					t.Fatal(err)

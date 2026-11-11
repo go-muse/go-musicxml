@@ -24,7 +24,7 @@ func TestSpanRound3LocalTieHonorsHierarchyGaps(t *testing.T) {
 							pid = parent.header.ID
 						}
 						n := localNode(id, pid, name)
-						n.header.Location.DocumentID = r.s.documentID
+						n.header.loc.meta.documentID = r.s.documentID
 						r.s.nodes[id] = n
 						r.s.sequence = append(r.s.sequence, id)
 						if parent == nil {
@@ -258,7 +258,7 @@ func TestSpanRound3UnnamedLyricScopePreservesIdentityEvidence(t *testing.T) {
 func TestSpanRound3UnknownDomainUnnamedAmbiguityReachesOnlyUnnamed(t *testing.T) {
 	r := spanUnitReader(t)
 	root := localNode(1, 0, "score")
-	root.header.Location.DocumentID = r.s.documentID
+	root.header.loc.meta.documentID = r.s.documentID
 	r.s.root = root
 	r.s.nodes[1] = root
 	r.s.sequence = []NodeID{1}

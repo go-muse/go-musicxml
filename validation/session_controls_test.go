@@ -36,13 +36,13 @@ func TestQAControlLifecycleMatrix(t *testing.T) {
 		"wrong-close": func(s *Session) error { qaOpenRoot(t, s); return s.CloseNode(context.Background(), factEnd(2)) },
 		"wrong-attribute-owner": func(s *Session) error {
 			qaOpenRoot(t, s)
-			a := ciStringNode(2, "K").attributes[0]
+			a := ciStringNode(2, "K").attributes[0].value(2)
 			return s.Attribute(context.Background(), a)
 		},
 		"attribute-after-child": func(s *Session) error {
 			qaOpenRoot(t, s)
 			ciStreamNode(t, s, 2, 1, "test.child", "")
-			a := ciStringNode(1, "K").attributes[0]
+			a := ciStringNode(1, "K").attributes[0].value(1)
 			return s.Attribute(context.Background(), a)
 		},
 		"nil-event-context": func(s *Session) error { return s.OpenNode(nil, factHeader(1, 0, "test.root", "root")) },
@@ -181,7 +181,7 @@ func TestQAControlExactDeclarationIsolation(t *testing.T) {
 		t.Run(variant, func(t *testing.T) {
 			s := qaSession(t, qaSpec{id: "presence", occurrence: "test.root", p: plan})
 			qaOpenRoot(t, s)
-			a := ciStringNode(1, "K").attributes[0]
+			a := ciStringNode(1, "K").attributes[0].value(1)
 			switch variant {
 			case "other-assembly":
 				a.Declaration.Value.Assembly = AssemblyOpus

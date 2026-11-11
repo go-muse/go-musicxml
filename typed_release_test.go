@@ -63,6 +63,7 @@ func typedReleaseCases() map[string][]byte {
 		"valid":                    render(nil),
 		"schema location hint":     render(map[string]string{"ROOTATTR": xsi + `xsi:schemaLocation="http://www.musicxml.org/ns musicxml.xsd"`}),
 		"no-namespace hint":        render(map[string]string{"ROOTATTR": xsi + `xsi:noNamespaceSchemaLocation="musicxml.xsd"`}),
+		"part no-namespace hint":   render(map[string]string{"ROOTATTR": xsi, "PART1ATTR": `xsi:noNamespaceSchemaLocation="part.xsd" `}),
 		"malformed hint":           render(map[string]string{"ROOTATTR": xsi + `xsi:schemaLocation="only-one-token"`}),
 		"invalid attribute value":  render(map[string]string{"MIDDLE": `<note default-x="wide" print-object="maybe"><rest/><duration>1</duration></note>`}),
 		"defaulted attribute":      render(map[string]string{"MIDDLE": `<direction><direction-type><dynamics><p/></dynamics></direction-type><sound tempo="120"/></direction>`}),

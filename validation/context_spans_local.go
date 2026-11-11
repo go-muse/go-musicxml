@@ -38,7 +38,7 @@ func spanPublish(r *contextReader, key RuleKey, n *factNode, property ContextPro
 	if r.err != nil {
 		return
 	}
-	r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: v, Origins: []Location{n.header.Location}})
+	r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: v, Origins: r.s.nodeOrigins(n)})
 }
 func spanAttrDefault(r *contextReader, key RuleKey, n *factNode, role contextRole, property ContextProperty, d Evidence[Atomic]) Evidence[Atomic] {
 	v := spanDefault(r.attribute(n, role), d)

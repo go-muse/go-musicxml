@@ -28,7 +28,7 @@ func navigationGraphicBindings() []contextBindingSpec {
 func navigationPublishGraphics(ctx context.Context, s *Session, p *contextPlan, key RuleKey, timeline *timelineService) error {
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
 	for _, id := range s.sequence {
-		n := s.nodes[id]
+		n := s.node(id)
 		kind := NavigationKind("")
 		role := contextRole("")
 		if r.matches(n, contextNavGraphicSegno) {
@@ -47,7 +47,7 @@ func navigationPublishGraphics(ctx context.Context, s *Session, p *contextPlan, 
 			return err
 		}
 		v := NavigationContextResult{Kind: kind, Part: origin.Part, PlaybackSoundNeeded: navigationKnownBool(true), LocalPlaybackSound: stateUnknown[NodeRef]("navigation-graphic-association-outside-direction-unresolved")}
-		for a := s.nodes[n.header.Parent]; a != nil; a = s.nodes[a.header.Parent] {
+		for a := s.node(n.header.Parent); a != nil; a = s.node(a.header.Parent) {
 			if !r.step(1) {
 				return r.err
 			}

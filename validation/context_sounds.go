@@ -82,7 +82,7 @@ func evaluateContextSoundsMapping(ctx context.Context, s *Session, _ *factNode, 
 		if !r.step(1) {
 			return Decision{}, false, r.err
 		}
-		n := s.nodes[id]
+		n := s.node(id)
 		role, primary := SoundMappingRole(""), contextRole("")
 		for _, binding := range []struct {
 			role    contextRole
@@ -109,7 +109,7 @@ func evaluateContextSoundsMapping(ctx context.Context, s *Session, _ *factNode, 
 		direction := SoundMappingToMusicXML
 		library, number := Evidence[Atomic]{State: EvidenceAbsent}, Evidence[Atomic]{State: EvidenceAbsent}
 		if role != SoundMappingSound {
-			owner = s.nodes[n.header.Parent]
+			owner = s.node(n.header.Parent)
 			if !r.matches(owner, soundsSound) {
 				if r.err != nil {
 					return Decision{}, false, r.err
@@ -126,7 +126,7 @@ func evaluateContextSoundsMapping(ctx context.Context, s *Session, _ *factNode, 
 		if r.err != nil {
 			return Decision{}, false, r.err
 		}
-		if err := s.publishContextResult(ctx, ContextResult{Provider: key, Subject: NodeRef{s.documentID, n.header.ID}, Property: ContextPropertySoundMapping, Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: []Location{n.header.Location}, SoundMapping: &value}); err != nil {
+		if err := s.publishContextResult(ctx, ContextResult{Provider: key, Subject: NodeRef{s.documentID, n.header.ID}, Property: ContextPropertySoundMapping, Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: s.nodeOrigins(n), SoundMapping: &value}); err != nil {
 			return Decision{}, false, err
 		}
 	}

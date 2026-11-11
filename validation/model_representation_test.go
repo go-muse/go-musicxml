@@ -144,7 +144,7 @@ func TestModelRepresentationOwnsProblemsAndPublishesRealCause(t *testing.T) {
 	if err := s.CloseNode(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
-	scalar := *s.nodes[1].end.Scalar.Value
+	scalar := *s.node(1).end.Scalar.Value
 	if scalar.State != EvidenceInvalid || scalar.Cause == nil {
 		t.Fatalf("missing causal invalidation: %+v", scalar)
 	}
@@ -152,7 +152,7 @@ func TestModelRepresentationOwnsProblemsAndPublishesRealCause(t *testing.T) {
 	if !ok || decision.Outcome != OutcomeFail || scalar.Cause.Subject.DocumentID != "doc" {
 		t.Fatalf("invented cause: %+v %+v", scalar, decision)
 	}
-	if s.nodes[1].end.ChildrenComplete.State != EvidenceKnown || s.nodes[1].end.AttributesComplete.State != EvidenceKnown {
+	if s.node(1).end.ChildrenComplete.State != EvidenceKnown || s.node(1).end.AttributesComplete.State != EvidenceKnown {
 		t.Fatal("unrelated axes were invalidated")
 	}
 	r := representationFinish(t, s)
@@ -296,7 +296,7 @@ func TestModelRepresentationTruncationPreservesBlockersAndCauses(t *testing.T) {
 	if err := s.CloseNode(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
-	if s.nodes[1].end.Scalar.Value.Cause == nil {
+	if s.node(1).end.Scalar.Value.Cause == nil {
 		t.Fatal("diagnostic truncation lost causal result")
 	}
 	r := representationFinish(t, s)
@@ -353,7 +353,7 @@ func TestModelRepresentationAttributeAndChildrenAreScoped(t *testing.T) {
 			if err := s.CloseNode(context.Background(), end); err != nil {
 				t.Fatal(err)
 			}
-			n := s.nodes[1]
+			n := s.node(1)
 			if n.end.Scalar.Value.State != EvidenceKnown || n.end.Scalar.Value.Value.Text != "independent" || n.end.AttributesComplete.State != EvidenceKnown {
 				t.Fatal("independent facts lost")
 			}
@@ -504,7 +504,7 @@ func TestModelRepresentationVerdictSurvivesCacheFailure(t *testing.T) {
 	}
 	closeErr := s.CloseNode(context.Background(), end)
 	var refused *ResourceError
-	if !errors.As(closeErr, &refused) || !s.nodes[1].closed {
+	if !errors.As(closeErr, &refused) || !s.node(1).closed {
 		t.Fatalf("expected decision-cache resource failure after end retention: %v", closeErr)
 	}
 	if left := refused.Limit - refused.Used; left != 0 {

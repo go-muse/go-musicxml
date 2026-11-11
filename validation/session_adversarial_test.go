@@ -188,7 +188,7 @@ func TestQAComputedViolationSurvivesDecisionCacheExhaustion(t *testing.T) {
 	}
 	err := s.CloseNode(context.Background(), end)
 	var refused *ResourceError
-	if !errors.As(err, &refused) || !s.nodes[1].closed {
+	if !errors.As(err, &refused) || !s.node(1).closed {
 		t.Fatalf("expected decision-cache resource failure after end retention: %v", err)
 	}
 	if left := refused.Limit - refused.Used; left != 1 {

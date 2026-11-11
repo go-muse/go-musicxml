@@ -20,7 +20,7 @@ func layoutExhaustiveReference(ctx context.Context, s *Session, key RuleKey, p *
 		if !r.step(1) {
 			return r.err
 		}
-		n := s.nodes[id]
+		n := s.node(id)
 		if n == nil {
 			continue
 		}
@@ -106,7 +106,7 @@ func TestLayoutDispatchMatchesExhaustiveRoleReference(t *testing.T) {
 						unavailable := Evidence[Atomic]{State: state, Reason: "value-unavailable", Cause: &DecisionRef{Rule: RuleKey{"source-prerequisite", 1}, Subject: NodeRef{"doc", 2}}}
 						n.end.Scalar.Value = testEvidence(unavailable)
 						if spec.Attribute {
-							n.attributes[0].Scalar.Value = unavailable
+							n.attributes[0].Scalar.Value = testEvidence(unavailable)
 						}
 					case "attributes-incomplete":
 						n.end.AttributesComplete = testEvidence(stateUnknown[bool]("attributes-incomplete"))
@@ -333,7 +333,7 @@ func TestLayoutDispatchExactAndOneUnderWorkLimits(t *testing.T) {
 		fixture := func(budget Budgets) (*Session, *contextPlan) {
 			s, p := layoutDispatchUnrelatedFixture(t, 1, budget)
 			if selected {
-				n := s.nodes[1]
+				n := s.node(1)
 				n.header.Type = testEvidence(stateKnown(contextNamedType("dispatch-owner")))
 				p.Bindings.Attributes = map[contextRole]map[ComponentID]AttributeSelector{layoutRole("constant.0.attribute"): {n.header.Type.Value: localAttr("implicit")}}
 				// Exercise the compatibility index too; a real compiled plan provides an
@@ -373,7 +373,7 @@ func TestLayoutDispatchExactAndOneUnderWorkLimits(t *testing.T) {
 func TestLayoutDispatchParentOnlyLookupRefusal(t *testing.T) {
 	s, p := layoutDispatchUnrelatedFixture(t, 1, Budgets{MaxRuleSteps: 9})
 	defer s.cleanup()
-	n := s.nodes[1]
+	n := s.node(1)
 	n.header.Parent = 2
 	n.header.Declaration = testEvidence(stateUnknown[DeclarationID]("child-unavailable"))
 	parent := localNode(2, 0, "parent")

@@ -65,7 +65,7 @@ func spanAncestor(r *contextReader, n *factNode, roles ...contextRole) *factNode
 		if n.header.Parent == 0 {
 			return nil
 		}
-		n = r.s.nodes[n.header.Parent]
+		n = r.s.node(n.header.Parent)
 	}
 	return nil
 }
@@ -98,7 +98,7 @@ func spanDomainIndex(r *contextReader, t *timelineService) map[NodeID]Evidence[N
 		if f.Part.State != EvidenceKnown {
 			continue
 		}
-		for n := r.s.nodes[id]; n != nil; n = r.s.nodes[n.header.Parent] {
+		for n := r.s.node(id); n != nil; n = r.s.node(n.header.Parent) {
 			if !r.step(1 + int64(len(f.Part.Value.DocumentID))) {
 				return nil
 			}
@@ -126,7 +126,7 @@ func spanInheritedDomain(r *contextReader, n *factNode, domains map[NodeID]Evide
 		if d, ok := domains[n.header.ID]; ok {
 			return d
 		}
-		n = r.s.nodes[n.header.Parent]
+		n = r.s.node(n.header.Parent)
 	}
 	return stateUnknown[NodeRef]("span-part-unavailable")
 }
@@ -412,7 +412,7 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 	lyrics := &spanLyricIndex{scratch: &scratch, domains: domains}
 	var metronomeSide NodeID
 	for order, id := range s.sequence {
-		node := s.nodes[id]
+		node := s.node(id)
 		if !r.step(1) {
 			break
 		}
@@ -594,8 +594,8 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 		if !r.step(1) {
 			break
 		}
-		node := s.nodes[e.ref.Node]
-		r.err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: e.ref, Property: ContextPropertySpan, Span: &e.payload, Origins: []Location{node.header.Location}})
+		node := s.node(e.ref.Node)
+		r.err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: e.ref, Property: ContextPropertySpan, Span: &e.payload, Origins: s.nodeOrigins(node)})
 		if r.err != nil {
 			break
 		}

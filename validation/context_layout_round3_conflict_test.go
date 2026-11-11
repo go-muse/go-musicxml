@@ -57,7 +57,7 @@ func TestLayoutRound3ConflictingAdmittedBreaksEveryOrder(t *testing.T) {
 							}
 							localSetAttr(print, "new-page", localString(value))
 							if statement == 2 {
-								print.attributes[0].Scalar.Value = Evidence[Atomic]{State: state, Reason: "admitted-break-unavailable", Cause: &DecisionRef{Rule: RuleKey{"fixture", 1}, Subject: NodeRef{"score", print.header.ID}}}
+								print.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: state, Reason: "admitted-break-unavailable", Cause: &DecisionRef{Rule: RuleKey{"fixture", 1}, Subject: NodeRef{"score", print.header.ID}}})
 							}
 							measure.children = []*factNode{print}
 							r.s.nodes[print.header.ID] = print

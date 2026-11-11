@@ -77,7 +77,7 @@ func TestTimelineDisplacedGapRetainsKnownFlagAlternatives(t *testing.T) {
 	offset := stateNode(b, timelineRoleDirectionOffset, 41, stateAtomicDecimal(t, 2, 1))
 	stateAttribute(b, offset, timelineRoleOffsetSound, Atomic{Kind: AtomicString, Text: "yes"})
 	cause := &DecisionRef{Rule: RuleKey{"invalid-sound-flag", 1}, Subject: NodeRef{"d", 41}}
-	offset.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-sound-flag", Cause: cause}
+	offset.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-sound-flag", Cause: cause})
 	sound := stateNode(b, timelineRoleDirectionSound, 50, stateAbsent[Atomic]())
 	stateAttribute(b, sound, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
 	direction := stateNode(b, timelineRoleDirection, 40, stateAbsent[Atomic](), offset, sound)

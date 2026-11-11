@@ -66,12 +66,12 @@ func TestContextRequiredAttributeExactOwnerCause(t *testing.T) {
 	for _, attrs := range []map[QName]string{nil, {{Local: "other"}: "bad"}, {{Space: "urn:foreign", Local: "type"}: "1"}} {
 		s, b := contextRequiredFixture(t, "A", attrs, true, XSDCheckAttributes)
 		r := &contextReader{ctx: context.Background(), s: s, b: b}
-		got := r.attribute(s.nodes[1], "required")
+		got := r.attribute(s.node(1), "required")
 		want := DecisionRef{Rule: RuleKey{ID: "test.xsd.attributes", Revision: 1}, Subject: NodeRef{DocumentID: "source", Node: 1}}
 		if r.err != nil || got.State != EvidenceInvalid || got.Cause == nil || *got.Cause != want {
 			t.Errorf("exact missing required cause: %+v / %v", got, r.err)
 		}
-		optional := r.attribute(s.nodes[1], "number")
+		optional := r.attribute(s.node(1), "number")
 		if optional.State != EvidenceKnown || optional.Value.Integer.String() != "1" {
 			t.Errorf("optional default lost: %+v", optional)
 		}
@@ -88,7 +88,7 @@ func TestContextRequiredAttributeConservativeBoundaries(t *testing.T) {
 		{name: "derived-optional", actual: "optional", complete: true, proof: true},
 		{name: "derived-prohibited", actual: "prohibited", complete: true, proof: true},
 		{name: "forged-derived-owner", actual: "inherited", complete: true, proof: true, change: func(s *Session, b *contextBindings) {
-			s.nodes[1].header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("A")})
+			s.node(1).header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("A")})
 		}},
 
 		{name: "different-schema-graph", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) {
@@ -108,13 +108,13 @@ func TestContextRequiredAttributeConservativeBoundaries(t *testing.T) {
 		{name: "no-runtime-binding", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) { s.schema.nodes.remove(1) }},
 		{name: "same-name-present-wrong-declaration", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) {
 			a := b.Attributes["different"][contextNamedType("B")]
-			s.nodes[1].attributes = append(s.nodes[1].attributes, AttributeFact{Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}})
+			s.node(1).attributes = append(s.node(1).attributes, testRetainedAttribute(AttributeFact{Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}}))
 		}},
 		{name: "same-name-unknown-presence", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) {
 			a := b.Attributes["different"][contextNamedType("B")]
-			s.nodes[1].attributes = append(s.nodes[1].attributes, AttributeFact{Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceUnknown, Reason: "unknown"}})
+			s.node(1).attributes = append(s.node(1).attributes, testRetainedAttribute(AttributeFact{Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceUnknown, Reason: "unknown"}}))
 		}},
-		{name: "unclosed", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) { s.nodes[1].closed = false }},
+		{name: "unclosed", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) { s.node(1).closed = false }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			checks := []XSDCheck{XSDCheckContent}
@@ -126,7 +126,7 @@ func TestContextRequiredAttributeConservativeBoundaries(t *testing.T) {
 				tc.change(s, b)
 			}
 			r := &contextReader{ctx: context.Background(), s: s, b: b}
-			got := r.attribute(s.nodes[1], "required")
+			got := r.attribute(s.node(1), "required")
 			if r.err != nil || got.State == EvidenceInvalid || got.State == EvidenceKnown {
 				t.Errorf("unproved required absence upgraded: %+v / %v", got, r.err)
 			}
@@ -138,18 +138,18 @@ func TestContextRequiredAttributeCancellation(t *testing.T) {
 	s, b := contextRequiredFixture(t, "A", nil, true, XSDCheckAttributes)
 	probe := &rationalCancelContext{Context: context.Background(), at: 1000000}
 	r := &contextReader{ctx: probe, s: s, b: b}
-	_ = r.attribute(s.nodes[1], "required")
+	_ = r.attribute(s.node(1), "required")
 	if r.err != nil {
 		t.Fatal(r.err)
 	}
 	for at := 1; at <= probe.calls; at++ {
 		r = &contextReader{ctx: &rationalCancelContext{Context: context.Background(), at: at}, s: s, b: b}
-		_ = r.attribute(s.nodes[1], "required")
+		_ = r.attribute(s.node(1), "required")
 		if !errors.Is(r.err, context.Canceled) {
 			t.Fatalf("poll %d: %v", at, r.err)
 		}
 		r.ctx = context.Background()
-		_ = r.attribute(s.nodes[1], "required")
+		_ = r.attribute(s.node(1), "required")
 		if !errors.Is(r.err, context.Canceled) {
 			t.Fatal("lost first cancellation")
 		}
@@ -216,7 +216,7 @@ func TestContextRequiredAttributeEquivalentSchemaInterning(t *testing.T) {
 				t.Fatal(err)
 			}
 			r := &contextReader{ctx: context.Background(), s: s, b: contextPlan.context.Bindings}
-			got := r.attribute(s.nodes[1], "required")
+			got := r.attribute(s.node(1), "required")
 			if r.err != nil || got.State != EvidenceInvalid || got.Cause == nil {
 				t.Errorf("equivalent-schema interning lost required cause: %+v / %v", got, r.err)
 			}

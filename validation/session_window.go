@@ -172,7 +172,7 @@ func (s *Session) pushWindowChild(ctx context.Context, child *factNode) error {
 	if open == nil {
 		return nil
 	}
-	w, ok, err := state.run.PushChild(ctx, open, xsd.Child{ID: xsd.SubjectID(child.header.ID), Name: xsd.QName{Space: child.header.Name.Space, Local: child.header.Name.Local}, Path: child.header.Location.Path})
+	w, ok, err := state.run.PushChild(ctx, open, xsd.Child{ID: xsd.SubjectID(child.header.ID), Name: xsd.QName{Space: child.header.Name.Space, Local: child.header.Name.Local}, Path: child.path()})
 	if err != nil || !ok || w.Mode != xsd.WitnessDeclared {
 		return err
 	}
@@ -235,7 +235,7 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	// proved failures wait until it is not.
 	var consumed int
 	s.accumulator.holding = true
-	completion, err := s.bindSubtree(ctx, s.nodes[w.root], use, w.first, len(s.stack), &consumed)
+	completion, err := s.bindSubtree(ctx, s.node(w.root), use, w.first, len(s.stack), &consumed)
 	s.accumulator.holding = false
 	if err != nil {
 		return err

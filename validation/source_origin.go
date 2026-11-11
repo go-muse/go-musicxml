@@ -192,7 +192,7 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 		return s.fail(&SessionError{Operation: "SourceOrigin", Reason: "currently open exact subject required"})
 	}
 	n := s.stack[len(s.stack)-1]
-	location := n.header.Location
+	location := n.location()
 	slot := sourceOriginSubject{Node: in.Subject.Node}
 	if in.Attribute != nil {
 		slot.Attribute = *in.Attribute
@@ -204,7 +204,7 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 			a := n.attributes[i]
 			if a.Name == *in.Attribute {
 				if a.Presence.State == EvidenceKnown && a.Presence.Value {
-					location = a.Location
+					location = a.location()
 					found = true
 				}
 				break

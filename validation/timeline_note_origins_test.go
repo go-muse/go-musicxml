@@ -91,7 +91,7 @@ func TestNoteOriginsAbsentZeroInvalidAndUnitsRemainDistinct(t *testing.T) {
 	n := runtimeNote(t, b, 20, 6, false)
 	stateAttribute(b, n, timelineRoleNoteRelease, stateAtomicDecimal(t, 1, 1).Value)
 	cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: NodeRef{"d", 20}}
-	n.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "bad-release", Cause: cause}
+	n.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "bad-release", Cause: cause})
 	if err := service.readNoteOrigins(context.Background(), s, b, n, noteOriginFact(t), stateKnown(stateDecimal(t, 3, 1))); err != nil {
 		t.Fatal(err)
 	}

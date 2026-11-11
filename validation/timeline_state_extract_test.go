@@ -44,7 +44,7 @@ func stateNode(b *timelineBindings, role timelineRole, id NodeID, scalar Evidenc
 }
 func stateAttribute(b *timelineBindings, n *factNode, role timelineRole, value Atomic) {
 	u := b.Roles[role][0]
-	n.attributes = append(n.attributes, AttributeFact{Owner: n.header.ID, Name: u.Name, Declaration: stateKnown(u.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: stateKnown(value)}})
+	n.attributes = append(n.attributes, testRetainedAttribute(AttributeFact{Owner: n.header.ID, Name: u.Name, Declaration: stateKnown(u.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: stateKnown(value)}}))
 }
 func stateAtomicInteger(t *testing.T, n int64) Evidence[Atomic] {
 	return stateKnown(Atomic{Kind: AtomicInteger, Integer: stateInt(t, n)})

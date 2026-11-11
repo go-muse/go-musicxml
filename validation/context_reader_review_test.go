@@ -35,7 +35,7 @@ func TestContextReviewEmptyAttributeCacheIsCompact(t *testing.T) {
 	r := &contextReader{ctx: context.Background(), s: s, b: b}
 	before := s.retained
 	for _, id := range []NodeID{2, 3} {
-		if _, ok := r.attributeSelector(s.nodes[id], "unselected"); ok || r.err != nil {
+		if _, ok := r.attributeSelector(s.node(id), "unselected"); ok || r.err != nil {
 			t.Fatalf("empty lookup: %v", r.err)
 		}
 	}
@@ -214,14 +214,14 @@ func TestContextReviewSameTypePreservesAssessedUses(t *testing.T) {
 			t.Fatalf("node %d fixture types differ", tc.id)
 		}
 		for role, want := range map[contextRole]bool{"required": tc.required, "optional": tc.optional} {
-			_, got := r.attributeSelector(s.nodes[tc.id], role)
+			_, got := r.attributeSelector(s.node(tc.id), role)
 			if got != want || r.err != nil {
 				t.Fatalf("node%d %s got%t want%t: %v", tc.id, role, got, want, r.err)
 			}
 		}
-		table := r.attributeTable(s.nodes[tc.id])
+		table := r.attributeTable(s.node(tc.id))
 		tables = append(tables, table)
-		if got := r.attributeRoles(s.nodes[tc.id]); len(got) != btoi(tc.required)+btoi(tc.optional) {
+		if got := r.attributeRoles(s.node(tc.id)); len(got) != btoi(tc.required)+btoi(tc.optional) {
 			t.Fatalf("node%d owner dispatch leaked another use: %v", tc.id, got)
 		}
 	}
@@ -347,7 +347,7 @@ func TestContextReviewAttributeCacheAdmission(t *testing.T) {
 	before := rationalUsage(t, s, BudgetRuleSteps)
 	probe := &rationalCancelContext{Context: context.Background(), at: 1000000}
 	r := &contextReader{ctx: probe, s: s, b: b}
-	if _, ok := r.attributeSelector(s.nodes[2], "required"); !ok || r.err != nil {
+	if _, ok := r.attributeSelector(s.node(2), "required"); !ok || r.err != nil {
 		t.Fatal(r.err)
 	}
 	total := rationalUsage(t, s, BudgetRuleSteps)
@@ -355,12 +355,12 @@ func TestContextReviewAttributeCacheAdmission(t *testing.T) {
 	for at := 1; at <= probe.calls; at++ {
 		reader := &contextReader{ctx: &rationalCancelContext{Context: context.Background(), at: at}, s: s, b: b}
 		retained := s.retained
-		_, _ = reader.attributeSelector(s.nodes[2], "required")
+		_, _ = reader.attributeSelector(s.node(2), "required")
 		if !errors.Is(reader.err, context.Canceled) || len(reader.attributeCache) != 0 || len(reader.attributeIntern) != 0 || s.retained != retained {
 			t.Fatalf("poll%d published partial cache: err=%v retained=%d/%d", at, reader.err, s.retained, retained)
 		}
 		reader.ctx = context.Background()
-		_, _ = reader.attributeSelector(s.nodes[2], "required")
+		_, _ = reader.attributeSelector(s.node(2), "required")
 		if !errors.Is(reader.err, context.Canceled) {
 			t.Fatal("cache interruption reset")
 		}
@@ -370,7 +370,7 @@ func TestContextReviewAttributeCacheAdmission(t *testing.T) {
 		s, b := contextReviewSameTypeFixture(t, Budgets{MaxRuleSteps: limit})
 		retained := s.retained
 		reader := &contextReader{ctx: context.Background(), s: s, b: b}
-		_, ok := reader.attributeSelector(s.nodes[2], "required")
+		_, ok := reader.attributeSelector(s.node(2), "required")
 		if limit == total {
 			if !ok || reader.err != nil {
 				t.Fatalf("exact cache work: %v", reader.err)
@@ -383,7 +383,7 @@ func TestContextReviewAttributeCacheAdmission(t *testing.T) {
 			if err := s.account.Charge(BudgetRuleSteps, 0); err != nil {
 				t.Fatal(err)
 			}
-			_, _ = reader.attributeSelector(s.nodes[2], "optional")
+			_, _ = reader.attributeSelector(s.node(2), "optional")
 			if !errors.Is(reader.err, ErrResourceLimit) {
 				t.Fatal("reader lost non-sticky quota interruption")
 			}
@@ -499,7 +499,7 @@ func TestContextReviewAttributeCacheBufferedBoundary(t *testing.T) {
 		s := rationalSession(t, Budgets{MaxBufferedBytes: limit})
 		s.schema = source.schema
 		r := &contextReader{ctx: context.Background(), s: s, b: b}
-		_, ok := r.attributeSelector(source.nodes[2], "required")
+		_, ok := r.attributeSelector(source.node(2), "required")
 		if r.err != nil && (ok || len(r.attributeCache) != 0 || len(r.attributeIntern) != 0 || s.retained != 0 || rationalUsage(t, s, BudgetBufferedBytes) != 0) {
 			t.Fatalf("failed cache admission retained partial state: %v", r.err)
 		}

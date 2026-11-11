@@ -26,7 +26,7 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 	// indexes are useful only when an exact link/bookmark occurrence is selected.
 	attachments := false
 	for _, id := range r.s.sequence {
-		for _, role := range r.roles(r.s.nodes[id]) {
+		for _, role := range r.roles(r.s.node(id)) {
 			if role == resourceRole("link") || role == resourceRole("bookmark") {
 				attachments = true
 				break
@@ -80,7 +80,7 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 		if !r.step(1) {
 			return i
 		}
-		n := r.s.nodes[id]
+		n := r.s.node(id)
 		if n == nil {
 			continue
 		}
@@ -138,7 +138,7 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 			return i
 		}
 		id := r.s.sequence[pos]
-		n := r.s.nodes[id]
+		n := r.s.node(id)
 		if n == nil {
 			continue
 		}

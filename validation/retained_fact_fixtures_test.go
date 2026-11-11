@@ -12,11 +12,43 @@ import (
 // Tests may therefore mutate their fixtures without changing another node.
 func testEvidence[T any](v Evidence[T]) *Evidence[T] { return &v }
 
+func testRetainedLocation(v Location, bindings []Binding) retainedLocation {
+	var out retainedLocation
+	meta := &retainedLocationMeta{
+		target:      v.Target,
+		documentID:  v.DocumentID,
+		entry:       v.Entry,
+		bindings:    bindings,
+		xmlBindings: [1]Binding{{Prefix: "xml", URI: "http://www.w3.org/XML/1998/namespace"}},
+	}
+	if v.Position != nil {
+		meta.coordSpace = v.Position.CoordinateSpace
+		meta.posLine = v.Position.Line
+		meta.posCol = v.Position.Column
+		meta.customPos = true
+		out.byteOffset = v.Position.ByteOffset
+		out.columnAndKind = locCoordMeta | locFlagHasPos
+	}
+	out.meta = meta
+	out.pathPrefix = v.Path
+	return out
+}
+
 func testRetainedHeader(v NodeHeader) retainedHeader {
 	return retainedHeader{
 		ID: v.ID, Parent: v.Parent, Name: v.Name,
 		Type: testEvidence(v.Type), Declaration: testEvidence(v.Declaration),
-		Location: v.Location, Bindings: v.Bindings,
+		loc: testRetainedLocation(v.Location, v.Bindings),
+	}
+}
+
+func testRetainedAttribute(v AttributeFact) retainedAttribute {
+	return retainedAttribute{
+		Name:        v.Name,
+		Declaration: testEvidence(v.Declaration),
+		Presence:    testEvidence(v.Presence),
+		Scalar:      retainedScalar{Lexeme: testEvidence(v.Scalar.Lexeme), Value: testEvidence(v.Scalar.Value)},
+		loc:         testRetainedLocation(v.Location, nil),
 	}
 }
 

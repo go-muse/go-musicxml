@@ -473,7 +473,7 @@ func TestIndependentTimelineNoteOriginCausalPrecedence(t *testing.T) {
 		s, _, b, fact := independentOriginFixture(t, Budgets{})
 		bend := stateNode(b, timelineRoleTechnicalBend, 100, stateAbsent[Atomic]())
 		stateAttribute(b, bend, timelineRoleBendFirstBeat, stateAtomicDecimal(t, 25, 1).Value)
-		bend.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceUnknown, Reason: "unknown-percentage"}
+		bend.attributes[0].Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceUnknown, Reason: "unknown-percentage"})
 		r := &stateReader{ctx: context.Background(), s: s, b: b}
 		got := r.notePercent(bend, timelineRoleBendFirstBeat, noteTimingFirstBeat, fact.Position, Evidence[Rational]{State: EvidenceInvalid, Reason: "invalid-duration", Cause: durationCause})
 		if r.err != nil || got.Position.State != EvidenceInvalid || got.Position.Cause == nil || *got.Position.Cause != *durationCause {
@@ -504,11 +504,11 @@ func independentNestedOriginFixture(t *testing.T) (*Session, *timelineService, *
 	badDecimal := Evidence[Atomic]{State: EvidenceInvalid, Reason: "bad-number", Cause: cause}
 	bend := stateNode(b, timelineRoleTechnicalBend, 203, stateAbsent[Atomic]())
 	stateAttribute(b, bend, timelineRoleBendBeats, stateAtomicDecimal(t, 4, 1).Value)
-	bend.attributes[len(bend.attributes)-1].Scalar.Value = badDecimal
+	bend.attributes[len(bend.attributes)-1].Scalar.Value = testEvidence(badDecimal)
 	notation := stateNode(b, timelineRoleNoteNotations, 201, stateAbsent[Atomic](), stateNode(b, timelineRoleNotationsTechnical, 202, stateAbsent[Atomic](), bend))
 	grace := stateNode(b, timelineRoleNoteGrace, 204, stateAbsent[Atomic]())
 	stateAttribute(b, grace, timelineRoleGraceStealPrevious, stateAtomicDecimal(t, 10, 1).Value)
-	grace.attributes[0].Scalar.Value = badDecimal
+	grace.attributes[0].Scalar.Value = testEvidence(badDecimal)
 	note := stateNode(b, timelineRoleNote, 100, stateAbsent[Atomic](), notation, grace)
 	fact.Part = Evidence[NodeRef]{State: EvidenceInvalid, Reason: "bad-part", Cause: cause}
 	return s, service, b, note, fact, cause

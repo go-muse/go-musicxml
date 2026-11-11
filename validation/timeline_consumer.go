@@ -238,7 +238,7 @@ func (s *Session) timelineChordDuration(ctx context.Context, n *factNode, p *tim
 	if fact.PrincipalDuration.State != EvidenceKnown {
 		return localGap(timelineGapAs[Rational, Rational](fact.PrincipalDuration, "chord-principal-duration-unavailable")), nil
 	}
-	principal := s.nodes[fact.Principal.Value.Node]
+	principal := s.node(fact.Principal.Value.Node)
 	if fact.Principal.Value.DocumentID != s.documentID || principal == nil {
 		return Decision{}, contract("timeline chord principal", "same-document established note required")
 	}
@@ -250,11 +250,11 @@ func (s *Session) timelineChordDuration(ctx context.Context, n *factNode, p *tim
 		return Decision{Outcome: OutcomePass}, nil
 	}
 	d := Decision{Outcome: OutcomeFail, Reason: "chord-duration-exceeds-principal", Expected: "duration no longer than the principal non-chord note", Actual: fact.Duration.Value.String()}
-	return s.withTimelineProvedRelated(n, p, planChordDuration, d, principal.header.Location)
+	return s.withTimelineProvedRelated(n, p, planChordDuration, d, principal.location())
 }
 
 func (s *Session) timelineNumeralKey(ctx context.Context, n *factNode, p *timelineConsumerPlan, service *timelineService) (Decision, error) {
-	harmony := s.nodes[n.header.Parent]
+	harmony := s.node(n.header.Parent)
 	if harmony == nil {
 		return Decision{Outcome: OutcomeUnknown, Reason: "numeral-harmony-unavailable"}, nil
 	}
@@ -288,7 +288,7 @@ func (s *Session) timelineNumeralKey(ctx context.Context, n *factNode, p *timeli
 		return localGap(result.Value), nil
 	}
 	d = Decision{Outcome: OutcomeFail, Reason: "numeral-key-required", Expected: "a valid numeral-key or applicable encoded key", Actual: "neither key alternative is present"}
-	return s.withTimelineProvedRelated(n, p, planNumeralKey, d, harmony.header.Location)
+	return s.withTimelineProvedRelated(n, p, planNumeralKey, d, harmony.location())
 }
 
 func (s *Session) withTimelineProvedRelated(n *factNode, p *timelineConsumerPlan, kind planKind, d Decision, location Location) (Decision, error) {

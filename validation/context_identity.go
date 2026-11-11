@@ -50,7 +50,7 @@ func (s *Session) contextScopeComplete(ctx context.Context, n *factNode, relatio
 	}
 	at := n
 	if relation == RelationParent {
-		at = s.nodes[n.header.Parent]
+		at = s.node(n.header.Parent)
 	}
 	if at == nil || !at.closed {
 		return false, nil
@@ -176,7 +176,7 @@ func (s *Session) markContextIncomplete(ctx context.Context, n *factNode, r Rule
 		e.State = EvidenceInvalid
 		e.Cause = d.Cause
 	}
-	return s.publishContext(ctx, n, r, p, e, n.header.Location)
+	return s.publishContext(ctx, n, r, p, e, n.location())
 }
 
 // Context provenance may contain many publishers. Reserve the output copy and
@@ -229,7 +229,7 @@ func evaluateContextPlan(ctx context.Context, s *Session, n *factNode, r RuleDef
 			return d, false, nil
 		}
 		value := Evidence[Atomic]{State: EvidenceKnown, Value: p.expected}
-		origin := n.header.Location
+		origin := n.location()
 		if p.kind == planContextDefault {
 			presence, attribute, err := s.attributeEvidence(ctx, n, p.attribute)
 			if err != nil {
@@ -242,8 +242,8 @@ func evaluateContextPlan(ctx context.Context, s *Session, n *factNode, r RuleDef
 				if attribute == nil {
 					value = Evidence[Atomic]{State: EvidenceUnknown, Reason: "attribute-value-unavailable"}
 				} else {
-					origin = attribute.Location
-					value = attribute.Scalar.Value
+					origin = attribute.location()
+					value = s.readAtomic(attribute.Scalar.Value)
 					if value.State == EvidenceAbsent {
 						value = Evidence[Atomic]{State: EvidenceUnknown, Reason: "required-value-absent"}
 					}
@@ -422,7 +422,7 @@ func evaluateIdentityPlan(ctx context.Context, s *Session, n *factNode, r RuleDe
 		if err := s.account.Charge(BudgetIDs, 1); err != nil {
 			return d, false, err
 		}
-		loc := n.header.Location
+		loc := n.location()
 		if location != nil {
 			loc = *location
 		}

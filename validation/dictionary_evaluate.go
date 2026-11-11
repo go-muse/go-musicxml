@@ -122,7 +122,7 @@ func dictionaryPublish(r *contextReader, n *factNode, key RuleKey, property Cont
 	if r.err != nil {
 		return r.err
 	}
-	return r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: []Location{n.header.Location}, Dictionary: p})
+	return r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: r.s.nodeOrigins(n), Dictionary: p})
 }
 
 type dictionaryGlyphSearch struct {
