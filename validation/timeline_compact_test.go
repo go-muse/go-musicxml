@@ -1,7 +1,9 @@
 package validation
 
 import (
+	"context"
 	"math/big"
+	"reflect"
 	"runtime"
 	"testing"
 	"unsafe"
@@ -53,10 +55,10 @@ func TestTimelineCompactStoreChargeCoversItsHeap(t *testing.T) {
 	}
 	const events = 24000
 	for _, tc := range []struct {
-		distinct   bool
-		perMeasure int
-	}{{false, 48}, {true, 48}, {false, 1}, {false, events}} {
-		distinct, perMeasure := tc.distinct, tc.perMeasure
+		distinct, overflow bool
+		perMeasure         int
+	}{{false, false, 48}, {true, false, 48}, {false, false, 1}, {false, false, events}, {false, true, 48}} {
+		distinct, overflow, perMeasure := tc.distinct, tc.overflow, tc.perMeasure
 		offsets := make([]Rational, events)
 		for i := range offsets {
 			n := int64(i % 4)
@@ -71,6 +73,18 @@ func TestTimelineCompactStoreChargeCoversItsHeap(t *testing.T) {
 		service := &timelineService{Facts: make(map[NodeID]timelineEventFact)}
 		part := Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"d", 1}}
 		heap0, used0 := compactLiveHeap(), rationalUsage(t, s, BudgetBufferedBytes)
+		// While a pack runs, the working maps are reachable and keep their
+		// reservations.
+		packs := 0
+		timelinePackObserver = func() {
+			packs++
+			if packs%50 != 1 {
+				return
+			}
+			if heap, used := compactLiveHeap()-heap0, rationalUsage(t, s, BudgetBufferedBytes)-used0; heap > used+64<<10 {
+				t.Errorf("distinct offsets %v, overflow %v, %d per measure: during a pack the run holds %d live bytes but charged %d", distinct, overflow, perMeasure, heap, used)
+			}
+		}
 		for first := 0; first < events; first += perMeasure {
 			measure := NodeRef{"d", NodeID(first + 2)}
 			for i := first; i < first+perMeasure; i++ {
@@ -81,31 +95,100 @@ func TestTimelineCompactStoreChargeCoversItsHeap(t *testing.T) {
 				if err := s.retain(timelineFactReserveBytes + timelineNoteReserveBytes + playbackNoteReserveBytes); err != nil {
 					t.Fatal(err)
 				}
-				service.Facts[id] = timelineEventFact{Origin: at, Position: at, End: at, Duration: duration, PrincipalDuration: duration, Principal: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"d", id}}, Units: units, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceKnown, Value: "1"}, Part: part}
+				fact := timelineEventFact{Origin: at, Position: at, End: at, Duration: duration, PrincipalDuration: duration, Principal: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"d", id}}, Units: units, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceKnown, Value: "1"}, Part: part}
+				grace := Evidence[graceTimingOrigin]{State: EvidenceAbsent}
+				var play []playbackInstruction
+				if overflow {
+					// None of the three is encodable; each stays whole.
+					fact.Placement.Displaced = true
+					grace = Evidence[graceTimingOrigin]{State: EvidenceKnown}
+					if err := s.retain(512); err != nil {
+						t.Fatal(err)
+					}
+					play = []playbackInstruction{{Source: NodeRef{"d", id}}}
+				}
+				service.Facts[id] = fact
 				if service.NoteOrigins == nil {
 					service.NoteOrigins = make(map[NodeID]noteTimingOrigin)
 				}
 				adjust := noteTimingAdjustment{noteTimingDelta: noteTimingDelta{Raw: absent, Units: units, Delta: Evidence[Rational]{State: EvidenceAbsent}}, Origin: at, Position: at}
-				service.NoteOrigins[id] = noteTimingOrigin{Note: NodeRef{"d", id}, Part: part, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceKnown, Value: "1"}, ScoreOnset: at, ScoreEnd: at, Duration: duration, Chord: Evidence[bool]{State: EvidenceKnown}, Grace: Evidence[bool]{State: EvidenceKnown}, Cue: Evidence[bool]{State: EvidenceKnown}, Attack: adjust, Release: adjust, GraceTiming: Evidence[graceTimingOrigin]{State: EvidenceAbsent}, BendsComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
+				service.NoteOrigins[id] = noteTimingOrigin{Note: NodeRef{"d", id}, Part: part, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceKnown, Value: "1"}, ScoreOnset: at, ScoreEnd: at, Duration: duration, Chord: Evidence[bool]{State: EvidenceKnown}, Grace: Evidence[bool]{State: EvidenceKnown}, Cue: Evidence[bool]{State: EvidenceKnown}, Attack: adjust, Release: adjust, GraceTiming: grace, BendsComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
 				if service.Playback.Notes == nil {
 					service.Playback.Notes = make(map[NodeID]notePlaybackContext)
 				}
-				service.Playback.Notes[id] = notePlaybackContext{Origin: playbackOrigin{Source: NodeRef{"d", id}, Measure: measure, Part: part, MeasureOrdinal: uint64(first), Position: at, Voice: Evidence[string]{State: EvidenceKnown, Value: "1"}, MeasureComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}, Principal: part, Chord: Evidence[bool]{State: EvidenceKnown}, Play: []playbackInstruction{}, PlayComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
+				service.Playback.Notes[id] = notePlaybackContext{Origin: playbackOrigin{Source: NodeRef{"d", id}, Measure: measure, Part: part, MeasureOrdinal: uint64(first), Position: at, Voice: Evidence[string]{State: EvidenceKnown, Value: "1"}, MeasureComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}, Principal: part, Chord: Evidence[bool]{State: EvidenceKnown}, Play: play, PlayComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
 			}
-			if err := service.packTimelineFacts(s); err != nil {
+			if err := service.packTimelineFacts(context.Background(), s); err != nil {
 				t.Fatal(err)
 			}
 		}
+		timelinePackObserver = nil
 		heap, used := compactLiveHeap()-heap0, rationalUsage(t, s, BudgetBufferedBytes)-used0
 		store := service.compact
-		if store == nil || store.factTotal != events || store.noteCount != events || store.playCount != events {
+		compact := events
+		if overflow {
+			compact = 0
+		}
+		if store == nil || store.factTotal != events || int(store.noteCount) != compact || int(store.playCount) != compact {
 			t.Fatalf("distinct=%v, %d per measure: packed %+v", distinct, perMeasure, store)
 		}
-		t.Logf("distinct offsets %v, %d per measure: the store holds %d live bytes, charged %d", distinct, perMeasure, heap, used)
+		t.Logf("distinct offsets %v, overflow %v, %d per measure: the store holds %d live bytes, charged %d", distinct, overflow, perMeasure, heap, used)
 		if heap > used+64<<10 {
-			t.Errorf("distinct offsets %v, %d per measure: the store holds %d live bytes but charged %d", distinct, perMeasure, heap, used)
+			t.Errorf("distinct offsets %v, overflow %v, %d per measure: the store holds %d live bytes but charged %d", distinct, overflow, perMeasure, heap, used)
 		}
 		runtime.KeepAlive(offsets)
 		runtime.KeepAlive(service)
+	}
+}
+
+// A store's fixed charge covers the store and its empty tables.
+func TestTimelineCompactStoreFixedCharge(t *testing.T) {
+	if testing.Short() {
+		t.Skip("measures the heap")
+	}
+	s := rationalSession(t, Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40})
+	const stores = 2000
+	kept := make([]*timelineCompactStore, stores)
+	heap0 := compactLiveHeap()
+	for i := range kept {
+		store, err := newTimelineCompactStore(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		kept[i] = store
+	}
+	heap := (compactLiveHeap() - heap0) / stores
+	runtime.KeepAlive(kept)
+	t.Logf("a store holds %d live bytes, charged %d", heap, timelineCompactStoreBytes)
+	if heap > timelineCompactStoreBytes {
+		t.Fatalf("a store holds %d live bytes but is charged %d", heap, timelineCompactStoreBytes)
+	}
+}
+
+// Equal numbers built by different arithmetic can differ in representation
+// (a zero numerator held as nil or as an empty word slice), which
+// reflect.DeepEqual observes. Interning keeps them apart, so each decodes to
+// a value deeply equal to its own original and both stay compact.
+func TestTimelineCompactInternsNumberShapes(t *testing.T) {
+	s := rationalSession(t, Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40})
+	one := mustRational(t, 1, 7)
+	parsed := mustRational(t, 0, 7)
+	difference, err := s.rationalAdd(context.Background(), one, Rational{value: new(big.Rat).Neg(one.value), text: "-1/7", bytes: one.bytes})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if parsed.text != difference.text || reflect.DeepEqual(parsed, difference) {
+		t.Skipf("no two representations of zero: %q %q", parsed.text, difference.text)
+	}
+	store, err := newTimelineCompactStore(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := compactEncoder{s: s, store: store, in: &store.in, ok: true}
+	for _, v := range []Rational{parsed, difference, parsed, difference} {
+		at := e.rational(v)
+		if !e.live() || !reflect.DeepEqual(store.in.rationals[at], v) {
+			t.Fatalf("interned %q decodes to a different representation", v.text)
+		}
 	}
 }

@@ -3,6 +3,7 @@ package musicxml
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,10 +29,7 @@ var timelineCompactInputs = map[string]string{
 		`<note><cue/><pitch><step>C</step><octave>3</octave></pitch><duration>4</duration><voice>2</voice><play><mute>on</mute></play></note>` +
 		`</measure><measure number="2"><note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>1</voice></note></measure></part>` +
 		`<part id="P2"><measure number="1"><attributes><divisions>1</divisions></attributes><note><rest/><duration>2</duration></note></measure></part></score-partwise>`,
-	"staged units": `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>A</part-name></score-part></part-list><part id="P1">` +
-		`<measure number="1"><attributes><divisions>1</divisions></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note></measure>` +
-		`<measure number="2"><attributes><divisions>2</divisions></attributes><note><pitch><step>D</step><octave>4</octave></pitch><duration>2</duration></note>` +
-		`<backup><duration>4</duration></backup><note><pitch><step>E</step><octave>4</octave></pitch><duration>2</duration></note></measure></part></score-partwise>`,
+	"staged units": timelineStagedUnits(120),
 	"timewise": `<score-timewise version="4.0"><part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P2"><part-name>B</part-name></score-part></part-list>` +
 		`<measure number="1"><part id="P1"><attributes><divisions>1</divisions></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note></part>` +
 		`<part id="P2"><attributes><divisions>2</divisions></attributes><note><pitch><step>D</step><octave>4</octave></pitch><duration>2</duration></note></part></measure>` +
@@ -39,19 +37,35 @@ var timelineCompactInputs = map[string]string{
 		`<part id="P2"><note><pitch><step>F</step><octave>4</octave></pitch><duration>2</duration></note></part></measure></score-timewise>`,
 }
 
+// timelineStagedUnits is a part whose divisions alternate between 1 and 2
+// from measure to measure, each measure with a backup past its start: the
+// unit proof is staged and reads every measure again. Its timeline is large
+// enough for a compact store.
+func timelineStagedUnits(measures int) string {
+	var b strings.Builder
+	b.WriteString(`<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>A</part-name></score-part></part-list><part id="P1">`)
+	for m := 1; m <= measures; m++ {
+		units := 1 + m%2
+		fmt.Fprintf(&b, `<measure number="%d"><attributes><divisions>%d</divisions></attributes>`, m, units)
+		fmt.Fprintf(&b, `<note><pitch><step>D</step><octave>4</octave></pitch><duration>%d</duration><voice>1</voice></note>`, units)
+		fmt.Fprintf(&b, `<backup><duration>%d</duration></backup>`, 2*units)
+		fmt.Fprintf(&b, `<note><pitch><step>E</step><octave>4</octave></pitch><duration>%d</duration><voice>2</voice></note></measure>`, units)
+	}
+	b.WriteString(`</part></score-partwise>`)
+	return b.String()
+}
+
 // timelineRecords runs one line on data with the given strategy and returns
 // the dumps and counts of every timeline service that finalized.
-func timelineRecords(t *testing.T, name, line string, data []byte, document Document, windowed bool) ([]string, [6]int) {
+func timelineRecords(t *testing.T, name, line string, data []byte, document Document, windowed bool) ([]string, [][9]int) {
 	t.Helper()
 	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 34}
 	var dumps []string
-	var counts [6]int
+	var counts [][9]int
 	previousStrategy := validationSetWindowedStrategy(windowed)
-	previous := validationSetTimelineObserver(func(dump func() string, c [6]int) {
+	previous := validationSetTimelineObserver(func(dump func() string, c [9]int) {
 		dumps = append(dumps, dump())
-		for i := range counts {
-			counts[i] += c[i]
-		}
+		counts = append(counts, c)
 	})
 	var err error
 	if line == "source" {
@@ -102,8 +116,8 @@ func TestTimelineCompactRecordsMatchBuffered(t *testing.T) {
 		}
 		inputs = append(inputs, input{files[i], data})
 	}
-	var total [6]int
-	services := 0
+	var total [9]int
+	services, packedServices := 0, 0
 	for _, in := range inputs {
 		document, err := Decode(bytes.NewReader(in.data))
 		for _, line := range []string{"source", "model"} {
@@ -120,21 +134,53 @@ func TestTimelineCompactRecordsMatchBuffered(t *testing.T) {
 					t.Fatalf("%s %s: windowed timeline records differ:\nbuffered %s\nwindowed %s", in.name, line, firstDifferentLine(buffered[k], windowed[k]), firstDifferentLine(windowed[k], buffered[k]))
 				}
 			}
-			if bufferedCounts[3]+bufferedCounts[4]+bufferedCounts[5] != 0 {
-				t.Fatalf("%s %s: buffered evaluation holds compact records: %v", in.name, line, bufferedCounts)
+			stored := 0
+			for k := range buffered {
+				b, w := bufferedCounts[k], windowedCounts[k]
+				if b[3]+b[4]+b[5] != 0 || [3]int(b[:3]) != [3]int(b[6:]) {
+					t.Fatalf("%s %s: buffered evaluation holds records outside its working maps: %v", in.name, line, b)
+				}
+				if [3]int(b[:3]) != [3]int(w[:3]) {
+					t.Fatalf("%s %s: record counts %v buffered, %v windowed", in.name, line, b, w)
+				}
+				services++
+				if w[3]+w[4]+w[5] == 0 {
+					// A timeline too small to pay for a store keeps its working
+					// maps, as buffered evaluation does.
+					if [3]int(w[:3]) != [3]int(w[6:]) {
+						t.Fatalf("%s %s: windowed records outside the working maps without compact ones: %v", in.name, line, w)
+					}
+					continue
+				}
+				// Once a store exists, every record is packed, also after a
+				// staged unit proof that read every measure again.
+				stored++
+				if w[6]+w[7]+w[8] != 0 {
+					t.Fatalf("%s %s: %v records left in the working maps", in.name, line, w[6:])
+				}
+				if _, synthetic := timelineCompactInputs[in.name]; !synthetic {
+					for i := range total {
+						total[i] += w[i]
+					}
+					packedServices++
+				}
 			}
-			if [3]int(bufferedCounts[:3]) != [3]int(windowedCounts[:3]) {
-				t.Fatalf("%s %s: record counts %v buffered, %v windowed", in.name, line, bufferedCounts, windowedCounts)
-			}
-			services += len(windowed)
-			for i := range total {
-				total[i] += windowedCounts[i]
+			switch in.name {
+			case "notes", "timewise":
+				if stored != 0 {
+					t.Fatalf("%s %s: a small timeline started a compact store", in.name, line)
+				}
+			case "staged units":
+				if stored != len(windowed) {
+					t.Fatalf("%s %s: %d of %d timeline services packed", in.name, line, stored, len(windowed))
+				}
 			}
 		}
 	}
-	t.Logf("%d services; facts %d (compact %d), note origins %d (compact %d), note playback %d (compact %d)", services, total[0], total[3], total[1], total[4], total[2], total[5])
-	// Overflow is for exceptional records: the encoding must hold at least
-	// nine in ten records of each kind on the corpus.
+	t.Logf("%d services, %d corpus services with a compact store; there facts %d (compact %d), note origins %d (compact %d), note playback %d (compact %d)", services, packedServices, total[0], total[3], total[1], total[4], total[2], total[5])
+	// Overflow is for exceptional records: where a corpus timeline has a
+	// store, the encoding must hold at least nine in ten records of each kind.
+	// (The synthetic staged units are mostly displaced and overflow.)
 	for kind := range 3 {
 		if total[kind] == 0 || 10*total[kind+3] < 9*total[kind] {
 			t.Fatalf("record kind %d: %d of %d compact", kind, total[kind+3], total[kind])
@@ -192,7 +238,7 @@ func TestTimelineCompactChargeCoversWindowedTimeline(t *testing.T) {
 					used0, _ = a.Usage(validation.BudgetBufferedBytes)
 				}
 			})
-			previousTimeline := validationSetTimelineObserver(func(_ func() string, _ [6]int) {
+			previousTimeline := validationSetTimelineObserver(func(_ func() string, _ [9]int) {
 				if !observed && account != nil {
 					observed = true
 					heap = liveHeap() - heap0

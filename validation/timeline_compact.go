@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"context"
 	"math"
 	"math/big"
 	"reflect"
@@ -38,8 +39,15 @@ const (
 	// A slice header slot of an outer chunk or page directory, doubled for
 	// growth.
 	timelineCompactSlotBytes int64 = 48
-	// The store and its empty tables.
-	timelineCompactStoreBytes int64 = 2048
+	// The store and its empty tables (TestTimelineCompactStoreChargeCoversItsHeap
+	// measures about 3 KiB).
+	timelineCompactStoreBytes int64 = 4096
+
+	// Windowed evaluation starts a compact store only once the working maps
+	// hold this many bytes of record reservations: a smaller timeline stays in
+	// its working maps, as in buffered evaluation, since the store's first
+	// chunks and page would cost more than they save.
+	timelineCompactPackBytes int64 = 256 << 10
 )
 
 const (
@@ -168,8 +176,8 @@ type compactInterner struct {
 }
 
 // timelineCompactStore is append-only. Its records are addressed by NodeID
-// through fixed pages, and stored in fixed chunks, so no array is copied
-// while it grows.
+// through fixed pages and stored in fixed chunks: growing copies only the
+// page directory and the chunk lists, never records.
 type timelineCompactStore struct {
 	in            compactInterner
 	pages         [][]uint32
@@ -184,6 +192,17 @@ type timelineCompactStore struct {
 	overflowFacts map[NodeID]timelineEventFact
 	overflowNotes map[NodeID]noteTimingOrigin
 	overflowPlays map[NodeID]notePlaybackContext
+	// charged is what the store has retained, released at once if a staged
+	// unit proof drops the whole store.
+	charged int64
+}
+
+func (store *timelineCompactStore) retain(s *Session, bytes int64) error {
+	if err := s.retain(bytes); err != nil {
+		return err
+	}
+	store.charged += bytes
+	return nil
 }
 
 func newTimelineCompactStore(s *Session) (*timelineCompactStore, error) {
@@ -205,13 +224,21 @@ func newTimelineCompactStore(s *Session) (*timelineCompactStore, error) {
 		frames:        []timelineFrame{{}},
 		frameIndex:    map[timelineFrame]uint32{{}: 0},
 	}
-	return &timelineCompactStore{in: in}, nil
+	return &timelineCompactStore{in: in, charged: timelineCompactStoreBytes}, nil
+}
+
+// timelinePendingBytes is the record reservations the working maps hold.
+func (service *timelineService) timelinePendingBytes() int64 {
+	return int64(len(service.Facts))*timelineFactReserveBytes + int64(len(service.NoteOrigins))*timelineNoteReserveBytes + int64(len(service.Playback.Notes))*playbackNoteReserveBytes
 }
 
 // packTimelineFacts moves every record of the working maps into the compact
 // store and gives the service new, empty working maps, so that neither the
-// records nor the old map tables stay reachable.
-func (service *timelineService) packTimelineFacts(s *Session) error {
+// records nor the old map tables stay reachable. The compacted records'
+// reservations are released only then; after a failure the working maps
+// stay as they are and keep their reservations. Packing charges no rule
+// steps: each record was charged when it was published.
+func (service *timelineService) packTimelineFacts(ctx context.Context, s *Session) error {
 	if len(service.Facts) == 0 && len(service.NoteOrigins) == 0 && len(service.Playback.Notes) == 0 {
 		return nil
 	}
@@ -223,28 +250,52 @@ func (service *timelineService) packTimelineFacts(s *Session) error {
 		service.compact = store
 	}
 	store := service.compact
+	var released int64
 	for id, fact := range service.Facts {
-		if err := store.putFact(s, id, fact); err != nil {
+		if err := ctx.Err(); err != nil {
 			return err
 		}
+		bytes, err := store.putFact(s, id, fact)
+		if err != nil {
+			return err
+		}
+		released += bytes
 	}
 	for id, note := range service.NoteOrigins {
-		if err := store.putNote(s, id, note); err != nil {
+		if err := ctx.Err(); err != nil {
 			return err
 		}
+		bytes, err := store.putNote(s, id, note)
+		if err != nil {
+			return err
+		}
+		released += bytes
 	}
 	for id, play := range service.Playback.Notes {
-		if err := store.putPlay(s, id, play); err != nil {
+		if err := ctx.Err(); err != nil {
 			return err
 		}
+		bytes, err := store.putPlay(s, id, play)
+		if err != nil {
+			return err
+		}
+		released += bytes
+	}
+	if timelinePackObserver != nil {
+		timelinePackObserver()
 	}
 	service.Facts = make(map[NodeID]timelineEventFact)
 	service.NoteOrigins = nil
 	if service.Playback.Notes != nil {
 		service.Playback.Notes = make(map[NodeID]notePlaybackContext)
 	}
+	s.releaseFactBytes(released)
 	return nil
 }
+
+// timelinePackObserver is a test observation point only: it runs when every
+// record is in the store and the working maps are still reachable.
+var timelinePackObserver func()
 
 func (store *timelineCompactStore) slot(s *Session, id NodeID) (*uint32, error) {
 	page := uint64(id) >> timelineCompactPageShift
@@ -253,7 +304,7 @@ func (store *timelineCompactStore) slot(s *Session, id NodeID) (*uint32, error) 
 	}
 	if int(page) >= len(store.pages) {
 		size := max(int(page)+1, 2*len(store.pages))
-		if err := s.retain(int64(size) * timelineCompactSlotBytes); err != nil {
+		if err := store.retain(s, int64(size)*timelineCompactSlotBytes); err != nil {
 			return nil, err
 		}
 		pages := make([][]uint32, size)
@@ -261,7 +312,7 @@ func (store *timelineCompactStore) slot(s *Session, id NodeID) (*uint32, error) 
 		store.pages = pages
 	}
 	if store.pages[page] == nil {
-		if err := s.retain(4*timelineCompactPageSize + timelineCompactSlotBytes); err != nil {
+		if err := store.retain(s, 4*timelineCompactPageSize+timelineCompactSlotBytes); err != nil {
 			return nil, err
 		}
 		store.pages[page] = make([]uint32, timelineCompactPageSize)
@@ -295,7 +346,7 @@ func (store *timelineCompactStore) record(s *Session, id NodeID) (*compactEventR
 		return nil, contract("timeline compact store", "record count out of range")
 	}
 	if store.eventCount%timelineCompactChunk == 0 {
-		if err := s.retain(timelineCompactChunkBytes + timelineCompactSlotBytes); err != nil {
+		if err := store.retain(s, timelineCompactChunkBytes+timelineCompactSlotBytes); err != nil {
 			return nil, err
 		}
 		store.events = append(store.events, make([]compactEventRecord, timelineCompactChunk))
@@ -308,55 +359,58 @@ func (store *timelineCompactStore) record(s *Session, id NodeID) (*compactEventR
 	return rec, nil
 }
 
-func (store *timelineCompactStore) putFact(s *Session, id NodeID, fact timelineEventFact) error {
+func (store *timelineCompactStore) putFact(s *Session, id NodeID, fact timelineEventFact) (int64, error) {
 	rec, err := store.record(s, id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if rec.flags&compactHasFact != 0 {
-		return contract("timeline fact", "duplicate publication")
+		return 0, contract("timeline fact", "duplicate publication")
 	}
-	e := compactEncoder{s: s, in: &store.in, ok: true}
+	e := compactEncoder{s: s, store: store, in: &store.in, ok: true}
 	c := e.fact(fact)
 	if e.err != nil {
-		return e.err
+		return 0, e.err
 	}
 	rec.flags |= compactHasFact
 	store.factTotal++
 	if e.ok && reflect.DeepEqual(store.in.fact(c), fact) {
 		rec.fact = c
-		s.releaseFactBytes(timelineFactReserveBytes)
-		return nil
+		return timelineFactReserveBytes, nil
 	}
-	// The overflow entry keeps the working map's reservation.
+	// The copy has a reservation of its own: the working map's record stays
+	// reachable until the pack ends and releases that one.
+	if err := store.retain(s, timelineFactReserveBytes); err != nil {
+		return 0, err
+	}
 	if store.overflowFacts == nil {
 		store.overflowFacts = make(map[NodeID]timelineEventFact)
 	}
 	store.overflowFacts[id] = fact
 	rec.flags |= compactFactOverflow
-	return nil
+	return timelineFactReserveBytes, nil
 }
 
-func (store *timelineCompactStore) putNote(s *Session, id NodeID, note noteTimingOrigin) error {
+func (store *timelineCompactStore) putNote(s *Session, id NodeID, note noteTimingOrigin) (int64, error) {
 	rec, err := store.record(s, id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if rec.note != 0 || rec.flags&compactNoteOverflow != 0 {
-		return contract("note timing origins", "duplicate publication")
+		return 0, contract("note timing origins", "duplicate publication")
 	}
-	e := compactEncoder{s: s, in: &store.in, ok: true}
+	e := compactEncoder{s: s, store: store, in: &store.in, ok: true}
 	c := e.note(id, note)
 	if e.err != nil {
-		return e.err
+		return 0, e.err
 	}
 	if e.ok && reflect.DeepEqual(store.in.note(id, c), note) {
 		if store.noteCount == math.MaxUint32-1 {
-			return contract("timeline compact store", "record count out of range")
+			return 0, contract("timeline compact store", "record count out of range")
 		}
 		if store.noteCount%timelineCompactNoteChunk == 0 {
-			if err := s.retain(timelineCompactChunkBytes + timelineCompactSlotBytes); err != nil {
-				return err
+			if err := store.retain(s, timelineCompactChunkBytes+timelineCompactSlotBytes); err != nil {
+				return 0, err
 			}
 			store.notes = append(store.notes, make([]compactNote, timelineCompactNoteChunk))
 		}
@@ -364,38 +418,42 @@ func (store *timelineCompactStore) putNote(s *Session, id NodeID, note noteTimin
 		store.noteCount++
 		store.notes[at/timelineCompactNoteChunk][at%timelineCompactNoteChunk] = c
 		rec.note = at + 1
-		s.releaseFactBytes(timelineNoteReserveBytes)
-		return nil
+		return timelineNoteReserveBytes, nil
+	}
+	// The copy has a reservation of its own: the working map's record stays
+	// reachable until the pack ends and releases that one.
+	if err := store.retain(s, timelineNoteReserveBytes); err != nil {
+		return 0, err
 	}
 	if store.overflowNotes == nil {
 		store.overflowNotes = make(map[NodeID]noteTimingOrigin)
 	}
 	store.overflowNotes[id] = note
 	rec.flags |= compactNoteOverflow
-	return nil
+	return timelineNoteReserveBytes, nil
 }
 
-func (store *timelineCompactStore) putPlay(s *Session, id NodeID, play notePlaybackContext) error {
+func (store *timelineCompactStore) putPlay(s *Session, id NodeID, play notePlaybackContext) (int64, error) {
 	rec, err := store.record(s, id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if rec.play != 0 || rec.flags&compactPlayOverflow != 0 {
-		return contract("playback context", "duplicate publication")
+		return 0, contract("playback context", "duplicate publication")
 	}
-	e := compactEncoder{s: s, in: &store.in, ok: true}
+	e := compactEncoder{s: s, store: store, in: &store.in, ok: true}
 	c := e.play(id, play)
 	if e.err != nil {
-		return e.err
+		return 0, e.err
 	}
 	store.playTotal++
 	if e.ok && reflect.DeepEqual(store.in.play(id, c), play) {
 		if store.playCount == math.MaxUint32-1 {
-			return contract("timeline compact store", "record count out of range")
+			return 0, contract("timeline compact store", "record count out of range")
 		}
 		if store.playCount%timelineCompactPlayChunk == 0 {
-			if err := s.retain(timelineCompactChunkBytes + timelineCompactSlotBytes); err != nil {
-				return err
+			if err := store.retain(s, timelineCompactChunkBytes+timelineCompactSlotBytes); err != nil {
+				return 0, err
 			}
 			store.plays = append(store.plays, make([]compactPlay, timelineCompactPlayChunk))
 		}
@@ -403,15 +461,19 @@ func (store *timelineCompactStore) putPlay(s *Session, id NodeID, play notePlayb
 		store.playCount++
 		store.plays[at/timelineCompactPlayChunk][at%timelineCompactPlayChunk] = c
 		rec.play = at + 1
-		s.releaseFactBytes(playbackNoteReserveBytes)
-		return nil
+		return playbackNoteReserveBytes, nil
+	}
+	// The copy has a reservation of its own: the working map's record stays
+	// reachable until the pack ends and releases that one.
+	if err := store.retain(s, playbackNoteReserveBytes); err != nil {
+		return 0, err
 	}
 	if store.overflowPlays == nil {
 		store.overflowPlays = make(map[NodeID]notePlaybackContext)
 	}
 	store.overflowPlays[id] = play
 	rec.flags |= compactPlayOverflow
-	return nil
+	return playbackNoteReserveBytes, nil
 }
 
 func (store *timelineCompactStore) fact(id NodeID) (timelineEventFact, bool) {
@@ -482,10 +544,11 @@ func (store *timelineCompactStore) forEachFact(visit func(NodeID, timelineEventF
 // cannot hold (a causal reference, a displaced placement, a list); err is a
 // resource or contract failure of interning.
 type compactEncoder struct {
-	s   *Session
-	in  *compactInterner
-	ok  bool
-	err error
+	s     *Session
+	store *timelineCompactStore
+	in    *compactInterner
+	ok    bool
+	err   error
 }
 
 func (e *compactEncoder) live() bool { return e.ok && e.err == nil }
@@ -494,7 +557,7 @@ func (e *compactEncoder) intern(bytes int64) bool {
 	if !e.live() {
 		return false
 	}
-	e.err = e.s.retain(bytes)
+	e.err = e.store.retain(e.s, bytes)
 	return e.err == nil
 }
 

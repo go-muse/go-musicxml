@@ -21,8 +21,9 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 	if service.Final {
 		return Decision{Outcome: OutcomePass}, false, nil
 	}
-	// Windowed evaluation packs each measure's facts once it is read; every
-	// later reader goes through the service accessors.
+	// Windowed evaluation packs each measure's records once it is read and
+	// the working maps hold enough to pay for a store; every later reader goes
+	// through the service accessors.
 	windowed := s.strategy == strategyWindowed
 	blocks, err := s.timelineBlocks(ctx, p)
 	if err != nil {
@@ -57,19 +58,24 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 		if err = service.readMeasure(ctx, s, p.Bindings, block); err != nil {
 			return Decision{}, false, err
 		}
-		if windowed {
-			if err = service.packTimelineFacts(s); err != nil {
+		if windowed && (service.compact != nil || service.timelinePendingBytes() >= timelineCompactPackBytes) {
+			if err = service.packTimelineFacts(ctx, s); err != nil {
 				return Decision{}, false, err
 			}
 		}
 	}
+	packed := service.compact
 	if err := service.finalizeTimingOrigins(ctx, s, p.Bindings, blocks); err != nil {
 		return Decision{}, false, err
 	}
 	// A staged unit proof replaces the service with one that read every
-	// measure again into its working maps.
-	if windowed {
-		if err := service.packTimelineFacts(s); err != nil {
+	// measure again into its working maps, and drops the store.
+	if packed != nil && service.compact != packed {
+		s.releaseFactBytes(packed.charged)
+	}
+	packed = nil
+	if windowed && (service.compact != nil || service.timelinePendingBytes() >= timelineCompactPackBytes) {
+		if err := service.packTimelineFacts(ctx, s); err != nil {
 			return Decision{}, false, err
 		}
 	}
