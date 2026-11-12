@@ -232,7 +232,7 @@ func (service *timelineService) directionAnchor(r *stateReader, origin timelineE
 					}
 					continue
 				}
-				fact, found := service.Facts[candidate.header.ID]
+				fact, found := service.fact(candidate.header.ID)
 				if !found {
 					q.add(r, stateUnknown[NodeRef]("direction-note-fact-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
 					continue
@@ -319,7 +319,7 @@ func (service *timelineService) resolveDirectionOrigin(r *stateReader, event *fa
 	if err := s.retain(timelineDirectionReserveBytes); err != nil {
 		return err
 	}
-	fact, found := service.Facts[event.header.ID]
+	fact, found := service.fact(event.header.ID)
 	if !found {
 		fact = timelineEventFact{Part: block.part, Origin: stateUnknown[musicalPosition]("direction-origin-unavailable"), Position: stateUnknown[musicalPosition]("direction-display-position-unavailable"), Staff: stateUnknown[Integer]("direction-staff-unavailable"), Voice: stateUnknown[string]("direction-voice-unavailable")}
 	}

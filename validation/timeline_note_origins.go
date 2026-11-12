@@ -197,7 +197,7 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 		}
 		return contract("note timing origins", "exact note declaration required")
 	}
-	if _, exists := service.NoteOrigins[note.header.ID]; exists {
+	if _, exists := service.noteOrigin(note.header.ID); exists {
 		return contract("note timing origins", "duplicate publication")
 	}
 	// Admit the context fact and fixed record before retaining any collection.
@@ -304,7 +304,7 @@ func (service *timelineService) finalizeNoteOrigins(ctx context.Context, s *Sess
 			}
 			continue
 		}
-		fact, found := service.Facts[note.header.ID]
+		fact, found := service.fact(note.header.ID)
 		if !found {
 			return contract("note origin finalization", "stored note fact required")
 		}

@@ -91,16 +91,19 @@ func spanDomainIndex(r *contextReader, t *timelineService) map[NodeID]Evidence[N
 		return nil
 	}
 	out := make(map[NodeID]Evidence[NodeRef])
-	for id, f := range t.Facts {
+	interrupted := false
+	t.forEachFact(func(id NodeID, f timelineEventFact) bool {
 		if !r.step(1) {
-			return nil
+			interrupted = true
+			return false
 		}
 		if f.Part.State != EvidenceKnown {
-			continue
+			return true
 		}
 		for n := r.s.node(id); n != nil; n = r.s.node(n.header.Parent) {
 			if !r.step(1 + int64(len(f.Part.Value.DocumentID))) {
-				return nil
+				interrupted = true
+				return false
 			}
 			if old, ok := out[n.header.ID]; ok {
 				if old.State != EvidenceKnown || old.Value == f.Part.Value {
@@ -111,10 +114,15 @@ func spanDomainIndex(r *contextReader, t *timelineService) map[NodeID]Evidence[N
 			}
 			if err := r.s.retain(256); err != nil {
 				r.err = err
-				return nil
+				interrupted = true
+				return false
 			}
 			out[n.header.ID] = f.Part
 		}
+		return true
+	})
+	if interrupted {
+		return nil
 	}
 	return out
 }
@@ -241,7 +249,7 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 	p.Anchor = spanRef(r.s, anchor)
 	p.Domain = spanInheritedDomain(r, n, domains)
 	if t != nil && anchor != nil {
-		if f, ok := t.Facts[anchor.header.ID]; ok {
+		if f, ok := t.fact(anchor.header.ID); ok {
 			p.Domain = f.Part
 			p.Staff = f.Staff
 			p.Voice = f.Voice

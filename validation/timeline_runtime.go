@@ -21,6 +21,9 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 	if service.Final {
 		return Decision{Outcome: OutcomePass}, false, nil
 	}
+	// Windowed evaluation packs each measure's facts once it is read; every
+	// later reader goes through the service accessors.
+	windowed := s.strategy == strategyWindowed
 	blocks, err := s.timelineBlocks(ctx, p)
 	if err != nil {
 		return Decision{}, false, err
@@ -54,11 +57,24 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 		if err = service.readMeasure(ctx, s, p.Bindings, block); err != nil {
 			return Decision{}, false, err
 		}
+		if windowed {
+			if err = service.packTimelineFacts(s); err != nil {
+				return Decision{}, false, err
+			}
+		}
 	}
 	if err := service.finalizeTimingOrigins(ctx, s, p.Bindings, blocks); err != nil {
 		return Decision{}, false, err
 	}
+	// A staged unit proof replaces the service with one that read every
+	// measure again into its working maps.
+	if windowed {
+		if err := service.packTimelineFacts(s); err != nil {
+			return Decision{}, false, err
+		}
+	}
 	service.Final = true
+	service.observe()
 	return Decision{Outcome: OutcomePass}, false, nil
 }
 func timelineAt(block timelineMeasureBlock, offset Evidence[Rational]) Evidence[musicalPosition] {

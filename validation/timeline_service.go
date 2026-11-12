@@ -18,6 +18,10 @@ type timelineService struct {
 	DirectionOrigins   map[NodeID]directionTimingOrigin
 	Facts              map[NodeID]timelineEventFact
 	Final              bool
+	// compact holds the facts of evaluated measures in windowed evaluation;
+	// buffered evaluation leaves it nil. Read facts, note origins and note
+	// playback contexts through the accessors in timeline_compact.go.
+	compact *timelineCompactStore
 }
 
 // Indirect fixed record plus at least 512 bytes of map/growth headroom.
@@ -61,7 +65,7 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
-	if _, exists := service.Facts[id]; exists {
+	if service.hasFact(id) {
 		return contract("timeline fact", "duplicate publication")
 	}
 	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {

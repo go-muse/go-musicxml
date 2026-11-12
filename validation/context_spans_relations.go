@@ -506,7 +506,7 @@ func spanTremoloFacts(r *contextReader, key RuleKey, n *factNode, e *spanEndpoin
 		duration = stateUnavailable[Atomic, Atomic](ratio)
 	}
 	if timeline != nil && note != nil && (ordinary || me.State == EvidenceAbsent) {
-		fact, ok := timeline.Facts[note.header.ID]
+		fact, ok := timeline.fact(note.header.ID)
 		typ := stateText(r.childScalar(note, spanRole_noteType))
 		dots := spanCountChildren(r, note, spanRole_noteDot)
 		if ok && fact.Duration.State == EvidenceKnown && typ.State == EvidenceKnown && dots.State == EvidenceKnown && dots.Value.Integer.value.IsUint64() {

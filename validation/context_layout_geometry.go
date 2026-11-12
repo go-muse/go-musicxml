@@ -34,7 +34,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 					if !r.step(1) {
 						return r.err
 					}
-					if fact, ok := timeline.Facts[a.header.ID]; ok && fact.Part.State == EvidenceKnown {
+					if fact, ok := timeline.fact(a.header.ID); ok && fact.Part.State == EvidenceKnown {
 						scope = fact.Part.Value
 						break
 					}

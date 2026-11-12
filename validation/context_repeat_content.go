@@ -113,7 +113,7 @@ func contextRepeatTransformParts(ctx context.Context, s *Session, timeline *time
 func contextRepeatReadNote(r *contextReader, timeline *timelineService, transformed map[NodeRef]bool, id NodeID) (contextRepeatNote, error) {
 	note := contextRepeatNote{source: NodeRef{r.s.documentID, id}, available: navigationKnownBool(true)}
 	node := r.s.node(id)
-	fact, ok := timeline.Facts[id]
+	fact, ok := timeline.fact(id)
 	if !ok {
 		note.available = stateUnknown[bool]("context-repeat-note-timing-unavailable")
 		return note, nil
@@ -133,7 +133,7 @@ func contextRepeatReadNote(r *contextReader, timeline *timelineService, transfor
 	}
 	note.pos, note.duration, note.staff, note.voice = fact.Position.Value, fact.Duration.Value, fact.Staff, fact.Voice
 	note.available = stateMergeGap(note.available, r.complete(node))
-	playback := timeline.Playback.Notes[id]
+	playback, _ := timeline.playbackNote(id)
 	if playback.Chord.State != EvidenceKnown {
 		note.available = stateMergeGap(note.available, stateUnavailable[bool, bool](playback.Chord))
 	} else {
@@ -294,12 +294,12 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 		return err
 	}
 	defer releaseTransforms()
-	freeNotes, err := contextRepeatScratch(ctx, s, len(timeline.Playback.Notes), 2048)
+	freeNotes, err := contextRepeatScratch(ctx, s, timeline.playbackNoteCount(), 2048)
 	if err != nil {
 		return err
 	}
 	defer freeNotes()
-	notes := make([]contextRepeatNote, 0, len(timeline.Playback.Notes))
+	notes := make([]contextRepeatNote, 0, timeline.playbackNoteCount())
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
 	var hierarchyPlan *timelinePlan
 	if s.catalog != nil {
@@ -315,7 +315,7 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 		if !r.step(1) {
 			return r.err
 		}
-		if _, ok := timeline.Playback.Notes[id]; !ok {
+		if !timeline.hasPlaybackNote(id) {
 			continue
 		}
 		note, err := contextRepeatReadNote(r, timeline, transformed, id)

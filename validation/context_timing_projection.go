@@ -3,7 +3,7 @@ package validation
 import "context"
 
 func performanceTimelineFact(ctx context.Context, s *Session, service *timelineService, index *performanceAdviceIndex, n *factNode) (TimingContextResult, bool, error) {
-	f, ok := service.Facts[n.header.ID]
+	f, ok := service.fact(n.header.ID)
 	if !ok {
 		return TimingContextResult{}, false, nil
 	}
@@ -20,7 +20,7 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 	out.Staff = f.Staff
 	out.Voice = f.Voice
 	out.Part = f.Part
-	if v, ok := service.NoteOrigins[n.header.ID]; ok {
+	if v, ok := service.noteOrigin(n.header.ID); ok {
 		out.Kind = TimingKindNote
 		if f.End.State == "" {
 			out.End = stateUnknown[ContextPosition]("timeline-note-end-unestablished")
@@ -105,7 +105,7 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 		out.Pan = v.Pan
 		out.Elevation = v.Elevation
 	}
-	if v, ok := service.Playback.Notes[n.header.ID]; ok {
+	if v, ok := service.playbackNote(n.header.ID); ok {
 		out.PlayComplete = v.PlayComplete
 		var e error
 		out.Play, e = performancePlayInstructions(ctx, s, v.Play)

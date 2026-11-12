@@ -307,7 +307,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				var fact timelineEventFact
 				ok := false
 				if l.timeline != nil {
-					fact, ok = l.timeline.Facts[print.header.ID]
+					fact, ok = l.timeline.fact(print.header.ID)
 				}
 				if !ok || fact.Origin.State != EvidenceKnown || fact.Origin.Value.UnprovedFrame {
 					breakPositionUnknown = true

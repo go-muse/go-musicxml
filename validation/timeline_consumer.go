@@ -225,7 +225,7 @@ func (s *Session) evaluateTimelineConsumer(ctx context.Context, n *factNode, p *
 }
 
 func (s *Session) timelineChordDuration(ctx context.Context, n *factNode, p *timelineConsumerPlan, service *timelineService) (Decision, error) {
-	fact, ok := service.Facts[n.header.ID]
+	fact, ok := service.fact(n.header.ID)
 	if !ok {
 		return Decision{Outcome: OutcomeUnknown, Reason: "timeline-note-unavailable"}, nil
 	}
@@ -268,7 +268,7 @@ func (s *Session) timelineNumeralKey(ctx context.Context, n *factNode, p *timeli
 	if !match {
 		return Decision{Outcome: OutcomeUnknown, Reason: "numeral-harmony-unavailable"}, nil
 	}
-	fact, ok := service.Facts[harmony.header.ID]
+	fact, ok := service.fact(harmony.header.ID)
 	if !ok {
 		return Decision{Outcome: OutcomeUnknown, Reason: "timeline-harmony-unavailable"}, nil
 	}

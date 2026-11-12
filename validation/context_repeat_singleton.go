@@ -385,7 +385,7 @@ func contextRepeatSingletonReadNote(r *contextReader, timeline *timelineService,
 	if status.State != EvidenceKnown || !status.Value {
 		return out, status, nil
 	}
-	f, ok := timeline.Facts[n.header.ID]
+	f, ok := timeline.fact(n.header.ID)
 	if !ok {
 		return out, stateUnknown[bool]("context-repeat-singleton-timing-unavailable"), nil
 	}

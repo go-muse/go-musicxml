@@ -159,7 +159,7 @@ func unitPublisherApplies(p timelineUnitPublisher, part NodeRef) bool {
 }
 func (p timelineUnitPublisher) gap(v *timelineService, part NodeRef) stateGap {
 	g := stateGap{Part: part, FirstMeasure: p.Ordinal, LastMeasure: p.Ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[Decimal, bool](p.Value)}
-	if fact, ok := v.Facts[p.Node]; ok {
+	if fact, ok := v.fact(p.Node); ok {
 		g.Placement = fact.Placement
 		if fact.Origin.State == EvidenceKnown {
 			pos := fact.Origin.Value
@@ -194,7 +194,7 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 		if err = s.step(ctx, 1+int64(len(exc.Part.DocumentID))); err != nil {
 			return err
 		}
-		units := v.Facts[exc.Node].Units
+		units := v.factFast(exc.Node).Units
 		uniform, domain := units.State == EvidenceKnown, true
 		seen := false
 		gap := exc.Availability
@@ -306,7 +306,7 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 }
 
 func (v *timelineService) proveExcursion(ctx context.Context, s *Session, exc timelineUnitExcursion, publishers []timelineUnitPublisher) (bool, Evidence[Decimal], error) {
-	fact, ok := v.Facts[exc.Node]
+	fact, ok := v.fact(exc.Node)
 	cause := Evidence[Decimal]{State: EvidenceAbsent}
 	if !ok || fact.Origin.State != EvidenceKnown || fact.Units.State != EvidenceKnown && !exc.Locked {
 		return false, cause, nil
@@ -535,7 +535,7 @@ func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *t
 // only from the previous stopped stage; a newly qualified bound cannot certify
 // itself during the same pass.
 func (v *timelineService) proveExcursionDirection(ctx context.Context, s *Session, exc timelineUnitExcursion, publishers []timelineUnitPublisher) (bool, error) {
-	fact, ok := v.Facts[exc.Node]
+	fact, ok := v.fact(exc.Node)
 	if !ok || fact.Origin.State != EvidenceKnown || exc.Raw.State != EvidenceKnown || exc.Raw.Value.value.Sign() < 0 {
 		return false, nil
 	}
