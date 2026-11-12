@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"errors"
 	"math/big"
 	"reflect"
 	"runtime"
@@ -54,11 +55,15 @@ func TestTimelineCompactStoreChargeCoversItsHeap(t *testing.T) {
 		t.Skip("measures the heap")
 	}
 	const events = 24000
+	// overflow selects the kinds that stay whole: 1 facts, 2 note origins,
+	// 4 playback contexts.
 	for _, tc := range []struct {
-		distinct, overflow bool
-		perMeasure         int
-	}{{false, false, 48}, {true, false, 48}, {false, false, 1}, {false, false, events}, {false, true, 48}} {
+		distinct   bool
+		overflow   int
+		perMeasure int
+	}{{false, 0, 48}, {true, 0, 48}, {false, 0, 1}, {false, 0, events}, {false, 1, 48}, {false, 2, 48}, {false, 4, 48}, {false, 7, 48}} {
 		distinct, overflow, perMeasure := tc.distinct, tc.overflow, tc.perMeasure
+		extra := int64(0) // what the test charges beyond the records' reservations
 		offsets := make([]Rational, events)
 		for i := range offsets {
 			n := int64(i % 4)
@@ -98,13 +103,18 @@ func TestTimelineCompactStoreChargeCoversItsHeap(t *testing.T) {
 				fact := timelineEventFact{Origin: at, Position: at, End: at, Duration: duration, PrincipalDuration: duration, Principal: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"d", id}}, Units: units, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceKnown, Value: "1"}, Part: part}
 				grace := Evidence[graceTimingOrigin]{State: EvidenceAbsent}
 				var play []playbackInstruction
-				if overflow {
-					// None of the three is encodable; each stays whole.
+				// None of these is encodable; each stays whole.
+				if overflow&1 != 0 {
 					fact.Placement.Displaced = true
+				}
+				if overflow&2 != 0 {
 					grace = Evidence[graceTimingOrigin]{State: EvidenceKnown}
+				}
+				if overflow&4 != 0 {
 					if err := s.retain(512); err != nil {
 						t.Fatal(err)
 					}
+					extra += 512
 					play = []playbackInstruction{{Source: NodeRef{"d", id}}}
 				}
 				service.Facts[id] = fact
@@ -125,12 +135,20 @@ func TestTimelineCompactStoreChargeCoversItsHeap(t *testing.T) {
 		timelinePackObserver = nil
 		heap, used := compactLiveHeap()-heap0, rationalUsage(t, s, BudgetBufferedBytes)-used0
 		store := service.compact
-		compact := events
-		if overflow {
-			compact = 0
+		notes, plays := events, events
+		if overflow&2 != 0 {
+			notes = 0
 		}
-		if store == nil || store.factTotal != events || int(store.noteCount) != compact || int(store.playCount) != compact {
+		if overflow&4 != 0 {
+			plays = 0
+		}
+		if store == nil || store.factTotal != events || int(store.noteCount) != notes || int(store.playCount) != plays || len(store.overflowFacts) != events*(overflow&1) {
 			t.Fatalf("distinct=%v, %d per measure: packed %+v", distinct, perMeasure, store)
+		}
+		// Every record's reservation was released, so the run's charge is
+		// the store's own, which a dropped store releases.
+		if store.charged != used-extra {
+			t.Errorf("distinct offsets %v, overflow %v, %d per measure: the store counts %d charged bytes, the account %d", distinct, overflow, perMeasure, store.charged, used-extra)
 		}
 		t.Logf("distinct offsets %v, overflow %v, %d per measure: the store holds %d live bytes, charged %d", distinct, overflow, perMeasure, heap, used)
 		if heap > used+64<<10 {
@@ -189,6 +207,78 @@ func TestTimelineCompactInternsNumberShapes(t *testing.T) {
 		at := e.rational(v)
 		if !e.live() || !reflect.DeepEqual(store.in.rationals[at], v) {
 			t.Fatalf("interned %q decodes to a different representation", v.text)
+		}
+	}
+}
+
+// A staged unit proof replaces the service and drops its store; the store's
+// whole charge is released then, and only then.
+func TestTimelineCompactDroppedStoreReleasesItsCharge(t *testing.T) {
+	s := rationalSession(t, Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40})
+	s.documentID = "d"
+	service := &timelineService{Facts: make(map[NodeID]timelineEventFact)}
+	for id := NodeID(1); id <= 300; id++ {
+		if err := s.retain(timelineFactReserveBytes); err != nil {
+			t.Fatal(err)
+		}
+		service.Facts[id] = timelineEventFact{Position: Evidence[musicalPosition]{State: EvidenceKnown, Value: musicalPosition{Part: NodeRef{"d", 1}, Offset: mustRational(t, int64(id), 1)}}}
+	}
+	if err := service.packTimelineFacts(context.Background(), s); err != nil {
+		t.Fatal(err)
+	}
+	packed := service.compact
+	used := rationalUsage(t, s, BudgetBufferedBytes)
+	if packed == nil || packed.charged == 0 || packed.charged != used {
+		t.Fatalf("store charged %v, account %d", packed, used)
+	}
+	service.releaseDroppedStore(s, packed)
+	if after := rationalUsage(t, s, BudgetBufferedBytes); after != used {
+		t.Fatalf("a kept store released %d bytes", used-after)
+	}
+	*service = timelineService{Facts: make(map[NodeID]timelineEventFact)}
+	service.releaseDroppedStore(s, packed)
+	if after := rationalUsage(t, s, BudgetBufferedBytes); after != 0 {
+		t.Fatalf("a dropped store left %d of %d bytes charged", after, used)
+	}
+}
+
+// countdownContext reports cancellation from its nth Err call on.
+type countdownContext struct {
+	context.Context
+	n int
+}
+
+func (c *countdownContext) Err() error {
+	if c.n--; c.n < 0 {
+		return context.Canceled
+	}
+	return nil
+}
+
+// A pack checks for cancellation before each record. Cancelled midway, it
+// releases nothing and leaves the working maps as they were.
+func TestTimelineCompactPackCancellation(t *testing.T) {
+	for _, after := range []int{0, 1, 150, 299} {
+		s := rationalSession(t, Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40})
+		s.documentID = "d"
+		service := &timelineService{Facts: make(map[NodeID]timelineEventFact)}
+		for id := NodeID(1); id <= 300; id++ {
+			if err := s.retain(timelineFactReserveBytes); err != nil {
+				t.Fatal(err)
+			}
+			service.Facts[id] = timelineEventFact{Position: Evidence[musicalPosition]{State: EvidenceKnown, Value: musicalPosition{Part: NodeRef{"d", 1}, Offset: mustRational(t, int64(id), 1)}}}
+		}
+		before := rationalUsage(t, s, BudgetBufferedBytes)
+		err := service.packTimelineFacts(&countdownContext{context.Background(), after}, s)
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("cancelled after %d records: %v", after, err)
+		}
+		charged := int64(0)
+		if service.compact != nil {
+			charged = service.compact.charged
+		}
+		if len(service.Facts) != 300 || rationalUsage(t, s, BudgetBufferedBytes) != before+charged {
+			t.Fatalf("cancelled after %d records: %d working facts, usage %d, before %d plus store %d", after, len(service.Facts), rationalUsage(t, s, BudgetBufferedBytes), before, charged)
 		}
 	}
 }

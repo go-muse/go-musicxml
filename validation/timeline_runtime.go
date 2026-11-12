@@ -58,7 +58,7 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 		if err = service.readMeasure(ctx, s, p.Bindings, block); err != nil {
 			return Decision{}, false, err
 		}
-		if windowed && (service.compact != nil || service.timelinePendingBytes() >= timelineCompactPackBytes) {
+		if windowed && service.packDue() {
 			if err = service.packTimelineFacts(ctx, s); err != nil {
 				return Decision{}, false, err
 			}
@@ -68,13 +68,9 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 	if err := service.finalizeTimingOrigins(ctx, s, p.Bindings, blocks); err != nil {
 		return Decision{}, false, err
 	}
-	// A staged unit proof replaces the service with one that read every
-	// measure again into its working maps, and drops the store.
-	if packed != nil && service.compact != packed {
-		s.releaseFactBytes(packed.charged)
-	}
+	service.releaseDroppedStore(s, packed)
 	packed = nil
-	if windowed && (service.compact != nil || service.timelinePendingBytes() >= timelineCompactPackBytes) {
+	if windowed && service.packDue() {
 		if err := service.packTimelineFacts(ctx, s); err != nil {
 			return Decision{}, false, err
 		}

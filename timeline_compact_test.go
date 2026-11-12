@@ -57,13 +57,13 @@ func timelineStagedUnits(measures int) string {
 
 // timelineRecords runs one line on data with the given strategy and returns
 // the dumps and counts of every timeline service that finalized.
-func timelineRecords(t *testing.T, name, line string, data []byte, document Document, windowed bool) ([]string, [][9]int) {
+func timelineRecords(t *testing.T, name, line string, data []byte, document Document, windowed bool) ([]string, [][10]int) {
 	t.Helper()
 	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 34}
 	var dumps []string
-	var counts [][9]int
+	var counts [][10]int
 	previousStrategy := validationSetWindowedStrategy(windowed)
-	previous := validationSetTimelineObserver(func(dump func() string, c [9]int) {
+	previous := validationSetTimelineObserver(func(dump func() string, c [10]int) {
 		dumps = append(dumps, dump())
 		counts = append(counts, c)
 	})
@@ -116,7 +116,7 @@ func TestTimelineCompactRecordsMatchBuffered(t *testing.T) {
 		}
 		inputs = append(inputs, input{files[i], data})
 	}
-	var total [9]int
+	var total [10]int
 	services, packedServices := 0, 0
 	for _, in := range inputs {
 		document, err := Decode(bytes.NewReader(in.data))
@@ -173,6 +173,13 @@ func TestTimelineCompactRecordsMatchBuffered(t *testing.T) {
 			case "staged units":
 				if stored != len(windowed) {
 					t.Fatalf("%s %s: %d of %d timeline services packed", in.name, line, stored, len(windowed))
+				}
+				// Once the store exists, each measure (an attributes element,
+				// two notes and a backup) is packed as soon as it is read.
+				for _, w := range windowedCounts {
+					if w[9] > 4 {
+						t.Fatalf("%s %s: %d facts packed at once after the store started", in.name, line, w[9])
+					}
 				}
 			}
 		}
@@ -238,7 +245,7 @@ func TestTimelineCompactChargeCoversWindowedTimeline(t *testing.T) {
 					used0, _ = a.Usage(validation.BudgetBufferedBytes)
 				}
 			})
-			previousTimeline := validationSetTimelineObserver(func(_ func() string, _ [9]int) {
+			previousTimeline := validationSetTimelineObserver(func(_ func() string, _ [10]int) {
 				if !observed && account != nil {
 					observed = true
 					heap = liveHeap() - heap0

@@ -195,6 +195,8 @@ type timelineCompactStore struct {
 	// charged is what the store has retained, released at once if a staged
 	// unit proof drops the whole store.
 	charged int64
+	// largestLaterPack is the most facts packed at once after the first pack.
+	largestLaterPack int
 }
 
 func (store *timelineCompactStore) retain(s *Session, bytes int64) error {
@@ -227,6 +229,22 @@ func newTimelineCompactStore(s *Session) (*timelineCompactStore, error) {
 	return &timelineCompactStore{in: in, charged: timelineCompactStoreBytes}, nil
 }
 
+// packDue reports whether windowed evaluation packs the working maps now:
+// after every measure once a store exists, and to start one when the maps
+// hold timelineCompactPackBytes of record reservations.
+func (service *timelineService) packDue() bool {
+	return service.compact != nil || service.timelinePendingBytes() >= timelineCompactPackBytes
+}
+
+// releaseDroppedStore releases the charge of packed, the store the service
+// held before its timing origins were finalized, when a staged unit proof
+// replaced the service and so dropped that store.
+func (service *timelineService) releaseDroppedStore(s *Session, packed *timelineCompactStore) {
+	if packed != nil && service.compact != packed {
+		s.releaseFactBytes(packed.charged)
+	}
+}
+
 // timelinePendingBytes is the record reservations the working maps hold.
 func (service *timelineService) timelinePendingBytes() int64 {
 	return int64(len(service.Facts))*timelineFactReserveBytes + int64(len(service.NoteOrigins))*timelineNoteReserveBytes + int64(len(service.Playback.Notes))*playbackNoteReserveBytes
@@ -250,6 +268,9 @@ func (service *timelineService) packTimelineFacts(ctx context.Context, s *Sessio
 		service.compact = store
 	}
 	store := service.compact
+	if store.eventCount != 0 {
+		store.largestLaterPack = max(store.largestLaterPack, len(service.Facts))
+	}
 	var released int64
 	for id, fact := range service.Facts {
 		if err := ctx.Err(); err != nil {

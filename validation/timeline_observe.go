@@ -9,7 +9,8 @@ import (
 
 // Record counts of a finalized timeline service, in this order: all facts,
 // note timing origins and note playback contexts, then those of each held in
-// compact form, then those of each left in the working maps. Buffered
+// compact form, then those of each left in the working maps, then the most
+// facts packed at once after the store's first pack. Buffered
 // evaluation holds none in compact form.
 const (
 	timelineCountFacts = iota
@@ -21,6 +22,8 @@ const (
 	timelineCountWorkingFacts
 	timelineCountWorkingNotes
 	timelineCountWorkingPlays
+	// The most facts packed at once after the store's first pack.
+	timelineCountLargestLaterPack
 	timelineCountKinds
 )
 
@@ -52,6 +55,7 @@ func (service *timelineService) observe() {
 		counts[timelineCountCompactFacts] = store.factTotal - len(store.overflowFacts)
 		counts[timelineCountCompactNotes] = int(store.noteCount)
 		counts[timelineCountCompactPlays] = int(store.playCount)
+		counts[timelineCountLargestLaterPack] = store.largestLaterPack
 	}
 	timelineObserver(service.dump, counts)
 }
