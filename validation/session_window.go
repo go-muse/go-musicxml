@@ -231,14 +231,31 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	if windowObserver != nil {
 		windowObserver(w.root, w.first, w.end)
 	}
+	held := len(s.accumulator.heldOutcomes) + len(s.accumulator.heldFindings)
 	bound, err := s.bindClosed(ctx, w.root, w.first, w.end)
 	if err != nil {
 		return err
 	}
+	// A window whose binding proved a failure leaves that failure held,
+	// without the decision rules would read until the root binds.
+	proved := len(s.accumulator.heldOutcomes)+len(s.accumulator.heldFindings) != held
 	if bound && windowBindObserver != nil {
 		windowBindObserver(w.root)
 	}
-	return s.readTimelineWindow(ctx, w, bound)
+	if err := s.readTimelineWindow(ctx, w, bound); err != nil {
+		return err
+	}
+	if !bound || proved {
+		if windowRulesObserver != nil {
+			windowRulesObserver(false, s.windowKeptCount())
+		}
+		return nil
+	}
+	err = s.evaluateWindowRules(ctx, w)
+	if windowRulesObserver != nil {
+		windowRulesObserver(true, s.windowKeptCount())
+	}
+	return err
 }
 
 // closeSegment is called when n closes; a segment is bound there with its

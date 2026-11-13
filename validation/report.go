@@ -263,6 +263,10 @@ type findingStage uint8
 const (
 	stageInput findingStage = iota
 	stageSchema
+	// stageNodeRules orders the findings of the node rules evaluated once
+	// the root bound (or, under the windowed strategy, once a window bound),
+	// by the node evaluated.
+	stageNodeRules
 	stageSchemaFinal
 	stagePhases
 	stageSummaries
