@@ -13,7 +13,10 @@ import (
 // partwise measure inside its part, or a timewise measure. Every node outside
 // a window belongs to the skeleton, the score header and the windows'
 // ancestors, which stays until Finish. Other documents (opus, container,
-// sounds) have no windows: the whole document is skeleton.
+// sounds) have no windows: the whole document is skeleton. A segment is a
+// child of a window ancestor that is neither a window nor an ancestor, such
+// as the part-list: it is bound with its subtree when it closes, as a window
+// is, but it is not a window.
 var windowRootPaths = [][]string{{"score-partwise", "part", "measure"}, {"score-timewise", "measure"}}
 
 // evaluationWindow is one window: its root and the nodes it covers, as the
@@ -176,9 +179,6 @@ func (s *Session) pushWindowChild(ctx context.Context, child *factNode) error {
 	if err != nil || !ok || w.Mode != xsd.WitnessDeclared {
 		return err
 	}
-	if !s.opensWindow(child.header.Name) && !s.windowAncestor(child.header.Name) {
-		return nil
-	}
 	if err := s.retain(windowUseEntryBytes); err != nil {
 		return err
 	}
@@ -186,6 +186,17 @@ func (s *Session) pushWindowChild(ctx context.Context, child *factNode) error {
 		state.uses = make(map[NodeID]xsd.Use)
 	}
 	state.uses[child.header.ID] = w.Use
+	if s.opensWindow(child.header.Name) || s.windowAncestor(child.header.Name) {
+		return nil
+	}
+	// A segment: the child opens next in the sequence.
+	if err := s.retain(segmentEntryBytes); err != nil {
+		return err
+	}
+	if state.segments == nil {
+		state.segments = make(map[NodeID]int)
+	}
+	state.segments[child.header.ID] = len(s.sequence)
 	return nil
 }
 
@@ -194,6 +205,7 @@ func (s *Session) pushWindowChild(ctx context.Context, child *factNode) error {
 // bare entry.
 var (
 	windowUseEntryBytes   = 3 * (int64(unsafe.Sizeof(NodeID(0))) + int64(unsafe.Sizeof(xsd.Use{})))
+	segmentEntryBytes     = 3 * (int64(unsafe.Sizeof(NodeID(0))) + int64(unsafe.Sizeof(int(0))))
 	boundWindowEntryBytes = 3 * (int64(unsafe.Sizeof(NodeID(0))) + int64(unsafe.Sizeof(boundWindow{})))
 )
 
@@ -219,38 +231,74 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	if windowObserver != nil {
 		windowObserver(w.root, w.first, w.end)
 	}
-	if !s.windowBinding() || s.schema.uses == nil {
+	bound, err := s.bindClosed(ctx, w.root, w.first, w.end)
+	if bound && windowBindObserver != nil {
+		windowBindObserver(w.root)
+	}
+	return err
+}
+
+// closeSegment is called when n closes; a segment is bound there with its
+// subtree, as a window is.
+func (s *Session) closeSegment(ctx context.Context, n *factNode) error {
+	if s.schema == nil || s.schema.segments == nil {
 		return nil
 	}
-	state := s.schema
-	use, ok := state.uses[w.root]
+	first, ok := s.schema.segments[n.header.ID]
 	if !ok {
 		return nil
 	}
+	delete(s.schema.segments, n.header.ID)
+	bound, err := s.bindClosed(ctx, n.header.ID, first, len(s.sequence))
+	if bound && segmentBindObserver != nil {
+		segmentBindObserver(n.header.ID, first, len(s.sequence))
+	}
+	return err
+}
+
+// segmentBindObserver receives the root of every segment bound when it
+// closed and the sequence range it covers. It is an unsynchronized package
+// variable: only serial tests set it.
+var segmentBindObserver func(root NodeID, first, end int)
+
+func setSegmentBindObserver(observer func(root NodeID, first, end int)) func(NodeID, int, int) {
+	previous := segmentBindObserver
+	segmentBindObserver = observer
+	return previous
+}
+
+// bindClosed binds the closed subtree rooted at root, which covers the
+// sequence range [first, end), when its parent's prefix gave it a use.
+func (s *Session) bindClosed(ctx context.Context, root NodeID, first, end int) (bool, error) {
+	if !s.windowBinding() || s.schema.uses == nil {
+		return false, nil
+	}
+	state := s.schema
+	use, ok := state.uses[root]
+	if !ok {
+		return false, nil
+	}
 	if err := s.ensureSchemaNodes(); err != nil {
-		return err
+		return false, err
 	}
 	// Binding the document can still be skipped (a resource limit,
-	// cancellation or rejected event before the root closes); the window's
-	// proved failures wait until it is not.
+	// cancellation or rejected event before the root closes); the proved
+	// failures wait until it is not.
 	var consumed int
 	s.accumulator.holding = true
-	completion, err := s.bindSubtree(ctx, s.node(w.root), use, w.first, len(s.stack), &consumed)
+	completion, err := s.bindSubtree(ctx, s.node(root), use, first, len(s.stack), &consumed)
 	s.accumulator.holding = false
 	if err != nil {
-		return err
+		return false, err
 	}
 	if err := s.retain(boundWindowEntryBytes); err != nil {
-		return err
+		return false, err
 	}
 	if state.windows == nil {
 		state.windows = make(map[NodeID]boundWindow)
 	}
-	state.windows[w.root] = boundWindow{use: use, completion: completion, size: w.end - w.first}
-	if windowBindObserver != nil {
-		windowBindObserver(w.root)
-	}
-	return nil
+	state.windows[root] = boundWindow{use: use, completion: completion, size: end - first}
+	return true, nil
 }
 
 // eulerEnter is the position of binding a node in a top-down traversal of

@@ -773,6 +773,9 @@ func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
 			return s.fail(err)
 		}
 	}
+	if err := s.closeSegment(ctx, n); err != nil {
+		return s.fail(err)
+	}
 	if err := s.closeWindowAncestor(n); err != nil {
 		return s.fail(err)
 	}

@@ -51,6 +51,8 @@ var (
 	validationSetWindowObserver = validationlink.Hook[func(func(validation.NodeID, int, int)) func(validation.NodeID, int, int)]("Session.SetWindowObserver")
 	// validationSetWindowBindObserver is a test observation point only.
 	validationSetWindowBindObserver = validationlink.Hook[func(func(validation.NodeID)) func(validation.NodeID)]("Session.SetWindowBindObserver")
+	// validationSetSegmentBindObserver is a test observation point only.
+	validationSetSegmentBindObserver = validationlink.Hook[func(func(validation.NodeID, int, int)) func(validation.NodeID, int, int)]("Session.SetSegmentBindObserver")
 	// validationSetTimelineObserver is a test observation point only. It is
 	// called when a timeline service finalizes, with a canonical dump of its
 	// records and their counts: facts, note origins, note playback contexts,

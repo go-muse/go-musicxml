@@ -42,6 +42,7 @@ func init() {
 	validationlink.Register("Session.SetKeepTypedXSD", setKeepTypedXSD)
 	validationlink.Register("Session.SetWindowObserver", setWindowObserver)
 	validationlink.Register("Session.SetWindowBindObserver", setWindowBindObserver)
+	validationlink.Register("Session.SetSegmentBindObserver", setSegmentBindObserver)
 	validationlink.Register("Session.SetTimelineObserver", setTimelineObserver)
 	validationlink.Register("Report.SetFindingKeyObserver", setFindingKeyObserverOrdered)
 	validationlink.Register("Engine.SourceAttributeLexicalProvider", (*Engine).sourceAttributeLexicalProvider)
