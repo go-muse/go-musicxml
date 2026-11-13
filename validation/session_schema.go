@@ -26,11 +26,13 @@ type schemaSession struct {
 	dtdOrder      []RuleKey
 	dtdOmitted    bool
 	// Under the windowed strategy (session_window.go): the open window
-	// ancestors, the uses their children got as they opened, and the windows
+	// ancestors, the uses their children got as they opened, the open
+	// segments with their first sequence index, and the windows and segments
 	// bound before the root closed.
-	opened  map[NodeID]*xsd.OpenElement
-	uses    map[NodeID]xsd.Use
-	windows map[NodeID]boundWindow
+	opened   map[NodeID]*xsd.OpenElement
+	uses     map[NodeID]xsd.Use
+	segments map[NodeID]int
+	windows  map[NodeID]boundWindow
 	// keepTyped keeps the typed results of completed subjects for the
 	// readers that finish the document; typedReleased records a read of
 	// typed results that were released, which Finish reports as a contract

@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -200,10 +201,18 @@ func TestWindowsCoverMeasures(t *testing.T) {
 	measure := regexp.MustCompile(`<measure[\s>/]`)
 	partwise := regexp.MustCompile(`<score-partwise[\s>]`)
 	type window struct{ first, end int }
-	var windows []window
+	var windows, segments []window
 	total := -1
 	var bound int
-	t.Cleanup(func() { validationSetWindowObserver(nil); validationSetWindowBindObserver(nil) })
+	t.Cleanup(func() {
+		validationSetWindowObserver(nil)
+		validationSetWindowBindObserver(nil)
+		validationSetSegmentBindObserver(nil)
+	})
+	segment := func(_ validation.NodeID, first, end int) { segments = append(segments, window{first, end}) }
+	// The nodes left for Finish to bind: the root and partwise parts, and
+	// children whose prefix gave them no declaration.
+	ancestors := regexp.MustCompile(`<(score-partwise|score-timewise)[\s>]|<part[\s>]`)
 	observe := func(root validation.NodeID, first, end int) {
 		if root == 0 {
 			total = end
@@ -212,7 +221,7 @@ func TestWindowsCoverMeasures(t *testing.T) {
 		windows = append(windows, window{first, end})
 	}
 	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 34}
-	checked, nodes, skeleton := 0, 0, 0
+	checked, nodes, skeleton, unbound := 0, 0, 0, 0
 	for i := 0; i < len(files); i += windowedStride() {
 		data, err := os.ReadFile(files[i])
 		if err != nil {
@@ -225,10 +234,11 @@ func TestWindowsCoverMeasures(t *testing.T) {
 		measures := len(measure.FindAll(data, -1))
 		for _, line := range []string{"source", "model"} {
 			for _, windowed := range []bool{false, true} {
-				windows, total, bound = nil, -1, 0
+				windows, segments, total, bound = nil, nil, -1, 0
 				previousStrategy := validationSetWindowedStrategy(windowed)
 				validationSetWindowObserver(observe)
 				validationSetWindowBindObserver(func(validation.NodeID) { bound++ })
+				validationSetSegmentBindObserver(segment)
 				if line == "source" {
 					_, err = InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceLine, Budgets: big})
 				} else {
@@ -236,12 +246,13 @@ func TestWindowsCoverMeasures(t *testing.T) {
 				}
 				validationSetWindowObserver(nil)
 				validationSetWindowBindObserver(nil)
+				validationSetSegmentBindObserver(nil)
 				validationSetWindowedStrategy(previousStrategy)
 				if err != nil {
 					t.Fatalf("%s %s: %v", files[i], line, err)
 				}
 				if !windowed {
-					if len(windows) != 0 || total != -1 || bound != 0 {
+					if len(windows) != 0 || len(segments) != 0 || total != -1 || bound != 0 {
 						t.Fatalf("%s %s: buffered strategy observed %d windows", files[i], line, len(windows))
 					}
 					continue
@@ -259,8 +270,25 @@ func TestWindowsCoverMeasures(t *testing.T) {
 					}
 					covered += w.end - w.first
 				}
+				// Segments are bound as they close, between and outside windows.
+				all := append(append([]window(nil), windows...), segments...)
+				sort.Slice(all, func(a, b int) bool { return all[a].first < all[b].first })
+				bindings := 0
+				for k, w := range all {
+					if w.first >= w.end || (k > 0 && w.first < all[k-1].end) || w.end > total {
+						t.Fatalf("%s %s: bound range %d [%d,%d) overlaps (total %d)", files[i], line, k, w.first, w.end, total)
+					}
+					bindings += w.end - w.first
+				}
+				left := total - bindings
+				if want := len(ancestors.FindAll(data, -1)); left < want {
+					t.Errorf("%s %s: %d nodes left for Finish, fewer than the %d ancestors", files[i], line, left, want)
+				} else if files[i] == filepath.Join("testdata", "official", "MozartTrio.musicxml") && left != want {
+					t.Errorf("%s %s: %d nodes left for Finish, want only the %d ancestors", files[i], line, left, want)
+				}
 				nodes += total
 				skeleton += total - covered
+				unbound += left
 				checked++
 			}
 		}
@@ -268,7 +296,7 @@ func TestWindowsCoverMeasures(t *testing.T) {
 	if checked < 20 {
 		t.Fatalf("checked %d runs", checked)
 	}
-	t.Logf("%d windowed runs, %d nodes, %d in the skeleton", checked, nodes, skeleton)
+	t.Logf("%d windowed runs, %d nodes, %d in the skeleton, %d left for Finish to bind", checked, nodes, skeleton, unbound)
 }
 
 // windowedRiskScore is a two-part partwise score whose elements carry IDs.
