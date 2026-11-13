@@ -98,6 +98,13 @@ func (service *timelineService) dump() string {
 		}
 		b.WriteByte('\n')
 	}
+	// The rest of the service, except the records above and the compact
+	// store that holds them.
+	rest := *service
+	rest.Facts, rest.NoteOrigins, rest.Playback.Notes, rest.compact, rest.Final = nil, nil, nil, nil, false
+	b.WriteString("service=")
+	dumpValue(&b, reflect.ValueOf(rest))
+	b.WriteByte('\n')
 	return b.String()
 }
 
@@ -138,6 +145,35 @@ func dumpValue(b *strings.Builder, v reflect.Value) {
 			dumpValue(b, v.Index(i))
 		}
 		b.WriteByte(']')
+	case reflect.Map:
+		if v.IsNil() {
+			b.WriteString("nil")
+			return
+		}
+		entries := make([]string, 0, v.Len())
+		for it := v.MapRange(); it.Next(); {
+			var e strings.Builder
+			dumpValue(&e, it.Key())
+			e.WriteByte(':')
+			dumpValue(&e, it.Value())
+			entries = append(entries, e.String())
+		}
+		slices.Sort(entries)
+		b.WriteString("map[")
+		b.WriteString(strings.Join(entries, " "))
+		b.WriteByte(']')
+	case reflect.Interface:
+		if v.IsNil() {
+			b.WriteString("nil")
+			return
+		}
+		dumpValue(b, v.Elem())
+	case reflect.Func:
+		if v.IsNil() {
+			b.WriteString("nil")
+		} else {
+			b.WriteString("func")
+		}
 	case reflect.String:
 		fmt.Fprintf(b, "%q", v.String())
 	case reflect.Bool:

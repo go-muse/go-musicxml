@@ -226,18 +226,37 @@ type timelineScopeIndex struct {
 }
 
 func (service *timelineService) prepareTimelineParts(ctx context.Context, s *Session, blocks []timelineMeasureBlock) (timelineScopeIndex, error) {
+	index, closures, err := timelineScope(ctx, s, blocks)
+	if err != nil {
+		return timelineScopeIndex{}, err
+	}
+	for _, c := range closures {
+		if err := s.step(ctx, 1); err != nil {
+			return timelineScopeIndex{}, err
+		}
+		if err := service.State.closePart(ctx, s, c.Part, c.Through, c.Complete); err != nil {
+			return timelineScopeIndex{}, err
+		}
+	}
+	return index, nil
+}
+
+// timelineScope indexes the parts of blocks in order of first appearance,
+// counts each part's measure ordinals and gives each part's closure: its
+// last ordinal, complete when every block's hierarchy is.
+func timelineScope(ctx context.Context, s *Session, blocks []timelineMeasureBlock) (timelineScopeIndex, []stateClosure, error) {
 	type partInfo struct {
 		through  uint64
 		complete Evidence[bool]
 	}
 	if err := s.retain(512); err != nil {
-		return timelineScopeIndex{}, err
+		return timelineScopeIndex{}, nil, err
 	}
 	index := timelineScopeIndex{Counts: map[timelineDomain]uint64{}}
 	parts := map[NodeID]partInfo{}
 	for _, block := range blocks {
 		if err := s.step(ctx, 1); err != nil {
-			return timelineScopeIndex{}, err
+			return timelineScopeIndex{}, nil, err
 		}
 		if block.part.State != EvidenceKnown {
 			continue
@@ -246,7 +265,7 @@ func (service *timelineService) prepareTimelineParts(ctx context.Context, s *Ses
 		info, exists := parts[id]
 		if !exists {
 			if err := s.retain(384); err != nil {
-				return timelineScopeIndex{}, err
+				return timelineScopeIndex{}, nil, err
 			}
 			index.Parts = append(index.Parts, block.part.Value)
 			info.complete = Evidence[bool]{State: EvidenceKnown, Value: true}
@@ -254,7 +273,7 @@ func (service *timelineService) prepareTimelineParts(ctx context.Context, s *Ses
 		domain := timelineDomain{id, block.ordinal}
 		if index.Counts[domain] == 0 {
 			if err := s.retain(64); err != nil {
-				return timelineScopeIndex{}, err
+				return timelineScopeIndex{}, nil, err
 			}
 		}
 		index.Counts[domain]++
@@ -268,14 +287,10 @@ func (service *timelineService) prepareTimelineParts(ctx context.Context, s *Ses
 		info.complete = timelineMergeAvailability(info.complete, coverage)
 		parts[id] = info
 	}
+	closures := make([]stateClosure, 0, len(index.Parts))
 	for _, part := range index.Parts {
-		if err := s.step(ctx, 1); err != nil {
-			return timelineScopeIndex{}, err
-		}
 		info := parts[part.Node]
-		if err := service.State.closePart(ctx, s, part, info.through, info.complete); err != nil {
-			return timelineScopeIndex{}, err
-		}
+		closures = append(closures, stateClosure{part, info.through, info.complete})
 	}
-	return index, nil
+	return index, closures, nil
 }

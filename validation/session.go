@@ -206,10 +206,14 @@ type Session struct {
 	hiddenContexts   []hiddenContext
 	// contextBackingHold keeps replaced Report.Context arrays charged while
 	// a rollback snapshot may restore one; contextBackingHeld sums them.
-	contextBackingHold      bool
-	contextBackingHeld      int64
-	contextReportRetained   int64
-	timeline                map[RuleKey]*timelineService
+	contextBackingHold    bool
+	contextBackingHeld    int64
+	contextReportRetained int64
+	timeline              map[RuleKey]*timelineService
+	// speculations are the timelines windowed evaluation reads as their
+	// windows close; speculating is the one reading a measure.
+	speculations            map[RuleKey]*timelineSpeculation
+	speculating             *timelineSpeculation
 	localDocuments          map[*localPlan]localDocumentResult
 	schema                  *schemaSession
 	catalog                 *CompiledCatalog

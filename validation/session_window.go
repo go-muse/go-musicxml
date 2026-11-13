@@ -232,10 +232,13 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 		windowObserver(w.root, w.first, w.end)
 	}
 	bound, err := s.bindClosed(ctx, w.root, w.first, w.end)
+	if err != nil {
+		return err
+	}
 	if bound && windowBindObserver != nil {
 		windowBindObserver(w.root)
 	}
-	return err
+	return s.readTimelineWindow(ctx, w, bound)
 }
 
 // closeSegment is called when n closes; a segment is bound there with its
