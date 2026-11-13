@@ -49,7 +49,7 @@ func TestIndependentR1OriginCanceledBeforeMalformed(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	err := s.sourceOrigin(ctx, key, in)
-	if !errors.Is(err, context.Canceled) || errors.Is(err, ErrInvalidConfiguration) || len(s.contextResults) != 0 || len(s.sourceOriginSeen) != 0 || s.retained != before {
+	if !errors.Is(err, context.Canceled) || errors.Is(err, ErrInvalidConfiguration) || len(s.contextResults) != 0 || s.sourceOriginCount != 0 || s.retained != before {
 		t.Fatalf("canceled invalid publication: err=%v retained=%d/%d", err, s.retained, before)
 	}
 }

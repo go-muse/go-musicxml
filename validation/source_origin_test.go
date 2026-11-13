@@ -225,7 +225,7 @@ func TestSourceOriginRejectsUnownedAndContradictoryIngress(t *testing.T) {
 			if err := s.sourceOrigin(ctx, key, in); err == nil {
 				t.Fatal("accepted malformed origin")
 			}
-			if len(s.contextResults) != 0 || len(s.sourceOriginSeen) != 0 || s.retained != before {
+			if len(s.contextResults) != 0 || s.sourceOriginCount != 0 || s.retained != before {
 				t.Fatal("partial malformed publication")
 			}
 		})
@@ -503,7 +503,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 		}
 		before, interned := s.retained, internCharge(s)
 		err := s.sourceOrigin(&rationalCancelContext{Context: context.Background(), at: at}, key, sourceOriginPhysical())
-		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || len(s.sourceOriginSeen) != 0 || s.retained != before+internCharge(s)-interned {
+		if !errors.Is(err, context.Canceled) || len(s.contextResults) != 0 || s.sourceOriginCount != 0 || s.retained != before+internCharge(s)-interned {
 			t.Fatalf("ingress cancel %d/%d: %v retained %d/%d", at, calls, err, s.retained, before)
 		}
 		s.cleanup()
@@ -524,7 +524,7 @@ func TestSourceOriginIngressCancellationAndExactContextFactLimit(t *testing.T) {
 	in := sourceOriginPhysical()
 	in.Attribute = &a.Name
 	before := s.retained
-	if err := s.sourceOrigin(ctx, key, in); !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 1 || len(s.sourceOriginSeen) != 1 || s.retained != before {
+	if err := s.sourceOrigin(ctx, key, in); !errors.Is(err, ErrResourceLimit) || len(s.contextResults) != 1 || s.sourceOriginCount != 1 || s.retained != before {
 		t.Fatalf("fact cap: %v", err)
 	}
 }

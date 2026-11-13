@@ -175,23 +175,28 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
-	facts                   *retainedFactPool
-	nodeCapacity            int
-	commonModelSeal         *modelRepresentationRecord
-	commonAttributeSeal     *Evidence[bool]
-	dtdIDs                  *sourceDTDIDs
-	sourceEntities          *sourceEntityDeclarations
-	dictionaries            *dictionaryLease
-	sourceOriginSeen        map[sourceOriginSubject]*SourceOriginContextResult
-	sourceAttributeLexical  map[sourceOriginSubject]Evidence[string]
-	sourceOriginExpected    uint64
-	sourceOriginUncertain   bool
-	sourceOriginUnavailable bool
-	sourceOriginSeal        *Evidence[bool]
-	contextServices         map[RuleKey]*contextService
-	contextElementRoles     map[contextBoundElementKey][]contextRole
-	contextAttributeTables  map[contextAttributeTableKey]*contextAttributeTable
-	contextAttributeIntern  map[contextSharedInternKey]*contextAttributeTable
+	facts               *retainedFactPool
+	nodeCapacity        int
+	commonModelSeal     *modelRepresentationRecord
+	commonAttributeSeal *Evidence[bool]
+	dtdIDs              *sourceDTDIDs
+	sourceEntities      *sourceEntityDeclarations
+	dictionaries        *dictionaryLease
+	sourceOriginSeen    map[sourceOriginSubject]*SourceOriginContextResult
+	// Under the windowed strategy (source_origin_window.go).
+	sourceOriginOpen              map[NodeID]*sourceOriginOpenNode
+	sourceOriginSpecified         map[sourceOriginSubject]uint8
+	sourceOriginSpecifiedOverflow map[sourceOriginSubject]Evidence[bool]
+	sourceOriginCount             uint64
+	sourceAttributeLexical        map[sourceOriginSubject]Evidence[string]
+	sourceOriginExpected          uint64
+	sourceOriginUncertain         bool
+	sourceOriginUnavailable       bool
+	sourceOriginSeal              *Evidence[bool]
+	contextServices               map[RuleKey]*contextService
+	contextElementRoles           map[contextBoundElementKey][]contextRole
+	contextAttributeTables        map[contextAttributeTableKey]*contextAttributeTable
+	contextAttributeIntern        map[contextSharedInternKey]*contextAttributeTable
 	// contextSharedTableBytes sums the charges of the shared attribute tables.
 	contextSharedTableBytes int64
 	contextResults          []ContextResult
@@ -779,6 +784,10 @@ func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
 			return s.fail(err)
 		}
 	}
+	s.closeSourceOrigins(n)
+	if err := s.closeDTDIDs(ctx, n); err != nil {
+		return s.fail(err)
+	}
 	if err := s.closeSegment(ctx, n); err != nil {
 		return s.fail(err)
 	}
@@ -1001,6 +1010,7 @@ func (s *Session) cleanup() {
 		lease.release()
 	}
 	s.sourceOriginSeen = nil
+	s.sourceOriginOpen, s.sourceOriginSpecified, s.sourceOriginSpecifiedOverflow, s.sourceOriginCount = nil, nil, nil, 0
 	s.sourceAttributeLexical = nil
 	s.sourceOriginSeal = nil
 	s.sourceOriginExpected = 0

@@ -106,7 +106,7 @@ func (s *Session) observeSourceAttributeLexical(ctx context.Context, provider Ru
 		}
 	}
 	slot := sourceOriginSubject{Node: subject.Node, Attribute: attribute}
-	origin := s.sourceOriginSeen[slot]
+	origin := s.sourceOriginFull(slot)
 	if origin == nil || origin.Attribute == nil {
 		return s.fail(&SessionError{Operation: "SourceAttributeLexical", Reason: "admitted exact attribute origin required"})
 	}
@@ -177,14 +177,14 @@ func (s *Session) sourcePhysicalAttribute(ctx context.Context, n *factNode, attr
 		return Evidence[bool]{}, Evidence[string]{}, err
 	}
 	slot := sourceOriginSubject{Node: n.header.ID, Attribute: attribute.Name}
-	origin := s.sourceOriginSeen[slot]
-	if origin == nil {
+	specified, found := s.sourceOriginSpecifiedOf(slot)
+	if !found {
 		return stateUnknown[bool]("source-attribute-origin-unavailable"), stateUnknown[string]("source-attribute-origin-unavailable"), nil
 	}
-	if origin.Specified.State != EvidenceKnown {
-		return origin.Specified, stateUnavailable[bool, string](origin.Specified), nil
+	if specified.State != EvidenceKnown {
+		return specified, stateUnavailable[bool, string](specified), nil
 	}
-	if !origin.Specified.Value {
+	if !specified.Value {
 		return Evidence[bool]{State: EvidenceAbsent}, Evidence[string]{State: EvidenceAbsent}, nil
 	}
 	if raw, found := s.sourceAttributeLexical[slot]; found {

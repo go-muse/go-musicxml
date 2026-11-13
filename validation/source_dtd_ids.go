@@ -40,10 +40,15 @@ type SourceDTDIDDomain struct {
 }
 
 type sourceDTDIDs struct {
-	Uncertain    bool
-	Domain       Evidence[bool]
-	Complete     Evidence[bool]
-	Seen         map[sourceOriginSubject]bool
+	Uncertain bool
+	Domain    Evidence[bool]
+	Complete  Evidence[bool]
+	Seen      map[sourceOriginSubject]bool
+	// Under the windowed strategy Seen is empty: the attributes classified
+	// so far are kept per open node, checked when the node closes, and
+	// missing records that a closed node left one unclassified.
+	open         map[NodeID]map[QName]bool
+	missing      bool
 	Declarations map[uint64]*SourceDTDIDDeclaration
 	Bindings     map[string]uint64
 	IDs          []SourceDTDIDAttribute
@@ -148,7 +153,7 @@ func (s *Session) sourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribu
 		return s.fail(contract("source DTD ID occurrence", "negative classification requires complete declarations"))
 	}
 	slot := sourceOriginSubject{Node: f.Subject.Node, Attribute: f.Attribute}
-	if s.dtdIDs.Seen[slot] {
+	if s.dtdIDClassified(slot) {
 		return s.fail(contract("source DTD ID occurrence", "duplicate attribute classification"))
 	}
 	if err = sourceDTDIDLocation(f.Use, s.documentID); err != nil {
@@ -160,7 +165,7 @@ func (s *Session) sourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribu
 	if f.Specified.State != EvidenceKnown || f.Specified.Cause != nil || len(f.Specified.Reason) > maxIdentityBytes {
 		return s.fail(contract("source DTD ID specifiedness", "known source occurrence required"))
 	}
-	origin := s.sourceOriginSeen[slot]
+	origin := s.sourceOriginFull(slot)
 	if origin == nil || origin.Specified.State != EvidenceKnown || origin.Specified.Value != f.Specified.Value {
 		return s.fail(contract("source DTD ID specifiedness", "matching admitted source origin required"))
 	}
@@ -229,7 +234,7 @@ func (s *Session) sourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribu
 	}
 	// Conservative per-event allowance pays for map growth and candidate slice
 	// capacity before either allocation, including repeated declaration metadata.
-	s.dtdIDs.Seen[sourceOriginSubject{Node: slot.Node, Attribute: owned.Attribute}] = true
+	s.dtdIDClassify(sourceOriginSubject{Node: slot.Node, Attribute: owned.Attribute})
 	if owned.IsID.State != EvidenceKnown || owned.Declaration != nil && owned.Declaration.DefaultKind != "required" && owned.Declaration.DefaultKind != "implied" {
 		s.dtdIDs.Uncertain = true
 	}
@@ -302,17 +307,24 @@ func (s *Session) completeSourceDTDIDs(ctx context.Context, doc string) error {
 	if !s.sourceDTDIDsSelected() || s.dtdIDs == nil || doc != s.documentID || s.root == nil || !s.root.closed || len(s.stack) != 0 || knownComplete(s.dtdIDs.Complete) {
 		return s.fail(&SessionError{Operation: "CompleteSourceDTDIDs", Reason: "one selected closed-document seal required"})
 	}
-	for _, id := range s.sequence {
-		n := s.node(id)
-		for _, a := range n.attributes {
-			if err := s.step(ctx, 1); err != nil {
-				return s.fail(err)
-			}
-			if a.Name.Space == "http://www.w3.org/2000/xmlns/" {
-				continue
-			}
-			if !s.dtdIDs.Seen[sourceOriginSubject{Node: id, Attribute: a.Name}] {
-				return s.fail(contract("source DTD ID occurrences", "missing admitted attribute classification"))
+	if s.strategy == strategyWindowed {
+		// Each node was checked when it closed.
+		if s.dtdIDs.missing {
+			return s.fail(contract("source DTD ID occurrences", "missing admitted attribute classification"))
+		}
+	} else {
+		for _, id := range s.sequence {
+			n := s.node(id)
+			for _, a := range n.attributes {
+				if err := s.step(ctx, 1); err != nil {
+					return s.fail(err)
+				}
+				if a.Name.Space == "http://www.w3.org/2000/xmlns/" {
+					continue
+				}
+				if !s.dtdIDs.Seen[sourceOriginSubject{Node: id, Attribute: a.Name}] {
+					return s.fail(contract("source DTD ID occurrences", "missing admitted attribute classification"))
+				}
 			}
 		}
 	}
@@ -332,4 +344,55 @@ func sourceDTDIDSameSite(a, b Evidence[Location]) bool {
 		return false
 	}
 	return x.Position == nil || *x.Position == *y.Position
+}
+
+// dtdIDClassified reports whether slot's attribute was already classified.
+func (s *Session) dtdIDClassified(slot sourceOriginSubject) bool {
+	if s.strategy != strategyWindowed {
+		return s.dtdIDs.Seen[slot]
+	}
+	return s.dtdIDs.open[slot.Node][slot.Attribute]
+}
+
+// dtdIDClassify records slot's attribute as classified. The caller charged
+// the entry with the event.
+func (s *Session) dtdIDClassify(slot sourceOriginSubject) {
+	if s.strategy != strategyWindowed {
+		s.dtdIDs.Seen[slot] = true
+		return
+	}
+	if s.dtdIDs.open == nil {
+		s.dtdIDs.open = make(map[NodeID]map[QName]bool)
+	}
+	names := s.dtdIDs.open[slot.Node]
+	if names == nil {
+		names = make(map[QName]bool)
+		s.dtdIDs.open[slot.Node] = names
+	}
+	names[slot.Attribute] = true
+}
+
+// closeDTDIDs checks, under the windowed strategy, that every admitted
+// attribute of n was classified, as completing the occurrences checks for
+// every node, and forgets n's classifications.
+func (s *Session) closeDTDIDs(ctx context.Context, n *factNode) error {
+	if s.strategy != strategyWindowed || s.dtdIDs == nil || !s.sourceDTDIDsSelected() {
+		return nil
+	}
+	names := s.dtdIDs.open[n.header.ID]
+	for _, a := range n.attributes {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+		if a.Name.Space == "http://www.w3.org/2000/xmlns/" {
+			continue
+		}
+		if !names[a.Name] {
+			s.dtdIDs.missing = true
+		}
+	}
+	if names != nil {
+		delete(s.dtdIDs.open, n.header.ID)
+	}
+	return nil
 }
