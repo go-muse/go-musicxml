@@ -150,6 +150,31 @@ func measureSourceOriginContext(ctx context.Context, s *Session, in *SourceOrigi
 }
 
 func cloneSourceOriginContext(ctx context.Context, s *Session, in *SourceOriginContextResult) (*SourceOriginContextResult, error) {
+	return cloneSourceOriginContextOwned(ctx, s, in, s)
+}
+
+// cloneSourceOriginContextPrivate copies in like cloneSourceOriginContext,
+// but owns every string itself instead of sharing the session's interned
+// copies, so that dropping the copy frees all it charged.
+func cloneSourceOriginContextPrivate(ctx context.Context, s *Session, in *SourceOriginContextResult) (*SourceOriginContextResult, int64, error) {
+	if in == nil {
+		return nil, 0, nil
+	}
+	size, err := measureSourceOriginContext(ctx, s, in)
+	if err != nil {
+		return nil, 0, err
+	}
+	if err = s.retain(size); err != nil {
+		return nil, 0, err
+	}
+	out := new(SourceOriginContextResult)
+	if err = resourceCopyIntoOwned(ctx, reflect.ValueOf(out).Elem(), reflect.ValueOf(in).Elem(), "", "", nil); err != nil {
+		return nil, size, err
+	}
+	return out, size, nil
+}
+
+func cloneSourceOriginContextOwned(ctx context.Context, s *Session, in *SourceOriginContextResult, owner *Session) (*SourceOriginContextResult, error) {
 	if in == nil {
 		return nil, nil
 	}
@@ -163,7 +188,7 @@ func cloneSourceOriginContext(ctx context.Context, s *Session, in *SourceOriginC
 	// Fill a single owned root after admission. The shared copier checks context
 	// throughout all nested sites, causes and bounded string-copy blocks.
 	out := new(SourceOriginContextResult)
-	if err = resourceCopyIntoOwned(ctx, reflect.ValueOf(out).Elem(), reflect.ValueOf(in).Elem(), "", "", s); err != nil {
+	if err = resourceCopyIntoOwned(ctx, reflect.ValueOf(out).Elem(), reflect.ValueOf(in).Elem(), "", "", owner); err != nil {
 		return nil, err
 	}
 	return out, nil

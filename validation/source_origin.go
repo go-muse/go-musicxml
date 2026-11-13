@@ -214,7 +214,7 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 			return s.fail(&SessionError{Operation: "SourceOrigin", Reason: "admitted present attribute required"})
 		}
 	}
-	if _, exists := s.sourceOriginSeen[slot]; exists {
+	if s.sourceOriginExists(slot) {
 		return s.fail(&SessionError{Operation: "SourceOrigin", Reason: "duplicate origin for subject"})
 	}
 	publication := ContextResult{Provider: provider, Subject: in.Subject, Property: ContextPropertySourceOrigin, Value: Evidence[Atomic]{State: EvidenceAbsent}, SourceOrigin: &in}
@@ -236,7 +236,7 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 		}
 	}()
 	cost := sourceOriginIndexEntryBytes
-	if s.sourceOriginSeen == nil {
+	if s.sourceOriginCount == 0 {
 		cost += sourceOriginIndexHeaderBytes
 	}
 	if err = s.retain(cost); err != nil {
@@ -247,22 +247,28 @@ func (s *Session) sourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 		return err
 	}
 	var owned *SourceOriginContextResult
+	var copied int64
 	if kept == nil {
-		// Without a kept record the index owns its own copy.
-		if owned, err = cloneSourceOriginContext(ctx, s, &in); err != nil {
+		// Without a kept record the index owns its own copy. Under the
+		// windowed strategy the copy lives only while its node is open: it
+		// shares no interned string, so dropping it frees what it charged.
+		if s.sourceOriginWindowed() {
+			if owned, copied, err = cloneSourceOriginContextPrivate(ctx, s, &in); err != nil {
+				return err
+			}
+		} else if owned, err = cloneSourceOriginContext(ctx, s, &in); err != nil {
 			return err
 		}
 	} else {
 		// Borrow only from the newly owned record, never from the adapter.
 		owned = kept.SourceOrigin
 	}
-	if s.sourceOriginSeen == nil {
-		s.sourceOriginSeen = make(map[sourceOriginSubject]*SourceOriginContextResult)
-	}
 	if owned.Attribute != nil {
 		slot.Attribute = *owned.Attribute
 	}
-	s.sourceOriginSeen[slot] = owned
+	if err = s.keepSourceOrigin(slot, owned, copied); err != nil {
+		return err
+	}
 	if !sourceOriginComponentsComplete(owned) {
 		s.sourceOriginUnavailable = true
 	}
@@ -288,7 +294,7 @@ func (s *Session) completeSourceOrigins(ctx context.Context, provider RuleKey, c
 	if complete.State == EvidenceAbsent {
 		return s.fail(contract("source origin completeness", "absence is not completeness"))
 	}
-	if complete.State == EvidenceKnown && complete.Value && uint64(len(s.sourceOriginSeen)) != s.sourceOriginExpected {
+	if complete.State == EvidenceKnown && complete.Value && s.sourceOriginCount != s.sourceOriginExpected {
 		return s.fail(contract("source origin completeness", "origins missing for admitted occurrences"))
 	}
 	if err := s.step(ctx, 1+evidenceLogicalBytes(complete)); err != nil {
