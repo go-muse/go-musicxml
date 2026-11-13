@@ -29,28 +29,66 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 	if err != nil {
 		return Decision{}, false, err
 	}
-	index, err := service.prepareTimelineParts(ctx, s, blocks)
-	if err != nil {
-		return Decision{}, false, err
-	}
-	for _, part := range index.Parts {
-		if err = service.State.readInstrumentDefinitions(ctx, s, p.Bindings, s.node(part.Node), part); err != nil {
+	// A partwise score read as its windows closed continues from the
+	// measures read when its assumptions hold; otherwise the speculative
+	// timeline is dropped and every measure is read here.
+	start, accepted := 0, false
+	var adopted timelineScopeIndex
+	if spec := s.speculations[key]; windowed && spec != nil {
+		delete(s.speculations, key)
+		index, closures, err := timelineScope(ctx, s, blocks)
+		if err != nil {
 			return Decision{}, false, err
 		}
+		if timelineSpeculationTamper != "" {
+			spec.tamper(s)
+		}
+		trigger, err := spec.confirm(ctx, s, blocks, index, closures)
+		if err != nil {
+			return Decision{}, false, err
+		}
+		if trigger == timelineTriggerNone {
+			trigger = spec.adoptClosures(closures)
+		}
+		if trigger == timelineTriggerNone {
+			if err := s.account.Charge(BudgetContextFacts, spec.facts); err != nil {
+				return Decision{}, false, err
+			}
+			*service = *spec.service
+			start, accepted, adopted = len(spec.blocks), true, index
+		} else if spec.service != nil {
+			s.releaseFactBytes(spec.retained)
+		}
+		if timelineDegradationObserver != nil {
+			timelineDegradationObserver(int(trigger), len(spec.blocks))
+		}
+		spec.service = nil
 	}
-	for _, block := range blocks {
-		if block.part.State != EvidenceKnown {
-			for _, part := range index.Parts {
-				if err = s.step(ctx, 1); err != nil {
-					return Decision{}, false, err
-				}
-				if err = service.gapAllPublishers(ctx, s, part, block.ordinal, timelineGapAs[NodeRef, musicalPosition](block.part, "timeline-part-owner-unavailable")); err != nil {
-					return Decision{}, false, err
+	index := adopted
+	if !accepted {
+		index, err = service.prepareTimelineParts(ctx, s, blocks)
+		if err != nil {
+			return Decision{}, false, err
+		}
+		for _, part := range index.Parts {
+			if err = service.State.readInstrumentDefinitions(ctx, s, p.Bindings, s.node(part.Node), part); err != nil {
+				return Decision{}, false, err
+			}
+		}
+		for _, block := range blocks {
+			if block.part.State != EvidenceKnown {
+				for _, part := range index.Parts {
+					if err = s.step(ctx, 1); err != nil {
+						return Decision{}, false, err
+					}
+					if err = service.gapAllPublishers(ctx, s, part, block.ordinal, timelineGapAs[NodeRef, musicalPosition](block.part, "timeline-part-owner-unavailable")); err != nil {
+						return Decision{}, false, err
+					}
 				}
 			}
 		}
 	}
-	for _, block := range blocks {
+	for _, block := range blocks[start:] {
 		if block.part.State == EvidenceKnown && index.Counts[timelineDomain{block.part.Value.Node, block.ordinal}] > 1 {
 			block.complete = stateUnknown[bool]("timeline-duplicate-part-measure-domain")
 		}

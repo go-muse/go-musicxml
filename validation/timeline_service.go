@@ -68,7 +68,7 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 	if service.hasFact(id) {
 		return contract("timeline fact", "duplicate publication")
 	}
-	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+	if err := s.chargeTimelineFact(); err != nil {
 		return err
 	}
 	if err := s.account.Charge(BudgetBufferedBytes, timelineFactReserveBytes); err != nil {

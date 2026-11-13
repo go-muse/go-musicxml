@@ -404,7 +404,7 @@ func stateReserve(ctx context.Context, s *Session, value any) (int64, error) {
 	if e != nil {
 		return 0, e
 	}
-	if e = s.account.Charge(BudgetContextFacts, 1); e != nil {
+	if e = s.chargeTimelineFact(); e != nil {
 		return 0, e
 	}
 	if e = s.retain(n); e != nil {
@@ -427,7 +427,7 @@ func stateReserveTransient(ctx context.Context, s *Session, value any) (int64, e
 	if e != nil {
 		return 0, e
 	}
-	if e = s.account.Charge(BudgetContextFacts, 1); e != nil {
+	if e = s.chargeTimelineFact(); e != nil {
 		return 0, e
 	}
 	if e = s.retainTransient(n); e != nil {

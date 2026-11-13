@@ -120,7 +120,7 @@ func playbackStore[T playbackOwnedRecord](ctx context.Context, s *Session, recor
 	case barlinePlaybackContext:
 		bytes = playbackBarlineReserveBytes
 	}
-	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+	if err := s.chargeTimelineFact(); err != nil {
 		return err
 	}
 	// ownOrigin's bounded reflected temporary can coexist with the indirect map

@@ -201,7 +201,7 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 		return contract("note timing origins", "duplicate publication")
 	}
 	// Admit the context fact and fixed record before retaining any collection.
-	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+	if err := s.chargeTimelineFact(); err != nil {
 		return err
 	}
 	if err := s.account.Charge(BudgetBufferedBytes, timelineNoteReserveBytes); err != nil {

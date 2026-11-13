@@ -59,6 +59,13 @@ var (
 	// then the compact ones of each, then those left in the working maps, then
 	// the most facts packed at once after the store's first pack.
 	validationSetTimelineObserver = validationlink.Hook[func(func(func() string, [10]int)) func(func() string, [10]int)]("Session.SetTimelineObserver")
+	// validationSetTimelineDegradationObserver is a test observation point
+	// only. It receives, for each timeline windowed evaluation read, the
+	// trigger that made Finish read it whole (0 when none did) and the number
+	// of measures read as their windows closed.
+	validationSetTimelineDegradationObserver = validationlink.Hook[func(func(int, int)) func(int, int)]("Session.SetTimelineDegradationObserver")
+	// validationSetTimelineSpeculationTamper is a test switch only.
+	validationSetTimelineSpeculationTamper = validationlink.Hook[func(string) string]("Session.SetTimelineSpeculationTamper")
 	// validationObserveFindingKeyOrder is a test observation point only.
 	validationObserveFindingKeyOrder                 = validationlink.Hook[func(func(bool, int))]("Report.SetFindingKeyObserver")
 	validationShareDictionarySet                     = validationlink.Hook[func(context.Context, *validation.DictionarySet, *validation.Account) (*validation.DictionarySet, error)]("ShareDictionarySet")

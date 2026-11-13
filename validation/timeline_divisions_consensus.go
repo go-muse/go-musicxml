@@ -27,7 +27,7 @@ func (h *timelineState) certifyDivisionsValueGap(ctx context.Context, s *Session
 		return contract("divisions value", "duplicate certificate")
 	}
 	certificate := divisionsValueCertificate{Value: value, Provenance: stateProvenance{Node: node, Kind: stateExplicit}}
-	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+	if err := s.chargeTimelineFact(); err != nil {
 		return err
 	}
 	// Map header and old/new bucket coexistence, separately from the owned source.

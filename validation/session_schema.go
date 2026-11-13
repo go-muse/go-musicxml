@@ -1262,6 +1262,14 @@ func (s *Session) schemaResultCause(ctx context.Context, n *factNode, check XSDC
 // schemaEffectiveScalar exposes only the shared kernel's validated effective
 // value. Current input remains separately available in the original fact slot.
 func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attribute QName) (Evidence[Atomic], error) {
+	v, err := s.schemaEffectiveScalarAt(ctx, node, attribute)
+	if err == nil && v.State != EvidenceKnown && v.State != EvidenceAbsent {
+		s.speculativeScalarRead(node, attribute, v)
+	}
+	return v, err
+}
+
+func (s *Session) schemaEffectiveScalarAt(ctx context.Context, node NodeID, attribute QName) (Evidence[Atomic], error) {
 	unknown := Evidence[Atomic]{State: EvidenceUnsupported, Reason: "schema-effective-value-unavailable"}
 	if err := s.step(ctx, 1); err != nil {
 		return unknown, err
@@ -1341,6 +1349,9 @@ func (s *Session) schemaInvalidValue(ctx context.Context, n *factNode, check XSD
 			break
 		}
 	}
+	if out.Cause == nil {
+		s.speculativeInvalidRead(n, check)
+	}
 	return out, nil
 }
 func (s *Session) schemaResolveIdentity(ctx context.Context, node NodeID, attribute QName) (xsd.IdentityResolution, *DecisionRef, error) {
@@ -1354,6 +1365,9 @@ func (s *Session) schemaResolveIdentity(ctx context.Context, node NodeID, attrib
 	result, err := s.schema.run.ResolveIdentity(ctx, value.Value.Text)
 	if err != nil {
 		return result, nil, err
+	}
+	if speculated, ok := s.speculativeIdentity(value.Value.Text, result); ok {
+		return speculated, nil, nil
 	}
 	if result.Status != xsd.IdentityMissing && result.Status != xsd.IdentityAmbiguous {
 		return result, nil, nil

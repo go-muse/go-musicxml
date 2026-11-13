@@ -468,7 +468,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 		if _, exists := service.GraceNeighbors[n.Note.Node]; exists {
 			return contract("grace neighbors", "duplicate publication")
 		}
-		if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+		if err := s.chargeTimelineFact(); err != nil {
 			return err
 		}
 		if err := s.retain(4096); err != nil {
