@@ -51,8 +51,11 @@ type timelineSpeculation struct {
 	// retained is what reading measures retained, released when the
 	// speculation is dropped.
 	retained int64
-	started  bool
-	stopped  timelineTrigger
+	// facts counts the context facts reading published, charged when Finish
+	// adopts the speculation.
+	facts   int64
+	started bool
+	stopped timelineTrigger
 }
 
 type timelineSpeculativePart struct {
@@ -102,10 +105,25 @@ const (
 	timelineTriggerIdentity
 	// A schema check read with no failure recorded one later.
 	timelineTriggerLateFailure
+	// The buffer refused what a speculative read records.
+	timelineTriggerBudget
 	timelineTriggerCount
 )
 
 const timelineSpeculationBytes int64 = 1024
+
+// chargeTimelineFact charges one timeline context fact. A speculative read
+// only counts it: Finish charges the count when it adopts the speculation
+// and nothing when it drops it and reads the timeline again, so that the
+// cumulative context-fact quota counts each fact once, as buffered
+// evaluation does.
+func (s *Session) chargeTimelineFact() error {
+	if s.speculating != nil {
+		s.speculating.facts++
+		return nil
+	}
+	return s.account.Charge(BudgetContextFacts, 1)
+}
 
 // speculativeTimelineKeys are the timeline rules of the profile.
 func (s *Session) speculativeTimelineKeys() []RuleKey {
@@ -128,20 +146,25 @@ func (s *Session) readTimelineWindow(ctx context.Context, w evaluationWindow, bo
 		return nil
 	}
 	if s.speculations == nil {
+		if s.speculationNone {
+			return nil
+		}
 		keys := s.speculativeTimelineKeys()
 		if len(keys) == 0 {
+			s.speculationNone = true
 			return nil
 		}
 		if err := s.retain(int64(len(keys)) * timelineSpeculationBytes); err != nil {
 			return err
 		}
 		s.speculations = make(map[RuleKey]*timelineSpeculation, len(keys))
+		s.speculationKeys = keys
 		for _, key := range keys {
 			plan := s.catalog.plans[s.catalog.rules[key].Predicate].timeline
 			s.speculations[key] = &timelineSpeculation{key: key, plan: plan}
 		}
 	}
-	for _, key := range s.speculativeTimelineKeys() {
+	for _, key := range s.speculationKeys {
 		spec := s.speculations[key]
 		if spec == nil || spec.stopped != timelineTriggerNone {
 			continue
@@ -246,11 +269,11 @@ func (spec *timelineSpeculation) read(ctx context.Context, s *Session, measure *
 	state.ordinal++
 	before := s.retained
 	service := spec.service
-	if err := service.State.advanceClosure(ctx, s, block.part.Value, block.ordinal); err != nil {
-		return err
-	}
 	s.speculating = spec
-	err := service.readMeasure(ctx, s, b, block)
+	err := service.State.advanceClosure(ctx, s, block.part.Value, block.ordinal)
+	if err == nil {
+		err = service.readMeasure(ctx, s, b, block)
+	}
 	s.speculating = nil
 	if err != nil {
 		return err
@@ -381,7 +404,7 @@ func (s *Session) speculativeIdentity(value string, result xsd.IdentityResolutio
 		return result, false
 	}
 	if err := s.retain(int64(128 + len(value))); err != nil {
-		spec.stop(s, timelineTriggerIdentity)
+		spec.stop(s, timelineTriggerBudget)
 		return result, false
 	}
 	if spec.identities == nil {
@@ -402,7 +425,7 @@ func (s *Session) speculativeScalarRead(node NodeID, attribute QName, v Evidence
 		return
 	}
 	if err := s.retain(int64(192 + len(attribute.Space) + len(attribute.Local))); err != nil {
-		spec.stop(s, timelineTriggerLateFailure)
+		spec.stop(s, timelineTriggerBudget)
 		return
 	}
 	spec.scalarReads = append(spec.scalarReads, timelineScalarRead{node: node, attribute: attribute, value: v})
@@ -415,7 +438,7 @@ func (s *Session) speculativeInvalidRead(n *factNode, check XSDCheck) {
 		return
 	}
 	if err := s.retain(64); err != nil {
-		spec.stop(s, timelineTriggerLateFailure)
+		spec.stop(s, timelineTriggerBudget)
 		return
 	}
 	spec.invalidReads = append(spec.invalidReads, timelineInvalidRead{node: n, check: check})
@@ -497,6 +520,23 @@ func (spec *timelineSpeculation) confirm(ctx context.Context, s *Session, blocks
 		}
 	}
 	return timelineTriggerNone, nil
+}
+
+// adoptClosures gives the speculative closures the final ones in place:
+// they were closed through the measures read, in the order Finish closes
+// the parts, and are charged already.
+func (spec *timelineSpeculation) adoptClosures(closures []stateClosure) timelineTrigger {
+	current := spec.service.State.Closures
+	if len(current) != len(closures) {
+		return timelineTriggerBlocks
+	}
+	for i, c := range closures {
+		if current[i].Part != c.Part {
+			return timelineTriggerBlocks
+		}
+		current[i].Through, current[i].Complete = c.Through, c.Complete
+	}
+	return timelineTriggerNone
 }
 
 // timelineSpeculationTamper is a test switch only. It breaks a recorded

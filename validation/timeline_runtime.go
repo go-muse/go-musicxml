@@ -32,7 +32,8 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 	// A partwise score read as its windows closed continues from the
 	// measures read when its assumptions hold; otherwise the speculative
 	// timeline is dropped and every measure is read here.
-	start := 0
+	start, accepted := 0, false
+	var adopted timelineScopeIndex
 	if spec := s.speculations[key]; windowed && spec != nil {
 		delete(s.speculations, key)
 		index, closures, err := timelineScope(ctx, s, blocks)
@@ -46,23 +47,29 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 		if err != nil {
 			return Decision{}, false, err
 		}
-		if timelineDegradationObserver != nil {
-			timelineDegradationObserver(int(trigger), len(spec.blocks))
+		if trigger == timelineTriggerNone {
+			trigger = spec.adoptClosures(closures)
 		}
 		if trigger == timelineTriggerNone {
+			if err := s.account.Charge(BudgetContextFacts, spec.facts); err != nil {
+				return Decision{}, false, err
+			}
 			*service = *spec.service
-			service.State.Closures = nil
-			start = len(spec.blocks)
+			start, accepted, adopted = len(spec.blocks), true, index
 		} else if spec.service != nil {
 			s.releaseFactBytes(spec.retained)
 		}
+		if timelineDegradationObserver != nil {
+			timelineDegradationObserver(int(trigger), len(spec.blocks))
+		}
 		spec.service = nil
 	}
-	index, err := service.prepareTimelineParts(ctx, s, blocks)
-	if err != nil {
-		return Decision{}, false, err
-	}
-	if start == 0 {
+	index := adopted
+	if !accepted {
+		index, err = service.prepareTimelineParts(ctx, s, blocks)
+		if err != nil {
+			return Decision{}, false, err
+		}
 		for _, part := range index.Parts {
 			if err = service.State.readInstrumentDefinitions(ctx, s, p.Bindings, s.node(part.Node), part); err != nil {
 				return Decision{}, false, err

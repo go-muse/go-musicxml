@@ -309,7 +309,7 @@ func (service *timelineService) resolveDirectionOrigin(r *stateReader, event *fa
 	if _, exists := service.DirectionOrigins[event.header.ID]; exists {
 		return contract("direction origins", "duplicate publication")
 	}
-	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+	if err := s.chargeTimelineFact(); err != nil {
 		return err
 	}
 	if err := s.account.Charge(BudgetBufferedBytes, timelineDirectionReserveBytes); err != nil {

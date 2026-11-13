@@ -22,7 +22,7 @@ func (h *timelineState) certifyKeyPresenceGap(ctx context.Context, s *Session, i
 		return contract("key presence", "duplicate certificate")
 	}
 	provenance := stateProvenance{Node: node, Kind: stateExplicit}
-	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+	if err := s.chargeTimelineFact(); err != nil {
 		return err
 	}
 	// Map header and old/new bucket coexistence, separately from the owned source.

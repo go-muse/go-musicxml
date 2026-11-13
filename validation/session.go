@@ -213,6 +213,8 @@ type Session struct {
 	// speculations are the timelines windowed evaluation reads as their
 	// windows close; speculating is the one reading a measure.
 	speculations            map[RuleKey]*timelineSpeculation
+	speculationKeys         []RuleKey
+	speculationNone         bool
 	speculating             *timelineSpeculation
 	localDocuments          map[*localPlan]localDocumentResult
 	schema                  *schemaSession

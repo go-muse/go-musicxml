@@ -14,7 +14,7 @@ import (
 
 // timelineTriggerNames name the triggers of validation.timelineTrigger, in
 // order.
-var timelineTriggerNames = []string{"none", "timewise", "unbound", "hierarchy", "partless-gap", "duplicate-domain", "blocks", "incomplete-input", "identity", "late-failure"}
+var timelineTriggerNames = []string{"none", "timewise", "unbound", "hierarchy", "partless-gap", "duplicate-domain", "blocks", "incomplete-input", "identity", "late-failure", "budget"}
 
 // timelineWindowRuns runs one line on data with windowed evaluation and
 // returns the trigger and the measures read at window close of every
@@ -41,7 +41,8 @@ func timelineWindowRuns(t *testing.T, line string, data []byte, document Documen
 
 // Windowed evaluation reads the measures of a partwise score as their windows
 // close. On the corpus the speculation holds for at least 95 % of the
-// documents; each degradation is counted by its trigger.
+// documents, each degradation is counted by its trigger, and the cumulative
+// context-fact quota counts what buffered evaluation counts.
 func TestTimelineWindowCloseOnCorpus(t *testing.T) {
 	if raceEnabled {
 		t.Skip("slow under the race detector")
@@ -70,6 +71,9 @@ func TestTimelineWindowCloseOnCorpus(t *testing.T) {
 		for _, line := range []string{"source", "model"} {
 			if line == "model" && decodeErr != nil {
 				continue
+			}
+			if b, w := timelineContextFacts(t, line, data, document, false), timelineContextFacts(t, line, data, document, true); b != w {
+				t.Errorf("%s %s: %d context facts buffered, %d windowed", files[i], line, b, w)
 			}
 			for _, run := range timelineWindowRuns(t, line, data, document) {
 				seen = true
@@ -124,8 +128,9 @@ const (
 
 // Each assumption of a timeline read as its windows close has a document
 // that breaks it. The timeline is then read whole in Finish, the
-// degradation is counted by its trigger, and every report, with and without
-// the complete projection, is byte-identical to buffered evaluation's.
+// degradation is counted by its trigger, every report, with and without the
+// complete projection, is byte-identical to buffered evaluation's, and the
+// cumulative context-fact quota counts the same facts.
 func TestTimelineWindowCloseTriggers(t *testing.T) {
 	instrumentNote := `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><instrument id="I1"/></note>`
 	for _, tc := range []struct {
@@ -140,6 +145,7 @@ func TestTimelineWindowCloseTriggers(t *testing.T) {
 		{"stray root child", "partless-gap", timelineWindowScore(timelineWindowBare, timelineWindowPart("P1", timelineWindowAttr+timelineWindowNote)+`<stray/>`)},
 		{"content error after the last measure", "partless-gap", timelineWindowScore(timelineWindowBare, strings.Replace(timelineWindowPart("P1", timelineWindowAttr+timelineWindowNote), `</part>`, `<stray/></part>`, 1))},
 		{"identity repeated later", "identity", timelineWindowScore(timelineWindowSP, timelineWindowPart("P1", timelineWindowAttr+instrumentNote, `<note id="I1"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`))},
+		{"score-instrument ID repeated by a later score-part", "late-failure", timelineWindowScore(timelineWindowSP+strings.Replace(timelineWindowSP2, `<part-name>B</part-name>`, `<part-name>B</part-name><score-instrument id="I1"><instrument-name>Oboe</instrument-name></score-instrument>`, 1), timelineWindowPart("P1", timelineWindowAttr+instrumentNote)+timelineWindowPart("P2", timelineWindowAttr+timelineWindowNote))},
 		{"invalid attribute value", "none", timelineWindowScore(timelineWindowBare, timelineWindowPart("P1", timelineWindowAttr+`<note dynamics="abc"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`+`<barline location="bogus"/>`))},
 		{"invalid scalar", "none", timelineWindowScore(timelineWindowSP, timelineWindowPart("P1", timelineWindowAttr+`<note><pitch><step>C</step><octave>4</octave></pitch><duration>x</duration></note>`))},
 	} {
@@ -159,6 +165,14 @@ func TestTimelineWindowCloseTriggers(t *testing.T) {
 			if !seen[tc.trigger] {
 				t.Fatalf("triggers %v, want %s", seen, tc.trigger)
 			}
+			for _, line := range []string{"source", "model"} {
+				if line == "model" && decodeErr != nil {
+					continue
+				}
+				if b, w := timelineContextFacts(t, line, data, document, false), timelineContextFacts(t, line, data, document, true); b != w {
+					t.Errorf("%s: %d context facts buffered, %d windowed", line, b, w)
+				}
+			}
 			buffered := windowedReports(t, tc.name, data)
 			previous := validationSetWindowedStrategy(true)
 			windowed := windowedReports(t, tc.name, data)
@@ -174,9 +188,10 @@ func TestTimelineWindowCloseTriggers(t *testing.T) {
 
 // Values a measure read as unavailable or invalid, and schema checks it read
 // with no failure recorded, are read again in Finish; a different answer
-// drops the speculation. No document of the corpus or of the triggers above
-// changes them, since a content error first leaves part identities
-// unresolved, so the test breaks a recorded read instead.
+// drops the speculation. A content error first leaves part identities
+// unresolved, and a repeated identity changes a schema check of the root, so
+// the test breaks a recorded read directly, and a closure Finish finds
+// incomplete, which no document makes so without unresolving its parts.
 func TestTimelineWindowCloseRechecksReads(t *testing.T) {
 	invalidDynamics := []byte(timelineWindowScore(timelineWindowBare, timelineWindowPart("P1", timelineWindowAttr+`<note dynamics="abc"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`)))
 	repeatedID := []byte(timelineWindowScore(timelineWindowSP, timelineWindowPart("P1", timelineWindowAttr+`<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><instrument id="I1"/></note>`, `<note id="I1"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`)))
@@ -252,4 +267,25 @@ func TestTimelineWindowCloseDroppedChargeCoversTheHeap(t *testing.T) {
 	if diff := used - bufferedUsed; 50*diff > bufferedUsed || -50*diff > bufferedUsed {
 		t.Errorf("the dropped run charges %d, the other %d", used, bufferedUsed)
 	}
+}
+
+// timelineContextFacts is the context-fact quota one run used.
+func timelineContextFacts(t *testing.T, line string, data []byte, document Document, windowed bool) int64 {
+	t.Helper()
+	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 34}
+	previousStrategy := validationSetWindowedStrategy(windowed)
+	defer validationSetWindowedStrategy(previousStrategy)
+	var used int64
+	previous := validationSetFinishObserver(func(stage string, account *validation.Account) {
+		if stage == "finished" {
+			used, _ = account.Usage(validation.BudgetContextFacts)
+		}
+	})
+	defer validationSetFinishObserver(previous)
+	if line == "source" {
+		_, _ = InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceSemantics, Budgets: big})
+	} else {
+		_, _ = AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics, Budgets: big})
+	}
+	return used
 }

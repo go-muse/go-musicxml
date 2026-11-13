@@ -276,7 +276,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			if _, exists := service.FiguredBassOrigins[event.header.ID]; exists {
 				return contract("figured bass origins", "duplicate publication")
 			}
-			if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+			if err := s.chargeTimelineFact(); err != nil {
 				return err
 			}
 			if err := s.retain(timelineFigureReserveBytes); err != nil {
