@@ -101,10 +101,19 @@ func (s *Session) keepSourceOrigin(slot sourceOriginSubject, owned *SourceOrigin
 		s.sourceOriginCount++
 		return nil
 	}
-	// Every charge comes first: a refused one leaves no entry behind.
-	if slot.Attribute != (QName{}) && !(owned.Specified.State == EvidenceKnown && owned.Specified.Reason == "" && owned.Specified.Cause == nil) {
-		if err := s.retain(sourceOriginOverflowBytes + evidenceLogicalBytes(owned.Specified)); err != nil {
+	// Every charge comes first: a refused one leaves no entry behind. An
+	// attribute's open entry is a second map entry besides its compact
+	// specifiedness, released with the open record.
+	var attrEntry int64
+	if slot.Attribute != (QName{}) {
+		attrEntry = sourceOriginIndexEntryBytes
+		if err := s.retain(attrEntry); err != nil {
 			return err
+		}
+		if !(owned.Specified.State == EvidenceKnown && owned.Specified.Reason == "" && owned.Specified.Cause == nil) {
+			if err := s.retain(sourceOriginOverflowBytes + evidenceLogicalBytes(owned.Specified)); err != nil {
+				return err
+			}
 		}
 	}
 	open := s.sourceOriginOpen[slot.Node]
@@ -119,7 +128,7 @@ func (s *Session) keepSourceOrigin(slot sourceOriginSubject, owned *SourceOrigin
 		s.sourceOriginOpen[slot.Node] = open
 	}
 	s.sourceOriginCount++
-	open.retained += retained
+	open.retained += retained + attrEntry
 	if slot.Attribute == (QName{}) {
 		open.element = owned
 		return nil
