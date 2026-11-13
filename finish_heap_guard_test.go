@@ -14,7 +14,9 @@ import (
 // While Finish evaluates the document's phases, the buffered charge covers
 // the heap: on corpus documents, the official scores and hostile documents,
 // for the semantic and context profiles with and without the complete
-// projection and for the source line, which releases typed XSD results, the
+// projection (on MozartTrio also with windowed evaluation, which packs the
+// timeline's records per measure) and for the source line, which releases
+// typed XSD results, the
 // live heap never exceeds what has been charged to the buffer
 // and the diagnostic quota, plus 64 KiB for the runtime's own allocations.
 // Two measurements: the whole run's heap against its whole charge, and,
@@ -106,6 +108,18 @@ func TestFinishChargeCoversTheHeapItAdds(t *testing.T) {
 			"source semantics":                     source(SourceOptions{}),
 			"source line":                          source(SourceOptions{Profile: ProfileSourceLine}),
 			"source context, complete projection":  source(SourceOptions{Profile: ProfileSourceContext, Context: validation.ContextFamilyAll}),
+		}
+		// Windowed evaluation packs the timeline's records per measure;
+		// MozartTrio, where they dominate Finish, runs in it too.
+		if name == "MozartTrio.musicxml" {
+			for _, label := range []string{"model semantics", "model context, complete projection", "source semantics", "source context, complete projection"} {
+				buffered := runs[label]
+				runs[label+", windowed"] = func() {
+					previous := validationSetWindowedStrategy(true)
+					defer validationSetWindowedStrategy(previous)
+					buffered()
+				}
+			}
 		}
 		for label, run := range runs {
 			if keep := only[name]; keep != nil && !keep(label) {

@@ -180,7 +180,7 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 			}
 			x.events[v.part.Value] = append(x.events[v.part.Value], id)
 		}
-		fact, isEvent := timeline.Facts[id]
+		fact, isEvent := timeline.fact(id)
 		if isEvent {
 			if !r.step(1 + 4*int64(len(fact.Part.Value.DocumentID))) {
 				return nil, nil, r.err
@@ -218,7 +218,7 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 				merge(v.part, r.enumerated(parent))
 			}
 			if v.note {
-				if _, found := timeline.Playback.Notes[id]; !found {
+				if !timeline.hasPlaybackNote(id) {
 					merge(v.part, stateUnknown[bool]("context-repeat-note-universe-incomplete"))
 				}
 			}

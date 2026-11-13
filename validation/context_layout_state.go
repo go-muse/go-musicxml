@@ -278,7 +278,7 @@ func layoutStateFact(r *contextReader, p *contextPlan, n *factNode) timelineEven
 		if !r.step(1) {
 			return missing
 		}
-		if fact, ok := service.Facts[current.header.ID]; ok {
+		if fact, ok := service.fact(current.header.ID); ok {
 			return fact
 		}
 	}

@@ -82,7 +82,7 @@ func contextRepeatOrigin(ctx context.Context, s *Session, timeline *timelineServ
 		if err := s.step(ctx, 1); err != nil {
 			return timelineEventFact{}, err
 		}
-		if fact, ok := timeline.Facts[n.header.ID]; ok {
+		if fact, ok := timeline.fact(n.header.ID); ok {
 			return fact, nil
 		}
 		n = s.node(n.header.Parent)

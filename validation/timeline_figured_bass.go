@@ -123,7 +123,7 @@ func (service *timelineService) figuredBassAnchor(r *stateReader, domains []figu
 					}
 					continue
 				}
-				fact, found := service.Facts[candidate.header.ID]
+				fact, found := service.fact(candidate.header.ID)
 				_, grace := r.child(candidate, timelineRoleNoteGrace)
 				_, chord := r.child(candidate, timelineRoleNoteChord)
 				if (grace.State == EvidenceKnown && grace.Value) || (chord.State == EvidenceKnown && chord.Value) {
@@ -282,7 +282,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			if err := s.retain(timelineFigureReserveBytes); err != nil {
 				return err
 			}
-			fact, found := service.Facts[event.header.ID]
+			fact, found := service.fact(event.header.ID)
 			if !found {
 				fact = timelineEventFact{Position: stateUnknown[musicalPosition]("figured-bass-position-unavailable"), Part: block.part, Staff: Evidence[Integer]{State: EvidenceAbsent}}
 			}
@@ -333,7 +333,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 				}
 				anchor = cached
 				if anchor.State == EvidenceKnown {
-					anchorFact = service.Facts[anchor.Value.Node]
+					anchorFact = service.factFast(anchor.Value.Node)
 				}
 			} else {
 				anchor, anchorFact = service.figuredBassAnchor(r, domains, fact, complete)

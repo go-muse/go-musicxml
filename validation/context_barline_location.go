@@ -33,7 +33,7 @@ func evaluateBarlineLocation(ctx context.Context, s *Session, n *factNode, p *co
 	if bar.Location.State != EvidenceKnown {
 		return localGap(bar.Location), false, nil
 	}
-	fact, ok := service.Facts[n.header.ID]
+	fact, ok := service.fact(n.header.ID)
 	if !ok {
 		return Decision{Outcome: OutcomeUnknown, Reason: "barline-position-unavailable"}, false, nil
 	}
@@ -216,7 +216,7 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 			prefix = false
 			continue
 		}
-		f, ok := service.Facts[event.header.ID]
+		f, ok := service.fact(event.header.ID)
 		if !ok {
 			merge(stateUnknown[bool]("barline-event-timing-unavailable"))
 			prefix = false

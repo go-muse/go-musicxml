@@ -48,7 +48,7 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 		}
 		hasFact := false
 		if service != nil && service.Final {
-			_, hasFact = service.Facts[id]
+			hasFact = service.hasFact(id)
 		}
 		if !hasFact && !roles.timing() {
 			// Scalar-only roles never dereference the timing payload.

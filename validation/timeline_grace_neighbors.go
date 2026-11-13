@@ -125,10 +125,10 @@ func graceGapRelevant(r *stateReader, service *timelineService, gap graceScopedG
 		if !r.step(1) {
 			return false, r.err
 		}
-		n, found := service.NoteOrigins[gap.Note]
+		n, found := service.noteOrigin(gap.Note)
 		placement := n.Placement
 		if !found {
-			placement = service.Facts[gap.Note].Placement
+			placement = service.factFast(gap.Note).Placement
 		}
 		if placement.Displaced {
 			return service.State.associationPlacementRelevant(r, placement, lo, hi)
@@ -188,7 +188,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			if err != nil {
 				return err
 			}
-			n := service.NoteOrigins[event.header.ID]
+			n := service.noteOriginFast(event.header.ID)
 			if n.Grace.State == EvidenceKnown && n.Grace.Value {
 				hasGrace = true
 			}
@@ -279,10 +279,10 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				continue
 			}
 			id := event.header.ID
-			n, found := service.NoteOrigins[id]
+			n, found := service.noteOrigin(id)
 			if !found {
 				gap := graceScopedGap{Note: id, Value: stateUnknown[NodeRef]("grace-note-origin-unavailable"), From: block.ordinal, Through: block.ordinal}
-				if fact, ok := service.Facts[id]; ok {
+				if fact, ok := service.fact(id); ok {
 					gap.Position, gap.Voice = fact.Position, fact.Voice
 				}
 				part.gaps = append(part.gaps, gap)
@@ -372,7 +372,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			if !r.step(1) {
 				return r.err
 			}
-			n := service.NoteOrigins[member.id]
+			n := service.noteOriginFast(member.id)
 			if (n.Voice.State == EvidenceAbsent && part.voicedGrace) || (n.Voice.State == EvidenceKnown && part.unvoicedGrace) {
 				gap := graceScopedGap{Note: member.id, Value: stateUnknown[NodeRef]("grace-mixed-voice-identity-unresolved"), Position: member.position, Voice: n.Voice, Mixing: true, From: member.ordinal, Through: member.ordinal}
 				part.gaps = append(part.gaps, gap)
@@ -404,7 +404,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			if interrupted != nil {
 				return false
 			}
-			a, z := service.NoteOrigins[stream.notes[i]].ScoreOnset.Value, service.NoteOrigins[stream.notes[j]].ScoreOnset.Value
+			a, z := service.noteOriginFast(stream.notes[i]).ScoreOnset.Value, service.noteOriginFast(stream.notes[j]).ScoreOnset.Value
 			// Duplicate canonical ordinals already have a scoped gap. Give those
 			// unavailable domains a deterministic internal order without treating
 			// their different measure identities as chronological evidence.
@@ -437,12 +437,12 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			if !r.step(1) {
 				return r.err
 			}
-			n := service.NoteOrigins[id]
+			n := service.noteOriginFast(id)
 			if n.Grace.Value || n.Chord.State != EvidenceKnown || n.Chord.Value {
 				continue
 			}
 			if lastOrdinary != 0 {
-				prior := service.NoteOrigins[lastOrdinary]
+				prior := service.noteOriginFast(lastOrdinary)
 				if prior.ScoreEnd.State == EvidenceKnown && r.sameMeasure(prior.ScoreEnd.Value, n.ScoreOnset.Value) {
 					cmp, err := s.rationalCmp(ctx, prior.ScoreEnd.Value.Offset, n.ScoreOnset.Value.Offset)
 					if err != nil {
@@ -510,7 +510,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			if !r.step(1) {
 				return r.err
 			}
-			n := service.NoteOrigins[stream.notes[at]]
+			n := service.noteOriginFast(stream.notes[at])
 			if !n.Grace.Value {
 				previous = at
 				at++
@@ -521,7 +521,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				if !r.step(1) {
 					return r.err
 				}
-				if !service.NoteOrigins[stream.notes[end]].Grace.Value {
+				if !service.noteOriginFast(stream.notes[end]).Grace.Value {
 					break
 				}
 				end++
@@ -538,7 +538,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				if !r.step(1) {
 					return r.err
 				}
-				n = service.NoteOrigins[stream.notes[at]]
+				n = service.noteOriginFast(stream.notes[at])
 				position := n.ScoreOnset.Value
 				if !r.step(int64(len(position.Offset.text))) {
 					return r.err
@@ -562,10 +562,10 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 					}
 					lo, hi := Evidence[musicalPosition]{State: EvidenceAbsent}, Evidence[musicalPosition]{State: EvidenceAbsent}
 					if chosenPrevious >= 0 {
-						lo = service.NoteOrigins[stream.notes[chosenPrevious]].ScoreOnset
+						lo = service.noteOriginFast(stream.notes[chosenPrevious]).ScoreOnset
 					}
 					if chosenFollowing >= 0 {
-						hi = service.NoteOrigins[stream.notes[chosenFollowing]].ScoreOnset
+						hi = service.noteOriginFast(stream.notes[chosenFollowing]).ScoreOnset
 					}
 					previousGap, err = graceRelationGap(r, service, part, stream.key, global, lo, n.ScoreOnset)
 					if err != nil {
@@ -590,7 +590,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			return r.err
 		}
 		gap := graceStronger(global, orphanGaps[id])
-		if err := publish(service.NoteOrigins[id], &graceStream{}, -1, -1, gap, gap); err != nil {
+		if err := publish(service.noteOriginFast(id), &graceStream{}, -1, -1, gap, gap); err != nil {
 			return err
 		}
 	}
@@ -608,7 +608,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 // only that stream's donor proof to exact partial chronology. Candidate and
 // competitor passes allocate no per-query scratch and retain separate sides.
 func (service *timelineService) graceChronologicalDonor(r *stateReader, stream *graceStream, target int, previous bool) (int, Evidence[NodeRef], error) {
-	n := service.NoteOrigins[stream.notes[target]]
+	n := service.noteOriginFast(stream.notes[target])
 	best := -1
 	gap := Evidence[NodeRef]{State: EvidenceKnown}
 	for pass := 0; pass < 2; pass++ {
@@ -616,7 +616,7 @@ func (service *timelineService) graceChronologicalDonor(r *stateReader, stream *
 			if !r.step(1) {
 				return -1, gap, r.err
 			}
-			candidate := service.NoteOrigins[id]
+			candidate := service.noteOriginFast(id)
 			if candidate.Grace.State != EvidenceKnown || candidate.Grace.Value || candidate.Chord.State != EvidenceKnown {
 				continue
 			}
@@ -648,7 +648,7 @@ func (service *timelineService) graceChronologicalDonor(r *stateReader, stream *
 					continue
 				}
 				if best >= 0 {
-					relation, err := service.State.positionOrder(r.ctx, r.s, candidate.ScoreOnset.Value, service.NoteOrigins[stream.notes[best]].ScoreOnset.Value)
+					relation, err := service.State.positionOrder(r.ctx, r.s, candidate.ScoreOnset.Value, service.noteOriginFast(stream.notes[best]).ScoreOnset.Value)
 					if err != nil {
 						return -1, gap, err
 					}
@@ -663,7 +663,7 @@ func (service *timelineService) graceChronologicalDonor(r *stateReader, stream *
 				continue
 			}
 			if best >= 0 {
-				relation, err := service.State.positionOrder(r.ctx, r.s, candidate.ScoreOnset.Value, service.NoteOrigins[stream.notes[best]].ScoreOnset.Value)
+				relation, err := service.State.positionOrder(r.ctx, r.s, candidate.ScoreOnset.Value, service.noteOriginFast(stream.notes[best]).ScoreOnset.Value)
 				if err != nil {
 					return -1, gap, err
 				}
@@ -685,13 +685,13 @@ func (service *timelineService) graceDonor(ctx context.Context, s *Session, stre
 	if index < 0 {
 		out.Note = graceStronger(out.Note, stateUnknown[NodeRef]("grace-neighbor-outside-proven-domain"))
 	} else {
-		donor := service.NoteOrigins[stream.notes[index]]
+		donor := service.noteOriginFast(stream.notes[index])
 		out.DonorDuration = donor.Duration
 		if donor.Grace.State != EvidenceKnown || donor.Grace.Value || donor.Chord.State != EvidenceKnown || donor.Chord.Value {
 			out.Note = graceStronger(out.Note, stateUnknown[NodeRef]("grace-ordinary-donor-unresolved"))
 		}
 		if index+1 < len(stream.notes) {
-			next := service.NoteOrigins[stream.notes[index+1]]
+			next := service.noteOriginFast(stream.notes[index+1])
 			if next.Grace.State == EvidenceKnown && !next.Grace.Value && next.Chord.State == EvidenceKnown && next.Chord.Value {
 				out.Note = graceStronger(out.Note, stateUnknown[NodeRef]("grace-chord-donor-unresolved"))
 			}

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -73,15 +74,27 @@ func TestMemoryPerElement(t *testing.T) {
 		runtime.ReadMemStats(&m)
 		return int64(m.HeapAlloc)
 	}
+	// MUSICXML_MEMORY_FACTORS selects the copies, for example "16,110".
+	factors := []int{1, 4, 16, 110}
+	if list := os.Getenv("MUSICXML_MEMORY_FACTORS"); list != "" {
+		factors = nil
+		for _, field := range strings.Split(list, ",") {
+			factor, err := strconv.Atoi(strings.TrimSpace(field))
+			if err != nil || factor < 1 {
+				t.Fatalf("MUSICXML_MEMORY_FACTORS: %q", list)
+			}
+			factors = append(factors, factor)
+		}
+	}
 	fmt.Printf("| Input | Bytes | Elements | Line | Strategy | Live at end of Finish | Per element | Per input byte | Charged |\n")
-	for _, factor := range []int{1, 4, 16, 110} {
+	for _, factor := range factors {
 		data := scaledScore(t, source, factor)
 		document, err := Decode(bytes.NewReader(data))
 		if err != nil {
 			t.Fatal(err)
 		}
 		elements := int64(strings.Count(string(data), "<") - strings.Count(string(data), "</") - strings.Count(string(data), "<?") - strings.Count(string(data), "<!"))
-		for _, line := range []string{"2 source", "3 model"} {
+		for _, line := range []string{"2 source", "2 semantics", "3 model"} {
 			for _, windowed := range []bool{false, true} {
 				previousStrategy := validationSetWindowedStrategy(windowed)
 				var live, charged int64
@@ -93,9 +106,12 @@ func TestMemoryPerElement(t *testing.T) {
 							charged, _ = a.Usage(validation.BudgetBufferedBytes)
 						}
 					})
-					if line == "2 source" {
+					switch line {
+					case "2 source":
 						_, err = InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceLine, Budgets: unlimited})
-					} else {
+					case "2 semantics":
+						_, err = InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceSemantics, Budgets: unlimited})
+					default:
 						_, err = AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics, Budgets: unlimited})
 					}
 					validationSetFinishObserver(previous)
@@ -111,6 +127,23 @@ func TestMemoryPerElement(t *testing.T) {
 				fmt.Printf("| MozartTrio x%d | %d | %d | %s | %s | %.1f MB | %d B | %d B | %.1f MB |\n", factor, len(data), elements, line, strategy, float64(live)/1e6, live/elements, live/int64(len(data)), float64(charged)/1e6)
 			}
 		}
+	}
+	// The smallest buffer, to 64 KiB, that strict loading of MozartTrio
+	// accepts: both lines with their dictionaries, without the projection.
+	for _, windowed := range []bool{false, true} {
+		previousStrategy := validationSetWindowedStrategy(windowed)
+		lo, hi := int64(0), int64(1<<30)
+		for hi-lo > 64<<10 {
+			mid := lo + (hi-lo)/2
+			_, err := DecodeAssessed(context.Background(), bytes.NewReader(raw), DecodeAssessmentOptions{Assessment: &SourceOptions{Budgets: validation.Budgets{MaxBufferedBytes: mid}}})
+			if err == nil {
+				hi = mid
+			} else {
+				lo = mid
+			}
+		}
+		validationSetWindowedStrategy(previousStrategy)
+		fmt.Printf("strict loading of MozartTrio, windowed %v: smallest buffer %.2f MB\n", windowed, float64(hi)/1e6)
 	}
 }
 

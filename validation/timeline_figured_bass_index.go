@@ -90,7 +90,7 @@ func (service *timelineService) buildFiguredBassNoteIndex(r *stateReader, domain
 				item.Safe = false
 				continue
 			}
-			fact, found := service.Facts[candidate.header.ID]
+			fact, found := service.fact(candidate.header.ID)
 			if !found || fact.Part.State != EvidenceKnown || !r.sameRef(fact.Part.Value, part) || fact.Position.State != EvidenceKnown {
 				item.Safe = false
 				continue
@@ -147,7 +147,7 @@ func (service *timelineService) buildFiguredBassNoteIndex(r *stateReader, domain
 				return false
 			}
 			var cmp int
-			cmp, interrupted = figuredBassScoreCompare(r.ctx, r.s, service.Facts[item.Notes[i]].Position.Value, service.Facts[item.Notes[j]].Position.Value)
+			cmp, interrupted = figuredBassScoreCompare(r.ctx, r.s, service.factFast(item.Notes[i]).Position.Value, service.factFast(item.Notes[j]).Position.Value)
 			return interrupted == nil && cmp < 0
 		})
 		if interrupted != nil {
@@ -185,7 +185,7 @@ func (index figuredBassNoteIndex) anchor(ctx context.Context, s *Session, servic
 	lo, hi := 0, len(ids)
 	for lo < hi {
 		mid := lo + (hi-lo)/2
-		cmp, err := figuredBassScoreCompare(ctx, s, service.Facts[ids[mid]].Position.Value, at)
+		cmp, err := figuredBassScoreCompare(ctx, s, service.factFast(ids[mid]).Position.Value, at)
 		if err != nil {
 			return Evidence[NodeRef]{}, empty, false, err
 		}
@@ -202,7 +202,7 @@ func (index figuredBassNoteIndex) anchor(ctx context.Context, s *Session, servic
 		if err := s.step(ctx, 1); err != nil {
 			return Evidence[NodeRef]{}, empty, false, err
 		}
-		fact := service.Facts[id]
+		fact := service.factFast(id)
 		order, err := service.State.positionOrder(ctx, s, fact.Position.Value, at)
 		if err != nil {
 			return Evidence[NodeRef]{}, empty, false, err
@@ -211,7 +211,7 @@ func (index figuredBassNoteIndex) anchor(ctx context.Context, s *Session, servic
 			continue
 		}
 		if lo < len(ids) {
-			order, err = service.State.positionOrder(ctx, s, fact.Position.Value, service.Facts[ids[lo]].Position.Value)
+			order, err = service.State.positionOrder(ctx, s, fact.Position.Value, service.factFast(ids[lo]).Position.Value)
 			if err != nil {
 				return Evidence[NodeRef]{}, empty, false, err
 			}
@@ -224,9 +224,9 @@ func (index figuredBassNoteIndex) anchor(ctx context.Context, s *Session, servic
 	if lo == len(ids) {
 		return stateUnknown[NodeRef]("figured-bass-following-note-unresolved"), empty, true, nil
 	}
-	best := service.Facts[ids[lo]]
+	best := service.factFast(ids[lo])
 	if lo+1 < len(ids) {
-		cmp, err := figuredBassScoreCompare(ctx, s, best.Position.Value, service.Facts[ids[lo+1]].Position.Value)
+		cmp, err := figuredBassScoreCompare(ctx, s, best.Position.Value, service.factFast(ids[lo+1]).Position.Value)
 		if err != nil {
 			return Evidence[NodeRef]{}, empty, false, err
 		}

@@ -21,6 +21,10 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 	if service.Final {
 		return Decision{Outcome: OutcomePass}, false, nil
 	}
+	// Windowed evaluation packs each measure's records once it is read and
+	// the working maps hold enough to pay for a store; every later reader goes
+	// through the service accessors.
+	windowed := s.strategy == strategyWindowed
 	blocks, err := s.timelineBlocks(ctx, p)
 	if err != nil {
 		return Decision{}, false, err
@@ -54,11 +58,25 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 		if err = service.readMeasure(ctx, s, p.Bindings, block); err != nil {
 			return Decision{}, false, err
 		}
+		if windowed && service.packDue() {
+			if err = service.packTimelineFacts(ctx, s); err != nil {
+				return Decision{}, false, err
+			}
+		}
 	}
+	packed := service.compact
 	if err := service.finalizeTimingOrigins(ctx, s, p.Bindings, blocks); err != nil {
 		return Decision{}, false, err
 	}
+	service.releaseDroppedStore(s, packed)
+	packed = nil
+	if windowed && service.packDue() {
+		if err := service.packTimelineFacts(ctx, s); err != nil {
+			return Decision{}, false, err
+		}
+	}
 	service.Final = true
+	service.observe()
 	return Decision{Outcome: OutcomePass}, false, nil
 }
 func timelineAt(block timelineMeasureBlock, offset Evidence[Rational]) Evidence[musicalPosition] {

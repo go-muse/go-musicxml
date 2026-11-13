@@ -29,7 +29,7 @@ func performanceIndexReservation(s *Session, service *timelineService) (int64, e
 	count := int64(0)
 	if service != nil {
 		if len(service.State.Divisions.Gaps) != 0 {
-			count = int64(len(service.Facts))
+			count = int64(service.factCount())
 		}
 		for _, n := range []int{len(service.State.Divisions.Publications), len(service.State.Divisions.Gaps), len(service.State.MIDI), len(service.State.NoteInstruments)} {
 			var err error
@@ -73,7 +73,7 @@ func performanceIndexGaps(ctx context.Context, s *Session, service *timelineServ
 		if err := s.step(ctx, 1); err != nil {
 			return err
 		}
-		f, ok := service.Facts[id]
+		f, ok := service.fact(id)
 		if !ok {
 			continue
 		}

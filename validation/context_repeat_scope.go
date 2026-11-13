@@ -37,7 +37,7 @@ func contextRepeatNoteScopes(ctx context.Context, s *Session, timeline *timeline
 		if err = s.step(ctx, 1); err != nil {
 			return err
 		}
-		note, ok := timeline.Playback.Notes[id]
+		note, ok := timeline.playbackNote(id)
 		if !ok {
 			continue
 		}
@@ -114,11 +114,11 @@ func contextRepeatNoteScopes(ctx context.Context, s *Session, timeline *timeline
 			if err := s.step(ctx, 1); err != nil {
 				return err
 			}
-			note, ok := timeline.Playback.Notes[id]
+			note, ok := timeline.playbackNote(id)
 			if !ok {
 				continue
 			}
-			fact := timeline.Facts[id]
+			fact := timeline.factFast(id)
 			v := RepeatNoteScope{Source: note.Origin.Source, InRange: stateUnknown[bool]("context-repeat-range-membership-unavailable")}
 			if row.value.Part.State != EvidenceKnown {
 				v.InRange = stateUnavailable[NodeRef, bool](row.value.Part)

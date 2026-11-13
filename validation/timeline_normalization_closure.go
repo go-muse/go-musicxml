@@ -29,7 +29,7 @@ func (root *timelineService) closeUnitStage(ctx context.Context, s *Session, b *
 				if err := s.step(ctx, 1); err != nil {
 					return nil, err
 				}
-				fact, ok := stage.Facts[event.header.ID]
+				fact, ok := stage.fact(event.header.ID)
 				if !ok || fact.Origin.State != EvidenceKnown {
 					continue
 				}
@@ -106,7 +106,7 @@ func (stage *timelineService) restoreNormalizations(ctx context.Context, s *Sess
 			if !ok || gate.Restored {
 				continue
 			}
-			fact := stage.Facts[event.header.ID]
+			fact := stage.factFast(event.header.ID)
 			if fact.Origin.State != EvidenceKnown {
 				continue
 			}

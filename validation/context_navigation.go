@@ -130,7 +130,7 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 				return nil, release, e
 			}
 		}
-		if note, ok := timeline.Playback.Notes[id]; ok {
+		if note, ok := timeline.playbackNote(id); ok {
 			noteListening, recommended, distinct, e := navigationReadNoteListening(r, node, note.Origin.Part)
 			if e != nil {
 				return nil, release, e
