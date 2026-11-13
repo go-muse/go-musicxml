@@ -208,7 +208,8 @@ func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 	d.Subject = NodeRef{s.documentID, n.header.ID}
 	// Once established, a finding remains authoritative even if retaining its
 	// dependency-cache entry exhausts the session buffer afterwards. A
-	// window's evaluation keeps it aside until the root closes.
+	// window's evaluation keeps it aside until the root closes, and it is
+	// dropped if the root never does, as the buffered engine never makes it.
 	if s.windowEvaluating != nil {
 		if err := s.stashWindowDecision(r, n, d); err != nil {
 			return err

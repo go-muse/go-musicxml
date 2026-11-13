@@ -221,6 +221,8 @@ type Session struct {
 	// windowKept what windows evaluated before the root closed.
 	windowEvaluating        *windowEvaluation
 	windowKept              windowOutcomes
+	windowRuleIndex         []windowRule
+	windowRulesIndexed      bool
 	speculations            map[RuleKey]*timelineSpeculation
 	speculationKeys         []RuleKey
 	speculationNone         bool

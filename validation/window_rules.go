@@ -16,10 +16,11 @@ import (
 // rejected event, a limit), and then no rule of the root-close pass is
 // evaluated: the window's outcomes and findings are kept aside and recorded
 // only when the root closes, and the decisions it cached are forgotten when
-// it does not.
+// it does not. Dictionary and bend-release-sign rules are not evaluated
+// there: they wait for the document whatever the window holds.
 func windowRuleKind(kind planKind) bool {
 	switch kind {
-	case planChildren, planLocal, planDictionary, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign:
+	case planChildren, planLocal, planTimeOnlyOrder, planFigureNumberNumeric:
 		return true
 	}
 	return false
@@ -59,20 +60,39 @@ func (s *Session) evaluateWindowRules(ctx context.Context, w evaluationWindow) e
 	s.windowKept.windows = append(s.windowKept.windows, [2]int{w.first, w.end})
 	s.windowEvaluating = &windowEvaluation{first: ids[0], last: ids[len(ids)-1]}
 	defer func() { s.windowEvaluating = nil }()
-	keys := s.catalog.orders[s.profile.ID]
+	rules, count := s.windowRules()
 	for i, id := range ids {
 		n := s.node(id)
-		for k, key := range keys {
-			if !windowRuleKind(s.catalog.plans[s.catalog.rules[key].Predicate].kind) {
-				continue
-			}
-			s.accumulator.at = nodeRuleKey(w.first+i, k, len(keys))
-			if err := s.evaluate(ctx, n, key, false); err != nil {
+		for _, rule := range rules {
+			s.accumulator.at = nodeRuleKey(w.first+i, rule.order, count)
+			if err := s.evaluate(ctx, n, rule.key, false); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
+}
+
+// windowRule is a rule of the profile's order that windows evaluate, with
+// its place in that order.
+type windowRule struct {
+	key   RuleKey
+	order int
+}
+
+// windowRules are the profile's rules that windows evaluate, found once
+// per session, and the number of rules in the profile's order.
+func (s *Session) windowRules() ([]windowRule, int) {
+	keys := s.catalog.orders[s.profile.ID]
+	if !s.windowRulesIndexed {
+		s.windowRulesIndexed = true
+		for k, key := range keys {
+			if windowRuleKind(s.catalog.plans[s.catalog.rules[key].Predicate].kind) {
+				s.windowRuleIndex = append(s.windowRuleIndex, windowRule{key: key, order: k})
+			}
+		}
+	}
+	return s.windowRuleIndex, len(keys)
 }
 
 // nodeRuleKey is the finding key of the k-th rule of the profile's order
@@ -129,19 +149,35 @@ func (s *Session) stashWindowDecision(r RuleDefinition, n *factNode, d Decision)
 		}
 		return nil
 	}
+	// Every reader bounds the expected and actual previews; keep them bounded.
+	d.Expected = reportBoundedValue(d.Expected, reportValueBytes)
+	d.Actual = reportBoundedValue(d.Actual, reportValueBytes)
 	size := reportStorageSize{limit: math.MaxInt64}
 	size.decision(d)
-	charge := windowRecordBytes + size.total
-	if err := s.retain(charge); err != nil {
+	if err := s.retain(size.total); err != nil {
 		return err
 	}
-	s.windowKept.records = append(s.windowKept.records, windowRecord{rule: r.Key, node: n.header.ID, decision: cloneDecision(d), at: s.accumulator.at, charged: charge})
+	records := s.windowKept.records
+	if len(records) == cap(records) {
+		// The new array is charged whole before it is made; the old one is
+		// released once replaced.
+		grown := max(16, 2*cap(records))
+		if err := s.retain(int64(grown) * windowRecordBytes); err != nil {
+			s.releaseFactBytes(size.total)
+			return err
+		}
+		next := make([]windowRecord, len(records), grown)
+		copy(next, records)
+		s.releaseFactBytes(int64(cap(records)) * windowRecordBytes)
+		records = next
+	}
+	s.windowKept.records = append(records, windowRecord{rule: r.Key, node: n.header.ID, decision: cloneDecision(d), at: s.accumulator.at, charged: size.total})
 	return nil
 }
 
-// windowRecordBytes charges a kept record and its share of the slice's
-// growth.
-const windowRecordBytes int64 = 256
+// windowRecordBytes charges one slot of the kept records' array, at least
+// the record's size (TestWindowRecordWidth).
+const windowRecordBytes int64 = 224
 
 // confirmWindowDecisions records the outcomes and findings windows kept
 // aside, with their finding keys, once the root closed and bound.
@@ -150,6 +186,9 @@ func (s *Session) confirmWindowDecisions() error {
 	s.windowKept = windowOutcomes{}
 	s.accumulator.report.Counts.Pass += kept.pass
 	s.accumulator.report.Counts.NotApplicable += kept.notApplicable
+	// The kept records stay charged until they are all recorded: they are
+	// live while the accumulator stores their findings.
+	defer s.releaseWindowKept(kept)
 	for _, rec := range kept.records {
 		r := s.catalog.rules[rec.rule]
 		s.accumulator.at = rec.at
@@ -159,39 +198,41 @@ func (s *Session) confirmWindowDecisions() error {
 		if err := s.accumulator.storeDiagnostic(r, rec.decision, s.node(rec.node).location()); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// releaseWindowKept releases what kept's records, their array and the
+// window ranges charged.
+func (s *Session) releaseWindowKept(kept windowOutcomes) {
+	for _, rec := range kept.records {
 		s.releaseFactBytes(rec.charged)
 	}
-	s.releaseFactBytes(int64(cap(kept.windows)) * windowRangeBytes)
-	return nil
+	s.releaseFactBytes(int64(cap(kept.records))*windowRecordBytes + int64(cap(kept.windows))*windowRangeBytes)
 }
 
 // windowRangeBytes charges one evaluated window's range.
 const windowRangeBytes int64 = 32
 
-// forgetWindowDecisions drops what windows kept aside and the decisions of
-// their rules when the root never closed, so that Finish evaluates them as
-// the buffered engine does.
+// forgetWindowDecisions drops what windows kept aside, releasing its
+// charge, and the decisions of their rules when the root never closed, so
+// that Finish evaluates them as the buffered engine does. What caching those
+// decisions charged stays charged.
 func (s *Session) forgetWindowDecisions() {
 	kept := s.windowKept
 	s.windowKept = windowOutcomes{}
-	keys := s.catalog.orders[s.profile.ID]
+	rules, _ := s.windowRules()
 	for _, w := range kept.windows {
 		for _, id := range s.sequence[w[0]:w[1]] {
-			for _, key := range keys {
-				if !windowRuleKind(s.catalog.plans[s.catalog.rules[key].Predicate].kind) {
-					continue
-				}
-				if bits := s.successful[key]; bits != nil && bits.get(id) != 0 {
+			for _, rule := range rules {
+				if bits := s.successful[rule.key]; bits != nil && bits.get(id) != 0 {
 					_ = bits.set(s, id, 0)
 				}
-				delete(s.decisions, decisionID{key, id})
+				delete(s.decisions, decisionID{rule.key, id})
 			}
 		}
 	}
-	for _, rec := range kept.records {
-		s.releaseFactBytes(rec.charged)
-	}
-	s.releaseFactBytes(int64(cap(kept.windows)) * windowRangeBytes)
+	s.releaseWindowKept(kept)
 }
 
 // windowRulesOff is a test switch only: it evaluates every rule when the root
