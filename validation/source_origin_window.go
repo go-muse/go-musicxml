@@ -26,7 +26,20 @@ const (
 // sourceOriginOpenBytes charges an open node's record and its attribute map.
 const sourceOriginOpenBytes int64 = 512
 
-func (s *Session) sourceOriginWindowed() bool { return s.strategy == strategyWindowed }
+func (s *Session) sourceOriginWindowed() bool {
+	return s.strategy == strategyWindowed && !sourceOriginWhole
+}
+
+// sourceOriginWhole is a test switch only: it keeps every origin whole under
+// the windowed strategy too, so that a test can tell apart what else the
+// strategy keeps.
+var sourceOriginWhole bool
+
+func setSourceOriginWhole(whole bool) bool {
+	previous := sourceOriginWhole
+	sourceOriginWhole = whole
+	return previous
+}
 
 // sourceOriginExists reports whether slot already has an origin.
 func (s *Session) sourceOriginExists(slot sourceOriginSubject) bool {

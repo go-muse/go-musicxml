@@ -46,6 +46,7 @@ func init() {
 	validationlink.Register("Session.SetTimelineObserver", setTimelineObserver)
 	validationlink.Register("Session.SetTimelineDegradationObserver", setTimelineDegradationObserver)
 	validationlink.Register("Session.SetTimelineSpeculationTamper", setTimelineSpeculationTamper)
+	validationlink.Register("Session.SetSourceOriginWhole", setSourceOriginWhole)
 	validationlink.Register("Report.SetFindingKeyObserver", setFindingKeyObserverOrdered)
 	validationlink.Register("Engine.SourceAttributeLexicalProvider", (*Engine).sourceAttributeLexicalProvider)
 	validationlink.Register("Engine.SourceDTDIDsSelected", (*Engine).sourceDTDIDsSelected)

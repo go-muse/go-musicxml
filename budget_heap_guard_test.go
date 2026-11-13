@@ -182,7 +182,8 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 // The windowed strategy keeps an entry per measure for the declaration its
 // part gave it and another for its bound completion. On a part of many empty
 // measures, where those entries are most of what windowed adds, the heap it
-// adds over the buffered strategy stays within the charge it adds.
+// adds over the buffered strategy stays within the charge it adds, with
+// source origins kept whole in both runs.
 func TestWindowedMeasureEntriesAreCharged(t *testing.T) {
 	if raceEnabled {
 		t.Skip("the race detector changes the heap")
@@ -221,6 +222,10 @@ func TestWindowedMeasureEntriesAreCharged(t *testing.T) {
 		}
 		return heap, used
 	}
+	// Windowed evaluation also keeps source origins only while their nodes
+	// are open; that is measured on its own, so both runs keep them whole.
+	previousWhole := validationSetSourceOriginWhole(true)
+	defer validationSetSourceOriginWhole(previousWhole)
 	bufferedHeap, bufferedUsed := measure(false)
 	windowedHeap, windowedUsed := measure(true)
 	if added, charged := windowedHeap-bufferedHeap, windowedUsed-bufferedUsed; added > charged {
