@@ -68,6 +68,10 @@ var (
 	validationSetTimelineSpeculationTamper = validationlink.Hook[func(string) string]("Session.SetTimelineSpeculationTamper")
 	// validationSetSourceOriginWhole is a test switch only.
 	validationSetSourceOriginWhole = validationlink.Hook[func(bool) bool]("Session.SetSourceOriginWhole")
+	// validationSetWindowRulesOff is a test switch only.
+	validationSetWindowRulesOff = validationlink.Hook[func(bool) bool]("Session.SetWindowRulesOff")
+	// validationSetWindowRulesObserver is a test observation point only.
+	validationSetWindowRulesObserver = validationlink.Hook[func(func(bool, int)) func(bool, int)]("Session.SetWindowRulesObserver")
 	// validationObserveFindingKeyOrder is a test observation point only.
 	validationObserveFindingKeyOrder                 = validationlink.Hook[func(func(bool, int))]("Report.SetFindingKeyObserver")
 	validationShareDictionarySet                     = validationlink.Hook[func(context.Context, *validation.DictionarySet, *validation.Account) (*validation.DictionarySet, error)]("ShareDictionarySet")

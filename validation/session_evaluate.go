@@ -24,6 +24,9 @@ func (s *Session) evaluateRule(ctx context.Context, n *factNode, key RuleKey, fi
 	if r.Scope == ScopeDocument && n != s.root {
 		return nil
 	}
+	if s.windowEvaluating != nil && s.windowRuleDeferred(n, s.catalog.plans[r.Predicate].kind) {
+		return nil
+	}
 	if !n.closed {
 		return nil
 	}
@@ -204,13 +207,21 @@ func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 	d.Rule = r.Key
 	d.Subject = NodeRef{s.documentID, n.header.ID}
 	// Once established, a finding remains authoritative even if retaining its
-	// dependency-cache entry exhausts the session buffer afterwards.
-	if err := s.accumulator.recordOutcome(r, d); err != nil {
-		return err
-	}
-	if d.Outcome != OutcomePass && d.Outcome != OutcomeNotApplicable {
-		if err := s.accumulator.storeDiagnostic(r, d, n.location()); err != nil {
+	// dependency-cache entry exhausts the session buffer afterwards. A
+	// window's evaluation keeps it aside until the root closes, and it is
+	// dropped if the root never does, as the buffered engine never makes it.
+	if s.windowEvaluating != nil {
+		if err := s.stashWindowDecision(r, n, d); err != nil {
 			return err
+		}
+	} else {
+		if err := s.accumulator.recordOutcome(r, d); err != nil {
+			return err
+		}
+		if d.Outcome != OutcomePass && d.Outcome != OutcomeNotApplicable {
+			if err := s.accumulator.storeDiagnostic(r, d, n.location()); err != nil {
+				return err
+			}
 		}
 	}
 	return s.cacheDecision(r, n, d)

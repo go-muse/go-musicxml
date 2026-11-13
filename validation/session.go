@@ -217,6 +217,12 @@ type Session struct {
 	timeline              map[RuleKey]*timelineService
 	// speculations are the timelines windowed evaluation reads as their
 	// windows close; speculating is the one reading a measure.
+	// windowEvaluating is the window whose node rules are being evaluated;
+	// windowKept what windows evaluated before the root closed.
+	windowEvaluating        *windowEvaluation
+	windowKept              windowOutcomes
+	windowRuleIndex         []windowRule
+	windowRulesIndexed      bool
 	speculations            map[RuleKey]*timelineSpeculation
 	speculationKeys         []RuleKey
 	speculationNone         bool
@@ -801,10 +807,17 @@ func (s *Session) CloseNode(ctx context.Context, end NodeEnd) error {
 		if err := s.bindSourceSchema(ctx); err != nil {
 			return s.fail(err)
 		}
+		// The rules windows evaluated as they closed are recorded now, as if
+		// this pass evaluated them.
+		if err := s.confirmWindowDecisions(); err != nil {
+			return s.fail(err)
+		}
 		// Binding traverses every closed source node before any exact selector
 		// can cache an unavailable result. Evaluate in schema witness order.
-		for _, id := range s.sequence {
-			for _, key := range s.catalog.orders[s.profile.ID] {
+		keys := s.catalog.orders[s.profile.ID]
+		for i, id := range s.sequence {
+			for k, key := range keys {
+				s.accumulator.at = nodeRuleKey(i, k, len(keys))
 				if err := s.evaluate(ctx, s.node(id), key, false); err != nil {
 					return s.fail(err)
 				}
@@ -876,6 +889,9 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	if s.schema != nil && !s.schema.bound {
 		s.accumulator.dropHeld()
 	}
+	// Rules windows evaluated are recorded when the root closes; if it never
+	// did, the buffered engine never evaluated them there.
+	s.forgetWindowDecisions()
 	s.inputComplete = end.InputComplete && len(s.stack) == 0 && s.root != nil && end.Syntax != SyntaxMalformed
 	if s.terminalCause == nil && s.schema != nil && s.schema.bound {
 		addCause(s.finalizeSourceSchema(ctx))
