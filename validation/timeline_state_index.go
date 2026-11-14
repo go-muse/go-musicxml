@@ -65,6 +65,7 @@ func stateIndex[T any](ctx context.Context, s *Session, h *stateHistory[T]) (*st
 	if _, e = allocationSize(cost); e != nil {
 		return nil, e
 	}
+	before := s.retained
 	if e = s.retain(cost); e != nil {
 		return nil, e
 	}
@@ -116,6 +117,7 @@ func stateIndex[T any](ctx context.Context, s *Session, h *stateHistory[T]) (*st
 	}
 	stateDiscardIndex(s, h.index)
 	h.index = index
+	s.consumerIndexBuilt(s.retained - before)
 	success = true
 	return index, nil
 }

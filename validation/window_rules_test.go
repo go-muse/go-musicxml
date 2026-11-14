@@ -135,3 +135,20 @@ func TestWindowRuleFailureKeptAsideIsReleased(t *testing.T) {
 		t.Fatalf("forgetting released %d bytes, want %d", released, want)
 	}
 }
+
+// A slot of the provisional consumer records and of the key presences asked
+// is charged at least its size.
+func TestConsumerRecordWidth(t *testing.T) {
+	if size := int64(unsafe.Sizeof(consumerRecord{})); consumerRecordBytes < size {
+		t.Fatalf("a record slot is charged %d bytes, a record has %d", consumerRecordBytes, size)
+	}
+	if size := int64(unsafe.Sizeof(consumerQuery{})); consumerQueryBytes < size {
+		t.Fatalf("a query slot is charged %d bytes, a query has %d", consumerQueryBytes, size)
+	}
+	if size := int64(unsafe.Sizeof(windowConsumers{})); consumerStateBytes < size {
+		t.Fatalf("the provisional state is charged %d bytes and has %d", consumerStateBytes, size)
+	}
+	if size := int64(unsafe.Sizeof(consumerRule{}) + unsafe.Sizeof(consumerGroup{})); consumerRuleBytes < size {
+		t.Fatalf("a rule and its group are charged %d bytes and have %d", consumerRuleBytes, size)
+	}
+}

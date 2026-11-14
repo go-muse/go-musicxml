@@ -219,10 +219,14 @@ type Session struct {
 	// windows close; speculating is the one reading a measure.
 	// windowEvaluating is the window whose node rules are being evaluated;
 	// windowKept what windows evaluated before the root closed.
-	windowEvaluating        *windowEvaluation
-	windowKept              windowOutcomes
-	windowRuleIndex         []windowRule
-	windowRulesIndexed      bool
+	windowEvaluating   *windowEvaluation
+	windowKept         windowOutcomes
+	windowRuleIndex    []windowRule
+	windowRulesIndexed bool
+	// consumerEvaluating is set while a window's timeline consumers are
+	// decided; consumers is what windows decided provisionally.
+	consumerEvaluating      *consumerEvaluation
+	consumers               *windowConsumers
 	speculations            map[RuleKey]*timelineSpeculation
 	speculationKeys         []RuleKey
 	speculationNone         bool
@@ -905,6 +909,15 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	if s.terminalCause == nil {
 		for phaseIndex, phase := range s.catalog.phases[s.profile.ID] {
 			s.collectingIdentity = phase.registration
+			// What windows decided in place of this phase is adopted before
+			// it, after the phase of the timeline it reads; an assumption
+			// that failed drops every provisional decision left.
+			if s.consumersPending() {
+				if err := s.settleConsumerPhase(ctx, phaseIndex); err != nil {
+					addCause(err)
+					break
+				}
+			}
 			for trigger, id := range s.sequence {
 				s.accumulator.at = findingKey{stage: stagePhases, phase: phaseIndex, trigger: int64(trigger)}
 				n := s.node(id)
@@ -926,6 +939,9 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 			}
 		}
 	}
+	// Decisions windows made in place of a phase Finish did not reach are
+	// never recorded, as the buffered engine never makes them.
+	s.dropWindowConsumers(consumerFailedUnsettled)
 	if finishObserver != nil {
 		finishObserver("finished", s.account)
 	}

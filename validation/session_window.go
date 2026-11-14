@@ -251,11 +251,14 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 		}
 		return nil
 	}
-	err = s.evaluateWindowRules(ctx, w)
+	evaluated, err := s.evaluateWindowRules(ctx, w)
 	if windowRulesObserver != nil {
 		windowRulesObserver(true, s.windowKeptCount())
 	}
-	return err
+	if err != nil || !evaluated {
+		return err
+	}
+	return s.evaluateWindowConsumers(ctx, w)
 }
 
 // closeSegment is called when n closes; a segment is bound there with its

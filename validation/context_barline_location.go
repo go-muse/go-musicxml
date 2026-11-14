@@ -22,8 +22,8 @@ func evaluateBarlineLocation(ctx context.Context, s *Session, n *factNode, p *co
 	if err := s.step(ctx, 1+int64(len(p.Timeline.ID))); err != nil {
 		return Decision{}, false, err
 	}
-	service := s.timeline[p.Timeline]
-	if service == nil || !service.Final {
+	service := s.consumerTimeline(p.Timeline)
+	if service == nil {
 		return Decision{Outcome: OutcomeUnknown, Reason: "barline-timeline-unavailable"}, false, nil
 	}
 	bar, ok := service.Playback.Barlines[n.header.ID]

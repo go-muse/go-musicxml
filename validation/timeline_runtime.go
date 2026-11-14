@@ -56,7 +56,13 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 			}
 			*service = *spec.service
 			start, accepted, adopted = len(spec.blocks), true, index
+			s.consumerTimelineAdopted(key)
 		} else if spec.service != nil {
+			// What the speculation retained is what reading it added to
+			// the session's; anything else was released on its behalf.
+			if spec.retained < 0 {
+				return Decision{}, false, contract("timeline speculation", "released more than it retained")
+			}
 			s.releaseFactBytes(spec.retained)
 		}
 		if timelineDegradationObserver != nil {

@@ -84,3 +84,13 @@ func (b *outcomeBits) set(s *Session, id NodeID, v successfulOutcome) error {
 	b.overflow[id] = v
 	return nil
 }
+
+// release releases what the table charged, once nothing reaches it.
+func (b *outcomeBits) release(s *Session) {
+	charged := b.charged
+	if n := len(b.overflow); n != 0 {
+		charged += outcomeOverflowHeaderBytes + int64(n)*outcomeOverflowEntryBytes
+	}
+	s.releaseFactBytes(charged)
+	*b = outcomeBits{}
+}

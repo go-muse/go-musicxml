@@ -543,9 +543,11 @@ func (spec *timelineSpeculation) adoptClosures(closures []stateClosure) timeline
 // read of every speculation before Finish confirms it: "scalar" changes the
 // first effective value read, "invalid" records a read of the document's
 // identity check as having found no failure, "off" reads no timeline as its
-// windows close, and "closure" makes the first
+// windows close, "closure" makes the first
 // final part closure incomplete, which no document does without first
-// leaving its part identities unresolved.
+// leaving its part identities unresolved, and "released" leaves the
+// speculation with less retained than nothing, as a release made on its
+// behalf of bytes it never counted would.
 var timelineSpeculationTamper string
 
 func setTimelineSpeculationTamper(kind string) string {
@@ -562,6 +564,8 @@ func (spec *timelineSpeculation) tamper(s *Session) {
 		}
 	case "invalid":
 		spec.invalidReads = append(spec.invalidReads, timelineInvalidRead{node: s.root, check: XSDCheckIdentity})
+	case "released":
+		spec.retained = -1
 	}
 }
 

@@ -72,6 +72,15 @@ var (
 	validationSetWindowRulesOff = validationlink.Hook[func(bool) bool]("Session.SetWindowRulesOff")
 	// validationSetWindowRulesObserver is a test observation point only.
 	validationSetWindowRulesObserver = validationlink.Hook[func(func(bool, int)) func(bool, int)]("Session.SetWindowRulesObserver")
+	// validationSetWindowConsumersOff is a test switch only.
+	validationSetWindowConsumersOff = validationlink.Hook[func(bool) bool]("Session.SetWindowConsumersOff")
+	// validationSetWindowConsumersTamper is a test switch only.
+	validationSetWindowConsumersTamper = validationlink.Hook[func(string) string]("Session.SetWindowConsumersTamper")
+	// validationSetWindowConsumersObserver is a test observation point only:
+	// it receives, when Finish settles the decisions windows made
+	// provisionally, the assumption that failed (empty when it adopted them)
+	// and how many there were.
+	validationSetWindowConsumersObserver = validationlink.Hook[func(func(string, int)) func(string, int)]("Session.SetWindowConsumersObserver")
 	// validationObserveFindingKeyOrder is a test observation point only.
 	validationObserveFindingKeyOrder                 = validationlink.Hook[func(func(bool, int))]("Report.SetFindingKeyObserver")
 	validationShareDictionarySet                     = validationlink.Hook[func(context.Context, *validation.DictionarySet, *validation.Account) (*validation.DictionarySet, error)]("ShareDictionarySet")

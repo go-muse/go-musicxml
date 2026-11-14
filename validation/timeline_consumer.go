@@ -209,8 +209,8 @@ func (s *Session) evaluateTimelineConsumer(ctx context.Context, n *factNode, p *
 	} else {
 		return Decision{}, false, contract("timeline consumer", "unsupported sealed consumer family")
 	}
-	service := s.timeline[p.Provider]
-	if service == nil || !service.Final {
+	service := s.consumerTimeline(p.Provider)
+	if service == nil {
 		if !final {
 			return Decision{}, true, nil
 		}
@@ -279,6 +279,9 @@ func (s *Session) timelineNumeralKey(ctx context.Context, n *factNode, p *timeli
 	// tonal value. The component-aware projection preserves malformed fields.
 	result, err := service.State.effectiveKeyPresence(ctx, s, fact.Origin.Value, fact.Staff)
 	if err != nil {
+		return Decision{}, err
+	}
+	if err = s.journalKeyPresence(fact.Origin.Value, fact.Staff, result.Value); err != nil {
 		return Decision{}, err
 	}
 	if result.Value.State == EvidenceKnown {
