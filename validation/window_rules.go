@@ -22,6 +22,11 @@ func windowRuleKind(kind planKind) bool {
 	switch kind {
 	case planChildren, planLocal, planTimeOnlyOrder, planFigureNumberNumeric:
 		return true
+	case planChordDuration, planNumeralKey, planBarlineLocation:
+		// What these decide before the document's timeline: a selector
+		// mismatch, and a numeral's local key. The rest waits for the
+		// window's timeline (evaluateWindowConsumers) or for Finish.
+		return true
 	}
 	return false
 }
@@ -37,20 +42,20 @@ func (w *windowEvaluation) contains(id NodeID) bool {
 }
 
 // evaluateWindowRules evaluates the window's node rules, after the window
-// was bound.
-func (s *Session) evaluateWindowRules(ctx context.Context, w evaluationWindow) error {
+// was bound, and reports whether it did.
+func (s *Session) evaluateWindowRules(ctx context.Context, w evaluationWindow) (bool, error) {
 	if s.strategy != strategyWindowed || windowRulesOff || s.catalog == nil || w.end <= w.first {
-		return nil
+		return false, nil
 	}
 	ids := s.sequence[w.first:w.end]
 	// Node identities follow document order; a window is one contiguous run.
 	if !sort.SliceIsSorted(ids, func(i, j int) bool { return ids[i] < ids[j] }) {
-		return nil
+		return false, nil
 	}
 	if len(s.windowKept.windows) == cap(s.windowKept.windows) {
 		grown := max(16, 2*cap(s.windowKept.windows))
 		if err := s.retain(int64(grown) * windowRangeBytes); err != nil {
-			return err
+			return false, err
 		}
 		next := make([][2]int, len(s.windowKept.windows), grown)
 		copy(next, s.windowKept.windows)
@@ -66,11 +71,11 @@ func (s *Session) evaluateWindowRules(ctx context.Context, w evaluationWindow) e
 		for _, rule := range rules {
 			s.accumulator.at = nodeRuleKey(w.first+i, rule.order, count)
 			if err := s.evaluate(ctx, n, rule.key, false); err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
-	return nil
+	return true, nil
 }
 
 // windowRule is a rule of the profile's order that windows evaluate, with

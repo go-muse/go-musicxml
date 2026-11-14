@@ -9,7 +9,7 @@ import (
 // retainTransient is released when it returns.
 func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final bool) error {
 	err := s.transientScope(func() error { return s.evaluateRule(ctx, n, key, final) })
-	if finishObserver != nil && final {
+	if finishObserver != nil && final && s.consumerEvaluating == nil {
 		finishObserver("evaluated", s.account)
 	}
 	return err
@@ -25,6 +25,10 @@ func (s *Session) evaluateRule(ctx context.Context, n *factNode, key RuleKey, fi
 		return nil
 	}
 	if s.windowEvaluating != nil && s.windowRuleDeferred(n, s.catalog.plans[r.Predicate].kind) {
+		return nil
+	}
+	// While a window's timeline consumers are decided, no other rule is.
+	if s.consumerEvaluating != nil && !consumerRuleKind(s.catalog.plans[r.Predicate].kind) {
 		return nil
 	}
 	if !n.closed {
@@ -195,8 +199,15 @@ func (s *Session) lookupDecision(id decisionID) (Decision, bool) {
 		}
 		return Decision{Rule: id.rule, Subject: NodeRef{s.documentID, id.node}, Outcome: outcome}, true
 	}
-	d, ok := s.decisions[id]
-	return d, ok
+	if d, ok := s.decisions[id]; ok {
+		return d, true
+	}
+	// A window's timeline consumers also read what windows decided
+	// provisionally; nothing else does before Finish adopts it.
+	if s.consumerEvaluating != nil {
+		return s.provisionalDecision(id)
+	}
+	return Decision{}, false
 }
 
 func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
@@ -206,6 +217,11 @@ func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 	}
 	d.Rule = r.Key
 	d.Subject = NodeRef{s.documentID, n.header.ID}
+	// A window's timeline consumer is decided provisionally: its decision
+	// is kept apart until Finish reaches its phase.
+	if s.consumerEvaluating != nil {
+		return s.stashConsumerDecision(r, n, d)
+	}
 	// Once established, a finding remains authoritative even if retaining its
 	// dependency-cache entry exhausts the session buffer afterwards. A
 	// window's evaluation keeps it aside until the root closes, and it is
@@ -228,25 +244,34 @@ func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 }
 
 func (s *Session) cacheDecision(r RuleDefinition, n *factNode, d Decision) error {
-	id := decisionID{r.Key, n.header.ID}
-	if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
-		results := s.successful[r.Key]
-		if results == nil {
-			// Both map levels and per-rule state.
-			if err := s.retain(int64(128 + len(r.Key.ID))); err != nil {
-				return err
-			}
-			if s.successful == nil {
-				s.successful = make(map[RuleKey]*outcomeBits)
-			}
-			results = &outcomeBits{}
-			s.successful[r.Key] = results
+	return s.cacheDecisionAt(r, n.header.ID, d)
+}
+
+// cacheOutcome caches a pass or not-applicable outcome of r on node.
+func (s *Session) cacheOutcome(r RuleDefinition, node NodeID, result successfulOutcome) error {
+	results := s.successful[r.Key]
+	if results == nil {
+		// Both map levels and per-rule state.
+		if err := s.retain(int64(128 + len(r.Key.ID))); err != nil {
+			return err
 		}
+		if s.successful == nil {
+			s.successful = make(map[RuleKey]*outcomeBits)
+		}
+		results = &outcomeBits{}
+		s.successful[r.Key] = results
+	}
+	return results.set(s, node, result)
+}
+
+func (s *Session) cacheDecisionAt(r RuleDefinition, node NodeID, d Decision) error {
+	id := decisionID{r.Key, node}
+	if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
 		result := successfulPass
 		if d.Outcome == OutcomeNotApplicable {
 			result = successfulNotApplicable
 		}
-		return results.set(s, n.header.ID, result)
+		return s.cacheOutcome(r, node, result)
 	}
 	// Problem dependencies retain only outcome, reason and cause, not copied
 	// attacker-controlled value text or diagnostic location lists.
@@ -323,6 +348,15 @@ func (s *Session) dependency(ctx context.Context, n *factNode, dependency Depend
 	}
 	if dependency.Kind == DependencyExternal {
 		return Decision{Outcome: OutcomeUnsupported, Reason: "external-provider-unavailable"}, false, nil
+	}
+	// A window's timeline consumer assumes its timeline rule passes as the
+	// document prerequisite, which Finish checks; any other prerequisite
+	// leaves the node to Finish.
+	if c := s.consumerEvaluating; c != nil {
+		if dependency.Kind == DependencyRule && dependency.Relation == RelationDocument && dependency.Rule == c.timeline {
+			return Decision{Outcome: OutcomePass}, false, nil
+		}
+		return Decision{}, true, nil
 	}
 	if dependency.Kind == DependencyFact {
 		if !final {
