@@ -420,9 +420,11 @@ func keyedNumerals(measures int, last string) string {
 
 // Whatever Finish does with the provisional decisions, the session ends
 // with nothing charged to the buffer, and its report is buffered
-// evaluation's: an index a numeral's question builds in the speculative
-// timeline is released with the timeline, neither twice nor by the next
-// measure on the speculation's behalf.
+// evaluation's. An index a numeral's question builds in the speculative
+// timeline is discarded by the next measure's read; were it not counted for
+// the speculation, dropping the speculation would release bytes it never
+// retained and leave the account unbalanced. That the count is exact is
+// TestConsumerQuestionIndexBelongsToTheSpeculation's to prove.
 func TestWindowConsumersLeaveNothingCharged(t *testing.T) {
 	whole := timelineWindowScore(timelineWindowBare, keyedNumerals(80, ""))
 	for _, tc := range []struct {

@@ -315,9 +315,10 @@ func TestConsumerEvaluationHoldsNothingAfterwards(t *testing.T) {
 }
 
 // A history index a consumer's question builds in the speculative timeline
-// is counted as retained by the speculation, exactly once: the read that
-// next publishes to the history discards it on the speculation's account.
-// An index built outside a window's consumers is not.
+// is counted as retained by the speculation, exactly once and for exactly
+// its bytes: a read that publishes to the history discards it within what
+// the speculation counts. An index built outside a window's consumers is
+// not counted.
 func TestConsumerQuestionIndexBelongsToTheSpeculation(t *testing.T) {
 	ctx := context.Background()
 	s, _, _, _, evaluations := provisionalFixture(t)
