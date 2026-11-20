@@ -44,6 +44,13 @@ func stateDiscardIndex(s *Session, index *stateHistoryIndex) {
 	if index == nil {
 		return
 	}
+	if s.performance != nil && s.performance.provider != nil && s.performance.provider.swing.history.index == index {
+		p := s.performance.provider
+		p.indexCharged -= index.bytes
+		if p.indexCharged < 0 {
+			s.performanceContract = contract("performance swing index", "released more than it retained")
+		}
+	}
 	_ = s.account.Release(BudgetBufferedBytes, index.bytes)
 	s.retained -= index.bytes
 }
@@ -117,7 +124,11 @@ func stateIndex[T any](ctx context.Context, s *Session, h *stateHistory[T]) (*st
 	}
 	stateDiscardIndex(s, h.index)
 	h.index = index
-	s.consumerIndexBuilt(s.retained - before)
+	swing := false
+	if p := s.performanceStash; p != nil {
+		swing = any(h) == any(&p.swing.history)
+	}
+	s.consumerIndexBuilt(s.retained-before, swing)
 	success = true
 	return index, nil
 }

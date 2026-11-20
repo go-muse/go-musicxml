@@ -274,6 +274,9 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 				continue
 			}
 			if _, exists := service.FiguredBassOrigins[event.header.ID]; exists {
+				if service.windowOriginsIncremental {
+					continue
+				}
 				return contract("figured bass origins", "duplicate publication")
 			}
 			if err := s.chargeTimelineFact(); err != nil {
@@ -392,11 +395,19 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
-	if len(service.FiguredBassOrigins) != 0 {
-		return contract("figured bass origins", "duplicate finalization")
+	if !service.windowOriginsIncremental {
+		if len(service.FiguredBassOrigins) != 0 {
+			return contract("figured bass origins", "duplicate finalization")
+		}
+		service.FiguredBassOrigins = pending
+		return r.err
 	}
-	service.FiguredBassOrigins = pending
-
+	if service.FiguredBassOrigins == nil {
+		service.FiguredBassOrigins = make(map[NodeID]figuredBassTimingOrigin)
+	}
+	for id, out := range pending {
+		service.FiguredBassOrigins[id] = out
+	}
 	return r.err
 }
 

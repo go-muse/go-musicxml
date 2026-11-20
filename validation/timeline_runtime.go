@@ -58,6 +58,7 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 			start, accepted, adopted = len(spec.blocks), true, index
 			s.consumerTimelineAdopted(key)
 		} else if spec.service != nil {
+			s.dropWindowPerformance("speculation")
 			// What the speculation retained is what reading it added to
 			// the session's; anything else was released on its behalf.
 			if spec.retained < 0 {

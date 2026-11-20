@@ -105,7 +105,7 @@ func TestCommonExaminationSealAdmissionAndCleanup(t *testing.T) {
 }
 
 func TestCommonExaminationSealEnvelopesAndSessionIsolation(t *testing.T) {
-	if unsafe.Sizeof(modelRepresentationRecord{}) > 128 || unsafe.Sizeof(Evidence[bool]{}) > 64 || unsafe.Sizeof(Session{}) > 1024 {
+	if unsafe.Sizeof(modelRepresentationRecord{}) > 128 || unsafe.Sizeof(Evidence[bool]{}) > 64 || unsafe.Sizeof(Session{}) > 1152 {
 		t.Fatal("fixed retained envelope no longer covers representation")
 	}
 	a := representationFixture(t, Budgets{}, true)

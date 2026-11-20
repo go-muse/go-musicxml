@@ -449,11 +449,10 @@ func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
 	return table
 }
 
-// Attribute tables of a final reader are shared by every final reader of the
-// session with the same compiled bindings. As for boundElementRoles, Finish
-// has sealed the event API and the source schema is bound and complete, so no
-// binding's attributes can change; a table depends only on the bindings, the
-// session schema and the binding's assessed attributes. Only successfully
+// Attribute tables are shared by readers with the same compiled bindings once
+// their evidence is final at Finish or in a bound performance window. A table
+// depends only on the bindings, the session schema and the binding's assessed
+// attributes. Only successfully
 // built tables are stored; a failed build leaves no entry. Earlier readers and
 // private hand-built bindings keep their own caches.
 type contextAttributeTableKey struct {
@@ -467,7 +466,11 @@ type contextSharedInternKey struct {
 }
 
 func (r *contextReader) attributeTablesShared() bool {
-	return r.b.bindingDigest != "" && r.s.finished && r.s.schema != nil && r.s.schema.bound && r.s.schema.identityReady && r.s.schema.run != nil
+	// A performance window is already schema-bound; its attribute evidence is as
+	// immutable as at Finish. Sharing its tables avoids a second provider-local
+	// copy when a later fallback or another family reads the same attributes.
+	windowBound := r.s.performanceStash != nil
+	return r.b.bindingDigest != "" && (r.s.finished || windowBound) && r.s.schema != nil && (r.s.schema.bound || windowBound) && (r.s.schema.identityReady || windowBound) && r.s.schema.run != nil
 }
 
 func (r *contextReader) cachedAttributeTable(node NodeID) (*contextAttributeTable, bool) {

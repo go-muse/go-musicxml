@@ -115,7 +115,7 @@ func evaluateBendReleaseSign(ctx context.Context, s *Session, n *factNode, p *co
 		return Decision{}, false, err
 	}
 	service := s.contextServices[p.Provider]
-	if service == nil || !service.Final {
+	if (service == nil || !service.Final) && s.performanceBendEvaluating == nil {
 		if !final {
 			return Decision{}, true, nil
 		}

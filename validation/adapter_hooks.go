@@ -52,6 +52,8 @@ func init() {
 	validationlink.Register("Session.SetWindowConsumersOff", setWindowConsumersOff)
 	validationlink.Register("Session.SetWindowConsumersTamper", setWindowConsumersTamper)
 	validationlink.Register("Session.SetWindowConsumersObserver", setWindowConsumersObserver)
+	validationlink.Register("Session.SetWindowPerformanceOff", setWindowPerformanceOff)
+	validationlink.Register("Session.SetWindowPerformanceObserver", setWindowPerformanceObserver)
 	validationlink.Register("Report.SetFindingKeyObserver", setFindingKeyObserverOrdered)
 	validationlink.Register("Engine.SourceAttributeLexicalProvider", (*Engine).sourceAttributeLexicalProvider)
 	validationlink.Register("Engine.SourceDTDIDsSelected", (*Engine).sourceDTDIDsSelected)
