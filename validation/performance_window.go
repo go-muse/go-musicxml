@@ -31,10 +31,12 @@ type performanceWindowProvider struct {
 	records      []performanceWindowRecord
 	pendingFacts int64
 	stateFacts   int64
+	indexCharged int64
 	charged      int64
 	partStart    int
 	anchors      []performanceWindowAnchor
 	anchorStart  int
+	ranges       [][2]NodeID
 
 	adoptedTimeline RuleKey
 	project         bool
@@ -144,6 +146,14 @@ func (s *Session) evaluateWindowPerformance(ctx context.Context, w evaluationWin
 	if err := performanceWindowSwing(r, service, w); err != nil {
 		return err
 	}
+	late, err := performanceWindowLateState(r, service, w)
+	if err != nil {
+		return err
+	}
+	if late {
+		p.failed = "late-state"
+		return nil
+	}
 	if !p.project {
 		return s.countWindowPerformance(ctx, w, p, service, r)
 	}
@@ -174,7 +184,27 @@ func (s *Session) evaluateWindowPerformance(ctx context.Context, w evaluationWin
 			return err
 		}
 	}
+	if r.err == nil {
+		return s.recordPerformanceRange(p, w)
+	}
 	return r.err
+}
+
+func (s *Session) recordPerformanceRange(p *performanceWindowProvider, w evaluationWindow) error {
+	first, end := s.sequence[w.first], s.sequence[w.end-1]+1
+	if len(p.ranges) == cap(p.ranges) {
+		grown := max(8, 2*cap(p.ranges))
+		if err := s.retain(int64(grown) * 32); err != nil {
+			return err
+		}
+		next := make([][2]NodeID, len(p.ranges), grown)
+		copy(next, p.ranges)
+		s.releaseFactBytes(int64(cap(p.ranges)) * 32)
+		p.charged += int64(grown-cap(p.ranges)) * 32
+		p.ranges = next
+	}
+	p.ranges = append(p.ranges, [2]NodeID{first, end})
+	return nil
 }
 
 func (s *Session) evaluateWindowBends(ctx context.Context, w evaluationWindow, p *performanceWindowProvider, n *factNode) error {
@@ -244,7 +274,7 @@ func (s *Session) countWindowPerformance(ctx context.Context, w evaluationWindow
 			return r.err
 		}
 	}
-	return nil
+	return s.recordPerformanceRange(p, w)
 }
 
 func performanceCountNode(r *contextReader, sr *stateReader, service *timelineService, n *factNode) (int, error) {
@@ -421,6 +451,36 @@ func (s *Session) notePerformanceAnchor(r *stateReader, service *timelineService
 	}
 	p.anchors = append(p.anchors, performanceWindowAnchor{node: n.header.ID, record: at})
 	return nil
+}
+
+// performanceWindowLateState rejects a publication whose displaced position or
+// gaps can change records projected from an earlier window. A displacement
+// within the window is already known before its nodes are projected.
+func performanceWindowLateState(r *contextReader, service *timelineService, w evaluationWindow) (bool, error) {
+	for _, id := range r.s.sequence[w.first:w.end] {
+		if !r.step(1) {
+			return false, r.err
+		}
+		if !r.matches(r.s.node(id), "perf-sound") {
+			continue
+		}
+		sound, ok := service.Playback.Sounds[id]
+		if !ok {
+			continue
+		}
+		position := sound.Origin.Position
+		if position.State == EvidenceKnown && (position.Value.MeasureOrdinal < sound.Origin.MeasureOrdinal || position.Value.Offset.value.Sign() < 0) {
+			return true, nil
+		}
+		if position.State != EvidenceKnown && sound.Origin.Placement.Displaced {
+			return true, nil
+		}
+	}
+	if r.err != nil {
+		return false, r.err
+	}
+	late := len(service.Playback.Tempo.Gaps) != 0 || len(service.Playback.Dynamics.Gaps) != 0 || len(service.Playback.Pizzicato.Gaps) != 0
+	return late || len(r.s.performanceStash.swing.history.Gaps) != 0, nil
 }
 
 func performanceWindowSwing(r *contextReader, service *timelineService, w evaluationWindow) error {
@@ -737,6 +797,7 @@ func (s *Session) adoptPerformanceProvider(ctx context.Context, p *performanceWi
 	count := len(p.records)
 	p.records = nil
 	p.anchors = nil
+	p.ranges = nil
 	p.anchorStart = 0
 	s.releaseFactBytes(p.charged)
 	p.charged = 0
@@ -756,37 +817,9 @@ func (s *Session) performanceProjectSkeleton(ctx context.Context, p *performance
 	sr := &stateReader{ctx: ctx, s: s, b: tb}
 	r := s.performanceReader(ctx, p)
 	index := &performanceAdviceIndex{divisions: p.divisions}
-	var ranges [][2]NodeID
-	if s.schema != nil {
-		scratch, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(s.schema.windows)), 64)
-		if err != nil {
-			return err
-		}
-		if err := s.account.Charge(BudgetBufferedBytes, scratch); err != nil {
-			return err
-		}
-		defer func() { _ = s.account.Release(BudgetBufferedBytes, scratch) }()
-		ranges = make([][2]NodeID, 0, len(s.schema.windows))
-		for root, window := range s.schema.windows {
-			if sr.matches(s.node(root), timelineRoleMeasure) {
-				ranges = append(ranges, [2]NodeID{root, NodeID(int(root) + window.size)})
-			}
-		}
-		if sr.err != nil {
-			return sr.err
-		}
-		var sortErr error
-		sort.Slice(ranges, func(i, j int) bool {
-			if sortErr != nil {
-				return false
-			}
-			sortErr = s.step(ctx, 1)
-			return sortErr == nil && ranges[i][0] < ranges[j][0]
-		})
-		if sortErr != nil {
-			return sortErr
-		}
-	}
+	// These ranges were recorded when the windows closed. Do not reconstruct
+	// them by reading measure nodes during the accepted Finish path.
+	ranges := p.ranges
 	s.performanceStash = p
 	defer func() { s.performanceStash = nil }()
 	at := 0
@@ -936,6 +969,10 @@ func (s *Session) dropWindowPerformance(reason string) {
 	}
 	results, decisions := 0, 0
 	if p := k.provider; p != nil {
+		if p.swing.history.index != nil {
+			stateDiscardIndex(s, p.swing.history.index)
+			p.swing.history.index = nil
+		}
 		results = len(p.records)
 		for _, record := range p.records {
 			s.releaseFactBytes(record.charged)
@@ -946,6 +983,7 @@ func (s *Session) dropWindowPerformance(reason string) {
 		s.releaseFactBytes(p.charged)
 		p.charged = 0
 		p.anchors = nil
+		p.ranges = nil
 		p.partStart, p.anchorStart = 0, 0
 	}
 	for i := range k.bends {

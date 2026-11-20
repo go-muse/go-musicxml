@@ -340,12 +340,14 @@ func (s *Session) consumerTimelineAdopted(key RuleKey) {
 // the speculative timeline: the timeline's own, as if a measure's read had
 // built it. The next read that publishes to the history discards it, and
 // dropping the speculation releases it with the rest.
-func (s *Session) consumerIndexBuilt(bytes int64) {
+func (s *Session) consumerIndexBuilt(bytes int64, swing bool) {
 	if c := s.consumerEvaluating; c != nil {
 		c.speculation.retained += bytes
 	}
 	if p := s.performanceStash; p != nil {
-		if spec := s.speculations[p.timeline]; spec != nil {
+		if swing {
+			p.indexCharged += bytes
+		} else if spec := s.speculations[p.timeline]; spec != nil {
 			spec.retained += bytes
 		}
 	}

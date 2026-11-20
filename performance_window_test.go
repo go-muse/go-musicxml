@@ -62,6 +62,21 @@ func TestWindowPerformanceRiskCases(t *testing.T) {
 			performanceWindowMeasure("1", performanceWindowDivisions+eighth),
 			performanceWindowMeasure("2", swing+eighth),
 		),
+		"late tempo and dynamics at a negative offset": performanceWindowDocument(
+			performanceWindowMeasure("1", performanceWindowDivisions+`<sound tempo="60" dynamics="50"/>`+eighth),
+			performanceWindowMeasure("2", `<sound tempo="120" dynamics="70"><offset>-4</offset></sound>`+eighth),
+		),
+		"late swing and pizzicato at a negative offset": performanceWindowDocument(
+			performanceWindowMeasure("1", performanceWindowDivisions+eighth),
+			performanceWindowMeasure("2", `<sound pizzicato="yes"><offset>-2</offset><swing><first>2</first><second>1</second></swing></sound>`+eighth),
+		),
+		"late tempo without divisions": performanceWindowDocument(
+			performanceWindowMeasure("1", eighth),
+			performanceWindowMeasure("2", `<sound tempo="120"><offset>-1</offset></sound>`+eighth),
+		),
+		"negative offset within the same measure": performanceWindowDocument(
+			performanceWindowMeasure("1", performanceWindowDivisions+eighth+`<sound tempo="120" dynamics="70"><offset>-1</offset></sound>`+eighth),
+		),
 		"second divisions publisher": performanceWindowDocument(
 			performanceWindowMeasure("1", performanceWindowDivisions+ordinary),
 			performanceWindowMeasure("2", `<attributes><divisions>4</divisions></attributes>`+performanceWindowNote(`<duration>8</duration>`)),
@@ -132,10 +147,13 @@ func TestWindowPerformanceRiskCases(t *testing.T) {
 				t.Fatal("performance windows neither adopted nor dropped any work")
 			}
 			expected := map[string]string{
-				"excursion requiring a staged unit proof": "excursions",
-				"late duplicate identity":                 "speculation",
-				"cut inside a measure":                    "unsettled",
-				"content error proves the window unbound": "unbound",
+				"excursion requiring a staged unit proof":       "excursions",
+				"late duplicate identity":                       "speculation",
+				"cut inside a measure":                          "unsettled",
+				"content error proves the window unbound":       "unbound",
+				"late tempo and dynamics at a negative offset":  "late-state",
+				"late swing and pizzicato at a negative offset": "late-state",
+				"late tempo without divisions":                  "late-state",
 			}[name]
 			if expected != "" && !slices.Contains(reasons, expected) {
 				t.Errorf("degradation reasons %v, want %q", reasons, expected)

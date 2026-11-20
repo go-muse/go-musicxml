@@ -121,3 +121,57 @@ func TestPerformanceBendWaitsForItsPhase(t *testing.T) {
 		t.Fatalf("decision=%+v found=%v", d, ok)
 	}
 }
+
+func TestPerformanceSwingIndexOwnership(t *testing.T) {
+	s, _, _, _, _ := provisionalFixture(t)
+	p := &performanceWindowProvider{timeline: provisionalTimeline}
+	spec := &timelineSpeculation{service: &timelineService{}}
+	s.performance = &windowPerformance{provider: p}
+	s.performanceStash = p
+	s.speculations = map[RuleKey]*timelineSpeculation{provisionalTimeline: spec}
+	before := s.retained
+	index, err := stateIndex(context.Background(), s, &p.swing.history)
+	if err != nil {
+		t.Fatal(err)
+	}
+	built := s.retained - before
+	if built == 0 || p.indexCharged != built || spec.retained != 0 || p.swing.history.index != index {
+		t.Fatalf("index=%d provider=%d speculation=%d", built, p.indexCharged, spec.retained)
+	}
+	part := NodeRef{DocumentID: s.documentID, Node: 1}
+	publication := statePublication[performanceSwing]{Position: musicalPosition{Part: part, Measure: part, Offset: timelineZero}, Scope: stateScope{AllStaves: true}, Value: Evidence[performanceSwing]{State: EvidenceKnown}}
+	if err := publishState(context.Background(), s, &p.swing.history, publication); err != nil {
+		t.Fatal(err)
+	}
+	if p.indexCharged != 0 || p.swing.history.index != nil || spec.retained != 0 {
+		t.Fatalf("invalidation: provider=%d index=%p speculation=%d", p.indexCharged, p.swing.history.index, spec.retained)
+	}
+	if _, err := stateIndex(context.Background(), s, &p.swing.history); err != nil {
+		t.Fatal(err)
+	}
+	if p.indexCharged == 0 {
+		t.Fatal("the second index was not charged")
+	}
+	s.dropWindowPerformance("speculation")
+	if p.indexCharged != 0 || p.swing.history.index != nil || s.performanceContract != nil {
+		t.Fatalf("drop: provider=%d index=%p err=%v", p.indexCharged, p.swing.history.index, s.performanceContract)
+	}
+}
+
+func TestPerformanceRecordArrayChargeIsExact(t *testing.T) {
+	s, _, _, node, _ := provisionalFixture(t)
+	p := &performanceWindowProvider{key: RuleKey{ID: "performance", Revision: 1}}
+	s.performance = &windowPerformance{provider: p}
+	s.performanceStash = p
+	s.contextFamilies = ContextFamilyTiming
+	for i := 0; i < 20; i++ {
+		result := ContextResult{Provider: p.key, Subject: NodeRef{s.documentID, node.header.ID}, Property: ContextPropertyTiming, Timing: &TimingContextResult{}}
+		if err := s.publishContextResult(context.Background(), result); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got, want := p.charged, int64(cap(p.records))*512; got != want {
+		t.Fatalf("record array charged %d, want %d", got, want)
+	}
+	s.dropWindowPerformance("speculation")
+}
