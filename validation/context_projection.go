@@ -147,8 +147,18 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 // and returns the session's owned copy: the record in Report.Context, a record
 // kept only for a resource snapshot, or nil when the session keeps no copy.
 func (s *Session) keepValidatedContextResult(ctx context.Context, in ContextResult) (kept *ContextResult, err error) {
-	if err = s.account.Charge(BudgetContextFacts, 1); err != nil {
-		return nil, err
+	stash := s.performanceStash
+	if stash == nil {
+		if err = s.account.Charge(BudgetContextFacts, 1); err != nil {
+			return nil, err
+		}
+	} else {
+		// Provisional performance facts are counted now and charged once when
+		// Finish adopts the provider, as speculative timeline facts are.
+		stash.pendingFacts, err = rationalCheckedAdd(BudgetContextFacts, stash.pendingFacts, 1)
+		if err != nil {
+			return nil, err
+		}
 	}
 	mark := s.markRetained()
 	defer func() {
@@ -240,6 +250,13 @@ func (s *Session) keepValidatedContextResult(ctx context.Context, in ContextResu
 	}
 	if err = s.step(ctx, 1); err != nil {
 		return nil, err
+	}
+	if stash != nil {
+		charged := s.retained - mark.retained - (s.internRetained - mark.intern)
+		if err = s.stashPerformanceResult(out, charged); err != nil {
+			return nil, err
+		}
+		return nil, nil
 	}
 	if !selected {
 		// Kept for the snapshot only: the session releases it at cleanup,

@@ -112,12 +112,15 @@ const (
 
 const timelineSpeculationBytes int64 = 1024
 
-// chargeTimelineFact charges one timeline context fact. A speculative read
-// only counts it: Finish charges the count when it adopts the speculation
-// and nothing when it drops it and reads the timeline again, so that the
-// cumulative context-fact quota counts each fact once, as buffered
-// evaluation does.
+// chargeTimelineFact charges one state-derived context fact. Speculative
+// timeline reads and provisional performance work only count their facts;
+// Finish charges each accepted owner once, so a fallback does not count twice.
 func (s *Session) chargeTimelineFact() error {
+	if p := s.performanceStash; p != nil {
+		var err error
+		p.stateFacts, err = rationalCheckedAdd(BudgetContextFacts, p.stateFacts, 1)
+		return err
+	}
 	if s.speculating != nil {
 		s.speculating.facts++
 		return nil
@@ -403,9 +406,13 @@ func (s *Session) speculativeIdentity(value string, result xsd.IdentityResolutio
 		spec.stop(s, timelineTriggerIdentity)
 		return result, false
 	}
-	if err := s.retain(int64(128 + len(value))); err != nil {
+	charge := int64(128 + len(value))
+	if err := s.retain(charge); err != nil {
 		spec.stop(s, timelineTriggerBudget)
 		return result, false
+	}
+	if s.performanceStash != nil {
+		spec.retained += charge
 	}
 	if spec.identities == nil {
 		spec.identities = make(map[string]xsd.SubjectID)
@@ -424,9 +431,13 @@ func (s *Session) speculativeScalarRead(node NodeID, attribute QName, v Evidence
 	if spec == nil {
 		return
 	}
-	if err := s.retain(int64(192 + len(attribute.Space) + len(attribute.Local))); err != nil {
+	charge := int64(192 + len(attribute.Space) + len(attribute.Local))
+	if err := s.retain(charge); err != nil {
 		spec.stop(s, timelineTriggerBudget)
 		return
+	}
+	if s.performanceStash != nil {
+		spec.retained += charge
 	}
 	spec.scalarReads = append(spec.scalarReads, timelineScalarRead{node: node, attribute: attribute, value: v})
 }
@@ -440,6 +451,9 @@ func (s *Session) speculativeInvalidRead(n *factNode, check XSDCheck) {
 	if err := s.retain(64); err != nil {
 		spec.stop(s, timelineTriggerBudget)
 		return
+	}
+	if s.performanceStash != nil {
+		spec.retained += 64
 	}
 	spec.invalidReads = append(spec.invalidReads, timelineInvalidRead{node: n, check: check})
 }

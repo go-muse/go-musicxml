@@ -9,7 +9,7 @@ import (
 // retainTransient is released when it returns.
 func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final bool) error {
 	err := s.transientScope(func() error { return s.evaluateRule(ctx, n, key, final) })
-	if finishObserver != nil && final && s.consumerEvaluating == nil {
+	if finishObserver != nil && final && s.consumerEvaluating == nil && s.performanceBendEvaluating == nil {
 		finishObserver("evaluated", s.account)
 	}
 	return err
@@ -222,6 +222,9 @@ func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 	if s.consumerEvaluating != nil {
 		return s.stashConsumerDecision(r, n, d)
 	}
+	if s.performanceBendEvaluating != nil {
+		return s.stashPerformanceBend(r, n, d)
+	}
 	// Once established, a finding remains authoritative even if retaining its
 	// dependency-cache entry exhausts the session buffer afterwards. A
 	// window's evaluation keeps it aside until the root closes, and it is
@@ -354,6 +357,12 @@ func (s *Session) dependency(ctx context.Context, n *factNode, dependency Depend
 	// leaves the node to Finish.
 	if c := s.consumerEvaluating; c != nil {
 		if dependency.Kind == DependencyRule && dependency.Relation == RelationDocument && dependency.Rule == c.timeline {
+			return Decision{Outcome: OutcomePass}, false, nil
+		}
+		return Decision{}, true, nil
+	}
+	if b := s.performanceBendEvaluating; b != nil {
+		if dependency.Kind == DependencyRule && dependency.Relation == RelationDocument && dependency.Rule == b.provider {
 			return Decision{Outcome: OutcomePass}, false, nil
 		}
 		return Decision{}, true, nil

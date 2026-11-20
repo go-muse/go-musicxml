@@ -466,6 +466,9 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 	pending := map[NodeID]graceNeighborTiming{}
 	publish := func(n noteTimingOrigin, stream *graceStream, previous, following int, previousGap, followingGap Evidence[NodeRef]) error {
 		if _, exists := service.GraceNeighbors[n.Note.Node]; exists {
+			if service.windowOriginsIncremental {
+				return nil
+			}
 			return contract("grace neighbors", "duplicate publication")
 		}
 		if err := s.chargeTimelineFact(); err != nil {
@@ -597,10 +600,19 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
-	if len(service.GraceNeighbors) != 0 {
-		return contract("grace neighbors", "duplicate finalization")
+	if !service.windowOriginsIncremental {
+		if len(service.GraceNeighbors) != 0 {
+			return contract("grace neighbors", "duplicate finalization")
+		}
+		service.GraceNeighbors = pending
+		return nil
 	}
-	service.GraceNeighbors = pending
+	if service.GraceNeighbors == nil {
+		service.GraceNeighbors = make(map[NodeID]graceNeighborTiming)
+	}
+	for id, out := range pending {
+		service.GraceNeighbors[id] = out
+	}
 	return nil
 }
 

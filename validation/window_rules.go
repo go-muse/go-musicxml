@@ -16,8 +16,8 @@ import (
 // rejected event, a limit), and then no rule of the root-close pass is
 // evaluated: the window's outcomes and findings are kept aside and recorded
 // only when the root closes, and the decisions it cached are forgotten when
-// it does not. Dictionary and bend-release-sign rules are not evaluated
-// there: they wait for the document whatever the window holds.
+// it does not. Dictionary rules wait for the document; bend-release-sign is
+// decided separately after its performance provider has read the window.
 func windowRuleKind(kind planKind) bool {
 	switch kind {
 	case planChildren, planLocal, planTimeOnlyOrder, planFigureNumberNumeric:

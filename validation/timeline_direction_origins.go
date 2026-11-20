@@ -307,6 +307,9 @@ func (service *timelineService) resolveDirectionOrigins(ctx context.Context, s *
 func (service *timelineService) resolveDirectionOrigin(r *stateReader, event *factNode, block timelineMeasureBlock, blocks []timelineMeasureBlock, index directionNoteIndex) error {
 	ctx, s := r.ctx, r.s
 	if _, exists := service.DirectionOrigins[event.header.ID]; exists {
+		if service.windowOriginsIncremental {
+			return nil
+		}
 		return contract("direction origins", "duplicate publication")
 	}
 	if err := s.chargeTimelineFact(); err != nil {

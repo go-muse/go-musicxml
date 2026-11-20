@@ -16,8 +16,11 @@ type timelineService struct {
 	GraceNeighbors     map[NodeID]graceNeighborTiming
 	FiguredBassOrigins map[NodeID]figuredBassTimingOrigin
 	DirectionOrigins   map[NodeID]directionTimingOrigin
-	Facts              map[NodeID]timelineEventFact
-	Final              bool
+	// windowOriginsIncremental lets performance finalize anchors part by part;
+	// the final document pass then keeps those publications and fills the rest.
+	windowOriginsIncremental bool
+	Facts                    map[NodeID]timelineEventFact
+	Final                    bool
 	// compact holds the facts of evaluated measures in windowed evaluation;
 	// buffered evaluation leaves it nil. Read facts, note origins and note
 	// playback contexts through the accessors in timeline_compact.go.

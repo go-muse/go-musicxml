@@ -333,6 +333,7 @@ func (s *Session) consumerTimelineAdopted(key RuleKey) {
 	if k := s.consumers; k != nil {
 		k.adopted = key
 	}
+	s.performanceTimelineAdopted(key)
 }
 
 // consumerIndexBuilt notes a history index a consumer's question built in
@@ -342,6 +343,11 @@ func (s *Session) consumerTimelineAdopted(key RuleKey) {
 func (s *Session) consumerIndexBuilt(bytes int64) {
 	if c := s.consumerEvaluating; c != nil {
 		c.speculation.retained += bytes
+	}
+	if p := s.performanceStash; p != nil {
+		if spec := s.speculations[p.timeline]; spec != nil {
+			spec.retained += bytes
+		}
 	}
 }
 

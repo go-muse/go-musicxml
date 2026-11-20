@@ -81,6 +81,10 @@ var (
 	// provisionally, the assumption that failed (empty when it adopted them)
 	// and how many there were.
 	validationSetWindowConsumersObserver = validationlink.Hook[func(func(string, int)) func(string, int)]("Session.SetWindowConsumersObserver")
+	// validationSetWindowPerformanceOff disables only windowed performance work.
+	validationSetWindowPerformanceOff = validationlink.Hook[func(bool) bool]("Session.SetWindowPerformanceOff")
+	// validationSetWindowPerformanceObserver reports provisional performance settlement.
+	validationSetWindowPerformanceObserver = validationlink.Hook[func(func(string, int, int)) func(string, int, int)]("Session.SetWindowPerformanceObserver")
 	// validationObserveFindingKeyOrder is a test observation point only.
 	validationObserveFindingKeyOrder                 = validationlink.Hook[func(func(bool, int))]("Report.SetFindingKeyObserver")
 	validationShareDictionarySet                     = validationlink.Hook[func(context.Context, *validation.DictionarySet, *validation.Account) (*validation.DictionarySet, error)]("ShareDictionarySet")

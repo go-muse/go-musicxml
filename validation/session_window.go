@@ -246,6 +246,7 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 		return err
 	}
 	if !bound || proved {
+		s.stopWindowPerformance("unbound")
 		if windowRulesObserver != nil {
 			windowRulesObserver(false, s.windowKeptCount())
 		}
@@ -258,7 +259,10 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	if err != nil || !evaluated {
 		return err
 	}
-	return s.evaluateWindowConsumers(ctx, w)
+	if err := s.evaluateWindowConsumers(ctx, w); err != nil {
+		return err
+	}
+	return s.evaluateWindowPerformance(ctx, w)
 }
 
 // closeSegment is called when n closes; a segment is bound there with its
