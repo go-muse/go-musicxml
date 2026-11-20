@@ -20,10 +20,11 @@ type performanceWindowProvider struct {
 	timeline RuleKey
 	phase    int
 
-	partOrder int64
-	reader    *contextReader
-	swing     performanceSwingHistory
-	divisions map[NodeRef]performanceDivisionAdvice
+	partOrder      int64
+	reader         *contextReader
+	timingBindings *timelineBindings
+	swing          performanceSwingHistory
+	divisions      map[NodeRef]performanceDivisionAdvice
 	// The read counts make the next window's advice index an increment, not a
 	// reservation proportional to every fact in the document.
 	divisionsRead, midiRead, instrumentsRead int
@@ -142,6 +143,7 @@ func (s *Session) evaluateWindowPerformance(ctx context.Context, w evaluationWin
 		s.speculating = nil
 	}()
 	service := spec.service
+	p.timingBindings = spec.plan.Bindings
 	r := s.performanceReader(ctx, p)
 	if err := performanceWindowSwing(r, service, w); err != nil {
 		return err
@@ -157,10 +159,7 @@ func (s *Session) evaluateWindowPerformance(ctx context.Context, w evaluationWin
 	if !p.project {
 		return s.countWindowPerformance(ctx, w, p, service, r)
 	}
-	tb, err := p.plan.Schema.sharedTimelineBindings()
-	if err != nil {
-		return err
-	}
+	tb := p.timingBindings
 	sr := &stateReader{ctx: ctx, s: s, b: tb}
 	index, err := s.performanceWindowAdviceIndex(ctx, p, service)
 	if err != nil {
@@ -240,10 +239,7 @@ func (s *Session) evaluateWindowBends(ctx context.Context, w evaluationWindow, p
 // countWindowPerformance counts facts whose payloads are not selected. Bend
 // nodes still use the full local projection because their consumer reads proof.
 func (s *Session) countWindowPerformance(ctx context.Context, w evaluationWindow, p *performanceWindowProvider, service *timelineService, r *contextReader) error {
-	tb, err := p.plan.Schema.sharedTimelineBindings()
-	if err != nil {
-		return err
-	}
+	tb := p.timingBindings
 	sr := &stateReader{ctx: ctx, s: s, b: tb}
 	index := &performanceAdviceIndex{divisions: p.divisions}
 	for _, id := range s.sequence[w.first:w.end] {
