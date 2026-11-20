@@ -164,6 +164,7 @@ func TestPerformanceRecordArrayChargeIsExact(t *testing.T) {
 	s.performance = &windowPerformance{provider: p}
 	s.performanceStash = p
 	s.contextFamilies = ContextFamilyTiming
+	before, interned := s.retained, internCharge(s)
 	for i := 0; i < 20; i++ {
 		result := ContextResult{Provider: p.key, Subject: NodeRef{s.documentID, node.header.ID}, Property: ContextPropertyTiming, Timing: &TimingContextResult{}}
 		if err := s.publishContextResult(context.Background(), result); err != nil {
@@ -173,5 +174,15 @@ func TestPerformanceRecordArrayChargeIsExact(t *testing.T) {
 	if got, want := p.charged, int64(cap(p.records))*512; got != want {
 		t.Fatalf("record array charged %d, want %d", got, want)
 	}
+	owned := int64(0)
+	for _, record := range p.records {
+		owned += record.charged
+	}
+	if got, want := s.retained-before, p.charged+owned+internCharge(s)-interned; got != want {
+		t.Fatalf("account grew by %d, live records and interning %d", got, want)
+	}
 	s.dropWindowPerformance("speculation")
+	if got, want := s.retained-before, internCharge(s)-interned; got != want {
+		t.Fatalf("dropped arrays retain %d bytes, interning %d", got, want)
+	}
 }

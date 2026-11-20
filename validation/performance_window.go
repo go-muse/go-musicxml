@@ -457,6 +457,13 @@ func (s *Session) notePerformanceAnchor(r *stateReader, service *timelineService
 // gaps can change records projected from an earlier window. A displacement
 // within the window is already known before its nodes are projected.
 func performanceWindowLateState(r *contextReader, service *timelineService, w evaluationWindow) (bool, error) {
+	p := r.s.performanceStash
+	spec := r.s.speculations[p.timeline]
+	part := r.s.node(r.s.node(w.root).header.Parent)
+	state := spec.partState[part.header.ID]
+	if state == nil || state.ordinal <= 1 {
+		return false, nil
+	}
 	for _, id := range r.s.sequence[w.first:w.end] {
 		if !r.step(1) {
 			return false, r.err
@@ -469,7 +476,7 @@ func performanceWindowLateState(r *contextReader, service *timelineService, w ev
 			continue
 		}
 		position := sound.Origin.Position
-		if position.State == EvidenceKnown && (position.Value.MeasureOrdinal < sound.Origin.MeasureOrdinal || position.Value.Offset.value.Sign() < 0) {
+		if position.State == EvidenceKnown && position.Value.UnprovedFrame && (position.Value.MeasureOrdinal < sound.Origin.MeasureOrdinal || position.Value.Offset.value.Sign() < 0) {
 			return true, nil
 		}
 		if position.State != EvidenceKnown && sound.Origin.Placement.Displaced {

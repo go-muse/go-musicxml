@@ -68,14 +68,14 @@ func TestWindowPerformanceRiskCases(t *testing.T) {
 		),
 		"late swing and pizzicato at a negative offset": performanceWindowDocument(
 			performanceWindowMeasure("1", performanceWindowDivisions+eighth),
-			performanceWindowMeasure("2", `<sound pizzicato="yes"><offset>-2</offset><swing><first>2</first><second>1</second></swing></sound>`+eighth),
+			performanceWindowMeasure("2", `<sound pizzicato="yes"><swing><first>2</first><second>1</second></swing><offset>-2</offset></sound>`+eighth),
 		),
 		"late tempo without divisions": performanceWindowDocument(
 			performanceWindowMeasure("1", eighth),
 			performanceWindowMeasure("2", `<sound tempo="120"><offset>-1</offset></sound>`+eighth),
 		),
 		"negative offset within the same measure": performanceWindowDocument(
-			performanceWindowMeasure("1", performanceWindowDivisions+eighth+`<sound tempo="120" dynamics="70"><offset>-1</offset></sound>`+eighth),
+			performanceWindowMeasure("1", performanceWindowDivisions+eighth+`<sound tempo="120" dynamics="70"><offset>-4</offset></sound>`+eighth),
 		),
 		"second divisions publisher": performanceWindowDocument(
 			performanceWindowMeasure("1", performanceWindowDivisions+ordinary),
@@ -157,6 +157,9 @@ func TestWindowPerformanceRiskCases(t *testing.T) {
 			}[name]
 			if expected != "" && !slices.Contains(reasons, expected) {
 				t.Errorf("degradation reasons %v, want %q", reasons, expected)
+			}
+			if name == "negative offset within the same measure" && slices.Contains(reasons, "late-state") {
+				t.Errorf("same-window offset degraded: %v", reasons)
 			}
 			t.Logf("adopted=%d dropped=%d reasons=%v", adopted, dropped, reasons)
 		})
