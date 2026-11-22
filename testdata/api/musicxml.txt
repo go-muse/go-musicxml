@@ -131,6 +131,7 @@ const ClefSignJianpu ClefSign = "jianpu"
 const ClefSignNone ClefSign = "none"
 const ClefSignPercussion ClefSign = "percussion"
 const ClefSignTAB ClefSign = "TAB"
+const DefaultMaxDifferences untyped int = 100
 const DegreeSymbolValueAugmented DegreeSymbolValue = "augmented"
 const DegreeSymbolValueDiminished DegreeSymbolValue = "diminished"
 const DegreeSymbolValueHalfDiminished DegreeSymbolValue = "half-diminished"
@@ -139,6 +140,11 @@ const DegreeSymbolValueMinor DegreeSymbolValue = "minor"
 const DegreeTypeValueAdd DegreeTypeValue = "add"
 const DegreeTypeValueAlter DegreeTypeValue = "alter"
 const DegreeTypeValueSubtract DegreeTypeValue = "subtract"
+const DifferenceElement DifferenceKind = "element"
+const DifferenceNotComparable DifferenceKind = "not-comparable"
+const DifferenceOnlyInA DifferenceKind = "only-in-a"
+const DifferenceOnlyInB DifferenceKind = "only-in-b"
+const DifferenceValue DifferenceKind = "value"
 const EffectValueAnvil EffectValue = "anvil"
 const EffectValueAutoHorn EffectValue = "auto horn"
 const EffectValueBirdWhistle EffectValue = "bird whistle"
@@ -683,6 +689,7 @@ func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessm
 func AssessModel(ctx context.Context, document Document, options ModelOptions) (validation.Report, error)
 func AssessModelWithResources(ctx context.Context, document Document, options LinkedAssessmentOptions) (validation.AssessmentBundle, error)
 func BundledDictionarySource() DictionarySource
+func Compare(a Document, b Document, options CompareOptions) Comparison
 func Decode(reader io.Reader) (Document, error)
 func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessmentOptions) (DecodeResult, error)
 func DecodeContext(ctx context.Context, reader io.Reader, options DecodeOptions) (Document, error)
@@ -712,6 +719,7 @@ func Encode(writer io.Writer, document Document) error
 func EncodeMXL(writer io.Writer, document Document) error
 func EncodeMXLPackage(writer io.Writer, value *MXLPackage) error
 func EncodeWithOptions(writer io.Writer, document Document, options EncodeOptions) error
+func Equal(a Document, b Document) bool
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error)
 func InspectXML(ctx context.Context, reader io.Reader, options SourceOptions) (report validation.Report, err error)
 func InspectXMLWithResources(ctx context.Context, reader io.Reader, options LinkedAssessmentOptions) (validation.AssessmentBundle, error)
@@ -1146,6 +1154,12 @@ type Coda struct, field Valign *Valign `xml:"valign,attr,omitempty"`
 type Coda struct, field order SMuFL DefaultX DefaultY RelativeX RelativeY FontFamily FontStyle FontSize FontWeight Color Halign Valign ID
 type Color string
 type CommaSeparatedText string
+type CompareOptions struct, comparable
+type CompareOptions struct, field MaxDifferences int
+type Comparison struct, field Differences []Difference
+type Comparison struct, field Truncated bool
+type Comparison struct, field order Differences Truncated
+type Comparison struct, not comparable
 type ConversionError struct, comparable
 type ConversionError struct, field Cause error
 type ConversionError struct, field State validation.ConversionState
@@ -1327,6 +1341,15 @@ type DictionarySource interface
 type DictionarySource interface, method Open(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error)
 type DictionarySourceFunc func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error)
 type DictionarySourceFunc, method (DictionarySourceFunc) Open(ctx context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error)
+type Difference struct, comparable
+type Difference struct, field A string
+type Difference struct, field B string
+type Difference struct, field Kind DifferenceKind
+type Difference struct, field PathA string
+type Difference struct, field PathB string
+type Difference struct, field order PathA PathB Kind A B
+type Difference, method (Difference) String() string
+type DifferenceKind string
 type Direction struct, field DirectionType []DirectionType `xml:"direction-type"`
 type Direction struct, field Directive *YesNo `xml:"directive,attr,omitempty"`
 type Direction struct, field Footnote *FormattedText `xml:"footnote,omitempty"`

@@ -43,11 +43,13 @@ returns the text that `Report.Format` writes.
 Several option and value structs are comparable today, including
 `DecodeOptions`, `EncodeOptions`, `MXLOptions`, `SourceOptions`,
 `ModelOptions`, `GraphOptions`, `MXLGraphOptions`, `DecodeAssessmentOptions`,
-`PartDefinition`, `MXLRootFile`, and
+`CompareOptions`, `Difference`, `PartDefinition`, `MXLRootFile`, and
 `ValidationIssue`. New fields added to these structs are kept comparable
 (scalars or pointers), so `==` on them keeps compiling. Comparability of
 other structs, in particular generated model types, is not guaranteed; see
-[Generated model compatibility](#generated-model-compatibility).
+[Generated model compatibility](#generated-model-compatibility). To compare
+documents, use `Equal` and `Compare`
+([Comparing documents](#comparing-documents)).
 
 `validation.Integer`, `validation.Decimal`, and `validation.Rational` are not
 comparable: `==` on them, or on structs that contain them such as
@@ -359,6 +361,89 @@ from satisfying the interface accidentally.
 
 `AsScorePartwise`, `AsScoreTimewise`, and `AsOpusDocument` safely narrow a
 polymorphic `Document` without a panicking type assertion.
+
+### Comparing documents
+
+`Equal(a, b)` reports whether two documents have identical content, and
+`Compare(a, b, options)` reports where they differ.
+
+The comparison is strict. It compares the documents' data value by value and
+gives no meaning to it: a 2/4 time signature and a 4/8 one, `divisions` of 1
+and of 2 with durations scaled to match, C♯ and D♭, and a partwise score and
+a timewise one are all different documents. What decoding does not keep
+cannot make documents differ: whitespace between elements, comments,
+attribute order, and the spelling of a number in a numeric field (a duration
+of `4` and of `4.0`). Text is content as it is written: `" A "` and `"A"`
+differ, and so do `2` and `2.0` where the model holds text, as in `beats`.
+
+| Case | Result |
+| --- | --- |
+| A nil `Document` or a nil pointer of a root type | "No document": equal to any other nil, different from every document (one difference at `/`, `only-in-a` or `only-in-b`) |
+| A cyclic or too deeply nested opus, which `Encode` refuses | Equal only to itself by identity; against any other document, one `not-comparable` difference at `/` with the reason. For an opus that is both, the reason is the one `Compare` meets first, which need not be `Encode`'s |
+| A `Document` that is none of the three roots (a type embedding one), which `Encode` refuses | Equal to nothing, itself included: one `not-comparable` difference at `/` |
+| Different root types | Different: one `element` difference at `/` with the two root names |
+| `XMLName`, of a root and of an opus nested in an opus | Ignored: a decoded document equals a constructed one with the same content |
+| An absent optional field and a present zero value | Different: an element that is not there differs from an empty one |
+| Order of children | Significant |
+| A nil slice and an empty one | Equal |
+| `NaN` and `NaN`; `+0` and `-0` | Equal, so a document equals a copy of itself (`reflect.DeepEqual` says otherwise for `NaN`) |
+
+The rows are checked in that order: a nil document against a cyclic opus is
+`only-in-b`, and a cyclic opus against a score is `not-comparable`.
+
+`Compare` returns a `Comparison`: the `Differences` and `Truncated`, true when
+there are more than it lists. `CompareOptions.MaxDifferences` sets how many to
+list: zero means `DefaultMaxDifferences` (100) and a negative value means all
+of them. The search stops as soon as it has found one more than the limit.
+Differences are listed in the order of the documents: an element's attributes,
+then its content in the order of the model's fields.
+
+Each `Difference` has the paths `PathA` and `PathB` of the place in the first
+and in the second document, a `Kind`, and what the two documents have there
+as text, `A` and `B`. `Difference.String` writes one as a line:
+
+```text
+/score-partwise/part[1]/measure[2]/note[5]/pitch/step: "C" != "D"
+/score-partwise/@version: "4.0" != "3.1"
+/score-partwise/part[1]/measure[1]/note[7]: only in b
+/score-partwise/part[1]/measure[1]/attributes[1] (in b: /score-partwise/part[1]/measure[1]/note[1]): element <attributes> != <note>
+```
+
+| `Kind` | Meaning | `PathA`, `PathB` | `A`, `B` |
+| --- | --- | --- | --- |
+| `DifferenceValue` | Both documents have the element or attribute, with different values | Both set | The two values; numbers as `Encode` writes them |
+| `DifferenceElement` | Different elements at one position of a parent's ordered children, or different roots | Both set | The two element names |
+| `DifferenceOnlyInA` | Only the first document has the element or attribute | `PathA` only | Empty |
+| `DifferenceOnlyInB` | Only the second document has it | `PathB` only | Empty |
+| `DifferenceNotComparable` | A document cannot be compared | Both `/` | The reasons: `cyclic`, `nested too deeply`, `unsupported document type`; empty for a document that can be |
+
+A path is an XPath location path into the XML the document stands for. A
+number after a name is the element's place among its parent's children of
+that name, counted from 1. An element that the model keeps in a list always
+has one, and so has every element of a parent's ordered children (the
+model's `Content` lists), even where the schema allows only one; an element
+held by a single field has none. An attribute is `@name`, with the `xml:` and
+`xlink:` prefixes for the two namespaces the schema uses. The difference of
+an element's text is at the element's own path.
+
+`PathA` and `PathB` are the same unless the difference is of two elements, or
+earlier children of some parent differ in name, which gives the element
+another number in the second document. A document built in code can hold an ordered child with no element
+in it, or with more than one, which no XML has; its step is `*[n]`, its
+position among the ordered children.
+
+The comparison is positional: children are compared in order, with no attempt
+to align them. A child inserted into one document therefore makes every later
+sibling differ from the one at its position in the other. Different elements
+at one position are one difference, not one for every value in them.
+
+`Equal` and `Compare` do not modify their arguments and may run concurrently
+on documents that nothing modifies. They take the time of reading the XML the
+documents stand for, up to the last difference reported. An opus nested in
+several places of an opus is not compared again with the same counterpart
+once the two are found equal; where they differ, every place is a difference,
+so with a negative limit a few levels of such nesting give many times more
+differences than the documents have elements.
 
 ## Generated model
 

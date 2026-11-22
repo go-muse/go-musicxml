@@ -182,6 +182,22 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   (`ContextFamilyTiming` … `ContextFamilyDictionaries`, `ContextFamilyAll`),
   and `ContextResult.Family` returns the family of a record.
 
+- `Equal` reports whether two documents have identical content, and `Compare`
+  reports where they differ. Each `Difference` has the XPath location paths of
+  the place in the two documents (`PathA`, `PathB`, such as
+  `/score-partwise/part[1]/measure[2]/note[5]/pitch/step`), a `DifferenceKind`
+  (`value`, `element`, `only-in-a`, `only-in-b`, `not-comparable`) and what
+  the two documents have there, and prints as one line.
+  `CompareOptions.MaxDifferences` limits how many are listed
+  (`DefaultMaxDifferences` is 100, a negative value lists all) and
+  `Comparison.Truncated` says whether there were more. The comparison is
+  strict and positional: it compares the data as it is, with no musical
+  interpretation and no alignment of children, so 2/4 and 4/8, or the same
+  music under another `divisions`, are different documents, while whitespace
+  between elements, comments, attribute order and the spelling of a number in
+  a numeric field are not content.
+  `XMLName` is ignored, so a constructed document equals the decoded one with
+  the same content.
 - `ValidationLine` (`LineDecoder`, `LineSource`, `LineModel`), `RuleLine` and
   `AllowedLineOverlap` name the validation line of every rule revision of a
   public profile and the only accepted overlap of lines 2 and 3; tests keep
