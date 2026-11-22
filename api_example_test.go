@@ -35,6 +35,35 @@ func ExampleDecode() {
 	// timewise measures: 0
 }
 
+func ExampleCompare() {
+	decode := func(step string) musicxml.Document {
+		document, err := musicxml.Decode(strings.NewReader(
+			`<score-partwise version="4.0"><part-list>` +
+				`<score-part id="P1"><part-name>Flute</part-name></score-part>` +
+				`</part-list><part id="P1"><measure number="1">` +
+				`<note><pitch><step>` + step + `</step><octave>4</octave></pitch>` +
+				`<duration>4</duration></note></measure></part></score-partwise>`,
+		))
+		if err != nil {
+			log.Fatal(err)
+		}
+		return document
+	}
+	first, second := decode("C"), decode("D")
+
+	fmt.Println("equal:", musicxml.Equal(first, second))
+	result := musicxml.Compare(first, second, musicxml.CompareOptions{MaxDifferences: 10})
+	for _, difference := range result.Differences {
+		fmt.Println(difference)
+	}
+	fmt.Println("more:", result.Truncated)
+
+	// Output:
+	// equal: false
+	// /score-partwise/part[1]/measure[1]/note[1]/pitch/step: "C" != "D"
+	// more: false
+}
+
 func ExampleDecodeContext() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

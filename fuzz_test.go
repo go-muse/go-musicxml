@@ -49,6 +49,10 @@ func FuzzDocumentRoundTrip(f *testing.F) {
 		if !reflect.DeepEqual(document, decodedAgain) {
 			t.Fatal("document model changed after round-trip")
 		}
+		// Whatever reflect.DeepEqual calls equal, Equal and Compare do.
+		if found := Compare(document, decodedAgain, CompareOptions{}); !Equal(document, decodedAgain) || len(found.Differences) != 0 {
+			t.Fatalf("Equal and Compare differ from reflect.DeepEqual: %v", found.Differences)
+		}
 
 		_ = Validate(document)
 	})

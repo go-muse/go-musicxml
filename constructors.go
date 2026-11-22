@@ -14,9 +14,9 @@ type PartDefinition struct {
 // Each definition is added both to PartList and as an empty part body. Measures
 // can then be appended to the corresponding Part entry.
 //
-// The result leaves XMLName empty, while Decode fills it from the input, so
-// clear XMLName before comparing a constructed and a decoded document with
-// reflect.DeepEqual. Encode ignores XMLName.
+// The result leaves XMLName empty, while Decode fills it from the input.
+// Encode and Equal ignore XMLName, so Equal compares a constructed and a
+// decoded document by their content alone; reflect.DeepEqual would not.
 func NewScorePartwise(parts ...PartDefinition) *ScorePartwise {
 	result := &ScorePartwise{
 		Version: Ptr(MusicXMLVersion),
@@ -47,9 +47,9 @@ func (value *ScorePartwise) AddPart(part PartDefinition) {
 // Each definition is added to PartList. Use NewScoreTimewiseMeasure to create
 // measure-local part bodies in the same order.
 //
-// The result leaves XMLName empty, while Decode fills it from the input, so
-// clear XMLName before comparing a constructed and a decoded document with
-// reflect.DeepEqual. Encode ignores XMLName.
+// The result leaves XMLName empty, while Decode fills it from the input.
+// Encode and Equal ignore XMLName, so Equal compares a constructed and a
+// decoded document by their content alone; reflect.DeepEqual would not.
 func NewScoreTimewise(parts ...PartDefinition) *ScoreTimewise {
 	result := &ScoreTimewise{
 		Version: Ptr(MusicXMLVersion),
@@ -74,9 +74,9 @@ func (value *ScoreTimewise) AddPart(part PartDefinition) {
 
 // NewOpusDocument creates an empty MusicXML 4.0 opus.
 //
-// The result leaves XMLName empty, while Decode fills it from the input, so
-// clear XMLName before comparing a constructed and a decoded document with
-// reflect.DeepEqual. Encode ignores XMLName.
+// The result leaves XMLName empty, while Decode fills it from the input.
+// Encode and Equal ignore XMLName, so Equal compares a constructed and a
+// decoded document by their content alone; reflect.DeepEqual would not.
 func NewOpusDocument() *OpusDocument {
 	return &OpusDocument{Version: Ptr(MusicXMLVersion)}
 }
