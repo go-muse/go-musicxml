@@ -411,7 +411,7 @@ func (s *Session) speculativeIdentity(value string, result xsd.IdentityResolutio
 		spec.stop(s, timelineTriggerBudget)
 		return result, false
 	}
-	if s.performanceStash != nil {
+	if s.windowProviderReading() {
 		spec.retained += charge
 	}
 	if spec.identities == nil {
@@ -436,7 +436,7 @@ func (s *Session) speculativeScalarRead(node NodeID, attribute QName, v Evidence
 		spec.stop(s, timelineTriggerBudget)
 		return
 	}
-	if s.performanceStash != nil {
+	if s.windowProviderReading() {
 		spec.retained += charge
 	}
 	spec.scalarReads = append(spec.scalarReads, timelineScalarRead{node: node, attribute: attribute, value: v})
@@ -452,7 +452,7 @@ func (s *Session) speculativeInvalidRead(n *factNode, check XSDCheck) {
 		spec.stop(s, timelineTriggerBudget)
 		return
 	}
-	if s.performanceStash != nil {
+	if s.windowProviderReading() {
 		spec.retained += 64
 	}
 	spec.invalidReads = append(spec.invalidReads, timelineInvalidRead{node: n, check: check})

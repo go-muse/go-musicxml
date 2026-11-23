@@ -234,40 +234,48 @@ type Session struct {
 	performanceStash          *performanceWindowProvider
 	performanceBendEvaluating *performanceWindowBend
 	performanceContract       error
-	speculations              map[RuleKey]*timelineSpeculation
-	speculationKeys           []RuleKey
-	speculationNone           bool
-	speculating               *timelineSpeculation
-	localDocuments            map[*localPlan]localDocumentResult
-	schema                    *schemaSession
-	catalog                   *CompiledCatalog
-	documentID                string
-	profile                   Profile
-	account                   *Account
-	accumulator               *reportAccumulator
-	denseNodes                []*factNode
-	attrChunk                 []retainedAttribute
-	attrOwner                 *factNode
-	attrOwnerBase             []retainedAttribute
-	nodeCount                 int
-	attrCount                 int
-	nodes                     map[NodeID]*factNode
-	sequence                  []NodeID
-	stack                     []*factNode
-	decisions                 map[decisionID]Decision
-	successful                map[RuleKey]*outcomeBits
-	strings                   map[string]string
-	documentPrerequisites     map[RuleKey]*documentPrerequisite
-	contexts                  map[ContextKey]ContextFact
-	identities                map[string]*identityIndex
-	registered                map[decisionID]bool
-	terminalCause             error
-	inputComplete, finished   bool
-	enumerationIncomplete     bool
-	collectingIdentity        bool
-	root                      *factNode
-	rejectedRootName          QName
-	retained, depth           int64
+	// spans is the spans provider's provisional work; spansStash is set while
+	// it publishes provisionally, and windowsClosed counts the windows it
+	// had to read.
+	spansIndexed            bool
+	spans                   *windowSpans
+	spansStash              *windowSpans
+	spansContract           error
+	windowsClosed           int
+	speculations            map[RuleKey]*timelineSpeculation
+	speculationKeys         []RuleKey
+	speculationNone         bool
+	speculating             *timelineSpeculation
+	localDocuments          map[*localPlan]localDocumentResult
+	schema                  *schemaSession
+	catalog                 *CompiledCatalog
+	documentID              string
+	profile                 Profile
+	account                 *Account
+	accumulator             *reportAccumulator
+	denseNodes              []*factNode
+	attrChunk               []retainedAttribute
+	attrOwner               *factNode
+	attrOwnerBase           []retainedAttribute
+	nodeCount               int
+	attrCount               int
+	nodes                   map[NodeID]*factNode
+	sequence                []NodeID
+	stack                   []*factNode
+	decisions               map[decisionID]Decision
+	successful              map[RuleKey]*outcomeBits
+	strings                 map[string]string
+	documentPrerequisites   map[RuleKey]*documentPrerequisite
+	contexts                map[ContextKey]ContextFact
+	identities              map[string]*identityIndex
+	registered              map[decisionID]bool
+	terminalCause           error
+	inputComplete, finished bool
+	enumerationIncomplete   bool
+	collectingIdentity      bool
+	root                    *factNode
+	rejectedRootName        QName
+	retained, depth         int64
 
 	attributeEnumerationIncomplete bool
 }
@@ -960,6 +968,8 @@ func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snaps
 	s.dropWindowConsumers(consumerFailedUnsettled)
 	s.dropWindowPerformance("unsettled")
 	addCause(s.performanceContract)
+	s.dropWindowSpans("unsettled")
+	addCause(s.spansContract)
 	if finishObserver != nil {
 		finishObserver("finished", s.account)
 	}
