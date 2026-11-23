@@ -442,16 +442,15 @@ func spanRoleAvailability(e *spanEndpoint, b spanFamilyBinding) {
 // capture keeps, for an endpoint a window read, what the passes of Finish
 // would read from its node and its note.
 func (c *spanCollector) capture(r *contextReader, n *factNode, e *spanEndpoint) {
-	if c.window == nil || r.err != nil {
+	// A counting provider reads its endpoints' nodes while they are at
+	// hand and captures nothing.
+	if c.window == nil || c.window.counting() || r.err != nil {
 		return
 	}
 	charge := spanCapturedBytes
-	k := &spanCaptured{}
-	if c.window.project {
-		k.origins = r.s.nodeOrigins(n)
-		for _, origin := range k.origins {
-			charge += spanWindowLocationSize + ownedStringBytes(origin.Path) + 96
-		}
+	k := &spanCaptured{origins: r.s.nodeOrigins(n)}
+	for _, origin := range k.origins {
+		charge += spanWindowLocationSize + ownedStringBytes(origin.Path) + 96
 	}
 	if r.err = r.s.retain(charge); r.err != nil {
 		return
@@ -557,6 +556,8 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 		}
 		pending1 = c.endpoints
 	} else {
+		// With no spans projection the windows counted every fact and kept
+		// no endpoint: the passes below find nothing to associate.
 		// The endpoints windows read met their local gaps when their
 		// windows closed; those read here and the waiting extends meet them
 		// now.

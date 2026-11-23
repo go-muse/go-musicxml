@@ -299,8 +299,8 @@ func TestWindowSpansDeferredExtendMeetsItsGapsInOrder(t *testing.T) {
 	}
 }
 
-// What a window keeps of an endpoint's node is charged: the record, and the
-// origins when the spans projection is selected.
+// What a window keeps of an endpoint's node is charged: the record and the
+// origins. A counting provider, with no spans projection, captures nothing.
 func TestWindowSpansCaptureIsCharged(t *testing.T) {
 	for _, project := range []bool{false, true} {
 		r, k := spanWindowUnit(t)
@@ -315,15 +315,19 @@ func TestWindowSpansCaptureIsCharged(t *testing.T) {
 		if r.err != nil {
 			t.Fatal(r.err)
 		}
-		want := spanCapturedBytes
-		if project {
-			want += spanWindowLocationSize + 96
+		charged := r.s.retained - before
+		if !project {
+			if e.captured != nil || charged != 0 || k.capturedBytes != 0 {
+				t.Fatalf("a counting provider captured %+v and charged %d", e.captured, charged)
+			}
+			continue
 		}
-		if e.captured == nil || (len(e.captured.origins) != 0) != project {
-			t.Fatalf("project=%v: captured %+v", project, e.captured)
+		want := spanCapturedBytes + spanWindowLocationSize + 96
+		if e.captured == nil || len(e.captured.origins) != 1 {
+			t.Fatalf("captured %+v", e.captured)
 		}
-		if charged := r.s.retained - before; charged < want || k.capturedBytes != charged {
-			t.Fatalf("project=%v: charged %d and counted %d, the record alone is %d", project, charged, k.capturedBytes, want)
+		if charged < want || k.capturedBytes != charged {
+			t.Fatalf("charged %d and counted %d, the record and its origin are %d", charged, k.capturedBytes, want)
 		}
 	}
 }
@@ -378,16 +382,23 @@ func TestWindowSpansAdoptionReleasesItsLists(t *testing.T) {
 	lists += int64(cap(k.ranges)) * spanWindowRangeBytes
 	note := spanUnitNode(r, spanRole_note, nil)
 	e := &spanEndpoint{ref: NodeRef{s.documentID, note.header.ID}}
+	k.project = true
 	k.collector.capture(r, note, e)
 	k.collector.endpoints = []*spanEndpoint{e}
 	if r.err != nil || e.captured == nil || k.capturedBytes == 0 {
 		t.Fatalf("capture: %v, %+v, %d", r.err, e.captured, k.capturedBytes)
 	}
 	lists += k.capturedBytes
+	// The tied runs of a counting provider end with it as well.
+	before := s.retained
+	if err := k.keepTied(s, 700); err != nil || s.retained-before != 700 || k.persistentBytes() != k.listBytes()+700 {
+		t.Fatalf("tied runs: %v, charged %d, persistent %d of lists %d", err, s.retained-before, k.persistentBytes(), k.listBytes())
+	}
+	lists += 700
 	if err := k.kept.reserve(64); err != nil {
 		t.Fatal(err)
 	}
-	before := s.retained
+	before = s.retained
 	s.spans = k
 	s.windowSpansAdopted(k.collector)
 	if released := before - s.retained; released != lists || lists == 0 || k.kept.bytes != 0 {

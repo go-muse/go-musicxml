@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"slices"
@@ -106,6 +107,46 @@ func TestWindowSpansRiskCases(t *testing.T) {
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}
+	cases, expected := spansWindowRiskCases()
+	for name, data := range cases {
+		t.Run(name, func(t *testing.T) {
+			previous := validationSetWindowedStrategy(false)
+			buffered := windowedReports(t, name, data)
+			validationSetWindowedStrategy(true)
+			adopted, endpoints := 0, 0
+			var reasons []string
+			previousObserver := validationSetWindowSpansObserver(func(reason string, count int) {
+				if reason == "" {
+					adopted++
+					endpoints += count
+				} else if !slices.Contains(reasons, reason) {
+					reasons = append(reasons, reason)
+				}
+			})
+			windowed := windowedReports(t, name, data)
+			validationSetWindowSpansObserver(previousObserver)
+			validationSetWindowedStrategy(previous)
+			for label, want := range buffered {
+				if windowed[label] != want {
+					t.Errorf("%s: windowed report differs from buffered", label)
+				}
+			}
+			want := expected[name]
+			switch {
+			case want != "" && !slices.Contains(reasons, want):
+				t.Errorf("windows ended with %v after %d adoptions, want %q", reasons, adopted, want)
+			case want == "" && (adopted == 0 || endpoints == 0 || len(reasons) != 0):
+				t.Errorf("windows adopted %d times with %d endpoints; other ends: %v", adopted, endpoints, reasons)
+			}
+			t.Logf("adopted=%d endpoints=%d reasons=%v", adopted, endpoints, reasons)
+		})
+	}
+}
+
+// spansWindowRiskCases are documents where a later fact decides what an
+// earlier window read, or whose windows cannot be adopted, with the end of
+// the windows' work each of the latter must report.
+func spansWindowRiskCases() (map[string][]byte, map[string]string) {
 	m := performanceWindowMeasure
 	d := performanceWindowDivisions
 	plain := spansWindowNote("C", "")
@@ -200,6 +241,26 @@ func TestWindowSpansRiskCases(t *testing.T) {
 			m("1", d+spansWindowNote("C", lyric(`<extend/>`)+lyric(``))),
 			m("2", spansWindowNote("C", lyric(`<extend/>`))),
 		),
+		"numbered lyric twice on one note, extends without a type in version 2.0": []byte(strings.Replace(string(performanceWindowDocument(
+			m("1", d+spansWindowNote("C", lyric(`<extend/>`)+lyric(`<extend/>`))),
+			m("2", spansWindowNote("C", lyric(`<extend/>`)+lyric(`<extend/>`)+lyric(`<extend type="stop"/>`))),
+		)), `version="4.0"`, `version="2.0"`, 1)),
+		"tied on unpitched notes and rests": performanceWindowDocument(
+			m("1", d+tied("start")+`<note><unpitched><display-step>C</display-step><display-octave>4</display-octave></unpitched><duration>2</duration><voice>1</voice><type>quarter</type><notations><tied type="start"/></notations></note>`),
+			m("2", tied("stop")+tied("start")),
+			m("3", tied("stop")+`<note><rest/><duration>2</duration><voice>1</voice><type>quarter</type><notations><tied type="stop"/></notations></note>`),
+		),
+		"tied pair whose stop is earlier in time": performanceWindowDocument(
+			m("1", d+tied("start")+`<backup><duration>2</duration></backup>`+plain),
+			m("2", plain+`<backup><duration>2</duration></backup>`+tied("stop")),
+			m("3", tied("start")+`<backup><duration>2</duration></backup>`+tied("stop")+tied("start")),
+			m("4", tied("stop")),
+		),
+		"numbered tied chains and let-ring": performanceWindowDocument(
+			m("1", d+spansWindowNote("C", spansWindowNotations(`<tied type="start" number="1"/><tied type="start" number="2"/><tied type="let-ring"/>`))),
+			m("2", spansWindowNote("C", spansWindowNotations(`<tied type="continue" number="1"/><tied type="stop" number="2"/>`))),
+			m("3", spansWindowNote("D", spansWindowNotations(`<tied type="stop" number="1"/><tied type="stop" number="2"/><tied type="stop" number="2"/>`))),
+		),
 		"tremolo on notes of different lengths": performanceWindowDocument(
 			m("1", d+strings.Replace(spansWindowNote("C", spansWindowNotations(`<ornaments><tremolo type="start">2</tremolo></ornaments>`)), `<type>quarter</type>`, `<type>half</type>`, 1)+
 				spansWindowNote("D", `<time-modification><actual-notes>2</actual-notes><normal-notes>1</normal-notes></time-modification>`+spansWindowNotations(`<ornaments><tremolo type="stop">2</tremolo></ornaments>`))),
@@ -263,39 +324,7 @@ func TestWindowSpansRiskCases(t *testing.T) {
 		"divisions change behind a backup":    "excursions",
 		"timewise":                            "speculation",
 	}
-	for name, data := range cases {
-		t.Run(name, func(t *testing.T) {
-			previous := validationSetWindowedStrategy(false)
-			buffered := windowedReports(t, name, data)
-			validationSetWindowedStrategy(true)
-			adopted, endpoints := 0, 0
-			var reasons []string
-			previousObserver := validationSetWindowSpansObserver(func(reason string, count int) {
-				if reason == "" {
-					adopted++
-					endpoints += count
-				} else if !slices.Contains(reasons, reason) {
-					reasons = append(reasons, reason)
-				}
-			})
-			windowed := windowedReports(t, name, data)
-			validationSetWindowSpansObserver(previousObserver)
-			validationSetWindowedStrategy(previous)
-			for label, want := range buffered {
-				if windowed[label] != want {
-					t.Errorf("%s: windowed report differs from buffered", label)
-				}
-			}
-			want := expected[name]
-			switch {
-			case want != "" && !slices.Contains(reasons, want):
-				t.Errorf("windows ended with %v after %d adoptions, want %q", reasons, adopted, want)
-			case want == "" && (adopted == 0 || endpoints == 0 || len(reasons) != 0):
-				t.Errorf("windows adopted %d times with %d endpoints; other ends: %v", adopted, endpoints, reasons)
-			}
-			t.Logf("adopted=%d endpoints=%d reasons=%v", adopted, endpoints, reasons)
-		})
-	}
+	return cases, expected
 }
 
 // spansWindowHeavy is a part of measures full of span endpoints of every
@@ -602,4 +631,202 @@ func TestWindowSpansLeaseCoversTheProjection(t *testing.T) {
 		}
 		t.Logf("%s: %d records leased %d bytes, occupy %d", name, len(got.report.Context), got.leased, real)
 	}
+}
+
+// spansContextFacts runs one line with no projection and returns the context
+// facts it charged.
+func spansContextFacts(t *testing.T, data []byte, windowed, model bool) (facts int64, complete bool) {
+	t.Helper()
+	defer validationSetWindowedStrategy(validationSetWindowedStrategy(windowed))
+	defer validationSetFinishObserver(validationSetFinishObserver(func(stage string, account *validation.Account) {
+		if stage == "finished" {
+			facts, _ = account.Usage(validation.BudgetContextFacts)
+		}
+	}))
+	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 34}
+	if model {
+		document, err := Decode(bytes.NewReader(data))
+		if err != nil {
+			return 0, false
+		}
+		report, err := AssessModel(context.Background(), document, ModelOptions{Profile: ProfileModelSemantics, Budgets: big})
+		return facts, err == nil && report.AssessmentComplete
+	}
+	report, err := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceSemantics, Budgets: big})
+	return facts, err == nil && report.AssessmentComplete
+}
+
+// spansWindowRandom is a random part of notes with tied marks of every
+// shape, lyrics with extends, slurs and beams, in a random version.
+func spansWindowRandom(seed int64) []byte {
+	rng := rand.New(rand.NewSource(seed))
+	pick := func(options ...string) string { return options[rng.Intn(len(options))] }
+	var measures []string
+	for i := 0; i < 2+rng.Intn(5); i++ {
+		body := ""
+		if i == 0 {
+			body = performanceWindowDivisions
+		}
+		for j := 0; j < 1+rng.Intn(4); j++ {
+			if rng.Intn(8) == 0 {
+				body += `<backup><duration>2</duration></backup>`
+			}
+			ties, marks, extra := "", "", ""
+			for n := rng.Intn(3); n > 0; n-- {
+				kind := pick("start", "stop", "start", "stop", "continue", "let-ring")
+				number := pick("", "", "", ` number="1"`, ` number="2"`)
+				marks += `<tied type="` + kind + `"` + number + `/>`
+				if kind == "start" || kind == "stop" {
+					if rng.Intn(2) == 0 && !strings.Contains(ties, kind) {
+						ties += `<tie type="` + kind + `"/>`
+					}
+				}
+			}
+			if rng.Intn(4) == 0 {
+				marks += `<slur type="` + pick("start", "stop", "continue") + `" number="` + pick("1", "2") + `"/>`
+			}
+			if rng.Intn(6) == 0 {
+				extra += `<beam number="1">` + pick("begin", "continue", "end") + `</beam>`
+			}
+			if marks != "" {
+				extra += spansWindowNotations(marks)
+			}
+			for n := rng.Intn(3); n > 0 && rng.Intn(3) == 0; n-- {
+				extra += `<lyric` + pick(``, ` number="1"`, ` number="1"`, ` number="2"`) + `><text>la</text>` + pick(``, `<extend/>`, `<extend/>`, `<extend type="start"/>`, `<extend type="stop"/>`) + `</lyric>`
+			}
+			voice := pick("1", "1", "2")
+			note := spansWindowTiedNote(pick("C", "C", "D"), ties, extra)
+			switch rng.Intn(12) {
+			case 0:
+				note = strings.Replace(note, `<pitch><step>C</step><octave>4</octave></pitch>`, `<unpitched/>`, 1)
+			case 1:
+				if ties == "" {
+					note = strings.Replace(strings.Replace(note, `<pitch><step>C</step><octave>4</octave></pitch>`, `<rest/>`, 1), `<pitch><step>D</step><octave>4</octave></pitch>`, `<rest/>`, 1)
+				}
+			}
+			body += strings.Replace(note, `<voice>1</voice>`, `<voice>`+voice+`</voice>`, 1)
+		}
+		measures = append(measures, performanceWindowMeasure(fmt.Sprint(i+1), body))
+	}
+	document := string(performanceWindowDocument(measures...))
+	return []byte(strings.Replace(document, ` version="4.0"`, pick(` version="4.0"`, ` version="4.0"`, ` version="2.0"`, ` version="1.1"`, ``), 1))
+}
+
+// With no projection the windows count the provider's facts and keep no
+// endpoint. The count is the buffered provider's on every document: the
+// risk cases, random documents full of tied marks and typeless extends, and
+// the corpus; on both lines.
+func TestWindowSpansCountedFactsMatchBuffered(t *testing.T) {
+	if raceEnabled {
+		t.Skip("slow under the race detector")
+	}
+	documents, _ := spansWindowRiskCases()
+	// A hundred random documents by default, three hundred with the corpus.
+	random := int64(100)
+	if windowedStride() == 1 {
+		random = 300
+	}
+	for seed := int64(0); seed < random; seed++ {
+		documents[fmt.Sprintf("random %d", seed)] = spansWindowRandom(seed)
+	}
+	var files []string
+	for _, dir := range []string{"testdata/official", "testdata/corpus"} {
+		if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err == nil && !info.IsDir() && (strings.HasSuffix(path, ".xml") || strings.HasSuffix(path, ".musicxml")) {
+				files = append(files, path)
+			}
+			return err
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i := 0; i < len(files); i += windowedStride() {
+		data, err := os.ReadFile(files[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+		documents[files[i]] = data
+	}
+	adopted, counted := 0, 0
+	defer validationSetWindowSpansObserver(validationSetWindowSpansObserver(func(reason string, endpoints int) {
+		if reason == "" {
+			adopted++
+			counted += endpoints
+		}
+	}))
+	compared := 0
+	for name, data := range documents {
+		for _, model := range []bool{false, true} {
+			want, complete := spansContextFacts(t, data, false, model)
+			got, windowed := spansContextFacts(t, data, true, model)
+			if complete != windowed {
+				t.Errorf("%s model=%v: complete %v buffered, %v windowed", name, model, complete, windowed)
+				continue
+			}
+			if complete && got != want {
+				t.Errorf("%s model=%v: %d context facts windowed, %d buffered\n%s", name, model, got, want, data)
+			}
+			if complete {
+				compared++
+			}
+		}
+	}
+	if compared < 250 || adopted < 200 || counted < 2000 {
+		t.Fatalf("compared %d runs; %d adopted with %d endpoints counted", compared, adopted, counted)
+	}
+	t.Logf("compared %d runs; %d adopted with %d endpoints counted", compared, adopted, counted)
+}
+
+// Counting windows keep no endpoint: with no projection a part full of span
+// marks holds, between windows, the tied runs and nothing that grows with
+// the part; and Finish ends with less than the provider that keeps its
+// endpoints.
+func TestWindowSpansCountingKeepsNoEndpoints(t *testing.T) {
+	if raceEnabled {
+		t.Skip("the race detector changes the heap")
+	}
+	data := spansWindowHeavy(100)
+	big := validation.Budgets{MaxRuleSteps: 1 << 40, MaxBufferedBytes: 1 << 40}
+	measure := func(off bool) (heap, used, finishedHeap, finishedUsed int64, endpoints int) {
+		defer validationSetWindowedStrategy(validationSetWindowedStrategy(true))
+		defer validationSetWindowSpansOff(validationSetWindowSpansOff(off))
+		run := func() {
+			if _, err := InspectXML(context.Background(), bytes.NewReader(data), SourceOptions{Profile: ProfileSourceSemantics, Budgets: big}); err != nil {
+				t.Fatal(err)
+			}
+		}
+		run()
+		defer validationSetWindowSpansObserver(validationSetWindowSpansObserver(func(reason string, count int) {
+			if reason == "" {
+				endpoints += count
+			}
+		}))
+		before := liveHeap()
+		defer validationSetFinishObserver(validationSetFinishObserver(func(stage string, a *validation.Account) {
+			switch stage {
+			case "evaluating":
+				heap = liveHeap() - before
+				used, _ = a.Usage(validation.BudgetBufferedBytes)
+			case "finished":
+				finishedHeap = liveHeap() - before
+				finishedUsed, _ = a.Usage(validation.BudgetBufferedBytes)
+			}
+		}))
+		run()
+		return heap, used, finishedHeap, finishedUsed, endpoints
+	}
+	offHeap, offUsed, offFinishedHeap, offFinishedUsed, _ := measure(true)
+	onHeap, onUsed, onFinishedHeap, onFinishedUsed, endpoints := measure(false)
+	if endpoints < 2600 {
+		t.Fatalf("%d endpoints counted", endpoints)
+	}
+	if onHeap-offHeap > finishHeapNoise || onUsed-offUsed > finishHeapNoise {
+		t.Fatalf("%d endpoints: counting windows hold %d live bytes and charge %d", endpoints, onHeap-offHeap, onUsed-offUsed)
+	}
+	// The buffered path keeps every endpoint to the end of the session.
+	if kept := int64(endpoints) * 1000; offFinishedHeap-onFinishedHeap < kept || offFinishedUsed-onFinishedUsed < kept {
+		t.Fatalf("%d endpoints: Finish ends with %d live bytes and %d charged less than with kept endpoints", endpoints, offFinishedHeap-onFinishedHeap, offFinishedUsed-onFinishedUsed)
+	}
+	t.Logf("%d endpoints: counting windows hold %d live bytes and charge %d; Finish ends %d live bytes and %d charged below kept endpoints", endpoints, onHeap-offHeap, onUsed-offUsed, offFinishedHeap-onFinishedHeap, offFinishedUsed-onFinishedUsed)
+
 }
