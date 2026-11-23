@@ -438,10 +438,11 @@ make check-all
 checks module tidiness and generated files, runs the race detector, and
 performs short fuzzing passes. Both work on a worktree with uncommitted
 changes. When `xmllint` is available, the test suite also runs its external
-XSD conformance pass; Linux CI installs and requires it. CI and the release
-workflow run the same checks on Linux, macOS, and Windows; only the release
-workflow verifies the tag, the changelog entry, and the installation command
-in this README.
+XSD conformance pass; Linux CI installs and requires it. Pull-request CI runs
+these checks on Linux only and without the race detector; see
+[Local checks](CONTRIBUTING.md#local-checks). The release workflow runs all of
+them on Linux, macOS, and Windows, and only it verifies the tag, the changelog
+entry, and the installation command in this README.
 
 ## License
 
