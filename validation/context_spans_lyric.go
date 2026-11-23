@@ -81,8 +81,11 @@ type spanLyricIndex struct {
 	scratch    *spanScratch
 	identities map[NodeID]spanLyricIdentityValue
 	scopes     map[spanLyricScopeKey]Evidence[bool]
-	domains    map[NodeID]Evidence[NodeRef]
+	domains    *spanDomains
 	unnamed    map[NodeRef]Evidence[bool]
+	// kept, when set, holds the part-wide unnamed gaps apart from scratch
+	// that ends with a window.
+	kept *spanScratch
 }
 
 // Include every lyric, even one without an extend. Multiple unnamed lyrics on
@@ -143,7 +146,7 @@ func (index *spanLyricIndex) record(r *contextReader, n *factNode) {
 	// An unavailable identity can compete with the wholly unnamed identity only
 	// when neither axis independently excludes absence. Preserve the cause of
 	// that actual uncertainty rather than synthesizing duplicate ambiguity.
-	domain := spanInheritedDomain(r, note, index.domains)
+	domain := index.domains.inherited(r, note)
 	if r.err != nil {
 		return
 	}
@@ -158,11 +161,15 @@ func (index *spanLyricIndex) record(r *contextReader, n *factNode) {
 		index.unnamed[part] = timelineMergeAvailability(old, gap)
 		return
 	}
-	if r.err = index.scratch.reserve(256 + int64(len(part.DocumentID))); r.err != nil {
+	kept := index.scratch
+	if index.kept != nil {
+		kept = index.kept
+	}
+	if r.err = kept.reserve(256 + int64(len(part.DocumentID))); r.err != nil {
 		return
 	}
 	if index.unnamed == nil {
-		if r.err = index.scratch.reserve(512); r.err != nil {
+		if r.err = kept.reserve(512); r.err != nil {
 			return
 		}
 		index.unnamed = make(map[NodeRef]Evidence[bool])

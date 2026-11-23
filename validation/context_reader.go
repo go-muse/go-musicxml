@@ -20,6 +20,17 @@ type contextReader struct {
 	attributeIntern map[contextAttributeInternKey]*contextAttributeTable
 	elementCache    map[DeclarationID][]contextRole
 	ownerCache      map[ComponentID]*contextAttributeTable
+	// sealed, when set, is the spans provider whose windows this reader must
+	// not read again: Finish has only what the windows kept.
+	sealed *windowSpans
+}
+
+// seal notes a read of n; a read of a window's node by a sealed reader is a
+// defect the session reports.
+func (r *contextReader) seal(n *factNode) {
+	if r.sealed != nil && n != nil {
+		r.sealed.sealedRead(r.s, n.header.ID)
+	}
 }
 
 // A retained declaration is immutable, session-owned evidence. Schema
@@ -45,6 +56,7 @@ func (r *contextReader) sameDeclaration(a, b DeclarationID) bool {
 	return a == b
 }
 func (r *contextReader) matches(n *factNode, role contextRole) bool {
+	r.seal(n)
 	if n == nil || r.b == nil || !r.step(1) || n.header.Declaration.State != EvidenceKnown {
 		return false
 	}
@@ -145,6 +157,7 @@ func (r *contextReader) boundElementRoles(n *factNode) ([]contextRole, bool) {
 // and returned key traversal are charged once; callers must propagate err even
 // when the result is empty. Unavailable declaration evidence proves no exclusion.
 func (r *contextReader) roles(n *factNode) []contextRole {
+	r.seal(n)
 	if !r.step(1) || n == nil || r.b == nil || n.header.Declaration.State != EvidenceKnown {
 		return nil
 	}
@@ -258,6 +271,7 @@ type contextAttributeInternKey struct {
 // may borrow one compact immutable table. A fingerprint collision cannot merge
 // tables or introduce an unbounded collision-bucket scan.
 func (r *contextReader) attributeTable(n *factNode) *contextAttributeTable {
+	r.seal(n)
 	// A run binding identifies one immutable final assessed subject, including
 	// its actual type and public owner evidence. Check that compact identity
 	// before repeating any owner-key hashing on cached negative lookups.
@@ -652,6 +666,7 @@ func (r *contextReader) attributeFingerprint(selected []contextAttributeRole) ([
 }
 
 func (r *contextReader) enumerated(n *factNode) Evidence[bool] {
+	r.seal(n)
 	if r.err != nil {
 		return stateUnknown[bool]("context-interrupted")
 	}
@@ -661,6 +676,7 @@ func (r *contextReader) enumerated(n *factNode) Evidence[bool] {
 	return v
 }
 func (r *contextReader) complete(n *factNode) Evidence[bool] {
+	r.seal(n)
 	if r.err != nil {
 		return stateUnknown[bool]("context-interrupted")
 	}
@@ -670,6 +686,7 @@ func (r *contextReader) complete(n *factNode) Evidence[bool] {
 	return v
 }
 func (r *contextReader) scalar(n *factNode) Evidence[Atomic] {
+	r.seal(n)
 	if n == nil {
 		return Evidence[Atomic]{State: EvidenceAbsent}
 	}
@@ -681,6 +698,7 @@ func (r *contextReader) scalar(n *factNode) Evidence[Atomic] {
 	return v
 }
 func (r *contextReader) attribute(n *factNode, role contextRole) Evidence[Atomic] {
+	r.seal(n)
 	if n == nil {
 		return Evidence[Atomic]{State: EvidenceAbsent}
 	}
@@ -832,6 +850,7 @@ func (r *contextReader) childScalar(n *factNode, role contextRole) Evidence[Atom
 
 // presence distinguishes encoded omission from an XSD-effective scalar default.
 func (r *contextReader) presence(n *factNode, role contextRole) Evidence[bool] {
+	r.seal(n)
 	if n == nil {
 		return Evidence[bool]{State: EvidenceAbsent}
 	}

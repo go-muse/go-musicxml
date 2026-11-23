@@ -147,8 +147,14 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 // and returns the session's owned copy: the record in Report.Context, a record
 // kept only for a resource snapshot, or nil when the session keeps no copy.
 func (s *Session) keepValidatedContextResult(ctx context.Context, in ContextResult) (kept *ContextResult, err error) {
-	stash := s.performanceStash
-	if stash == nil {
+	stash, spans := s.performanceStash, s.spansStash
+	if spans != nil {
+		// As provisional as a performance window's facts.
+		spans.pendingFacts, err = rationalCheckedAdd(BudgetContextFacts, spans.pendingFacts, 1)
+		if err != nil {
+			return nil, err
+		}
+	} else if stash == nil {
 		if err = s.account.Charge(BudgetContextFacts, 1); err != nil {
 			return nil, err
 		}
@@ -254,6 +260,13 @@ func (s *Session) keepValidatedContextResult(ctx context.Context, in ContextResu
 	if stash != nil {
 		charged := s.retained - mark.retained - (s.internRetained - mark.intern)
 		if err = s.stashPerformanceResult(out, charged); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	if spans != nil {
+		charged := s.retained - mark.retained - (s.internRetained - mark.intern)
+		if err = s.stashSpansResult(out, charged); err != nil {
 			return nil, err
 		}
 		return nil, nil

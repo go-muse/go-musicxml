@@ -11,7 +11,7 @@ func TestIndependentContextEmptySpanScratchCancellation(t *testing.T) {
 		"local-tie": func(ctx context.Context, s *Session) error { return spanLocalTiePairs(ctx, s, nil) },
 		"vertical":  func(ctx context.Context, s *Session) error { return spanVerticalMembership(ctx, s, nil) },
 		"part-group": func(ctx context.Context, s *Session) error {
-			return spanPartGroupMembers(&contextReader{ctx: ctx, s: s}, nil)
+			return spanPartGroupMembers(&contextReader{ctx: ctx, s: s}, nil, nil)
 		},
 		"relational": func(ctx context.Context, s *Session) error {
 			r := &contextReader{ctx: ctx, s: s}

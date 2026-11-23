@@ -85,6 +85,14 @@ var (
 	validationSetWindowPerformanceOff = validationlink.Hook[func(bool) bool]("Session.SetWindowPerformanceOff")
 	// validationSetWindowPerformanceObserver reports provisional performance settlement.
 	validationSetWindowPerformanceObserver = validationlink.Hook[func(func(string, int, int)) func(string, int, int)]("Session.SetWindowPerformanceObserver")
+	// validationSetWindowSpansOff disables only windowed spans work.
+	validationSetWindowSpansOff = validationlink.Hook[func(bool) bool]("Session.SetWindowSpansOff")
+	// validationSetWindowSpansTamper breaks one assumption of windowed spans
+	// work after each window: "covered", "retained" or "captured".
+	validationSetWindowSpansTamper = validationlink.Hook[func(string) string]("Session.SetWindowSpansTamper")
+	// validationSetWindowSpansObserver reports how windowed spans work ended:
+	// with no reason when Finish adopted it, else the assumption that failed.
+	validationSetWindowSpansObserver = validationlink.Hook[func(func(string, int)) func(string, int)]("Session.SetWindowSpansObserver")
 	// validationObserveFindingKeyOrder is a test observation point only.
 	validationObserveFindingKeyOrder                 = validationlink.Hook[func(func(bool, int))]("Report.SetFindingKeyObserver")
 	validationShareDictionarySet                     = validationlink.Hook[func(context.Context, *validation.DictionarySet, *validation.Account) (*validation.DictionarySet, error)]("ShareDictionarySet")

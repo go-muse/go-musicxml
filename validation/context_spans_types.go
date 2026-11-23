@@ -100,6 +100,10 @@ type spanEndpoint struct {
 	categoryAvailable   Evidence[bool]
 	order               uint64
 	scoreParts          []NodeRef
+	// versionRole marks an extend a window read whose role waits for the
+	// root's version; captured is what a window kept of the endpoint's node.
+	versionRole bool
+	captured    *spanCaptured
 }
 type contextSpanService struct {
 	Final     bool

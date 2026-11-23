@@ -183,7 +183,7 @@ type spanPartListMember struct {
 	order uint64
 }
 
-func spanPartGroupMembers(r *contextReader, es []*spanEndpoint) error {
+func spanPartGroupMembers(r *contextReader, es []*spanEndpoint, window *windowSpans) error {
 	if !r.step(1) {
 		return r.err
 	}
@@ -203,7 +203,18 @@ func spanPartGroupMembers(r *contextReader, es []*spanEndpoint) error {
 			endpoints[e.ref] = e
 		}
 	}
+	at := 0
 	for order, id := range r.s.sequence {
+		// A score-part is never inside a window; Finish does not read a
+		// window's nodes again.
+		if window != nil {
+			for at < len(window.ranges) && id >= window.ranges[at].end {
+				at++
+			}
+			if at < len(window.ranges) && id >= window.ranges[at].first {
+				continue
+			}
+		}
 		if !r.step(1) {
 			return r.err
 		}
@@ -353,7 +364,11 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 		if !r.step(1) {
 			return
 		}
-		n := r.s.node(e.ref.Node)
+		// An endpoint a window read publishes from what the window kept.
+		var n *factNode
+		if e.captured == nil {
+			n = r.s.node(e.ref.Node)
+		}
 		role := e.payload.Role
 		var start *spanEndpoint
 		if e.payload.Association.State == EvidenceKnown && len(e.payload.Members) == 2 {
@@ -367,14 +382,19 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 			if start != nil && start.payload.Role.State == EvidenceKnown {
 				active = spanBool(start.payload.Role.Value != "diminuendo")
 			}
-			spanPublish(r, key, n, ContextPropertySpanWedgeSpreadActive, active)
+			e.publish(r, key, n, ContextPropertySpanWedgeSpreadActive, active)
 			if start != nil && start.payload.Role.State == EvidenceKnown {
 				active = spanBool(start.payload.Role.Value == "diminuendo")
 			}
-			spanPublish(r, key, n, ContextPropertySpanWedgeNienteActive, active)
+			e.publish(r, key, n, ContextPropertySpanWedgeNienteActive, active)
 		}
 		if e.payload.Family == SpanBeam && role.State == EvidenceKnown {
-			fan := spanDefault(r.attribute(n, spanRole_beam_fan), spanString("none"))
+			var fan Evidence[Atomic]
+			if e.captured != nil {
+				fan = e.captured.fan
+			} else {
+				fan = spanDefault(r.attribute(n, spanRole_beam_fan), spanString("none"))
+			}
 			if start != nil && role.Value == "begin" {
 				if r.err = r.s.retain(256); r.err != nil {
 					return
@@ -383,7 +403,12 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 			}
 			if role.Value == "continue" {
 				applicable := stateUnknown[Atomic]("span-fan-prior-direction-required")
-				present := r.presence(n, spanRole_beam_fan)
+				var present Evidence[bool]
+				if e.captured != nil {
+					present = e.captured.present
+				} else {
+					present = r.presence(n, spanRole_beam_fan)
+				}
 				if present.State == EvidenceAbsent || (present.State == EvidenceKnown && !present.Value) {
 					applicable = spanBool(false)
 				} else if present.State != EvidenceKnown {
@@ -399,7 +424,7 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 						}
 					}
 				}
-				spanPublish(r, key, n, ContextPropertySpanFanApplicable, applicable)
+				e.publish(r, key, n, ContextPropertySpanFanApplicable, applicable)
 				if start != nil && present.State == EvidenceKnown && present.Value {
 					lastFan[start.ref] = fan
 				}
@@ -425,24 +450,28 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 					}
 					value = spanBool(start.pitch == stop.pitch)
 				}
-				spanPublish(r, key, n, ContextPropertySpanPitchEquivalentRecommended, value)
+				e.publish(r, key, n, ContextPropertySpanPitchEquivalentRecommended, value)
 			}
 		}
 		if e.payload.Family == SpanTie && role.State == EvidenceKnown && e.payload.Anchor.State == EvidenceKnown {
-			note := r.s.node(e.payload.Anchor.Value.Node)
 			attr, property := spanRole_noteAttack, ContextPropertySpanTieAttackRecommended
 			if role.Value == "start" {
 				attr = spanRole_noteRelease
 				property = ContextPropertySpanTieReleaseRecommended
 			}
-			present := r.presence(note, attr)
+			var present Evidence[bool]
+			if e.captured != nil {
+				present = e.captured.present
+			} else {
+				present = r.presence(r.s.node(e.payload.Anchor.Value.Node), attr)
+			}
 			value := stateUnavailable[bool, Atomic](present)
 			if present.State == EvidenceAbsent {
 				value = spanBool(true)
 			} else if present.State == EvidenceKnown {
 				value = spanBool(!present.Value)
 			}
-			spanPublish(r, key, n, property, value)
+			e.publish(r, key, n, property, value)
 		}
 		if e.payload.Anchor.State == EvidenceKnown && role.State == EvidenceKnown && (role.Value == "start" || role.Value == "stop") {
 			k, ok, err := spanNoteKey(r.ctx, r.s, e)
@@ -465,7 +494,7 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 							value = spanBool(prev.payload.Role.Value == "stop")
 						}
 					}
-					spanPublish(r, key, n, ContextPropertySpanSameNoteOrderRecommended, value)
+					e.publish(r, key, n, ContextPropertySpanSameNoteOrderRecommended, value)
 				}
 				if _, ok := lastNote[k]; !ok {
 					if r.err = r.s.retain(256); r.err != nil {
@@ -476,11 +505,25 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 			}
 		}
 		if e.payload.Family == SpanTremolo && role.State == EvidenceKnown && (role.Value == "start" || role.Value == "stop") {
-			spanTremoloFacts(r, key, n, e, timeline)
+			if e.captured != nil {
+				e.publish(r, key, n, ContextPropertySpanTremoloRatioRecommended, e.captured.tremolo[0])
+				e.publish(r, key, n, ContextPropertySpanTremoloDurationRecommended, e.captured.tremolo[1])
+			} else {
+				spanTremoloFacts(r, key, n, e, timeline)
+			}
 		}
 	}
 }
-func spanTremoloFacts(r *contextReader, key RuleKey, n *factNode, e *spanEndpoint, timeline *timelineService) {
+
+func spanTremoloFacts(r *contextReader, key RuleKey, n *factNode, _ *spanEndpoint, timeline *timelineService) {
+	spanTremoloEach(r, n, timeline, func(property ContextProperty, v Evidence[Atomic]) {
+		spanPublish(r, key, n, property, v)
+	})
+}
+
+// spanTremoloEach gives emit the two tremolo recommendations of a start or
+// stop, in the order they are published.
+func spanTremoloEach(r *contextReader, n *factNode, timeline *timelineService, emit func(ContextProperty, Evidence[Atomic])) {
 	note := spanAncestor(r, n, spanRole_note)
 	mod, me := r.child(note, spanRole_noteModification)
 	ratio := stateUnknown[Atomic]("span-tremolo-cumulative-tuplet-ratio")
@@ -500,7 +543,7 @@ func spanTremoloFacts(r *contextReader, key RuleKey, n *factNode, e *spanEndpoin
 			ordinary = true
 		}
 	}
-	spanPublish(r, key, n, ContextPropertySpanTremoloRatioRecommended, ratio)
+	emit(ContextPropertySpanTremoloRatioRecommended, ratio)
 	duration := stateUnknown[Atomic]("span-tremolo-duration-context-required")
 	if ratio.State != EvidenceKnown {
 		duration = stateUnavailable[Atomic, Atomic](ratio)
@@ -590,5 +633,5 @@ func spanTremoloFacts(r *contextReader, key RuleKey, n *factNode, e *spanEndpoin
 			duration = stateUnavailable[Atomic, Atomic](dots)
 		}
 	}
-	spanPublish(r, key, n, ContextPropertySpanTremoloDurationRecommended, duration)
+	emit(ContextPropertySpanTremoloDurationRecommended, duration)
 }

@@ -217,7 +217,7 @@ func TestSpanRound3UnnamedLyricScopePreservesIdentityEvidence(t *testing.T) {
 			part := NodeRef{r.s.documentID, 1001}
 			scratch := spanScratch{s: r.s}
 			defer scratch.release()
-			index := spanLyricIndex{scratch: &scratch, domains: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}
+			index := spanLyricIndex{scratch: &scratch, domains: &spanDomains{index: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}}
 			if axis == "duplicate-unknown-domain" {
 				index.domains = nil
 				part = NodeRef{}
@@ -321,10 +321,10 @@ func TestSpanRound3LyricDomainIndexScratchAndCancellation(t *testing.T) {
 			r.ctx = &rationalCancelContext{Context: context.Background(), at: cancelAt}
 		}
 		scratch := spanScratch{s: r.s}
-		index := spanLyricIndex{scratch: &scratch, domains: map[NodeID]Evidence[NodeRef]{}}
+		index := spanLyricIndex{scratch: &scratch, domains: &spanDomains{index: map[NodeID]Evidence[NodeRef]{}}}
 		for i := 0; i < count && r.err == nil; i++ {
 			note := spanUnitNode(r, spanRole_note, nil)
-			index.domains[note.header.ID] = Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{r.s.documentID, 1001}}
+			index.domains.index[note.header.ID] = Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{r.s.documentID, 1001}}
 			for j := 0; j < 2 && r.err == nil; j++ {
 				index.record(r, spanUnitNode(r, spanRole_noteLyric, note))
 			}
@@ -376,7 +376,7 @@ func TestSpanRound3PartialLyricIdentityRetainsKnownAxis(t *testing.T) {
 					part := NodeRef{r.s.documentID, 1001}
 					scratch := spanScratch{s: r.s}
 					defer scratch.release()
-					index := spanLyricIndex{scratch: &scratch, domains: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}
+					index := spanLyricIndex{scratch: &scratch, domains: &spanDomains{index: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}}
 					unavailableAxis := spanRole_lyric_number
 					if knownAxis == spanRole_lyric_number {
 						unavailableAxis = spanRole_lyric_name
@@ -412,7 +412,7 @@ func TestSpanRound3PartialLyricIdentityNeedsKnownStringAxis(t *testing.T) {
 				part := NodeRef{r.s.documentID, 1001}
 				scratch := spanScratch{s: r.s}
 				defer scratch.release()
-				index := spanLyricIndex{scratch: &scratch, domains: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}
+				index := spanLyricIndex{scratch: &scratch, domains: &spanDomains{index: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}}
 				unavailableAxis := spanRole_lyric_number
 				if axis == spanRole_lyric_number {
 					unavailableAxis = spanRole_lyric_name
@@ -442,7 +442,7 @@ func TestSpanRound3ExcludedUnavailableSiblingKeepsUnnamedCauseIndependent(t *tes
 				part := NodeRef{r.s.documentID, 1001}
 				scratch := spanScratch{s: r.s}
 				defer scratch.release()
-				index := spanLyricIndex{scratch: &scratch, domains: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}
+				index := spanLyricIndex{scratch: &scratch, domains: &spanDomains{index: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}}
 				var excluded []*factNode
 				for _, named := range []struct {
 					axis contextRole

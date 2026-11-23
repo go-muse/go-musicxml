@@ -231,6 +231,7 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	if windowObserver != nil {
 		windowObserver(w.root, w.first, w.end)
 	}
+	s.windowsClosed++
 	held := len(s.accumulator.heldOutcomes) + len(s.accumulator.heldFindings)
 	bound, err := s.bindClosed(ctx, w.root, w.first, w.end)
 	if err != nil {
@@ -247,6 +248,9 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	}
 	if !bound || proved {
 		s.stopWindowPerformance("unbound")
+		if err := s.unreadWindowSpans(ctx); err != nil {
+			return err
+		}
 		if windowRulesObserver != nil {
 			windowRulesObserver(false, s.windowKeptCount())
 		}
@@ -256,13 +260,19 @@ func (s *Session) closeWindow(ctx context.Context, w evaluationWindow) error {
 	if windowRulesObserver != nil {
 		windowRulesObserver(true, s.windowKeptCount())
 	}
-	if err != nil || !evaluated {
+	if err != nil {
 		return err
+	}
+	if !evaluated {
+		return s.unreadWindowSpans(ctx)
 	}
 	if err := s.evaluateWindowConsumers(ctx, w); err != nil {
 		return err
 	}
-	return s.evaluateWindowPerformance(ctx, w)
+	if err := s.evaluateWindowPerformance(ctx, w); err != nil {
+		return err
+	}
+	return s.evaluateWindowSpans(ctx, w)
 }
 
 // closeSegment is called when n closes; a segment is bound there with its
