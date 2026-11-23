@@ -48,6 +48,18 @@ type windowSpans struct {
 	// capturedBytes that of what endpoints captured of their nodes.
 	recordBytes   int64
 	capturedBytes int64
+
+	// Counting windows (no spans projection) keep no endpoints: counted is
+	// how many they read, versionFacts the facts published only if an
+	// extend without a type starts a span, and tied the association of each
+	// tied identity so far, with the domains an unidentified tied endpoint
+	// withholds.
+	counted      int
+	versionFacts int64
+	tied         map[spanAssociationKey]*spanTiedRun
+	tiedPoisoned map[NodeRef]bool
+	tiedAll      bool
+	tiedBytes    int64
 	// retained is what the provisional state holds of the session's charge,
 	// record payloads included; a drop releases it.
 	retained int64
@@ -189,10 +201,20 @@ func (s *Session) evaluateWindowSpans(ctx context.Context, w evaluationWindow) e
 	}
 	s.spansStash = k
 	s.speculating = spec
-	mark := k.mark(s)
+	mark, persistent := k.mark(s), k.persistentBytes()
 	err := k.read(ctx, s, spec.service, w)
-	// Stashed results are the windows' own, unlike what a mark sets apart.
-	k.retained += k.since(s, mark) + k.recordBytes - mark.records
+	if own := k.since(s, mark); k.counting() && err == nil {
+		// A counting window leaves its lists and tied runs and nothing else.
+		kept := k.persistentBytes() - persistent
+		if own > kept {
+			s.releaseFactBytes(own - kept)
+		}
+		k.retained += kept
+	} else {
+		// Stashed results are the windows' own, unlike what a mark sets
+		// apart.
+		k.retained += own + k.recordBytes - mark.records
+	}
 	s.speculating = nil
 	s.spansStash = nil
 	// The lyric identities and scopes of a note and the window's domain
@@ -232,8 +254,19 @@ func (k *windowSpans) read(ctx context.Context, s *Session, service *timelineSer
 			c.mergeLocalGap(e)
 			continue
 		}
+		if k.counting() {
+			continue
+		}
 		if err := k.deferRole(s, e); err != nil {
 			return err
+		}
+	}
+	if k.counting() {
+		// Nothing later needs these endpoints: their facts are counted and
+		// the tied runs advanced while the window's nodes are at hand.
+		k.countAndDiscard(r)
+		if r.err != nil {
+			return r.err
 		}
 	}
 	if err := k.addRange(s, w); err != nil {
@@ -604,6 +637,9 @@ func (s *Session) adoptWindowSpans(ctx context.Context, key RuleKey, p *contextP
 			break
 		}
 	}
+	if k.counting() && r.err == nil {
+		k.countOutside(r)
+	}
 	s.spansStash = nil
 	if r.err != nil {
 		return nil, nil, r.err
@@ -705,19 +741,20 @@ func (s *Session) windowSpansAdopted(c *spanCollector) {
 	if k.retained < 0 && s.spansContract == nil {
 		s.spansContract = contract("window spans", "released more than it retained")
 	}
-	// The lists that carried the windows' work to Finish and what the
-	// endpoints captured for its passes end here; the endpoints stay
-	// charged with the provider, as the buffered provider's do.
+	// The lists that carried the windows' work to Finish, the tied runs and
+	// what the endpoints captured for its passes end here; the endpoints
+	// stay charged with the provider, as the buffered provider's do.
 	for _, e := range c.endpoints {
 		e.captured = nil
 	}
-	s.releaseFactBytes(k.listBytes() + k.capturedBytes)
+	s.releaseFactBytes(k.persistentBytes() + k.capturedBytes)
 	k.adopted = true
 	k.retained = 0
 	k.records, k.deferred, k.gapLog, k.ranges, k.outer = nil, nil, nil, nil, nil
+	k.tied, k.tiedPoisoned, k.tiedBytes = nil, nil, 0
 	k.collector, k.reader = nil, nil
 	if windowSpansObserver != nil {
-		windowSpansObserver("", len(c.endpoints))
+		windowSpansObserver("", k.counted+len(c.endpoints))
 	}
 }
 
@@ -727,9 +764,9 @@ func (s *Session) dropWindowSpans(reason string) {
 	if k == nil || k.adopted || k.collector == nil {
 		return
 	}
-	endpoints := 0
+	endpoints := k.counted
 	if c := k.collector; c != nil {
-		endpoints = len(c.endpoints)
+		endpoints += len(c.endpoints)
 	}
 	k.kept.release()
 	if k.retained > 0 {
@@ -740,7 +777,8 @@ func (s *Session) dropWindowSpans(reason string) {
 	k.retained = 0
 	k.collector, k.reader = nil, nil
 	k.records, k.deferred, k.gapLog, k.ranges, k.index, k.outer = nil, nil, nil, nil, nil, nil
-	k.pendingFacts = 0
+	k.tied, k.tiedPoisoned, k.tiedBytes = nil, nil, 0
+	k.pendingFacts, k.versionFacts = 0, 0
 	if k.failed != "" {
 		reason = k.failed
 	}
