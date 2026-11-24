@@ -145,7 +145,7 @@ select_packages() {
 # shard 2 runs the root package with the same pattern skipped. A root test
 # either matches the pattern or does not, and examples and fuzz seeds never
 # match it, so each of them runs in exactly one shard.
-check_test_shard_pattern='^Test[A-F]'
+check_test_shard_pattern='^Test[A-E]'
 
 stage_test() {
     stage "go test"
