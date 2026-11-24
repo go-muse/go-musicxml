@@ -20,6 +20,7 @@ import (
 )
 
 func TestIndependentContextDefaultResourceMatrix(t *testing.T) {
+	skipInShortTier(t)
 	t.Parallel()
 	fixtures := map[string]string{}
 	for _, count := range []int{100, 1000} {

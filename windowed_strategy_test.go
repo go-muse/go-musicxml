@@ -134,6 +134,7 @@ func TestWindowedStrategyMatchesBuffered(t *testing.T) {
 // findings in strictly increasing key order. The windowed engine sorts by this
 // key.
 func TestFindingKeysFollowInsertionOrder(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}
@@ -184,6 +185,7 @@ func TestFindingKeysFollowInsertionOrder(t *testing.T) {
 // nodes outside them, the skeleton that stays until Finish, are the header and
 // the parts. The buffered strategy opens and binds none.
 func TestWindowsCoverMeasures(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}
@@ -337,6 +339,7 @@ const windowedTimewiseScore = `<?xml version="1.0" encoding="UTF-8"?>
 // attribute on the root or a part, a timewise score, and input cut off
 // inside a measure. The buffered engine stores their findings in key order.
 func TestWindowedStrategyMatchesBufferedOnRiskCases(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}

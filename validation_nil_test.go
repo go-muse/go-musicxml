@@ -329,6 +329,7 @@ func TestMusicXMLNilPreservesPublicModelValidation(t *testing.T) {
 // Both validators receive identical original bytes. They never validate a
 // Decode/Encode round trip, which would discard the source xsi:nil attribute.
 func TestNilContractsAgainstSchema(t *testing.T) {
+	skipInShortTier(t)
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
 		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {

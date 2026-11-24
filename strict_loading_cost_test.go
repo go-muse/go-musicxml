@@ -554,6 +554,7 @@ func TestContextSelectionKeepsEveryVerdict(t *testing.T) {
 // loading needs: the smallest buffer that accepts 01a without the projection
 // is at most 55% of the one with the complete projection.
 func TestEmptyContextSelectionLowersTheBufferedStorage(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("binary search is slow under the race detector")
 	}

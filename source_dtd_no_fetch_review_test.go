@@ -64,6 +64,7 @@ func TestSourceInternalDTDPublicExternalIdentifiersStayUnread(t *testing.T) {
 var officialDTDCapacity = validation.Budgets{MaxBufferedBytes: 256 << 20, MaxRuleSteps: 100_000_000}
 
 func TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD(t *testing.T) {
+	skipInShortTier(t)
 	for _, name := range []string{"MozartTrio.musicxml", "MozaChloSample.musicxml", "Chant.musicxml"} {
 		t.Run(name, func(t *testing.T) {
 			input, err := os.ReadFile(filepath.Join("testdata", "official", name))

@@ -81,6 +81,7 @@ func typedReleaseCases() map[string][]byte {
 // A session that read a released typed result would fail Finish with a
 // contract error instead.
 func TestReleasingTypedXSDResultsChangesNoReport(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}

@@ -893,6 +893,7 @@ func comparePerturbations(t *testing.T, original, changed Document, every, readB
 // at a path that leads, in the XML the documents encode to, to the element or
 // attribute that was changed.
 func TestComparePathsLeadToTheDifference(t *testing.T) {
+	skipInShortTier(t)
 	data, err := os.ReadFile(filepath.Join("testdata", "official", "MozartTrio.musicxml"))
 	if err != nil {
 		t.Fatal(err)
@@ -919,6 +920,7 @@ func TestComparePathsLeadToTheDifference(t *testing.T) {
 // all, every change of a single value is one difference at the path of that
 // value, in a partwise score, a timewise one and an opus.
 func TestComparePathsOfEveryElement(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}

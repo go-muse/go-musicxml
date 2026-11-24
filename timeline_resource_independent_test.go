@@ -25,6 +25,7 @@ func independentTimelineScore(notes int, manyAttributes bool, duration string) s
 }
 
 func TestIndependentTimelinePracticalDefaults(t *testing.T) {
+	skipInShortTier(t)
 	t.Parallel()
 	for _, count := range []int{100, 1000} {
 		for _, attr := range []bool{false, true} {
@@ -204,6 +205,7 @@ func TestIndependentTimelineRepeatedDivisionsCosts(t *testing.T) {
 // limits, not a throughput promise. Both the prior and timeline profile must
 // preserve incomplete/undetermined classification if a safety quota stops work.
 func TestIndependentTimelineManyAttributesDefaultClassification(t *testing.T) {
+	skipInShortTier(t)
 	t.Parallel()
 	source := independentTimelineScore(1000, true, "1")
 	document, err := Decode(strings.NewReader(source))

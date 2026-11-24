@@ -87,6 +87,7 @@ func timelineRecords(t *testing.T, name, line string, data []byte, document Docu
 // on the corpus and on synthetic documents, for both lines, the canonical
 // dumps of the two strategies are equal, and most records are compact.
 func TestTimelineCompactRecordsMatchBuffered(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}

@@ -63,8 +63,8 @@ jobs:
         shell: bash
         run: bash scripts/check-all.sh vet
 
-  test:
-    name: Test (${{ matrix.os }})
+  test-shard:
+    name: Test shard ${{ matrix.shard }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
@@ -75,6 +75,7 @@ jobs:
           # Off for now (owner, 2026-11-08); see CONTRIBUTING.md to restore.
           # - macos-latest
           # - windows-latest
+        shard: [1, 2]
 
     steps:
       - name: Check out repository
@@ -89,7 +90,35 @@ jobs:
 
       - name: Run tests
         shell: bash
+        env:
+          TEST_SHARD: ${{ matrix.shard }}
         run: bash scripts/check-all.sh test
+
+  test:
+    name: Test (${{ matrix.os }})
+    needs: [test-shard]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          # Off for now (owner, 2026-11-08); see CONTRIBUTING.md to restore.
+          # - macos-latest
+          # - windows-latest
+
+    steps:
+      - name: Require every test shard
+        shell: bash
+        env:
+          SHARDS_RESULT: ${{ needs.test-shard.result }}
+        run: |
+          if [[ "$SHARDS_RESULT" != success ]]; then
+            printf 'Test shards did not all succeed (result=%s).\n' "$SHARDS_RESULT" >&2
+            exit 1
+          fi
 
   race-root:
     name: Race detector (root)

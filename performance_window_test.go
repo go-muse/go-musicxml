@@ -35,6 +35,7 @@ func performanceWindowBends(first, second string) string {
 }
 
 func TestWindowPerformanceRiskCases(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}
@@ -224,6 +225,7 @@ func TestWindowPerformanceDegradationOnCorpus(t *testing.T) {
 }
 
 func TestWindowPerformanceChargeCoversTheHeap(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("the race detector changes the heap")
 	}
@@ -284,6 +286,7 @@ func TestWindowPerformanceChargeCoversTheHeap(t *testing.T) {
 }
 
 func TestWindowPerformanceUnderContextFactQuotas(t *testing.T) {
+	skipInShortTier(t)
 	data := performanceWindowDocument(
 		performanceWindowMeasure("1", `<attributes><divisions>2</divisions><key><fifths>1</fifths></key></attributes>`+performanceWindowNote(`<duration>2</duration>`)+performanceWindowBends("2", "-2")),
 		performanceWindowMeasure("2", performanceWindowNote(`<duration>2</duration>`)),

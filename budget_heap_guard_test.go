@@ -31,6 +31,7 @@ func liveHeap() int64 {
 // synthetic document adds hostile sizes. Completed XSD subjects release their
 // work charge, so this guards the release against undercharging.
 func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("the race detector changes the heap")
 	}
@@ -185,6 +186,7 @@ func TestBufferedChargeCoversTheHeapAtEndOfInput(t *testing.T) {
 // adds over the buffered strategy stays within the charge it adds, with
 // source origins kept whole in both runs.
 func TestWindowedMeasureEntriesAreCharged(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("the race detector changes the heap")
 	}
@@ -241,6 +243,7 @@ func TestWindowedMeasureEntriesAreCharged(t *testing.T) {
 // projection; and the rule-step default, which grows with the document, covers
 // their 24 and 29 million steps, also when they are packed as MXL.
 func TestStrictLoadingOfficialScoresFitTheDefaultBudgets(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}
