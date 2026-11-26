@@ -163,13 +163,13 @@ of the matrices and the test job split as described below, CI has nine checks.
 
 CI also runs the test stage as two exhaustive, disjoint shards on standard
 Linux runners. `TEST_SHARD=1` runs the root package's tests whose names match
-`check_test_shard_pattern` in `scripts/check-all.sh` (`go test -run`), then
-every other package discovered by `go list ./...`; `TEST_SHARD=2` runs the root
-package with the same pattern skipped (`go test -skip`). A root test either
-matches the pattern or does not, so each test, example and fuzz seed runs in
-exactly one shard, whatever is added later. An unset value runs the full
-command, as the local stage and the release workflow do; empty or unknown
-values fail before anything runs. Each shard keeps the 15-minute job cap of
+`check_test_shard_pattern` in `scripts/check-all.sh` (`go test -run`);
+`TEST_SHARD=2` runs the root package with the same pattern skipped
+(`go test -skip`), then every other package discovered by `go list ./...`.
+A root test either matches the pattern or does not, so each test, example and
+fuzz seed runs in exactly one shard, whatever is added later. An unset value
+runs the full command, as the local stage and the release workflow do; empty
+or unknown values fail before anything runs. Each shard keeps the 15-minute job cap of
 the job it replaces. The stable `Test (ubuntu-latest)` check, which the
 ruleset requires, succeeds only when every shard succeeded. The pattern only
 balances the two shards; change it when one of them grows much longer than the

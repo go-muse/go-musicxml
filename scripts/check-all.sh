@@ -141,11 +141,12 @@ select_packages() {
 }
 
 # CI can split the test stage into two disjoint shards. Shard 1 runs the root
-# package's tests whose names match this pattern, then every other package;
-# shard 2 runs the root package with the same pattern skipped. A root test
+# package's tests whose names match this pattern; shard 2 runs the root
+# package with the same pattern skipped, then every other package. A root test
 # either matches the pattern or does not, and examples and fuzz seeds never
-# match it, so each of them runs in exactly one shard.
-check_test_shard_pattern='^Test[A-E]'
+# match it, so each of them runs in exactly one shard. The pattern only
+# balances the two shards' times on the hosted runner.
+check_test_shard_pattern='^Test[A-F]'
 
 stage_test() {
     stage "go test"
@@ -158,13 +159,13 @@ stage_test() {
         1|2) ;;
         *) echo "invalid TEST_SHARD: expected 1 or 2" >&2; return 2 ;;
     esac
-    if [[ "$TEST_SHARD" == 2 ]]; then
-        "$check_go" test -count=1 -skip="$check_test_shard_pattern" .
+    if [[ "$TEST_SHARD" == 1 ]]; then
+        "$check_go" test -count=1 -run="$check_test_shard_pattern" .
         return
     fi
     local selected=()
     select_packages test packages
-    "$check_go" test -count=1 -run="$check_test_shard_pattern" .
+    "$check_go" test -count=1 -skip="$check_test_shard_pattern" .
     "$check_go" test -count=1 "${selected[@]}"
 }
 

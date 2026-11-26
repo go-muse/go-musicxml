@@ -113,30 +113,30 @@ func TestSuiteShardDefaultCommandIsUnchanged(t *testing.T) {
 
 // Shard 1 selects root tests with -run and shard 2 leaves the same tests out
 // with -skip, so the two shards differ only in the flag: a root test, example
-// or fuzz seed is in exactly one of them. Every other package runs in shard 1.
+// or fuzz seed is in exactly one of them. Every other package runs in shard 2.
 func TestSuiteShardsPartitionTheSuite(t *testing.T) {
 	f := newSuiteShardFixture(t)
 	one, two := "1", "2"
-	status, first, output := f.run(t, suiteShardRun{shard: &one, root: suiteShardRoot + "\n", inventory: suiteShardInventory})
-	if status != 0 || len(first) != 4 {
+	status, first, output := f.run(t, suiteShardRun{shard: &one, root: suiteShardRoot + "\n", inventory: suiteShardInventory, rootStatus: 99, inventoryStatus: 99})
+	if status != 0 || len(first) != 1 {
 		t.Fatalf("shard 1: status=%d calls=%q output=%s", status, first, output)
 	}
-	status, second, output := f.run(t, suiteShardRun{shard: &two, root: suiteShardRoot + "\n", inventory: suiteShardInventory, rootStatus: 99, inventoryStatus: 99})
-	if status != 0 || len(second) != 1 {
+	status, second, output := f.run(t, suiteShardRun{shard: &two, root: suiteShardRoot + "\n", inventory: suiteShardInventory})
+	if status != 0 || len(second) != 4 {
 		t.Fatalf("shard 2: status=%d calls=%q output=%s", status, second, output)
 	}
-	selected, found := strings.CutPrefix(first[2][2], "-run=")
-	skipped, cut := strings.CutPrefix(second[0][2], "-skip=")
+	selected, found := strings.CutPrefix(first[0][2], "-run=")
+	skipped, cut := strings.CutPrefix(second[2][2], "-skip=")
 	if !found || !cut || selected != skipped || selected == "" {
-		t.Fatalf("shard 1 selects %q and shard 2 skips %q: they must name one pattern", first[2], second[0])
+		t.Fatalf("shard 1 selects %q and shard 2 skips %q: they must name one pattern", first[0], second[2])
 	}
-	want := [][]string{{"list", "."}, {"list", "./..."},
-		{"test", "-count=1", "-run=" + selected, "."},
-		{"test", "-count=1", suiteShardRoot + "/cmd/tool", suiteShardRoot + "/validation"}}
-	if !reflect.DeepEqual(first, want) {
+	if want := [][]string{{"test", "-count=1", "-run=" + selected, "."}}; !reflect.DeepEqual(first, want) {
 		t.Fatalf("shard 1 calls = %q, want %q", first, want)
 	}
-	if want := [][]string{{"test", "-count=1", "-skip=" + selected, "."}}; !reflect.DeepEqual(second, want) {
+	want := [][]string{{"list", "."}, {"list", "./..."},
+		{"test", "-count=1", "-skip=" + selected, "."},
+		{"test", "-count=1", suiteShardRoot + "/cmd/tool", suiteShardRoot + "/validation"}}
+	if !reflect.DeepEqual(second, want) {
 		t.Fatalf("shard 2 calls = %q, want %q", second, want)
 	}
 	// A pattern with a slash would also select or skip subtests by name.
@@ -189,11 +189,11 @@ func TestSuiteShardPreservesFailureStatus(t *testing.T) {
 		run           suiteShardRun
 		status, calls int
 	}{
-		{"root discovery", suiteShardRun{shard: &one, rootStatus: 23}, 23, 1},
-		{"inventory discovery", suiteShardRun{shard: &one, inventoryStatus: 29}, 29, 2},
-		{"root tests of shard 1", suiteShardRun{shard: &one, failing: ".", testStatus: 37}, 37, 3},
-		{"other packages", suiteShardRun{shard: &one, failing: suiteShardRoot + "/validation", testStatus: 41}, 41, 4},
-		{"root tests of shard 2", suiteShardRun{shard: &two, failing: ".", testStatus: 43}, 43, 1},
+		{"root tests of shard 1", suiteShardRun{shard: &one, failing: ".", testStatus: 37}, 37, 1},
+		{"root discovery", suiteShardRun{shard: &two, rootStatus: 23}, 23, 1},
+		{"inventory discovery", suiteShardRun{shard: &two, inventoryStatus: 29}, 29, 2},
+		{"root tests of shard 2", suiteShardRun{shard: &two, failing: ".", testStatus: 43}, 43, 3},
+		{"other packages", suiteShardRun{shard: &two, failing: suiteShardRoot + "/validation", testStatus: 41}, 41, 4},
 	} {
 		tc.run.root, tc.run.inventory = suiteShardRoot+"\n", suiteShardInventory
 		status, calls, output := f.run(t, tc.run)
@@ -207,7 +207,7 @@ func TestSuiteShardPreservesFailureStatus(t *testing.T) {
 // stage runs them before any test starts.
 func TestSuiteShardRejectsMalformedInventories(t *testing.T) {
 	f := newSuiteShardFixture(t)
-	one := "1"
+	two := "2"
 	for _, tc := range []struct{ name, root, inventory string }{
 		{"empty root", "", suiteShardInventory},
 		{"missing root", suiteShardRoot + "\n", suiteShardRoot + "/validation\n"},
@@ -216,7 +216,7 @@ func TestSuiteShardRejectsMalformedInventories(t *testing.T) {
 		{"option", suiteShardRoot + "\n", suiteShardRoot + "\n-run=none\n"},
 		{"no other package", suiteShardRoot + "\n", suiteShardRoot + "\n"},
 	} {
-		status, calls, output := f.run(t, suiteShardRun{shard: &one, root: tc.root, inventory: tc.inventory})
+		status, calls, output := f.run(t, suiteShardRun{shard: &two, root: tc.root, inventory: tc.inventory})
 		if status != 2 {
 			t.Errorf("%s: status=%d calls=%q output=%s", tc.name, status, calls, output)
 		}
