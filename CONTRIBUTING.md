@@ -113,8 +113,8 @@ version checks run only in the release workflow.
 For now (owner's decision, 2026-11-08) CI is narrower than the release
 workflow:
 
-- The quality and test matrices run on Linux only. Their macOS and Windows
-  entries are commented out in `.github/workflows/ci.yml`.
+- The quality, test shard and test gate matrices run on Linux only. Their
+  macOS and Windows entries are commented out in `.github/workflows/ci.yml`.
 - The three race jobs are off (`if: ${{ false }}`). The race stage still runs
   locally with `bash scripts/check-all.sh race` and in the release workflow.
 - The "Protect main" ruleset requires only the checks that run on pull
@@ -123,11 +123,13 @@ workflow:
 
 To restore the full pull-request CI:
 
-1. Uncomment `macos-latest` and `windows-latest` in both matrices.
+1. Uncomment `macos-latest` and `windows-latest` in the three matrices
+   (`quality`, `test-shard` and `test`).
 2. Remove the `if: ${{ false }}` lines of `race-root` and `race-packages`,
    and set the `race` job's condition back to `if: ${{ always() }}`.
 3. Update `raceCIOperatingSystems`, `raceCIOff` and the expected
-   headers and names in `race_ci_sharding_test.go`.
+   headers and names in `race_ci_sharding_test.go` and
+   `suite_ci_sharding_test.go`.
 4. Add `Quality (macos-latest)`, `Quality (windows-latest)`,
    `Test (macos-latest)`, `Test (windows-latest)` and `Race detector` back to
    the ruleset's required status checks.
@@ -136,7 +138,9 @@ Single stages can be run directly, for example
 `bash scripts/check-all.sh mod generate`; the stages are `mod`, `generate`,
 `format`, `test`, `vet`, `race`, and `fuzz`. The Make targets `mod-check`,
 `generated`, `format-check`, `test`, `vet`, `race`, and `fuzz` are shortcuts
-for the same stages, and the CI jobs run them from the same script. The
+for the same stages, and the CI jobs run them from the same script. One more
+stage, `short` (`make test-short`), runs only when named; see
+[the short tier](#the-short-tier). The
 source-reader, internal-DTD frame reader, direct-model, bounded context-profile,
 auxiliary-source and two validation-core fuzz targets each run 10,000 counted
 executions by default (`VALIDATION_FUZZ_TIME` overrides this count). The MXL
@@ -155,7 +159,30 @@ The stable `Race detector` check succeeds only when both shards succeed; failed,
 cancelled, skipped, or missing shard results cannot pass its aggregate gate.
 This deliberately changes CI from nine jobs to eleven without changing the
 seven local stages or the release checks. With macOS and Windows commented out
-of the matrices, CI has seven checks.
+of the matrices and the test job split as described below, CI has nine checks.
+
+CI also runs the test stage as two exhaustive, disjoint shards on standard
+Linux runners. `TEST_SHARD=1` runs the root package's tests whose names match
+`check_test_shard_pattern` in `scripts/check-all.sh` (`go test -run`);
+`TEST_SHARD=2` runs the root package with the same pattern skipped
+(`go test -skip`), then every other package discovered by `go list ./...`.
+A root test either matches the pattern or does not, so each test, example and
+fuzz seed runs in exactly one shard, whatever is added later. An unset value
+runs the full command, as the local stage and the release workflow do; empty
+or unknown values fail before anything runs. Each shard keeps the 15-minute job cap of
+the job it replaces. The stable `Test (ubuntu-latest)` check, which the
+ruleset requires, succeeds only when every shard succeeded. The pattern only
+balances the two shards; change it when one of them grows much longer than the
+other.
+
+### The short tier
+
+`make test-short` (`bash scripts/check-all.sh short`) runs every package with
+`go test -short`. Tests of the root package that take a second or more call
+`skipInShortTier` or reduce their input under `testing.Short()`, so this run
+is for the edit loop. It replaces nothing: `make check`, `make check-all`, CI
+and the release workflow run the full tier and never pass `-short`. Run the
+full `test` stage before opening a pull request.
 
 Package obligation inventories also have standard-library Go checks,
 required in the Linux CI jobs:

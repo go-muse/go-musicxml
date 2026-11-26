@@ -54,6 +54,7 @@ func xmlDocumentWhitespaceCases() []xmlReadingCase {
 }
 
 func TestXMLDocumentWhitespaceDecodePaths(t *testing.T) {
+	skipInShortTier(t)
 	runXMLReadingDecodePaths(t, xmlDocumentWhitespaceCases(), xmlDeclarationEncodingVariants, assertXMLReadingError)
 }
 

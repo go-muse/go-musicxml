@@ -44,6 +44,7 @@ func timelineWindowRuns(t *testing.T, line string, data []byte, document Documen
 // documents, each degradation is counted by its trigger, and the cumulative
 // context-fact quota counts what buffered evaluation counts.
 func TestTimelineWindowCloseOnCorpus(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}

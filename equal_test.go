@@ -889,7 +889,12 @@ func TestEqualOnCorpus(t *testing.T) {
 		compared++
 	}
 	t.Logf("%d files compared, %d against a different file", compared, different)
-	if compared < 20 || different < 20 {
-		t.Errorf("%d files compared, %d against a different file", compared, different)
+	// The short tier reads every twelfth file: 13 comparisons.
+	enough := 20
+	if testing.Short() {
+		enough = 10
+	}
+	if compared < enough || different < enough {
+		t.Errorf("%d files compared, %d against a different file, want at least %d", compared, different, enough)
 	}
 }

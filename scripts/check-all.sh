@@ -4,6 +4,7 @@
 #
 #   bash scripts/check-all.sh              # every stage, in order
 #   bash scripts/check-all.sh mod format   # only the named stages
+#   bash scripts/check-all.sh short        # the quick run for the edit loop
 #
 # The checks work on a worktree with uncommitted changes: the mod and
 # generate stages compare snapshots of the whole worktree taken before and
@@ -22,6 +23,8 @@ check_mxl_fuzz_time="${MXL_FUZZ_TIME:-10000x}"
 check_validation_fuzz_time="${VALIDATION_FUZZ_TIME:-10000x}"
 
 all_stages=(mod generate format test vet race fuzz)
+# Stages that run only when named.
+named_stages=(short)
 
 stage() {
     echo "==> $*"
@@ -82,9 +85,96 @@ stage_format() {
     fi
 }
 
+# select_packages fills the caller's `selected` array with one of two disjoint
+# sets of packages: the module root, or every other package of ./... . The
+# first argument names the stage in messages, the second is root or packages,
+# and the rest are passed to `go list`.
+select_packages() {
+    local label="$1" selection="$2"
+    shift 2
+    local root inventory status package seen root_count
+    selected=()
+    # A sentinel preserves trailing newlines so malformed blank records cannot
+    # disappear through command substitution. Capture each go-list status
+    # directly: partial output from a failed discovery must never start tests.
+    if root="$("$check_go" list "$@" .; status=$?; printf '.'; exit "$status")"; then
+        root="${root%.}"
+        root="${root%$'\n'}"
+    else
+        return "$?"
+    fi
+    if [[ -z "$root" || "$root" == -* || "$root" == *[[:space:][:cntrl:]]* ]]; then
+        echo "$label discovery requires one nonempty root import path" >&2
+        return 2
+    fi
+    if inventory="$("$check_go" list "$@" ./...; status=$?; printf '.'; exit "$status")"; then
+        inventory="${inventory%.}"
+        inventory="${inventory%$'\n'}"
+    else
+        return "$?"
+    fi
+    seen=$'\n'
+    root_count=0
+    while IFS= read -r package; do
+        if [[ -z "$package" || "$package" == -* || "$package" == *[[:space:][:cntrl:]]* ]]; then
+            echo "$label discovery returned an empty or malformed import path" >&2
+            return 2
+        fi
+        if [[ "$seen" == *$'\n'"$package"$'\n'* ]]; then
+            echo "$label discovery returned a duplicate import path: $package" >&2
+            return 2
+        fi
+        seen+="$package"$'\n'
+        if [[ "$package" == "$root" ]]; then
+            root_count=$((root_count + 1))
+            if [[ "$selection" == root ]]; then
+                selected+=("$package")
+            fi
+        elif [[ "$selection" == packages ]]; then
+            selected+=("$package")
+        fi
+    done <<< "$inventory"
+    if [[ "$root_count" != 1 || "${#selected[@]}" == 0 ]]; then
+        echo "$label discovery requires exactly one root and a nonempty selected shard" >&2
+        return 2
+    fi
+}
+
+# CI can split the test stage into two disjoint shards. Shard 1 runs the root
+# package's tests whose names match this pattern; shard 2 runs the root
+# package with the same pattern skipped, then every other package. A root test
+# either matches the pattern or does not, and examples and fuzz seeds never
+# match it, so each of them runs in exactly one shard. The pattern only
+# balances the two shards' times on the hosted runner.
+check_test_shard_pattern='^Test[A-F]'
+
 stage_test() {
     stage "go test"
-    "$check_go" test -count=1 ./...
+    # Local and release checks retain the original exhaustive command.
+    if [[ ! ${TEST_SHARD+x} ]]; then
+        "$check_go" test -count=1 ./...
+        return
+    fi
+    case "$TEST_SHARD" in
+        1|2) ;;
+        *) echo "invalid TEST_SHARD: expected 1 or 2" >&2; return 2 ;;
+    esac
+    if [[ "$TEST_SHARD" == 1 ]]; then
+        "$check_go" test -count=1 -run="$check_test_shard_pattern" .
+        return
+    fi
+    local selected=()
+    select_packages test packages
+    "$check_go" test -count=1 -skip="$check_test_shard_pattern" .
+    "$check_go" test -count=1 "${selected[@]}"
+}
+
+# stage_short is the edit loop's run: every package with -short, which leaves
+# out the tests that take a second or more. It is not part of the default
+# sequence, and it replaces no stage of it.
+stage_short() {
+    stage "go test -short"
+    "$check_go" test -short -count=1 ./...
 }
 
 stage_vet() {
@@ -105,52 +195,8 @@ stage_race() {
         *) echo "invalid RACE_SHARD: expected root or packages" >&2; return 2 ;;
     esac
 
-    local root inventory status package seen root_count
     local selected=()
-    # A sentinel preserves trailing newlines so malformed blank records cannot
-    # disappear through command substitution. Capture each go-list status
-    # directly: partial output from a failed discovery must never start tests.
-    if root="$("$check_go" list -race .; status=$?; printf '.'; exit "$status")"; then
-        root="${root%.}"
-        root="${root%$'\n'}"
-    else
-        return "$?"
-    fi
-    if [[ -z "$root" || "$root" == -* || "$root" == *[[:space:][:cntrl:]]* ]]; then
-        echo "race discovery requires one nonempty root import path" >&2
-        return 2
-    fi
-    if inventory="$("$check_go" list -race ./...; status=$?; printf '.'; exit "$status")"; then
-        inventory="${inventory%.}"
-        inventory="${inventory%$'\n'}"
-    else
-        return "$?"
-    fi
-    seen=$'\n'
-    root_count=0
-    while IFS= read -r package; do
-        if [[ -z "$package" || "$package" == -* || "$package" == *[[:space:][:cntrl:]]* ]]; then
-            echo "race discovery returned an empty or malformed import path" >&2
-            return 2
-        fi
-        if [[ "$seen" == *$'\n'"$package"$'\n'* ]]; then
-            echo "race discovery returned a duplicate import path: $package" >&2
-            return 2
-        fi
-        seen+="$package"$'\n'
-        if [[ "$package" == "$root" ]]; then
-            root_count=$((root_count + 1))
-            if [[ "$RACE_SHARD" == root ]]; then
-                selected+=("$package")
-            fi
-        elif [[ "$RACE_SHARD" == packages ]]; then
-            selected+=("$package")
-        fi
-    done <<< "$inventory"
-    if [[ "$root_count" != 1 || "${#selected[@]}" == 0 ]]; then
-        echo "race discovery requires exactly one root and a nonempty selected shard" >&2
-        return 2
-    fi
+    select_packages race "$RACE_SHARD" -race
     "$check_go" test -race -count=1 -timeout=15m "${selected[@]}"
 }
 
@@ -185,11 +231,11 @@ if [[ $# -eq 0 ]]; then
 fi
 
 for name in "$@"; do
-    case " ${all_stages[*]} " in
+    case " ${all_stages[*]} ${named_stages[*]} " in
         *" $name "*) "stage_$name" ;;
         *)
             echo "unknown stage: $name" >&2
-            echo "stages: ${all_stages[*]}" >&2
+            echo "stages: ${all_stages[*]} ${named_stages[*]}" >&2
             exit 2
             ;;
     esac

@@ -185,6 +185,7 @@ var windowConsumerCases = []struct {
 // to buffered evaluation's, as is the cumulative context-fact quota. Input
 // cut off inside a measure settles nothing and records none of them.
 func TestWindowConsumersRiskCases(t *testing.T) {
+	skipInShortTier(t)
 	check := func(t *testing.T, name, settled string, decisions int, finding string, data []byte) {
 		document, decodeErr := Decode(bytes.NewReader(data))
 		for _, line := range []string{"source", "model"} {
@@ -258,6 +259,7 @@ func TestWindowConsumersRecheck(t *testing.T) {
 // evaluation's: a phase Finish does not reach records nothing windows
 // decided in its place.
 func TestWindowConsumersUnderContextFactQuotas(t *testing.T) {
+	skipInShortTier(t)
 	for _, name := range []string{"failures in every measure"} {
 		var data []byte
 		for _, tc := range windowConsumerCases {
@@ -358,6 +360,7 @@ func TestWindowConsumersNeedOnlyTheirTimeline(t *testing.T) {
 // document that fails the three rules in every measure, the heap it adds
 // over a run that decides them in Finish is covered by what it charges.
 func TestWindowConsumersChargeCoversTheHeap(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("the race detector changes the heap")
 	}
@@ -426,6 +429,7 @@ func keyedNumerals(measures int, last string) string {
 // retained and leave the account unbalanced. That the count is exact is
 // TestConsumerQuestionIndexBelongsToTheSpeculation's to prove.
 func TestWindowConsumersLeaveNothingCharged(t *testing.T) {
+	skipInShortTier(t)
 	whole := timelineWindowScore(timelineWindowBare, keyedNumerals(80, ""))
 	for _, tc := range []struct {
 		name, settled, tamper, data string

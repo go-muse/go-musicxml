@@ -352,11 +352,12 @@ func TestRaceCIShardsPreserveRunnerActionsAndBudgets(t *testing.T) {
 	}
 }
 
-// raceCIOperatingSystems are the runners of the quality and test matrices.
+// raceCIOperatingSystems are the runners of the quality, test shard and test
+// gate matrices.
 // macOS and Windows are off for now (owner, 2026-11-08).
 var raceCIOperatingSystems = []string{"ubuntu-latest"}
 
-func TestRaceCIHasSevenExplicitExpandedChecks(t *testing.T) {
+func TestRaceCIHasNineExplicitExpandedChecks(t *testing.T) {
 	jobs := raceCIJobs(t)
 	var ids, names []string
 	for id, job := range jobs {
@@ -366,7 +367,20 @@ func TestRaceCIHasSevenExplicitExpandedChecks(t *testing.T) {
 			t.Fatalf("job %s has no explicit check name", id)
 		}
 		name := match[1]
-		if id == "quality" || id == "test" {
+		if id == "test-shard" || id == "test" {
+			// suite_ci_sharding_test.go guards the exact blocks of the test
+			// shards and of their gate.
+			for _, os := range raceCIOperatingSystems {
+				expanded := strings.ReplaceAll(name, "${{ matrix.os }}", os)
+				if id == "test" {
+					names = append(names, expanded)
+					continue
+				}
+				for _, shard := range suiteCIShards {
+					names = append(names, strings.ReplaceAll(expanded, "${{ matrix.shard }}", shard))
+				}
+			}
+		} else if id == "quality" {
 			header, _, ok := strings.Cut(job, "\n    steps:\n")
 			wantHeader := `    name: ` + name + `
     runs-on: ${{ matrix.os }}
@@ -394,14 +408,14 @@ func TestRaceCIHasSevenExplicitExpandedChecks(t *testing.T) {
 		}
 	}
 	sort.Strings(ids)
-	wantIDs := []string{"fuzz", "quality", "race", "race-packages", "race-root", "test", "xsd-conformance"}
+	wantIDs := []string{"fuzz", "quality", "race", "race-packages", "race-root", "test", "test-shard", "xsd-conformance"}
 	if !reflect.DeepEqual(ids, wantIDs) {
 		t.Fatalf("job IDs = %q, want %q", ids, wantIDs)
 	}
 	sort.Strings(names)
-	wantNames := []string{"External XSD conformance", "Fuzz smoke", "Quality (ubuntu-latest)", "Race detector", "Race detector (packages)", "Race detector (root)", "Test (ubuntu-latest)"}
+	wantNames := []string{"External XSD conformance", "Fuzz smoke", "Quality (ubuntu-latest)", "Race detector", "Race detector (packages)", "Race detector (root)", "Test (ubuntu-latest)", "Test shard 1 (ubuntu-latest)", "Test shard 2 (ubuntu-latest)"}
 	if !reflect.DeepEqual(names, wantNames) {
-		t.Fatalf("expanded checks = %q, want all seven %q", names, wantNames)
+		t.Fatalf("expanded checks = %q, want all nine %q", names, wantNames)
 	}
 }
 

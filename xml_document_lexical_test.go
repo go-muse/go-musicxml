@@ -66,6 +66,7 @@ func xmlDocumentLexicalCases() []xmlReadingCase {
 }
 
 func TestXMLDocumentLexicalDecodePaths(t *testing.T) {
+	skipInShortTier(t)
 	runXMLReadingDecodePaths(t, xmlDocumentLexicalCases(), xmlDeclarationEncodingVariants, assertXMLReadingSyntaxError)
 }
 

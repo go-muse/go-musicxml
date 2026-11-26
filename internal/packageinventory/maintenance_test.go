@@ -1020,7 +1020,7 @@ func TestMaintenanceExistingLinuxJobsRequireMaintenanceWithoutNewGoStage(t *test
 	for _, tc := range []struct {
 		name string
 		jobs []string
-	}{{"ci.yml", []string{"quality", "test", "race-root", "race-packages", "race", "xsd-conformance", "fuzz"}}, {"release.yml", []string{"verify", "publish"}}} {
+	}{{"ci.yml", []string{"quality", "test-shard", "test", "race-root", "race-packages", "race", "xsd-conformance", "fuzz"}}, {"release.yml", []string{"verify", "publish"}}} {
 		t.Run(tc.name, func(t *testing.T) {
 			text := maintenanceWorkflowText(maintenanceRead(t, filepath.Join(repo, ".github/workflows", tc.name)))
 			parts := strings.SplitN(text, "jobs:\n", 2)

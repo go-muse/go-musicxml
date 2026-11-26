@@ -6,7 +6,7 @@ MXL_FUZZ_TIME ?= 10000x
 CHECK_ALL = GO='$(GO)' GOFMT='$(GOFMT)' FUZZ_TIME='$(FUZZ_TIME)' \
 	MXL_FUZZ_TIME='$(MXL_FUZZ_TIME)' bash scripts/check-all.sh
 
-.PHONY: check check-all format format-check fuzz generate generated mod-check test vet race
+.PHONY: check check-all format format-check fuzz generate generated mod-check test test-short vet race
 
 check: format-check test vet
 
@@ -27,6 +27,9 @@ mod-check:
 
 test:
 	$(CHECK_ALL) test
+
+test-short:
+	$(CHECK_ALL) short
 
 vet:
 	$(CHECK_ALL) vet

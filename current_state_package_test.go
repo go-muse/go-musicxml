@@ -303,6 +303,7 @@ func TestDecodeMXLAssessedModelStageSharesAccount(t *testing.T) {
 // -race build only samples every fortieth file, within the race job's time
 // limit.
 func TestAssessMXLPackageCurrentStateCorpus(t *testing.T) {
+	skipInShortTier(t)
 	t.Parallel()
 
 	ctx := context.Background()

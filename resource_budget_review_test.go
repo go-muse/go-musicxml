@@ -203,6 +203,7 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 // buffer of the refusal's used plus requested bytes admits the graph
 // completely, and one byte less refuses at the same used and requested bytes.
 func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
+	skipInShortTier(t)
 	for _, measures := range []int{900, 1200} {
 		source := reviewBudgetScore(measures)
 		graph := func(limit int64) (validation.AssessmentBundle, error) {

@@ -9,6 +9,7 @@ import (
 )
 
 func TestTimelinePracticalExactTrajectories(t *testing.T) {
+	skipInShortTier(t)
 	t.Parallel()
 	for _, tc := range []struct {
 		name, duration string

@@ -510,6 +510,7 @@ func TestAssessmentOptionsDTDIsHonoured(t *testing.T) {
 // suite. The accepted count is a floor that may rise; no rejection may come
 // from an unread external DTD or an exhausted default budget.
 func TestAssessedLoadingCorpusMeasurement(t *testing.T) {
+	skipInShortTier(t)
 	t.Parallel()
 
 	var files []string

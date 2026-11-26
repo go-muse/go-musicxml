@@ -104,6 +104,7 @@ func spansWindowTwoParts(version, first, second string) []byte {
 // later fact decides what an earlier window read, and on documents whose
 // windows cannot be adopted.
 func TestWindowSpansRiskCases(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}
@@ -352,6 +353,7 @@ func spansWindowHeavy(measures int) []byte {
 // windows' work on, the heap at the start of Finish grows by no more than the
 // charge does, with the projection selected and without it.
 func TestWindowSpansChargeCoversTheHeap(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("the race detector changes the heap")
 	}
@@ -410,6 +412,7 @@ func TestWindowSpansChargeCoversTheHeap(t *testing.T) {
 // are dropped in Finish ends its phases with the charge of a run that never
 // read windows for spans.
 func TestWindowSpansDropReleasesItsCharge(t *testing.T) {
+	skipInShortTier(t)
 	// Two unnamed lyrics on one note leave a part-wide gap the windows keep
 	// to the end.
 	data := bytes.Replace(spansWindowHeavy(40), []byte(`<lyric number="1"><text>la</text><extend/></lyric>`), []byte(`<lyric><text>la</text><extend/></lyric><lyric><text>lo</text></lyric>`), 2)
@@ -483,6 +486,7 @@ func TestWindowSpansReportsItsOwnDefects(t *testing.T) {
 // context-fact quota the two strategies complete or stop alike, and a
 // completed run reports the same.
 func TestWindowSpansUnderContextFactQuotas(t *testing.T) {
+	skipInShortTier(t)
 	data := spansWindowHeavy(2)
 	type outcome struct {
 		report   string
@@ -544,6 +548,7 @@ func TestWindowSpansUnderContextFactQuotas(t *testing.T) {
 // but no endpoints, holds no more live memory at the start of Finish with
 // the windows' work than without it.
 func TestWindowSpansKeepNothingForNodesWithoutEndpoints(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("the race detector changes the heap")
 	}
@@ -717,6 +722,7 @@ func spansWindowRandom(seed int64) []byte {
 // risk cases, random documents full of tied marks and typeless extends, and
 // the corpus; on both lines.
 func TestWindowSpansCountedFactsMatchBuffered(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("slow under the race detector")
 	}
@@ -782,6 +788,7 @@ func TestWindowSpansCountedFactsMatchBuffered(t *testing.T) {
 // the part; and Finish ends with less than the provider that keeps its
 // endpoints.
 func TestWindowSpansCountingKeepsNoEndpoints(t *testing.T) {
+	skipInShortTier(t)
 	if raceEnabled {
 		t.Skip("the race detector changes the heap")
 	}
